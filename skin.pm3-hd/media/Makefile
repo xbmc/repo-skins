@@ -28,45 +28,127 @@ IMAGES= \
 	flagging/audio/8.png \
 	flagging/audio/aac.png \
 	flagging/audio/ac3.png \
+	flagging/audio/aif.png \
+	flagging/audio/aifc.png \
+	flagging/audio/aiff.png \
+	flagging/audio/ape.png \
+	flagging/audio/avc.png \
+	flagging/audio/cdda.png \
+	flagging/audio/dca.png \
 	flagging/audio/dolbydigital.png \
 	flagging/audio/dts.png \
+	flagging/audio/eac3.png \
+	flagging/audio/flac.png \
+	flagging/audio/mp1.png \
+	flagging/audio/mp2.png \
 	flagging/audio/mp3.png \
+	flagging/audio/ogg.png \
+	flagging/audio/truehd.png \
+	flagging/audio/wma.png \
 	flagging/audio/wmapro.png \
+	flagging/audio/wmav2.png \
 	flagging/video/1080.png \
-	flagging/video/720.png \
-	flagging/video/540.png \
 	flagging/video/480.png \
+	flagging/video/540.png \
+	flagging/video/720.png \
 	flagging/video/avc1.png \
+	flagging/video/bluray.png \
 	flagging/video/divx.png \
+	flagging/video/flv.png \
 	flagging/video/h264.png \
+	flagging/video/hddvd.png \
 	flagging/video/mpeg1video.png \
+	flagging/video/mpeg2video.png \
+	flagging/video/vc-1.png \
 	flagging/video/wvc1.png \
 	flagging/video/xvid.png \
+	xbmc_subtitles/flags/-.gif \
+	xbmc_subtitles/flags/.gif \
+	xbmc_subtitles/flags/ar.gif \
+	xbmc_subtitles/flags/bg.gif \
+	xbmc_subtitles/flags/bs.gif \
+	xbmc_subtitles/flags/ca.gif \
+	xbmc_subtitles/flags/cs.gif \
+	xbmc_subtitles/flags/da.gif \
+	xbmc_subtitles/flags/de.gif \
+	xbmc_subtitles/flags/el.gif \
+	xbmc_subtitles/flags/en.gif \
+	xbmc_subtitles/flags/es.gif \
+	xbmc_subtitles/flags/et.gif \
+	xbmc_subtitles/flags/fi.gif \
+	xbmc_subtitles/flags/fo.gif \
+	xbmc_subtitles/flags/fr.gif \
+	xbmc_subtitles/flags/gl.gif \
+	xbmc_subtitles/flags/he.gif \
+	xbmc_subtitles/flags/hi.gif \
+	xbmc_subtitles/flags/hr.gif \
+	xbmc_subtitles/flags/hu.gif \
+	xbmc_subtitles/flags/hy.gif \
+	xbmc_subtitles/flags/id.gif \
+	xbmc_subtitles/flags/is.gif \
+	xbmc_subtitles/flags/it.gif \
+	xbmc_subtitles/flags/ja.gif \
+	xbmc_subtitles/flags/kk.gif \
+	xbmc_subtitles/flags/ko.gif \
+	xbmc_subtitles/flags/lb.gif \
+	xbmc_subtitles/flags/lt.gif \
+	xbmc_subtitles/flags/lv.gif \
+	xbmc_subtitles/flags/mk.gif \
+	xbmc_subtitles/flags/ms.gif \
+	xbmc_subtitles/flags/nl.gif \
+	xbmc_subtitles/flags/no.gif \
+	xbmc_subtitles/flags/pb.gif \
+	xbmc_subtitles/flags/pl.gif \
+	xbmc_subtitles/flags/pt.gif \
+	xbmc_subtitles/flags/ro.gif \
+	xbmc_subtitles/flags/ru.gif \
+	xbmc_subtitles/flags/sk.gif \
+	xbmc_subtitles/flags/sl.gif \
+	xbmc_subtitles/flags/sq.gif \
+	xbmc_subtitles/flags/sr.gif \
+	xbmc_subtitles/flags/sv.gif \
+	xbmc_subtitles/flags/tr.gif \
+	xbmc_subtitles/flags/uk.gif \
+	xbmc_subtitles/flags/vi.gif \
+	xbmc_subtitles/flags/zh.gif \
+	xbmc_subtitles/ratings/0.png \
+	xbmc_subtitles/ratings/1.png \
+	xbmc_subtitles/ratings/10.png \
+	xbmc_subtitles/ratings/2.png \
+	xbmc_subtitles/ratings/3.png \
+	xbmc_subtitles/ratings/4.png \
+	xbmc_subtitles/ratings/5.png \
+	xbmc_subtitles/ratings/6.png \
+	xbmc_subtitles/ratings/7.png \
+	xbmc_subtitles/ratings/8.png \
+	xbmc_subtitles/ratings/9.png \
+	xbmc_subtitles/icon_sync.png \
 	amt-blank-poster.png \
 	amt-generic-actor.png \
 	amt-generic-genre-i.png \
 	amt-generic-genre.png \
 	amt-generic-noactor.png \
 	amt-generic-studio.png \
-	amt-generic-trailer.png \
 	amt-generic-trailer-w.png \
+	amt-generic-trailer.png \
 	amt-overlay-favorite.png \
 	amt-overlay-saved.png \
 	amt-overlay-watched.png \
-	Background-Home-2.png \
+	arrow-big-down.png \
+	arrow-big-up.png \
 	Background-Home.png \
 	Background.png \
 	Barground2.png \
-	black-back2.png \
 	black-back.png \
-	button-focus2.png \
+	black-back2.png \
 	button-focus-keyboard.png \
-	button-focus.png \
 	button-focus-toggle-off.png \
 	button-focus-toggle-on.png \
-	button-nofocus.png \
+	button-focus.png \
+	button-focus2.png \
 	button-nofocus-toggle-off.png \
 	button-nofocus-toggle-on.png \
+	button-nofocus.png \
 	Button_Side_Focus.png \
 	Button_Side_NoFocus.png \
 	calibrate-bottomright-focus.png \
@@ -77,8 +159,8 @@ IMAGES= \
 	calibrate-subtitles.png \
 	calibrate-topleft-focus.png \
 	calibrate-topleft.png \
-	close-windowFO.png \
 	close-window.png \
+	close-windowFO.png \
 	ContextMenu_Bottom.png \
 	ContextMenu_Middle.png \
 	ContextMenu_Top.png \
@@ -91,8 +173,8 @@ IMAGES= \
 	DefaultDVDEmpty.png \
 	DefaultDVDRom.png \
 	DefaultFile.png \
-	DefaultFolderBack.png \
 	DefaultFolder.png \
+	DefaultFolderBack.png \
 	DefaultHardDisk.png \
 	DefaultIconError.png \
 	DefaultIconInfo.png \
@@ -121,18 +203,18 @@ IMAGES= \
 	DefaultShortcut.png \
 	DefaultTVShows.png \
 	DefaultVCD.png \
+	DefaultVideo.png \
 	DefaultVideoCover.png \
 	DefaultVideoPlaylists.png \
 	DefaultVideoPlugins.png \
-	DefaultVideo.png \
 	DefaultXboxDVD.png \
 	DialogBack.png \
 	DialogFront.png \
 	DialogLeft.png \
 	DialogMiddle.png \
 	DialogRight.png \
-	diffuse_mirror2.png \
 	diffuse_mirror.png \
+	diffuse_mirror2.png \
 	Fanart_Diffuse.png \
 	filemanager-select.png \
 	folder-focus.png \
@@ -143,14 +225,13 @@ IMAGES= \
 	home-button.png \
 	home-favourites-focus.gif \
 	home-favourites.png \
-	homeinfo-blank.png \
-	homeinfo-system.png \
-	Home-Menu-Back-2.png \
+	Home-Menu-Back-Divider.png \
 	Home-Menu-Back.png \
 	home-playmedia-focus.gif \
 	home-playmedia.png \
 	home-power-focus.gif \
 	home-power.png \
+	homeinfo-blank.png \
 	icon_addons.png \
 	icon_appearence.png \
 	icon_music.png \
@@ -166,21 +247,22 @@ IMAGES= \
 	list-focus.png \
 	NoCover_1.png \
 	NoCover_2.png \
+	osd-panel-top.png \
 	osd_button_audioFO.png \
 	osd_button_audioSELNF.png \
 	osd_button_bookmarkFO.png \
 	osd_button_bookmarkSELNF.png \
+	osd_button_dvdmenu.png \
 	osd_button_dvdmenu2.png \
 	osd_button_dvdmenuNF.png \
-	osd_button_dvdmenu.png \
 	osd_button_ffFO.png \
 	osd_button_ffSELNF.png \
-	osd_button_info_1_nofocus.png \
 	osd_button_info_1.png \
-	osd_button_info_2_nofocus.png \
+	osd_button_info_1_nofocus.png \
 	osd_button_info_2.png \
-	osd_button_lyricsFO.png \
+	osd_button_info_2_nofocus.png \
 	osd_button_lyrics.png \
+	osd_button_lyricsFO.png \
 	osd_button_pauseFO.png \
 	osd_button_pauseNF.png \
 	osd_button_playFO.png \
@@ -188,9 +270,9 @@ IMAGES= \
 	osd_button_playNF.png \
 	osd_button_presetsFO.png \
 	osd_button_presetsSELNF.png \
+	osd_button_rec.png \
 	osd_button_rec2.png \
 	osd_button_recNF.png \
-	osd_button_rec.png \
 	osd_button_rewFO.png \
 	osd_button_rewSELNF.png \
 	osd_button_skip_minusFO.png \
@@ -201,21 +283,22 @@ IMAGES= \
 	osd_button_visFO.png \
 	osd_button_vizsettingsFO.png \
 	osd_button_vizsettingsSELNF.png \
-	osd_panel_audio.png \
 	osd_panel.png \
-	osd-panel-top.png \
-	osd_slider_bg_2.png \
+	osd_panel_audio.png \
 	osd_slider_bg.png \
-	osd_slider_nibNF.png \
+	osd_slider_bg_2.png \
 	osd_slider_nib.png \
+	osd_slider_nibNF.png \
+	osd_SubtitleFO.png \
+	osd_SubtitleNF.png \
 	OverlayHasTrainer.png \
 	OverlayHD.png \
 	OverlayLocked.png \
 	OverlayRAR.png \
 	OverlayTrained.png \
 	OverlayWatched.png \
-	Panel2.png \
 	Panel.png \
+	Panel2.png \
 	PlayerControls-ForwardFO.png \
 	PlayerControls-ForwardNF.png \
 	PlayerControls-FullScreenFO.png \
@@ -228,14 +311,14 @@ IMAGES= \
 	PlayerControls-PlayNF.png \
 	PlayerControls-PrevFO.png \
 	PlayerControls-PrevNF.png \
-	PlayerControls-RandomFO_2.png \
 	PlayerControls-RandomFO.png \
-	PlayerControls-RandomNF_2.png \
+	PlayerControls-RandomFO_2.png \
 	PlayerControls-RandomNF.png \
-	PlayerControls-RandomOnFO_2.png \
+	PlayerControls-RandomNF_2.png \
 	PlayerControls-RandomOnFO.png \
-	PlayerControls-RandomOnNF_2.png \
+	PlayerControls-RandomOnFO_2.png \
 	PlayerControls-RandomOnNF.png \
+	PlayerControls-RandomOnNF_2.png \
 	PlayerControls-RepeatAllFO.png \
 	PlayerControls-RepeatAllNF.png \
 	PlayerControls-RepeatFO.png \
@@ -253,8 +336,8 @@ IMAGES= \
 	poster-shadow.png \
 	ProgressBack.png \
 	ProgressBuffer.png \
-	ProgressFront2.png \
 	ProgressFront.png \
+	ProgressFront2.png \
 	radiobutton-focus-2.png \
 	radiobutton-focus.png \
 	radiobutton-nofocus.png \
@@ -264,14 +347,6 @@ IMAGES= \
 	rating3.png \
 	rating4.png \
 	rating5.png \
-	scrollbar_bar_back2.png \
-	scrollbar_bar_back.png \
-	scrollbar_bar_focus.png \
-	scrollbar_bar_focus-vertical.png \
-	scrollbar_bar.png \
-	scrollbar_bar-vertical.png \
-	scrollbar_nib.png \
-	scrollbar_nib-vertical.png \
 	scroll-down-2.png \
 	scroll-down-focus-2.png \
 	scroll-down-focus.png \
@@ -284,6 +359,14 @@ IMAGES= \
 	scroll-up-focus-2.png \
 	scroll-up-focus.png \
 	scroll-up.png \
+	scrollbar_bar-vertical.png \
+	scrollbar_bar.png \
+	scrollbar_bar_back.png \
+	scrollbar_bar_back2.png \
+	scrollbar_bar_focus-vertical.png \
+	scrollbar_bar_focus.png \
+	scrollbar_nib-vertical.png \
+	scrollbar_nib.png \
 	SeekbarMarker.png \
 	seekslider.png \
 	separator.png \
@@ -317,7 +400,7 @@ IMAGES= \
 	VolumeIcon.png \
 	white-reflect.png \
 	Wide_Icon_Diffuse.png \
-	xbmc-logo.png
+	xbmc-logo.png \
 
 all: $(TARGET)
 
