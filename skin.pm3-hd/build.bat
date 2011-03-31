@@ -11,8 +11,9 @@ Echo dsstdfx.bin>>exclude.txt
 Echo exclude.txt>>exclude.txt
 
 ECHO ----------------------------------------
-ECHO Creating XBT File...
-START /B /WAIT ..\..\TexturePacker\TexturePacker -input media -output BUILD\skin.pm3.hd\media\Textures.xbt
+ECHO Creating XBT Files...
+START /B /WAIT ..\..\TexturePacker\TexturePacker -dupecheck -input media -output BUILD\skin.pm3.hd\media\Textures.xbt
+START /B /WAIT ..\..\TexturePacker\TexturePacker -dupecheck -input themes\Old_School -output BUILD\skin.pm3.hd\media\Old_School.xbt
 
 ECHO ----------------------------------------
 ECHO XBT Texture Files Created...
