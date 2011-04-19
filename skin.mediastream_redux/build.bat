@@ -12,7 +12,7 @@ Echo exclude.txt>>exclude.txt
 
 ECHO ----------------------------------------
 ECHO Creating XBT File...
-START /B /WAIT ..\..\TexturePacker\TexturePacker -input media -output BUILD\skin.mediastream_redux\media\Textures.xbt
+START /B /WAIT ..\..\TexturePacker\TexturePacker -dupecheck -input media -output BUILD\skin.mediastream_redux\media\Textures.xbt
 
 ECHO ----------------------------------------
 ECHO XBT Texture Files Created...
