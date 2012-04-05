@@ -1,11 +1,15 @@
 <window id="0">
-  <defaultcontrol always="true">9000</defaultcontrol>
+  <defaultcontrol always="false">8999</defaultcontrol>
   <allowoverlay>no</allowoverlay>
   <include>OpenClose</include>
-  <onload condition="IsEmpty(Window(Home).Property(Quartz_Watchlist)) | Window.Previous(Startup) |
- Window.Previous(LoginScreen)">RunScript(script.watchlist,movies=false&amp;episodes=true&amp;albums=true&amp;limit=10)</onload>
-  <onload condition="IsEmpty(Window(Home).Property(Quartz_Watchlist))">SetProperty(Quartz_Watchlist,True)</onload>
+  <onload condition="IsEmpty(Window(Home).Property(Quartz_Watchlist))">RunScript(script.watchlist,$VAR[WatchlistParameters])</onload>
+  <onload condition="IsEmpty(Window(Home).Property(Quartz_Watchlist))">SetProperty(Quartz_Watchlist,True,0)</onload>
   <controls>
+  	<control type="button" id="8999" description="Fix ATV1 focus bug">
+	<include>HiddenButton</include>
+	<onfocus>Control.SetFocus(9000)</onfocus>
+	<onclick>Control.SetFocus(9000)</onclick>
+	</control>
     <control type="group" description="Furniture">
       <control type="image" description="Stage">
         <posx>0</posx>
@@ -15,7 +19,7 @@
         <aspectratio>stretch</aspectratio>
         <texture>img/HomeStage.png</texture>
       </control>
-      <control type="image" description="Navbar">
+	  <control type="image" description="Navbar">
         <posx>-60</posx>
         <posy>317</posy>
         <width>1400</width>
@@ -161,7 +165,13 @@
             <label>31289</label>
             <onclick>ActivateWindow(VideoLibrary,RecentlyAddedEpisodes,return)</onclick>
           </item>
-          <item id="3" description="Custom TV">
+          <item id="2" description="Browse 5 MENU ITEM ADDED Watchlist">
+            <visible>!Skin.HasSetting(TV5)</visible>
+            <visible>Library.HasContent(TVShows)</visible>
+			<label>31981</label>
+            <onclick>ActivateWindow(1113)</onclick>
+          </item>
+		  <item id="3" description="Custom TV">
             <visible>!IsEmpty(Skin.String(CustomTV.1.Path))</visible>
             <label>$INFO[Skin.String(CustomTV.1.Label)]</label>
             <onclick>$INFO[Skin.String(CustomTV.1.Path)]</onclick>
@@ -195,11 +205,6 @@
             <visible>!IsEmpty(Skin.String(CustomTV.7.Path))</visible>
             <label>$INFO[Skin.String(CustomTV.7.Label)]</label>
             <onclick>$INFO[Skin.String(CustomTV.7.Path)]</onclick>
-          </item>
-          <item id="8" description="Browse 5 MENU ITEM ADDED Watchlist">
-            <visible>!Skin.HasSetting(TV5)</visible>
-            <label>31981</label>
-            <onclick>ActivateWindow(1113)</onclick>
           </item>
           <item id="8" description="Browse">
             <visible>!Skin.HasSetting(TV3)</visible>
@@ -438,17 +443,16 @@
 						<onclick>EjectTray()</onclick>
 					</item>-->
           <item id="5" description="Settings">
-            <visible>!Skin.HasSetting(XBMC5)</visible>
+            <visible>!Skin.HasSetting(HideSettings)</visible>
             <label>5</label>
             <onclick>ActivateWindow(Settings)</onclick>
           </item>
           <item id="4" description="Favorites">
-            <visible>!Skin.HasSetting(XBMC4)</visible>
+            <visible>!Skin.HasSetting(XBMC2)</visible>
             <label>1036</label>
             <onclick>ActivateWindow(Favourites)</onclick>
           </item>
           <item id="6" description="LogOff Profile">
-            <visible>!Skin.HasSetting(XBMC6)</visible>
             <visible>System.HasLoginScreen</visible>
             <visible>System.Loggedon</visible>
             <label>20126</label>
@@ -466,33 +470,14 @@
             <onclick>xbmc.mastermode</onclick>
           </item>
           <item id="2" description="Disc">
-            <visible>!Skin.HasSetting(XBMC2)</visible>
+            <visible>![System.Platform.ios | System.Platform.atv2]</visible>
+			<visible>!Skin.HasSetting(XBMC3)</visible>
             <label>446</label>
             <onclick>ActivateWindow(1112)</onclick>
           </item>
-          
-          <!--<item id="9" description="Quit Menu">
-						<visible>!Skin.HasSetting(XBMC7)</visible>
-						<label>13009</label>
-						<onclick>ActivateWindow(shutdownmenu)</onclick>
-					</item>
-					<item id="10" description="Shutdown">
-						<visible>Skin.HasSetting(XBMC8)</visible>
-						<label>13005</label>
-						<onclick>XBMC.Powerdown()</onclick>
-					</item>
-					<item id="11" description="Suspend">
-						<visible>Skin.HasSetting(XBMC9)</visible>
-						<label>13011</label>
-						<onclick>XBMC.suspend()</onclick>
-					</item>
-					<item id="12" description="Reboot">
-						<visible>Skin.HasSetting(XBMC10)</visible>
-						<label>13013</label>
-						<onclick>XBMC.Reboot()</onclick>
-					</item>-->
           <item id="13" description="Quit">
-            <label>13009</label>
+            <visible>!Skin.HasSetting(XBMC4)</visible>
+			<label fallback="13009">$VAR[QuitLabel2]</label>
             <onclick condition="IsEmpty(Skin.String(shutdown))">ActivateWindow(shutdownmenu)</onclick>
             <onclick condition="StringCompare(Skin.String(shutdown),quit)">XBMC.quit()</onclick>
             <onclick condition="StringCompare(Skin.String(shutdown),powerdown)">XBMC.powerdown()</onclick>
@@ -514,15 +499,18 @@
       <animation effect="slide" start="0,0" end="200,0" time="0" condition="StringCompare(Container(500).NumItems,4)">conditional</animation>
       <animation effect="slide" start="0,0" end="100,0" time="0" condition="StringCompare(Container(500).NumItems,5)">conditional</animation>
       <control type="image" description="Bar NF">
-        <visible>!system.getbool(lookandfeel.enablemouse)</visible>
-		<posx>-10</posx>
+        <visible>System.Platform.atv2 | !system.getbool(lookandfeel.enablemouse)</visible>
+		<animation type="Conditional" condition="!ControlGroup(700).HasFocus()">
+        <effect type="fade" start="100" end="0" time="200" reversible="true" />
+      </animation>
+        <posx>-10</posx>
         <posy>315</posy>
         <width>300</width>
         <height>67</height>
         <align>center</align>
         <aligny>center</aligny>
         <aspectratio>stretch</aspectratio>
-        <texture>img/HomeBarNF.png</texture>
+        <texture border="50,0,50,0">img/HomeBarNF.png</texture>
         <animation condition="Container(500).Position(0)" effect="slide" start="0,0" end="0,0"
 					time="180" easing="inout" reversible="true">Conditional</animation>
         <animation condition="Container(500).Position(1)" effect="slide" start="0,0" end="200,0"
@@ -537,16 +525,19 @@
 					time="180" easing="inout" reversible="true">Conditional</animation>
       </control>
       <control type="image" description="Bar FO">
-        <visible>!system.getbool(lookandfeel.enablemouse)</visible>
-		<animation condition="Control.HasFocus(301) | Control.HasFocus(302) | Control.HasFocus(303) | Control.HasFocus(304) | Control.HasFocus(305) | Control.HasFocus(306)" effect="fade" start="15" end="100" time="50" reversible="true">Conditional</animation>
-		<posx>-10</posx>
+        <visible>System.Platform.atv2 | !system.getbool(lookandfeel.enablemouse)</visible>
+		<!--<animation condition="Control.HasFocus(301) | Control.HasFocus(302) | Control.HasFocus(303) | Control.HasFocus(304) | Control.HasFocus(305) | Control.HasFocus(306)" effect="fade" start="15" end="100" time="50" reversible="true">Conditional</animation>-->
+		<animation type="Conditional" condition="ControlGroup(700).HasFocus()">
+        <effect type="fade" start="100" end="0" time="200" reversible="true" />
+      </animation>
+      <posx>-10</posx>
         <posy>315</posy>
         <width>300</width>
         <height>67</height>
         <align>center</align>
         <aligny>center</aligny>
         <aspectratio>stretch</aspectratio>
-        <texture>img/HomeBarFO.png</texture>
+        <texture border="50,0,50,0">img/HomeBarFO.png</texture>
         <animation condition="Container(500).Position(0)" effect="slide" start="0,0" end="0,0"
 					time="180" easing="inout" reversible="true">Conditional</animation>
         <animation condition="Container(500).Position(1)" effect="slide" start="0,0" end="200,0"
@@ -575,7 +566,7 @@
             <posx>100</posx>
             <width>200</width>
             <height>54</height>
-            <font>HomeBar</font>
+            <font>size28</font>
             <textcolor>White2</textcolor>
             <shadowcolor>Black</shadowcolor>
             <textoffsetx>0</textoffsetx>
@@ -588,7 +579,7 @@
             <posx>100</posx>
             <width>200</width>
             <height>54</height>
-            <font>HomeBar</font>
+            <font>size28</font>
             <textcolor>White2</textcolor>
             <shadowcolor>Black</shadowcolor>
             <textoffsetx>0</textoffsetx>
@@ -601,7 +592,7 @@
             <visible>!Skin.HasSetting(MoviesSectionHide)</visible>
             <label fallback="20342">$INFO[Skin.String(MoviesName)]</label>
             <onclick>SetFocus(301)</onclick>
-          </item>
+		  </item>
           <item id="302" description="TV">
             <visible>!Skin.HasSetting(TVSectionHide)</visible>
             <label fallback="20343">$INFO[Skin.String(TVName)]</label>
@@ -643,7 +634,7 @@
         <include>PlayingInfo</include>
       </control>
       <control type="image" description="Custom Image">
-        <visible>[ControlGroup(9000).HasFocus(301) + Skin.HasSetting(MoviesShelf_Image)] | [ControlGroup(9000).HasFocus(302) + Skin.HasSetting(TVShelf_Image)] | [ControlGroup(9000).HasFocus(303) + Skin.HasSetting(MusicShelf_Image)] | [ControlGroup(9000).HasFocus(304) + Skin.HasSetting(PicturesShelf_Image)] | [ControlGroup(9000).HasFocus(305) + Skin.HasSetting(AddonsShelf_Image)]</visible>
+        <visible>[ControlGroup(9000).HasFocus(301) + Skin.HasSetting(MoviesShelf_Image)] | [ControlGroup(9000).HasFocus(302) + Skin.HasSetting(TVShelf_Image)] | [ControlGroup(9000).HasFocus(303) + Skin.HasSetting(MusicShelf_Image)] | [ControlGroup(9000).HasFocus(304) + Skin.HasSetting(PicturesShelf_Image)] | [ControlGroup(9000).HasFocus(305) + Skin.HasSetting(AddonsShelf_Image)] | [ControlGroup(9000).HasFocus(306) + Skin.HasSetting(XBMCShelf_Image) + !Player.HasMedia]</visible>
         <include>ListVisibleFade</include>
         include>
         <posx>45</posx>
@@ -655,7 +646,7 @@
         <texture>$VAR[ShelfIcon]</texture>
       </control>
       <control type="image" description="Reflection Custom Image">
-        <visible>[ControlGroup(9000).HasFocus(301) + Skin.HasSetting(MoviesShelf_Image)] | [ControlGroup(9000).HasFocus(302) + Skin.HasSetting(TVShelf_Image)] | [ControlGroup(9000).HasFocus(303) + Skin.HasSetting(MusicShelf_Image)] | [ControlGroup(9000).HasFocus(304) + Skin.HasSetting(PicturesShelf_Image)] | [ControlGroup(9000).HasFocus(305) + Skin.HasSetting(AddonsShelf_Image)]</visible>
+        <visible>[ControlGroup(9000).HasFocus(301) + Skin.HasSetting(MoviesShelf_Image)] | [ControlGroup(9000).HasFocus(302) + Skin.HasSetting(TVShelf_Image)] | [ControlGroup(9000).HasFocus(303) + Skin.HasSetting(MusicShelf_Image)] | [ControlGroup(9000).HasFocus(304) + Skin.HasSetting(PicturesShelf_Image)] | [ControlGroup(9000).HasFocus(305) + Skin.HasSetting(AddonsShelf_Image)] | [ControlGroup(9000).HasFocus(306) + Skin.HasSetting(XBMCShelf_Image) + !Player.HasMedia]</visible>
         <include>ListVisibleFade</include>
         include>
         <posx>45</posx>
@@ -666,7 +657,7 @@
         <texture flipy="true" diffuse="img/Reflection.png">$VAR[ShelfIcon]</texture>
       </control>
       <control type="image" description="Logo">
-        <visible>[ControlGroup(9000).HasFocus(301) + !Skin.HasSetting(MoviesShelf_Image) + !Control.IsVisible(311)] | [ControlGroup(9000).HasFocus(302) + !Skin.HasSetting(TVShelf_Image) + !Control.IsVisible(312)] | [ControlGroup(9000).HasFocus(303) + !Skin.HasSetting(MusicShelf_Image) + !Control.IsVisible(313)] | [ControlGroup(9000).HasFocus(304) + !Skin.HasSetting(PicturesShelf_Image) + !Control.IsVisible(314)] | [ControlGroup(9000).HasFocus(305) + !Skin.HasSetting(AddonsShelf_Image) + !Control.IsVisible(315)] | [ControlGroup(9000).HasFocus(306) + !Player.HasMedia]</visible>
+        <visible>[ControlGroup(9000).HasFocus(301) + !Skin.HasSetting(MoviesShelf_Image) + !Control.IsVisible(311)] | [ControlGroup(9000).HasFocus(302) + !Skin.HasSetting(TVShelf_Image) + !Control.IsVisible(312)] | [ControlGroup(9000).HasFocus(303) + !Skin.HasSetting(MusicShelf_Image) + !Control.IsVisible(313)] | [ControlGroup(9000).HasFocus(304) + !Skin.HasSetting(PicturesShelf_Image) + !Control.IsVisible(314)] | [ControlGroup(9000).HasFocus(305) + !Skin.HasSetting(AddonsShelf_Image) + !Control.IsVisible(315)] | [ControlGroup(9000).HasFocus(306) + !Skin.HasSetting(XBMCShelf_Image) + !Player.HasMedia]</visible>
         <include>ListVisibleFade</include>
         include>
         <posx>45</posx>
@@ -686,7 +677,7 @@
       <posy>282</posy>
       <width>1280</width>
       <height>20</height>
-      <font>XXSmall</font>
+      <font>size17</font>
       <urlset>1</urlset>
       <shadowcolor>Black</shadowcolor>
       <titlecolor>White2</titlecolor>
