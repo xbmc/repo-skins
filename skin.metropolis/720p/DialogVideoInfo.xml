@@ -67,7 +67,7 @@
 				<font>METF_PlotText</font>
 				<textcolor>TextNF</textcolor>
 				<label>$INFO[ListItem.Tagline]</label>
-				<visible>!IsEmpty(ListItem.Tagline)+ !Container.Content(episodes)</visible>
+				<visible>!IsEmpty(ListItem.Tagline) + !Container.Content(episodes)</visible>
 			</control>
 			<!-- TVShows Number of Episodes -->
 			<control type="label">
@@ -141,7 +141,7 @@
 				<font>METF_MPAA</font>
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.FilenameAndPath]</label>
-				<visible>[Container.Content(movies) | Container.Content(videos)] + Skin.HasSetting(ShowVideoPath)</visible>
+				<visible>[Container.Content(movies) | Container.Content(videos) | Container.Content(episodes)] + Skin.HasSetting(ShowVideoPath)</visible>
 			</control>	
 			<control type="group">
 				<posx>550</posx>
@@ -208,7 +208,7 @@
 				<posy>138</posy>
 				<width>515</width>
 				<height>339</height>
-				<font>METF_PlotTextSpaced</font>
+				<font>METF_PlotText</font>
 				<textcolor>TextNF</textcolor>
 				<label fallback="161">$INFO[ListItem.Plot]</label>
 				<autoscroll time="4000" delay="16000" repeat="8000">Skin.HasSetting(AutoScroll)</autoscroll>
@@ -458,35 +458,37 @@
 				<visible>ControlGroup(7003).HasFocus(6)</visible>
 			</control>
 		</control>
-		<!-- Poster Image - Movies, TVShows, Seasons -->
 		<control type="group">
 			<control type="group">
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_CommonFade</include>
 				<include>Animation_OpenCloseFade</include>
-				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
+				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
+				<!-- Default Poster Image -->
 				<control type="image">
 					<posx>35</posx>
 					<posy>115</posy>
 					<width>275</width>
 					<height>404</height>
-					<texture>$INFO[ListItem.Icon]</texture>
+					<texture background="true" fallback="DefaultThumb.png">$INFO[ListItem.Icon]</texture>
 					<aspectratio scalediffuse="false">stretch</aspectratio>
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<!-- <visible>![Skin.HasSetting(banner_jpg) + Container.Content(tvshows)]</visible> -->
+					<visible>!Container.Content(seasons) + !Container.Content(episodes)</visible>
 				</control>
-				<!-- <control type="image">
+				<!-- Poster Image for TV Show Seasons and Episodes -->
+				<control type="image">
 					<posx>35</posx>
 					<posy>115</posy>
 					<width>275</width>
-					<height>51</height>
-					<texture>$INFO[ListItem.Icon]</texture>
+					<height>404</height>
+					<texture background="true" fallback="home/tvshows.jpg">$INFO[ListItem.Property(SeasonThumb)]</texture>
 					<aspectratio scalediffuse="false">stretch</aspectratio>
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>[Skin.HasSetting(banner_jpg) + Container.Content(tvshows)]</visible>
-				</control> -->
+					<visible>!Container.Content(tvshows) + [Container.Content(seasons) | Container.Content(episodes)]</visible>
+				</control>
+				<!-- Frame for poster -->
 				<control type="image">
 					<posx>17</posx>
 					<posy>92</posy>
@@ -497,13 +499,8 @@
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
 				</control>
-			</control>
-			<!-- Movie Fanart Image -->
-			<control type="group">
-				<include>Animation_FadedByMenu</include>
-				<include>Animation_CommonFade</include>
-				<include>Animation_OpenCloseFade</include>
-				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
+
+				<!-- Default Fanart Image -->
 				<control type="image">
 					<posx>915</posx>
 					<posy>79</posy>
@@ -511,23 +508,9 @@
 					<height>180</height>
 					<texture fallback="home/movies.jpg">$INFO[ListItem.Property(Fanart_Image)]</texture>
 					<aspectratio scalediffuse="false">scale</aspectratio>
+					<visible>!Container.Content(episodes)</visible>
 				</control>
-				<control type="image">
-					<posx>894</posx>
-					<posy>59</posy>
-					<width>364</width>
-					<height>220</height>
-					<texture>frames/ClassicFrame_FanartSmall.png</texture>
-					<aspectratio scalediffuse="false">scale</aspectratio>
-				</control>
-			</control>
-			
-			<!-- Episode Images -->
-			<control type="group">
-				<include>Animation_FadedByMenu</include>
-				<include>Animation_CommonFade</include>
-				<include>Animation_OpenCloseFade</include>
-				<visible>Window.IsActive(videolibrary) + Container.Content(episodes)</visible>
+				<!-- TV Show Episode Fanart Image -->
 				<control type="image">
 					<posx>915</posx>
 					<posy>79</posy>
@@ -537,6 +520,7 @@
 					<aspectratio aligny="top" scalediffuse="false">scale</aspectratio>
 					<visible>Container.Content(episodes)</visible>
 				</control>
+				<!-- Frame for fanart -->
 				<control type="image">
 					<posx>894</posx>
 					<posy>59</posy>
@@ -544,75 +528,25 @@
 					<height>220</height>
 					<texture>frames/ClassicFrame_FanartSmall.png</texture>
 					<aspectratio scalediffuse="false">scale</aspectratio>
-					<visible>Container.Content(episodes)</visible>
-				</control>
-				
-				<!-- Poster for Recently Added Episodes -->
-				<control type="image">
-					<posx>35</posx>
-					<posy>115</posy>
-					<width>275</width>
-					<height>404</height>
-					<texture>DefaultRecentEpisodesPoster.png</texture>
-					<aspectratio scalediffuse="false">keep</aspectratio>
-					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
-					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>IsEmpty(Container.SeasonThumb) + IsEmpty(Container.TvshowThumb) + Container.Content(episodes)</visible>
-				</control>
-				<control type="label">
-					<posx>55</posx>
-					<posy>459</posy>
-					<width>235</width>
-					<height>50</height>
-					<align>center</align>
-					<aligny>center</aligny>
-					<font>METF_RecentlyAddedTitle</font>
-					<textcolor>HomeMenuText</textcolor>
-					<label>[B]$LOCALIZE[20387][/B]</label>
-					<wrapmultiline>true</wrapmultiline>
-					<animation effect="zoom" center="138,202" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
-					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>IsEmpty(Container.SeasonThumb) + IsEmpty(Container.TvshowThumb) + Container.Content(episodes)</visible>
-				</control>
-				
-				<!-- TV Show Poster image for Episodes -->
-				<control type="image">
-					<posx>35</posx>
-					<posy>115</posy>
-					<width>275</width>
-					<height>404</height>
-					<texture>$INFO[Container.TvshowThumb]</texture>
-					<aspectratio scalediffuse="false">stretch</aspectratio>
-					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
-					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>Container.Content(episodes)</visible>
-				</control>
-				<control type="image">
-					<posx>17</posx>
-					<posy>92</posy>
-					<width>309</width>
-					<height>454</height>
-					<texture>frames/ClassicFrame_Poster.png</texture>
-					<aspectratio scalediffuse="false">stretch</aspectratio>
-					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
-					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>Container.Content(episodes)</visible>
+					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
 				</control>
 			</control>
-			<!-- Icon Image for items NOT in Video Library -->
-			<control type="image">
+			<control type="group">
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_CommonFade</include>
 				<include>Animation_OpenCloseFade</include>
-				<posx>35</posx>
-				<posy>115</posy>
-				<width>275</width>
-				<height>404</height>
-				<aspectratio align="right" aligny="center">keep</aspectratio>
-				<texture fallback="DefaultThumb.png">$INFO[ListItem.Icon]</texture>
-				<bordertexture border="8">border.png</bordertexture>
-				<bordersize>4</bordersize>
 				<visible>!Window.IsActive(videolibrary)</visible>
+				<!-- Icon Image for items NOT in Video Library -->
+				<control type="image">
+					<posx>35</posx>
+					<posy>115</posy>
+					<width>275</width>
+					<height>404</height>
+					<aspectratio align="right" aligny="center">keep</aspectratio>
+					<texture fallback="DefaultThumb.png">$INFO[ListItem.Icon]</texture>
+					<bordertexture border="8">border.png</bordertexture>
+					<bordersize>4</bordersize>
+				</control>
 			</control>
 		</control>
 
