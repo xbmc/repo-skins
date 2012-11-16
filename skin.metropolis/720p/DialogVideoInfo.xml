@@ -37,7 +37,8 @@
 				<font>METF_TitleTextLarge</font>
 				<textcolor>TextNF</textcolor>
 				<info>ListItem.Label</info>
-				<visible>!Container.Content(episodes)</visible>
+				<!-- Title was overlapping progress dialog.  this is probably not the best way to fix this, but it works.-->
+				<visible>!Container.Content(episodes) + !Window.IsActive(videoscan) + !Window.IsActive(musicscan)</visible>
 			</control>
 			<control type="fadelabel">
 				<posx>-325</posx>
@@ -50,11 +51,9 @@
 				<scrollspeed>20</scrollspeed>
 				<font>METF_TitleTextLarge</font>
 				<textcolor>TextNF</textcolor>
-				<!--
-				<label>$INFO[ListItem.Season] x $INFO[ListItem.Label]</label>
-				-->
 				<label>$INFO[ListItem.Season]x$INFO[ListItem.Episode]$INFO[ListItem.Title,. ]</label>
-				<visible>Container.Content(episodes)</visible>
+				<!-- Title was overlapping progress dialog.  this is probably not the best way to fix this, but it works.-->
+				<visible>Container.Content(episodes) + !Window.IsActive(videoscan) + !Window.IsActive(musicscan)</visible>
 			</control>
 			<!-- Tagline -->
 			<control type="label">
@@ -79,7 +78,7 @@
 				<aligny>center</aligny>
 				<font>METF_InfoTextLarger</font>
 				<textcolor>MediaDetailsEpisodes</textcolor>
-				<label>$INFO[ListItem.Episode] $LOCALIZE[20161] $LOCALIZE[20360]</label>
+				<label>$INFO[ListItem.Property(TotalEpisodes)] $LOCALIZE[20161] $LOCALIZE[20360]</label>
 				<visible>Container.Content(tvshows)</visible>
 			</control>
 			<!-- Episode Watched Status -->
@@ -141,7 +140,7 @@
 				<font>METF_MPAA</font>
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.FilenameAndPath]</label>
-				<visible>[Container.Content(movies) | Container.Content(videos) | Container.Content(episodes)] + Skin.HasSetting(ShowVideoPath)</visible>
+				<visible>[Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
 			</control>	
 			<control type="group">
 				<posx>550</posx>
@@ -199,7 +198,7 @@
 					<font>METF_HelpText</font>
 					<textcolor>HelpText</textcolor>
 					<label>$LOCALIZE[31407]</label>
-					<visible>!Control.IsVisible(50)+ !Skin.HasSetting(HideHelpText)</visible>
+					<visible>!Control.IsVisible(50) + !Skin.HasSetting(HideHelpText)</visible>
 				</control>
 			</control>
 			<!-- Plot -->
@@ -208,6 +207,7 @@
 				<posy>138</posy>
 				<width>515</width>
 				<height>339</height>
+				<align>justify</align>
 				<font>METF_PlotText</font>
 				<textcolor>TextNF</textcolor>
 				<label fallback="161">$INFO[ListItem.Plot]</label>
@@ -317,7 +317,7 @@
 				<font>METF_MediaDetailsSmall</font>
 				<textcolor>MediaDetailsYear</textcolor>
 				<label>$INFO[ListItem.Year]</label>
-				<visible>!IsEmpty(ListItem.Year) + [Container.Content(tvshows) | Container.Content(movies)]</visible>
+				<visible>!IsEmpty(ListItem.Year) + [Container.Content(tvshows) | Container.Content(movies) | Container.Content(MusicVideos)]</visible>
 			</control>
 			<!-- Bullet -->
 			<control type="image">
@@ -326,7 +326,7 @@
 				<texture>Dot.png</texture>
 				<aspectratio align="center" aligny="center">keep</aspectratio>
 				<colordiffuse>BulletDiffuse</colordiffuse>
-				<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + Container.Content(movies)</visible>
+				<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + [Container.Content(movies) | Container.Content(MusicVideos)]</visible>
 			</control>
 			<!-- Duration -->
 			<control type="label">
@@ -336,7 +336,7 @@
 				<font>METF_MediaDetailsSmall</font>
 				<textcolor>MediaDetailsDuration</textcolor>
 				<label>$INFO[ListItem.Duration,, [LOWERCASE]$LOCALIZE[31299][/LOWERCASE]]</label>
-				<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + [Container.Content(movies) | Container.Content(episodes)]</visible>
+				<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + [Container.Content(movies) | Container.Content(episodes) | Container.Content(MusicVideos)]</visible>
 			</control>
 			<control type="label">
 				<width min="25" max="220">auto</width>
@@ -345,7 +345,7 @@
 				<font>METF_MediaDetailsSmall</font>
 				<textcolor>MediaDetailsDuration</textcolor>
 				<label>$INFO[ListItem.Duration]</label>
-				<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + [Container.Content(movies) | Container.Content(episodes)]</visible>
+				<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + [Container.Content(movies) | Container.Content(episodes) | Container.Content(MusicVideos)]</visible>
 			</control>
 		</control>
 		
@@ -372,7 +372,7 @@
 				<texturenofocus>buttons/button_play.png</texturenofocus>
 				<texturefocus>buttons/button_playFO.png</texturefocus>
 				<include>Animation_ButtonFocus</include>
-				<visible>Container.Content(episodes) | Container.Content(movies) | [Container.Content(movies) + SubString(Container.FolderPath,plugin)]</visible>
+				<visible>Container.Content(episodes) | Container.Content(movies) | Container.Content(MusicVideos) | [Container.Content(movies) + SubString(Container.FolderPath,plugin)]</visible>
 			</control>
 			<!-- Cinema Experience -->
 			<control type="button" id="19">
@@ -463,7 +463,7 @@
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_CommonFade</include>
 				<include>Animation_OpenCloseFade</include>
-				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
+				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(MusicVideos)]</visible>
 				<!-- Default Poster Image -->
 				<control type="image">
 					<posx>35</posx>
@@ -474,7 +474,7 @@
 					<aspectratio scalediffuse="false">stretch</aspectratio>
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
-					<visible>!Container.Content(seasons) + !Container.Content(episodes)</visible>
+					<visible>!Container.Content(seasons) + !Container.Content(episodes) + !Container.Content(MusicVideos)</visible>
 				</control>
 				<!-- Poster Image for TV Show Seasons and Episodes -->
 				<control type="image">
@@ -482,13 +482,25 @@
 					<posy>115</posy>
 					<width>275</width>
 					<height>404</height>
-					<texture background="true" fallback="home/tvshows.jpg">$INFO[ListItem.Property(SeasonThumb)]</texture>
+					<texture background="true" fallback="home_art/tvshows.jpg">$INFO[ListItem.Property(SeasonThumb)]</texture>
 					<aspectratio scalediffuse="false">stretch</aspectratio>
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
 					<visible>!Container.Content(tvshows) + [Container.Content(seasons) | Container.Content(episodes)]</visible>
 				</control>
-				<!-- Frame for poster -->
+				<!-- Poster Image for Music Videos -->
+				<control type="image">
+					<posx>33</posx>
+					<posy>117</posy>
+					<width>275</width>
+					<height>275</height>
+					<texture background="true" fallback="DefaultThumb.png">$INFO[ListItem.Icon]</texture>
+					<aspectratio scalediffuse="false">stretch</aspectratio>
+					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
+					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
+					<visible>Container.Content(MusicVideos)]</visible>
+				</control>
+				<!-- Frame for poster (except for Music Videos) -->
 				<control type="image">
 					<posx>17</posx>
 					<posy>92</posy>
@@ -498,6 +510,19 @@
 					<aspectratio scalediffuse="false">stretch</aspectratio>
 					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
 					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
+					<visible>!Container.Content(MusicVideos)</visible>
+				</control>
+				<!-- Frame for poster (for Music Videos) -->
+				<control type="image">
+					<posx>17</posx>
+					<posy>102</posy>
+					<width>309</width>
+					<height>309</height>
+					<texture>frames/ClassicFrame_Poster.png</texture>
+					<aspectratio scalediffuse="false">stretch</aspectratio>
+					<animation effect="zoom" center="auto" start="40" end="100" time="400" tween="cubic" easing="inout">WindowOpen</animation>
+					<animation effect="fade" start="0" end="0" time="0">WindowClose</animation>
+					<visible>Container.Content(MusicVideos)</visible>
 				</control>
 
 				<!-- Default Fanart Image -->
@@ -506,7 +531,7 @@
 					<posy>79</posy>
 					<width>324</width>
 					<height>180</height>
-					<texture fallback="home/movies.jpg">$INFO[ListItem.Property(Fanart_Image)]</texture>
+					<texture fallback="home_art/movies.jpg">$INFO[ListItem.Property(Fanart_Image)]</texture>
 					<aspectratio scalediffuse="false">scale</aspectratio>
 					<visible>!Container.Content(episodes)</visible>
 				</control>
@@ -528,7 +553,7 @@
 					<height>220</height>
 					<texture>frames/ClassicFrame_FanartSmall.png</texture>
 					<aspectratio scalediffuse="false">scale</aspectratio>
-					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
+					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(MusicVideos)</visible>
 				</control>
 			</control>
 			<control type="group">
@@ -549,9 +574,8 @@
 				</control>
 			</control>
 		</control>
-
-		<include condition="!Skin.HasSetting(ShowAllMediaFlags)">MediaInfo2</include>
 		<include>Global_ContextFilter</include>
+		<include condition="Skin.HasSetting(Hide_ExtraMediaFlags)">MediaInfo2</include>
 		<include condition="Skin.HasSetting(DebugGrid)">Object_DebugGrid</include>
 		<include condition="Skin.HasSetting(DebugMode)">Debug</include>
 	</controls>
