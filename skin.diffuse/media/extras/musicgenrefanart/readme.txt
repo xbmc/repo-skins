@@ -1,0 +1,1 @@
+Drop your musicgenres backdrops inside this folder.

@@ -1,0 +1,1 @@
+Drop your moviegenres backdrops inside this folder.
