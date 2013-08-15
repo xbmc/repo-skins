@@ -23,7 +23,7 @@
 			<align>right</align>
 			<font>Light40</font>
 			<textcolor>midgrey</textcolor>
-			<label>Avalon 1.3.1</label>
+			<label>Avalon 1.3.3</label>
 			<include>animation_visible_hidden</include>
 			<include>animation_fade</include>
 		</control>
@@ -114,6 +114,14 @@
 		<ondown>9005</ondown>
 	</include>
 
+	<!-- Variables -->
+
+	<!--$VAR[example]-->	
+	<variable name="example">
+		<value condition="SubString(ListItem.FileNameAndPath,.3D.) | SubString(ListItem.FileNameAndPath,-3D.)">flags/other/3d-default.png</value>
+		<value condition="IntegerGreaterThan(ListItem.VideoResolution,719)">flags/defs/hd.png</value>
+		<value condition="!IsEmpty(ListItem.VideoResolution)">flags/defs/sd.png</value>
+	</variable>	
 
 	<!--Header Home-->	
 	<include name="HeaderHome">	
@@ -1151,8 +1159,9 @@
 		<selectedcolor>eewhite</selectedcolor>
 	</include>
 
-	<!--OSD Panel-->
-	<include name="OSDPanel">	
+	<!--OSD-->
+	<include name="OSDPanel">		<!--OSD Panel-->
+	
 		<!--Panel-->
 		<control type="image">
 			<posx>210</posx>
@@ -1308,8 +1317,7 @@
 			<aspectratio align="top" aligny="top">keep</aspectratio>				
 			<visible>!VideoPlayer.Content(Movies)</visible>
 		</control>
-		<control type="image"><!--Movie-->
-			<description>Movie cover image</description>
+		<control type="image"><!--Movie-->			
 			<posx>290</posx>
 			<posy>775</posy>
 			<width>155</width>
@@ -1339,8 +1347,8 @@
 			<width>900</width>
 			<align>left</align>
 			<font>Light35</font>
-			<textcolor>mainblue</textcolor>
-			<label>$INFO[VideoPlayer.Genre] • $INFO[VideoPlayer.Year]</label>	
+			<textcolor>mainblue</textcolor>			
+			<label>$INFO[VideoPlayer.Genre]</label>
 			<scroll>false</scroll>
 		</control>
 
@@ -1381,6 +1389,67 @@
 			<scroll>false</scroll>
 		</control>			
 
+		<!--Flags-->
+		<control type="group"><!--Flags Video-->	
+			<visible>!Window.IsActive(VideoOSD)</visible>
+			<visible>VideoPlayer.Content(movies) | VideoPlayer.Content(episodes)</visible>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>
+			<posx>550</posx>
+			<posy>963</posy>			
+
+			<control type="image">	<!--Video Resolution-->	
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>188</width><!--212-->
+				<height>40</height><!--45-->		
+				<colordiffuse>darkgrey</colordiffuse>
+				<texture fallback="flags/resolution/default.png">$INFO[VideoPlayer.VideoResolution,flags/resolution/,.png]</texture>					
+			</control>	
+			<control type="image">	<!--VideoCode-->
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>188</width><!--212-->
+				<height>40</height><!--45-->		
+				<colordiffuse>darkgrey</colordiffuse>
+				<texture fallback="flags/videocodec/default.png">$INFO[VideoPlayer.VideoCodec,flags/videocodec/,.png]</texture>				
+			</control>				
+			<control type="image">	<!--Aspectration-->
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>188</width><!--212-->
+				<height>40</height><!--45-->	
+				<colordiffuse>darkgrey</colordiffuse>
+				<texture fallback="flags/aspectration/default.png">$INFO[VideoPlayer.VideoAspect,flags/aspectration/,.png]</texture>					
+			</control>
+		</control>	
+		<control type="group"><!--Flags Audio-->
+			<visible>!Window.IsActive(VideoOSD)</visible>
+			<visible>VideoPlayer.Content(movies) | VideoPlayer.Content(episodes)</visible>	
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>
+			<posx>780</posx><!-- +230 more-->
+			<posy>963</posy>			
+
+			<control type="image">	<!--Audio Codec-->	
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>110</width><!--124-->
+				<height>40</height><!--45-->	
+				<colordiffuse>darkgrey</colordiffuse>
+				<texture fallback="flags/audiocodec/default.png">$INFO[VideoPlayer.AudioCodec,flags/audiocodec/,.png]</texture>					
+			</control>	
+			<control type="image">	<!--Audio Channels-->	
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>110</width><!--212-->
+				<height>40</height><!--45-->		
+				<colordiffuse>darkgrey</colordiffuse>
+				<texture fallback="flags/audiochannels/default.png">$INFO[VideoPlayer.AudioChannels,flags/audiochannels/,.png]</texture>					
+			</control>	
+		</control>	
 
 		<!--Time-->
 		<control type="label"><!--Left Play Time-->
@@ -1401,15 +1470,33 @@
 			<textcolor>midgrey</textcolor>
 			<label>- $INFO[Player.TimeRemaining]</label>
 		</control>
-		<control type="label"><!--End Time-->
-			<posx>550</posx>
+		<control type="label"><!--End Time DialogFullscreenInfo-->	
+			<visible>Window.IsActive(DialogFullscreenInfo.xml) + !Window.IsActive(VideoOSD.xml)</visible>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>
+			<animation effect="slide" start="0" end="160" time="0" condition="Window.IsActive(DialogSeekbar.xml)">Conditional</animation>
+			<posx>1500</posx>
 			<posy>955</posy>
 			<width>300</width>
-			<align>left</align>
+			<align>right</align>
 			<font>Light32</font>
 			<textcolor>darkgrey</textcolor>
 			<label>$LOCALIZE[31000] $INFO[Player.FinishTime]</label>
-		</control>			
+		</control>		
+		<control type="label"><!--End Time DialogSeekbar-->	
+			<visible>Window.IsActive(DialogSeekbar.xml) + !Window.IsActive(VideoOSD.xml)</visible>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+			<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>			
+			<posx>1660</posx>
+			<posy>955</posy>
+			<width>300</width>
+			<align>right</align>
+			<font>Light32</font>
+			<textcolor>darkgrey</textcolor>
+			<label>$LOCALIZE[31000] $INFO[Player.FinishTime]</label>
+		</control>		
 
 		<control type="grouplist"><!--Clock-->
 			<posx>1400</posx>
@@ -1466,5 +1553,233 @@
 		</control>
 
 	</include>
+	<include name="OSDInfoPanel">	<!--OSD Info Panel-->
+	
+		<!--No Info-->
+		<control type="group">
+			<visible>IsEmpty(VideoPlayer.Plot)</visible>
+			<control type="label">					
+				<posx>550</posx>
+				<posy>820</posy>
+				<width>700</width>
+				<font>Light32</font>
+				<align>left</align>
+				<label>No Info</label>
+				<textcolor>red</textcolor>
+				<scroll>false</scroll>
+			</control>
+		</control>
 
+		<!--Info Stuff-->
+		<control type="group">	
+			<visible>!IsEmpty(VideoPlayer.Plot)</visible>	
+
+			<!--Panel-->				
+			<control type="image">				
+				<posx>235</posx>
+				<posy>90</posy>
+				<width>1500</width>
+				<height>650</height>			
+				<texture border="39">dialogs/default/bg-black.png</texture>
+			</control>
+
+			<!--Info-->
+			<control type="grouplist">
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+				<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>					
+				<posx>350</posx>
+				<posy>170</posy>
+				<width>1050</width>
+				<height>700</height>
+				<orientation>vertical</orientation>		
+				<control type="group"><!--Year: Movies-->
+					<width>700</width>
+					<height>40</height>
+					<visible>VideoPlayer.Content(Movies) + !IsEmpty(VideoPlayer.Year)</visible>						
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/premiered-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Year]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="group"><!--Premiered: TV-Shows, Episodes-->
+					<width>700</width>
+					<height>40</height>
+					<visible>[VideoPlayer.Content(TVShows) | VideoPlayer.Content(episodes)] + !IsEmpty(VideoPlayer.Premiered)</visible>						
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/premiered-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Premiered]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="group"><!--Genre: Movies-->					
+					<width>700</width>
+					<height>40</height>
+					<visible>VideoPlayer.Content(Movies) + !IsEmpty(VideoPlayer.Genre)</visible>
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/genre-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Genre]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="group"><!--Director: Movies, Episodes-->					
+					<width>700</width>
+					<height>40</height>
+					<visible>[VideoPlayer.Content(Movies) | VideoPlayer.Content(episodes)] + !IsEmpty(VideoPlayer.Director)</visible>
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/director-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Director]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>
+				<control type="group"><!--Writer: Movies, Episodes-->						
+					<width>700</width>
+					<height>40</height>
+					<visible>[VideoPlayer.Content(Movies) | VideoPlayer.Content(episodes)] + !IsEmpty(VideoPlayer.Writer)</visible>
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/writer-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>i
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Writer]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>			
+				<control type="group"><!--Studio: TV-Shows-->
+					<width>700</width>
+					<height>40</height>
+					<visible>VideoPlayer.Content(episodes)] + !IsEmpty(VideoPlayer.Studio)</visible>
+					<control type="image">
+						<posx>0</posx>
+						<posy>5</posy>
+						<width>49</width>
+						<height>49</height>
+						<texture>dialogs/videoinfo/tvstudio-icon.png</texture>
+						<scroll>false</scroll>
+					</control>
+					<control type="label">
+						<posx>65</posx>
+						<posy>0</posy>
+						<width>700</width>
+						<font>Light32</font>
+						<align>left</align>
+						<label>$INFO[VideoPlayer.Studio,$LOCALIZE[572]: ,]</label>
+						<textcolor>aawhite</textcolor>
+						<scroll>false</scroll>
+					</control>
+				</control>				
+			</control>             
+
+			<!--Rating-->
+			<control type="group">	
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+				<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>
+				<posx>1590</posx>	
+				<posy>305</posy>					
+				<control type="image">	<!--10Star Rating-->							
+					<posx>-310</posx>
+					<posy>15</posy>
+					<width>280</width><!--315-->
+					<height>24</height><!--27-->
+					<colordiffuse>aaFFFFFF</colordiffuse>
+					<texture fallback="rating/10stars/NA.png">$INFO[VideoPlayer.Rating,rating/10stars/,.png]</texture>													
+				</control>				    
+				<control type="label">	<!--Rating Label-->   														
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>250</width>
+					<label>$INFO[VideoPlayer.Rating]</label>
+					<font>Reg45</font>
+					<textcolor>mainblue</textcolor>					
+					<scroll>false</scroll>
+				</control>
+			</control>
+
+			<!-- Plot -->
+			<control type="group">					
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="300" easing="in">WindowOpen</animation>
+				<animation effect="fade" start="0" end="100" time="300" tween="sine" delay="500" easing="in">Visible</animation>
+				<animation effect="fade" start="100" end="0" time="300" tween="sine" delay="500" easing="out">Hidden</animation>
+				<posx>350</posx>
+				<posy>390</posy>
+				<width>1200</width>
+				<height>60</height>
+				<control type="textbox">						
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1300</width>
+					<height>270</height>
+					<label>$INFO[VideoPlayer.Plot]</label>
+					<textcolor>bbwhite</textcolor>
+					<align>justify</align>
+					<font>Light32</font>				
+				</control>	
+			</control>		
+		</control>
+
+	</include>
 </includes>
