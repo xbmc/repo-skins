@@ -42,7 +42,7 @@
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:UC)">special://skin/extras/images/rating/bbfc_uc.png</value>
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:PG)">special://skin/extras/images/rating/bbfc_pg.png</value>
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:12)">special://skin/extras/images/rating/bbfc_12.png</value>
-		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:12A)">special://skin/extras/images/rating/bbfc_12A.png</value>
+		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:12A)">special://skin/extras/images/rating/bbfc_12.png</value>
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:15)">special://skin/extras/images/rating/bbfc_15.png</value>
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:18)">special://skin/extras/images/rating/bbfc_18.png</value>
 		<value condition="StringCompare(Container(100).ListItem.Property(Mpaa),UK:R18)">special://skin/extras/images/rating/bbfc_R18.png</value>
@@ -65,32 +65,35 @@
 		<value condition="substring(Container(100).ListItem.Property(Mpaa),TV-MA)">special://skin/extras/images/rating/TV-MA.png</value>
 	</variable>
 	 <variable name="Overlay" description="Overlay image">
-		<value condition="ListItem.IsResumable">overlaypartialywatched.png</value>
-		<value>$INFO[ListItem.Overlay]</value>
+		<value condition="IntegerGreaterThan(ListItem.PercentPlayed,-1) + ![IntegerGreaterThan(ListItem.PercentPlayed,19)]">overlayunwatched.png</value>
+		<value condition="IntegerGreaterThan(ListItem.PercentPlayed,19) + ![IntegerGreaterThan(ListItem.PercentPlayed,81)]">overlaypartialywatched.png</value>
+		<value>overlaywatched.png</value>
 	</variable>
 	 <variable name="PVROverlay" description="PVR Overlay image">
 		<value condition="ListItem.IsRecording">overlayisrecording.png</value>
-		<value condition="ListItem.HasTimer">overlayhastimer.png</value>
+		<value condition="ListItem.HasTimer + !ListItem.IsRecording">overlayhastimer.png</value>
 	</variable>
 	 <variable name="VideoDuration" description="Duration of video content">
 		<value condition="!substring(ListItem.Duration,min)">$INFO[ListItem.Duration,, $LOCALIZE[12391]]</value>
 		<value condition="substring(ListItem.Duration,min)">$INFO[ListItem.Duration]</value>
 	</variable>
-	<variable name="PlaybackState">
-		<value condition="[Player.Paused + !Player.Caching] + !Player.Seeking + !Player.DisplayAfterSeek">$LOCALIZE[31662]</value>
+	<variable name="PlayStateImage">
+		<value condition="Player.Paused + !Player.Seeking + !Player.DisplayAfterSeek">osd-btn-pause.png</value>
+		<value condition="Player.Forwarding">osd-btn-fastfwd.png</value>
+		<value condition="Player.Rewinding">osd-btn-rewind.png</value>
+		<value condition="!Player.Seeking + [Player.Rewinding2x | Player.Rewinding4x | Player.Rewinding8x | Player.Rewinding16x | Player.Rewinding32x]">osd-btn-rewind.png</value>
+		<value condition="!Player.Seeking + [Player.Forwarding2x | Player.Forwarding4x | Player.Forwarding8x | Player.Forwarding16x | Player.Forwarding32x]">osd-btn-fastfwd.png</value>
+	</variable>
+	<variable name="PlayStateTxt">
 		<value condition="[Player.Paused + Player.Caching] + !Player.Seeking + !Player.DisplayAfterSeek">$LOCALIZE[15107] $INFO[Player.CacheLevel]%</value>
-		<value condition="Player.Seeking">$LOCALIZE[773] $INFO[Player.SeekOffset]</value>
-		<value condition="Player.Rewinding2x + !Player.Seeking">$LOCALIZE[31666]</value>
-		<value condition="Player.Rewinding4x + !Player.Seeking">$LOCALIZE[31667]</value>
-		<value condition="Player.Rewinding8x + !Player.Seeking">$LOCALIZE[31668]</value>
-		<value condition="Player.Rewinding16x + !Player.Seeking">$LOCALIZE[31669]</value>
-		<value condition="Player.Rewinding32x + !Player.Seeking">$LOCALIZE[31670]</value>
-		<value condition="Player.Forwarding2x + !Player.Seeking">$LOCALIZE[31672]</value>
-		<value condition="Player.Forwarding4x + !Player.Seeking">$LOCALIZE[31673]</value>
-		<value condition="Player.Forwarding8x + !Player.Seeking">$LOCALIZE[31674]</value>
-		<value condition="Player.Forwarding16x + !Player.Seeking">$LOCALIZE[31675]</value>
-		<value condition="Player.Forwarding32x + !Player.Seeking">$LOCALIZE[31676]</value>
-		<value condition="Player.DisplayAfterSeek + !Player.Seeking">$INFO[Player.SeekOffset]</value>
+		<value condition="Player.Seeking">$INFO[Player.SeekOffset]</value>
+		<value condition="!Player.Seeking + [Player.Rewinding2x | Player.Forwarding2x]">x2</value>
+		<value condition="!Player.Seeking + [Player.Rewinding4x | Player.Forwarding4x]">x4</value>
+		<value condition="!Player.Seeking + [Player.Rewinding8x | Player.Forwarding8x]">x8</value>
+		<value condition="!Player.Seeking + [Player.Rewinding16x | Player.Forwarding16x]">x16</value>
+		<value condition="!Player.Seeking + [Player.Rewinding32x | Player.Forwarding32x]">x32</value>
+		<value condition="!Player.Seeking + Player.DisplayAfterSeek + !substring(Player.SeekOffset,-)">$INFO[Player.SeekOffset]</value>
+		<value condition="!Player.Seeking + Player.DisplayAfterSeek + substring(Player.SeekOffset,-)">$INFO[Player.SeekOffset]</value>
 	</variable>
 	<variable name="MovieLibEntry">
 		<value condition="!Library.HasContent(Movies)">ActivateWindow(Videos,Files,return)</value>
@@ -152,31 +155,30 @@
 		<value>ActivateWindow(MusicFiles,Addons,return)</value>
 	</variable>
 	<variable name="VideoHeadings" description="Video screen headings">
-		<value condition="Container.content(movies)">$LOCALIZE[20342]</value>
-		<value condition="Container.content(tvshows)">$LOCALIZE[31027]</value>
-		<value condition="Container.content(seasons)">$LOCALIZE[33054]</value>
-		<value condition="Container.content(episodes)">$LOCALIZE[20360]</value>
-		<value condition="Container.content(actors)">$LOCALIZE[344]</value>
-		<value condition="Container.content(genres)">$LOCALIZE[135]</value>
-		<value condition="Container.content(years)">$LOCALIZE[652]</value>
-		<value condition="Container.content(studios)">$LOCALIZE[20388]</value>
-		<value condition="Container.content(directors)">$LOCALIZE[20348]</value>
-		<value condition="Container.content(musicvideos)">$LOCALIZE[20389]</value>
-		<value condition="Container.content(addons)">$LOCALIZE[31696]</value>
-		<value condition="Container.content(files)">$LOCALIZE[744]</value>
+		<value condition="Container.Content(movies)">$LOCALIZE[20342]</value>
+		<value condition="Container.Content(tvshows)">$LOCALIZE[31027]</value>
+		<value condition="Container.Content(actors)">$LOCALIZE[344]</value>
+		<value condition="Container.Content(genres)">$LOCALIZE[135]</value>
+		<value condition="Container.Content(years)">$LOCALIZE[652]</value>
+		<value condition="Container.Content(studios)">$LOCALIZE[20388]</value>
+		<value condition="Container.Content(directors)">$LOCALIZE[20348]</value>
+		<value condition="Container.Content(musicvideos)">$LOCALIZE[20389]</value>
+		<value condition="Container.Content(addons)">$LOCALIZE[31696]</value>
+		<value condition="Container.Content(files)">$LOCALIZE[744]</value>
+		<value condition="!IsEmpty(Container.FolderName) + !IsEmpty(ListItem.Label)">$INFO[Container.FolderName]</value>
 		<value>$LOCALIZE[3]</value>
 	</variable>
 	<variable name="MusicHeadings" description="Music screen headings">
-		<value condition="Container.content(songs)">$LOCALIZE[134]</value>
-		<value condition="Container.content(artists)">$LOCALIZE[133]</value>
-		<value condition="Container.content(albums)">$LOCALIZE[132]</value>
-		<value condition="Container.content(genres)">$LOCALIZE[135]</value>
-		<value condition="Container.content(years)">$LOCALIZE[652]</value>
-		<value condition="Container.content(studios)">$LOCALIZE[20388]</value>
-		<value condition="Container.content(directors)">$LOCALIZE[20348]</value>
-		<value condition="Container.content(musicvideos)">$LOCALIZE[20389]</value>
-		<value condition="Container.content(addons)">$LOCALIZE[31697]</value>
-		<value condition="Container.content(files)">$LOCALIZE[744]</value>
+		<value condition="Container.Content(artists)">$LOCALIZE[133]</value>
+		<value condition="Container.Content(albums)">$LOCALIZE[132]</value>
+		<value condition="Container.Content(genres)">$LOCALIZE[135]</value>
+		<value condition="Container.Content(years)">$LOCALIZE[652]</value>
+		<value condition="Container.Content(studios)">$LOCALIZE[20388]</value>
+		<value condition="Container.Content(directors)">$LOCALIZE[20348]</value>
+		<value condition="Container.Content(musicvideos)">$LOCALIZE[20389]</value>
+		<value condition="Container.Content(addons)">$LOCALIZE[31697]</value>
+		<value condition="Container.Content(files)">$LOCALIZE[744]</value>
+		<value condition="!IsEmpty(Container.FolderName) + !IsEmpty(ListItem.Label)">$INFO[Container.FolderName]</value>
 		<value>$LOCALIZE[31030]</value>
 	</variable>
 	<variable name="PVRHeading" description="PVR Headings">
@@ -238,4 +240,24 @@
 		<value condition="!IsEmpty(ListItem(5).Art(poster))">$INFO[ListItem(5).Art(poster)]</value>
 		<value>$INFO[ListItem(5).Icon]</value>
 	</variable>
+    <variable name="VideoLogo">
+        <value condition="!IsEmpty(ListItem.Art(clearlogo)) + [Container.Content(tvshows) | Container.Content(movies)]">$INFO[ListItem.Art(clearlogo)]</value>
+        <value condition="IsEmpty(ListItem.Art(clearlogo)) + [Container.Content(tvshows) | Container.Content(movies)]">$INFO[ListItem.path,,logo.png]</value>
+		<value>blank.png</value>
+    </variable>
+    <variable name="ListViewVideoLogo">
+        <value condition="!IsEmpty(ListItem.Art(clearlogo)) + [Container.Content(tvshows) | Container.Content(seasons) | Container.Content(movies)]">$INFO[ListItem.Art(clearlogo)]</value>
+        <value condition="IsEmpty(ListItem.Art(clearlogo)) + [Container.Content(tvshows) | Container.Content(seasons) | Container.Content(movies)]">$INFO[ListItem.path,,logo.png]</value>
+        <value condition="IsEmpty(ListItem.Art(clearlogo)) + Container.Content(episodes)">$INFO[ListItem.Path,,../logo.png]</value>
+		<value>blank.png</value>
+    </variable>
+    <variable name="QuitAction">
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[13009])">XBMC.quit()</value>
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[13013])">XBMC.reboot()</value>
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[13005])">XBMC.powerdown()</value>
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[13010])">XBMC.hibernate()</value>
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[13011])">XBMC.suspend()</value>
+        <value condition="StringCompare(Skin.String(home-quitaction),$LOCALIZE[31558])">ActivateWindow(shutdownmenu)</value>
+		<value>XBMC.quit()</value>
+    </variable>
 </includes>

@@ -1,11 +1,10 @@
 <window>
 	<defaultcontrol always="true">50</defaultcontrol>
-	<visible>!Window.IsActive(movieinformation)</visible>
 	<backgroundcolor>0</backgroundcolor>
 	<allowoverlay>yes</allowoverlay>
 	<previouswindow>Home</previouswindow>
-	<views>50,52,54,57,58,59</views>
-	<include condition="Skin.HasSetting(tv_theme) + !SubString(Window(Videos).Property(CinemaExperienceRunning),True)">StartTVTunes</include>
+	<views>50,52,54,57,58,59,560</views>
+	<onload condition="Skin.HasSetting(tv_theme) + !SubString(Window(Videos).Property(CinemaExperienceRunning),True)">RunScript(script.tvtunes,backend=True&amp;loop=False)</onload>
 	<controls>
 		<include>backgroundvideo</include>
 		<include>Fake-Overlay</include>
@@ -14,7 +13,7 @@
 			<description>Movies/Video Logo</description>
 			<include>icon-header-commons</include>
 			<texture>icon-video-sml.png</texture>
-			<visible>!Container.Content(tvshows) + !Container.Content(seasons) + !Container.Content(episodes) + !Container.Content(MusicVideos)</visible>
+			<visible>!Container.Content(tvshows) + !Container.Content(seasons) + !Container.Content(episodes) + !Container.Content(musicvideos)</visible>
 		</control>
 		<control type="image">
 			<description>TV Logo</description>
@@ -26,41 +25,42 @@
 			<description>Music Videos Logo</description>
 			<include>icon-header-commons</include>
 			<texture>icon-musicvideo-sml.png</texture>
-			<visible>Container.Content(MusicVideos)</visible>
+			<visible>Container.Content(musicvideos)</visible>
 		</control>
-
 		<control type="grouplist">
 			<posx>946</posx>
-			<posy>50</posy>
-			<width>360</width>
-			<height>37</height>
+			<posy>35</posy>
+			<width>365</width>
+			<height>72</height>
 			<align>left</align>
 			<aligny>center</aligny>
 			<orientation>horizontal</orientation>
 			<control type="label">
 				<description>Video screen headings</description>
-				<width min="60" max="250">auto</width>
-				<height>37</height>
+				<width min="60" max="275">auto</width>
+				<height>72</height>
 				<label>$VAR[VideoHeadings]</label>
-				<font>font20</font>
-				<aligny>center</aligny>
+				<font>font18</font>
+				<wrapmultiline>true</wrapmultiline>
+				<aligny>top</aligny>
 			</control>
 			<control type="label">
 				<description>Number of files</description>
 				<visible>Skin.HasSetting(homemenu-horizontal) | [!Skin.HasSetting(homemenu-vertical) + !Skin.HasSetting(homemenu-horizontal)]</visible>
 				<posy>13</posy>
-				<width min="40" max="110">auto</width>
-				<height>37</height>
+				<width min="40" max="90">auto</width>
+				<height>38</height>
 				<font>font13</font>
 				<aligny>center</aligny>
-				<label>$INFO[Container.NumItems, (,)]</label>
+				<label>$INFO[Container.NumItems,(,)]</label>
 			</control>
 		</control>
-
+		<!-- Display warning if free memory is low -->
 		<include>memory-low</include>
 
+		<!-- Various Views of Video library node -->
 		<control type="group">
-			<visible>IntegerGreaterThan(Container.NumItems,0)</visible>
+			<visible>![IsEmpty(ListItem.Label) + IsEmpty(Container().ListItem(1).Label)]</visible>
 			<include>VideoListView</include>
 			<include>VideoIconView</include>
 			<include>BannerView</include>
@@ -69,19 +69,20 @@
 			<include>VideoCoverflow</include>
 			<include>PVRLiveTVView</include>
 		</control>
-
-		<control type="button" id="50">
-			<posx>678</posx>
-			<posy>116</posy>
-			<width>560</width>
-			<height>50</height>
-			<font>font12</font>
-			<label></label>
-			<onfocus>ActivateWindow(Videos,Files,return)</onfocus>
-			<textoffsetx>18</textoffsetx>
-			<align>center</align>
-			<aligny>center</aligny>
-			<visible>!IntegerGreaterThan(Container.NumItems,0)</visible>
+		<!-- No Label tag means video addon is busy pulling in content, so show a busy animation -->
+		<control type="group">
+			<visible>IsEmpty(ListItem.Label) + IsEmpty(Container().ListItem(1).Label) + System.IdleTime(1) + !Window.IsVisible(busydialog)</visible>
+			<include>fadebackground</include>
+			<control type="image">
+				<description>Busy animation</description>
+				<posx>576</posx>
+				<posy>290</posy>
+				<width>128</width>
+				<height>128</height>
+				<texture>busy.png</texture>
+				<aspectratio>keep</aspectratio>
+				<animation effect="rotate" start="360" end="0" center="auto" time="5400" loop="true" condition="true">conditional</animation>
+			</control>
 		</control>
 
 		<control type="group">
@@ -94,7 +95,7 @@
 					<posx>0</posx>
 					<posy>0</posy>
 					<width>1280</width>
-					<height>900</height>
+					<height>720</height>
 					<texture>black.png</texture>
 					<colordiffuse>osd-background</colordiffuse>
 					<visible>!Skin.HasSetting(view-as-lock)</visible>
