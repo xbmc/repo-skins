@@ -9,13 +9,43 @@
 	<include>WindowBG</include>
 	<texture fallback="special://skin/backgrounds/livetv.jpg" background="true">$INFO[skin.string(livetv.bg)]</texture>
 	</control>
+	<control type="group"><!-- Visualizacao de fundo -->
+	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
+	<control type="image">
+	<posx>0</posx>
+	<posy>0</posy>
+	<width>1280</width>
+	<height>720</height>
+	<texture>black.png</texture>
+	<colordiffuse>C3FFFFFF</colordiffuse>
+	<include>Animation_Fade</include>
+	<visible>Player.HasMedia</visible>
+	</control>
+	<control type="videowindow">
+	<posx>0</posx>
+	<posy>0</posy>
+	<width>1280</width>
+	<height>720</height>
+	<visible>Player.HasVideo</visible>
+	<animation effect="slide" start="0,0" end="-2000,0" time="0">WindowClose</animation>
+	</control>
+	<control type="visualisation">
+	<posx>0</posx>
+	<posy>0</posy>
+	<width>1280</width>
+	<height>720</height>
+	<visible>Player.HasAudio</visible>
+	<animation effect="slide" start="0,0" end="-2000,0" time="0">WindowClose</animation>
+	</control>
+	</control>
 
 	<control type="group"><!-- default group -->
 	<include>Animation_Window</include>
+	<visible>![Window.IsActive(PVRGuideInfo) | Window.IsActive(PVRRecordingInfo) | Window.IsActive(PVRGuideSearch) | Window.IsActive(PVRTimerSetting)]</visible>
 
 	<control type="button" id="9900"><!-- to menu/kiosk condition -->
 	<include>InvisibleButton</include>
-	<onfocus condition="![Skin.HasSetting(kiosk) | Skin.HasSetting(kiosksmart) + !SubString(skin.string(codestep),step3)]">SetFocus(9300)</onfocus>
+	<onfocus condition="![Skin.HasSetting(kiosk) | Skin.HasSetting(kiosksmart) + !SubString(skin.string(codestep),step3)]">SetFocus(9000)</onfocus>
 	<onfocus condition="Skin.HasSetting(kiosksmart) + !SubString(skin.string(codestep),step3)">SetFocus(9100)</onfocus>
 	</control>
 	<control type="button" id="9920"><!-- hidden colection/view fanart -->
@@ -33,7 +63,7 @@
 	<animation effect="slide" start="0,0" end="0,-70" time="300" easing="inout" tween="cubic">WindowClose</animation>
 	<animation effect="slide" start="0,0" end="0,-70" time="300" easing="inout" tween="cubic">Hidden</animation>
 	<animation effect="slide" start="0,0" end="300,0" time="0" easing="in" tween="cubic" condition="Control.IsVisible(11) | Control.IsVisible(12)">Conditional</animation>
-	<visible>PVR.HasTimer + ![PVR.IsRecording | Player.HasVideo]</visible>
+	<visible>[PVR.IsRecording | PVR.HasNonRecordingTimer] + ![Player.HasMedia | Control.HasFocus(9920) | ControlGroup(9000).HasFocus]</visible>
 	<control type="image">
 	<posx>0</posx>
 	<posy>31</posy>
@@ -64,11 +94,21 @@
 	</control>
 	<control type="image">
 	<posx>20</posx>
-	<posy>4</posy>
+	<posy>6</posy>
 	<width>15</width>
 	<height>15</height>
 	<aspectratio>stretch</aspectratio>
 	<texture>pvr_hastimer.png</texture>
+	<visible>PVR.HasNonRecordingTimer</visible>
+	</control>
+	<control type="image">
+	<posx>20</posx>
+	<posy>6</posy>
+	<width>15</width>
+	<height>15</height>
+	<aspectratio>stretch</aspectratio>
+	<texture>pvr_isrecording.png</texture>
+	<visible>PVR.IsRecording</visible>
 	</control>
 	<control type="label">
 	<posx>50</posx>
@@ -78,9 +118,8 @@
 	<align>left</align>
 	<font>Font_16</font>
 	<textcolor>FFFFFAF0</textcolor>
-	<label>[COLOR=$VAR[value_headercolor]]$LOCALIZE[19157]: [/COLOR]$INFO[PVR.NextRecordingDateTime][COLOR=80ffffff] | [/COLOR]$INFO[PVR.NextRecordingTitle][COLOR=80ffffff] | [/COLOR]$INFO[PVR.NextRecordingChannel]</label>
+	<label>$VAR[value_pvrstatus]</label>
 	<scroll>true</scroll>
-	<scrollout>false</scrollout>
 	<visible>![Control.IsVisible(11) | Control.IsVisible(12)]</visible>
 	</control>
 	<control type="label">
@@ -91,69 +130,15 @@
 	<align>left</align>
 	<font>Font_16</font>
 	<textcolor>FFFFFAF0</textcolor>
-	<label>[COLOR=$VAR[value_headercolor]]$LOCALIZE[19157]: [/COLOR]$INFO[PVR.NextRecordingDateTime][COLOR=80ffffff] | [/COLOR]$INFO[PVR.NextRecordingTitle][COLOR=80ffffff] | [/COLOR]$INFO[PVR.NextRecordingChannel]</label>
+	<label>$VAR[value_pvrstatus]</label>
 	<scroll>true</scroll>
-	<scrollout>false</scrollout>
 	<visible>Control.IsVisible(11) | Control.IsVisible(12)</visible>
 	</control>
-	</control>
-
-	<control type="group"><!-- Visualizacao de fundo -->
-	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
-	<control type="videowindow">
-	<posx>0</posx>
-	<posy>0</posy>
-	<width>1280</width>
-	<height>720</height>
-	<visible>Player.HasVideo</visible>
-	<animation effect="slide" start="0,0" end="-2000,0" time="0">WindowClose</animation>
-	</control>
-	<control type="visualisation">
-	<posx>0</posx>
-	<posy>0</posy>
-	<width>1280</width>
-	<height>720</height>
-	<visible>Player.HasAudio</visible>
-	<animation effect="slide" start="0,0" end="-2000,0" time="0">WindowClose</animation>
-	</control>
-	<control type="image">
-	<posx>0</posx>
-	<posy>0</posy>
-	<width>1280</width>
-	<height>720</height>
-	<texture>black.png</texture>
-	<colordiffuse>E5FFFFFF</colordiffuse>
-	<include>Animation_Fade</include>
-	<visible>![Control.IsVisible(11) | Control.IsVisible(12)] + Player.HasMedia</visible>
-	</control>
-	</control>
-
-	<control type="group">
-	<include>Animation_Fade</include>
-	<visible>Control.IsVisible(10) | Control.IsVisible(13) | Control.IsVisible(14) | Control.IsVisible(15) | Control.IsVisible(16) | Control.IsVisible(17)</visible>
-	<control type="image"><!-- Fundo EPG -->
-	<posx>0</posx>
-	<posy>31</posy>
-	<width>1280</width>
-	<height>30</height>
-	<texture>shadow_h.png</texture>
-	<colordiffuse>C3FFFFFF</colordiffuse>
-	</control>
-	<control type="image">
-	<posx>0</posx>
-	<posy>60</posy>
-	<width>1280</width>
-	<height>660</height>
-	<texture>darkgrey.png</texture>
-	<colordiffuse>$VAR[value_texturecolor]</colordiffuse>
-	<animation effect="fade" end="85" condition="true">Conditional</animation>
-	</control>
-	<include>MultiData</include>
 	</control>
 
 	<control type="group"><!-- Mobilia -->
 	<visible>Control.IsVisible(11) | Control.IsVisible(12)</visible>
-	<animation effect="slide" time="400" start="0,0" end="0,320" easing="in" tween="cubic" condition="Player.HasVideo + System.IdleTime(8) | Control.HasFocus(9920)">Conditional</animation>
+	<animation effect="slide" time="400" start="0,0" end="0,400" easing="in" tween="cubic" condition="Player.HasMedia + System.IdleTime(8) | Control.HasFocus(9920)">Conditional</animation>
 	<control type="image">
 	<posx>300</posx>
 	<posy>387</posy>
@@ -181,89 +166,126 @@
 	</control>
 	<control type="image">
 	<posx>348</posx>
-	<posy>418</posy>
-	<width>255</width>
-	<height>245</height>
-	<fadetime>FanartCrossFadeTime</fadetime>
+	<posy>428</posy>
+	<width>225</width>
+	<height>225</height>
 	<texture fallback="DefaultAudioCover.png" background="true">$INFO[Container(11).ListItem.Icon]</texture>
-	<aspectratio scalediffuse="false">keep</aspectratio>
+	<bordertexture border="-25">musicframe.png</bordertexture>
+	<fadetime>FanartCrossFadeTime</fadetime>
+	<aspectratio>keep</aspectratio>
+	<visible>Control.IsVisible(11)</visible>
+	</control>
+	<control type="image">
+	<posx>348</posx>
+	<posy>428</posy>
+	<width>225</width>
+	<height>225</height>
+	<texture fallback="DefaultAudioCover.png" background="true">$INFO[Container(12).ListItem.Icon]</texture>
+	<bordertexture border="-25">musicframe.png</bordertexture>
+	<fadetime>FanartCrossFadeTime</fadetime>
+	<aspectratio>keep</aspectratio>
+	<visible>Control.IsVisible(12)</visible>
 	</control>
 	<control type="label"><!-- Nome do canal -->
-	<posx>635</posx>
+	<posx>615</posx>
 	<posy>420</posy>
-	<width>700</width>
+	<width>625</width>
 	<height>20</height>
-	<scroll>true</scroll>
+	<textcolor>$VAR[value_headercolor]</textcolor>
 	<font>Font_23</font>
-	<textcolor>FFFFFAF0</textcolor>
-	<label>$INFO[Container(11).ListItem.Label]</label>
-	<visible>IsEmpty(Container(11).ListItem.Title)</visible>
+	<label>$INFO[ListItem.Label]</label>
+	<scroll>true</scroll>
 	</control>
 	<control type="label"><!-- Nome do programa -->
-	<posx>635</posx>
+	<posx>615</posx>
 	<posy>445</posy>
-	<width>700</width>
+	<width>625</width>
 	<height>20</height>
-	<scroll>true</scroll>
-	<font>Font_19</font>
 	<textcolor>FFFFFAF0</textcolor>
-	<label>$INFO[Container(11).ListItem.Title]</label>
+	<font>Font_17</font>
+	<label>$INFO[ListItem.Title]</label>
+	<scroll>true</scroll>
 	</control>
-	<control type="progress">
-	<posx>635</posx>
-	<posy>475</posy>
-	<width>595</width>
-	<height>5</height>
-	<info>Player.Progress</info>
-	<animation effect="fade" end="90" condition="true">Conditional</animation>
-	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
-	<visible>Player.HasVideo</visible>
+	<control type="image">
+	<posx>615</posx>
+	<posy>468</posy>
+	<width>625</width>
+	<height>2</height>
+	<align>left</align>
+	<texture flipx="true">divider.png</texture>
+	</control>
+	<control type="label"><!-- Genero -->
+	<posx>615</posx>
+	<posy>470</posy>
+	<width>625</width>
+	<height>20</height>
+	<align>left</align>
+	<textcolor>FFFFFAF0</textcolor>
+	<font>Font_17</font>
+	<label>$INFO[ListItem.Genre]</label>
+	<scroll>true</scroll>
+	</control>
+	<control type="image">
+	<posx>615</posx>
+	<posy>493</posy>
+	<width>625</width>
+	<height>2</height>
+	<align>left</align>
+	<texture flipx="true">divider.png</texture>
 	</control>
 	<control type="label">
-	<posx>635</posx>
-	<posy>468</posy>
+	<posx>615</posx>
+	<posy>496</posy>
 	<width>160</width>
 	<height>20</height>
-	<font>Font_16</font>
+	<font>Font_17</font>
 	<textcolor>FFFFFAF0</textcolor>>
-	<label>$INFO[Container(11).ListItem.StartTime]$INFO[Container(11).ListItem.EndTime, / ]</label>
+	<label>$INFO[ListItem.StartTime]$INFO[ListItem.EndTime, / ]</label>
 	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
-	<visible>!Player.HasVideo</visible>
+	</control>	
+	<control type="progress">
+	<posx>615</posx>
+	<posy>520</posy>
+	<width>625</width>
+	<height>5</height>
+	<info>ListItem.Progress</info>
+	<animation effect="fade" end="90" condition="true">Conditional</animation>
+	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
+	<visible>ListItem.HasEpg</visible>
 	</control>
 	<control type="textbox">
-	<posx>635</posx>
-	<posy>500</posy>
-	<width>595</width>
-	<height>155</height>
+	<posx>615</posx>
+	<posy>525</posy>
+	<width>625</width>
+	<height>135</height>
 	<textcolor>FFFFFAF0</textcolor>
-	<font>Font_16</font>
-	<label>$INFO[Container(11).ListItem.Plot]</label>
-	<autoscroll delay="8000" time="2000" repeat="8000">!Skin.HasSetting(noallowscroll)</autoscroll>
+	<font>Font_17</font>
+	<label>$INFO[ListItem.Plot]</label>
+	<autoscroll delay="15000" time="3000" repeat="15000">!Skin.HasSetting(noallowscroll)</autoscroll>
 	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
-	<visible>!Player.HasVideo</visible>
 	</control>
-	<control type="textbox">
-	<posx>635</posx>
-	<posy>530</posy>
-	<width>595</width>
-	<height>120</height>
-	<textcolor>FFFFFAF0</textcolor>
-	<font>Font_16</font>
-	<label>$INFO[Container(11).ListItem.Plot]</label>
-	<autoscroll delay="8000" time="2000" repeat="8000">!Skin.HasSetting(noallowscroll)</autoscroll>
-	<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
-	<visible>Player.HasVideo</visible>
+
+	<control type="group"><!-- Controles -->
+	<visible>Player.HasMedia</visible>
+	<animation effect="slide" start="1280,0" end="0,0" time="500" delay="1000" tween="sine" easing="out">WindowOpen</animation>
+	<animation effect="slide" start="1280,0" end="0,0" time="500" delay="1000" tween="sine" easing="out">Visible</animation>
+	<animation effect="slide" start="0,0" end="1280,0" time="500" delay="1000" tween="sine" easing="out">Hidden</animation>
+	<control type="image">
+	<posx>1025</posx>
+	<posy>385</posy>
+	<width>500</width>
+	<height>33</height>
+	<texture>statuswidget.png</texture>
+	<colordiffuse>$VAR[value_texturecolor]</colordiffuse>
+	<include>Animation_HomeGlass</include>
 	</control>
 	<control type="list" id="600">
-	<animation effect="fade" time="800">Visible</animation>
-	<animation effect="fade" time="400">Hidden</animation>
-	<visible>Player.HasVideo | Player.HasAudio</visible>
-	<posx>635</posx>
-	<posy>465</posy>
-	<height>50</height>
-	<width>990</width>
-	<ondown>300</ondown>
-	<onup>SetFocus(403)</onup>
+	<posx>1050</posx>
+	<posy>370</posy>
+	<height>200</height>
+	<width>400</width>
+	<ondown>11</ondown>
+	<onup>9900</onup>
 	<onleft>600</onleft>
 	<onright>600</onright>
 	<viewtype>list</viewtype>
@@ -271,23 +293,23 @@
 	<orientation>horizontal</orientation>
 	<scrolltime>200</scrolltime>
 	<focusposition>0</focusposition>
-	<itemlayout width="28" height="40">
+	<itemlayout width="31" height="40">
 	<control type="image">
 	<posy>22</posy>
 	<width>24</width>
 	<height>24</height>
 	<info>ListItem.Icon</info>
-	<colordiffuse>60DCDCDC</colordiffuse>
+	<colordiffuse>50FFFAF0</colordiffuse>
 	<include>Animation_Fade</include>
 	</control>
 	</itemlayout>
-	<focusedlayout width="28" height="40">
+	<focusedlayout width="31" height="40">
 	<control type="image">
 	<posy>22</posy>
 	<width>24</width>
 	<height>24</height>
 	<info>ListItem.Icon</info>
-	<colordiffuse>60DCDCDC</colordiffuse>
+	<colordiffuse>50FFFAF0</colordiffuse>
 	<include>Animation_Fade</include>
 	<visible>!Control.HasFocus(600)</visible>
 	</control>
@@ -296,7 +318,7 @@
 	<width>24</width>
 	<height>24</height>
 	<info>ListItem.Icon</info>
-	<colordiffuse>dcFFFFFF</colordiffuse>
+	<colordiffuse>FFFFFAF0</colordiffuse>
 	<include>Animation_Fade</include>
 	<visible>Control.HasFocus(600)</visible>
 	</control>
@@ -319,12 +341,6 @@
 	<icon>osd_menu_play_square.png</icon>
 	<onclick>PlayerControl(Play)</onclick>
 	<visible>Player.Paused</visible>
-	</item>
-	<item id="4"><!-- playlist -->
-	<label>-</label>
-	<icon>osd_menu_plyalist_square.png</icon>
-	<onclick>ActivateWindow(musicplaylist)</onclick>
-	<visible>Player.HasAudio + !IsEmpty(MusicPlayer.offset(1).Artist)</visible>
 	</item>
 	<item id="5"><!-- stop -->
 	<label>-</label>
@@ -365,11 +381,6 @@
 	<onclick>PlayerControl(Next)</onclick>
 	<visible>VideoPlayer.Content(LiveTV)</visible>
 	</item>
-	<item id="10"><!-- repeat -->
-	<label>-</label>
-	<icon>$VAR[value_playericon_repeat]</icon>
-	<onclick>PlayerControl(Repeat)</onclick>
-	</item>
 	<item id="12"><!-- go to fullscreen -->
 	<label>-</label>
 	<icon>osd_menu_fullscreen_square.png</icon>
@@ -377,19 +388,6 @@
 	</item>
 	</content>
 	</control>
-	<control type="label">
-	<posx>890</posx>
-	<posy>499</posy>
-	<width>250</width>
-	<font>Font_15</font>
-	<align>left</align>
-	<aligny>center</aligny>
-	<textcolor>FFFFFAF0</textcolor>
-	<label>$VAR[value_playercontrols,, | ]$INFO[Container(11).ListItem.StartTime]$INFO[Container(11).ListItem.EndTime, / ]</label>
-	<scroll>true</scroll>
-	<scrollout>false</scrollout>
-	<animation effect="fade" time="200" delay="400">Visible</animation>
-	<visible>Player.HasVideo | Player.HasAudio</visible>
 	</control>
 	<control type="label" id="29">
 	<description>Current Category</description>
