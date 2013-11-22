@@ -3,7 +3,9 @@
 	<include file="Defaults.xml" />
 	<include file="Includes_grid.xml" />
 	<include file="Includes_variables.xml" />
-	<include file="Includes_animations.xml" />	
+	<include file="Includes_animations.xml" />
+	<include file="Includes_animations.xml" />
+	<include file="Includes_controlStyles.xml" />	
 	<include file="ViewsVideos.xml" />
 	<include file="ViewsDialogs.xml" />
 	<include file="ViewsPVR.xml" />
@@ -16,7 +18,7 @@
 		<control type="image">
 			<include>dimensionsFullscreen</include>
 			<texture>colors/black.png</texture>
-			<colordiffuse>ccFFFFFF</colordiffuse>
+			<colordiffuse>eeFFFFFF</colordiffuse>
 			<aspectratio>stretch</aspectratio>
 		</control>
 		
@@ -31,7 +33,7 @@
 	
 	<!--Global background-->
 	<include name="globalBackground">
-
+		
 		<control type="group">
 					
 			<control type="image">
@@ -41,32 +43,48 @@
 				<aspectratio>stretch</aspectratio>
 			</control>	
 					
+			<!--default background-->
+			<control type="image">
+				<visible>!Skin.HasSetting(useGlobalFanartBackground) + isempty(skin.string(globalBackground))</visible>
+				<include>dimensionsFullscreen</include>
+				<texture>backgrounds/defaultBackground.jpg</texture>
+				<colordiffuse>6affffff</colordiffuse>
+				<aspectratio>stretch</aspectratio>
+				<animation effect="fade" start="0" end="100" time="1000" condition="window.previous(home)">windowopen</animation>	
+			</control>
+			
+			<!--User setting: global background override-->
+			<control type="image">
+				<visible>!Skin.HasSetting(useGlobalFanartBackground) + !isempty(skin.string(globalBackground))</visible>
+				<include>dimensionsFullscreen</include>
+				<texture>$INFO[skin.string(globalBackground)]</texture>
+				<colordiffuse>6Affffff</colordiffuse>
+				<aspectratio>stretch</aspectratio>
+				<animation effect="fade" start="0" end="100" time="1000" condition="window.previous(home)">windowopen</animation>	
+			</control>
+			
+			<!--User setting: rolling fanart slides-->
 			<control type="multiimage">
-				<visible>!Skin.HasSetting(useGlobalBackground) + !container.content(seasons) + !container.content(songs) + [!container.content(episodes) | Substring(Container.folderpath,plugin)] + [Container(9999).HasFiles | Container(9999).HasFolders]</visible>
+				<visible>Skin.HasSetting(useGlobalFanartBackground) + !container.content(seasons) + !container.content(songs) + [!container.content(episodes) | Substring(Container.folderpath,plugin)]</visible>
 				<posx>0</posx>
    				<posy>0</posy>
    				<include>dimensionsFullscreen</include>
    				<imagepath>$VAR[fanartType]</imagepath>
 				<timeperimage>25000</timeperimage>
-				<fadetime>2000</fadetime>
+				<fadetime>1000</fadetime>
 				<pauseatend>10000</pauseatend>
 				<randomize>true</randomize>
 				<aspectratio>stretch</aspectratio>
 				<colordiffuse>6affffff</colordiffuse>
-				<animation effect="fade" start="0" end="100" time="1000" delay="100">Windowopen</animation>		
-				<animation effect="fade" start="100" end="0" time="500">Windowclose</animation>				
+				<animation type="windowopen">
+		            <effect type="fade" start="0" end="100" time="500" delay="400"/>
+				</animation>
+				<animation type="windowclose">
+		            <effect type="fade" start="100" end="0" time="300"/>
+				</animation>		
 			</control>
-			
-			<control type="image">
-				<visible>Skin.HasSetting(useGlobalBackground) + !isempty(skin.string(globalBackground))</visible>
-				<include>dimensionsFullscreen</include>
-				<animation effect="fade" start="0" end="100" time="1000" delay="100">Windowopen</animation>		
-				<animation effect="fade" start="100" end="0" time="500">Windowclose</animation>
-				<texture>$INFO[skin.string(globalBackground)]</texture>
-				<colordiffuse>6affffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-						
+									
+			<!--show media fanart in relevant sections-->			
 			<control type="group">
 				<visible>container.content(seasons) | container.content(songs) | [container.content(episodes) + !Substring(Container.folderpath,iplayer)]</visible>
 				
@@ -77,7 +95,7 @@
 				<control type="image">
 					<include>dimensionsFullscreen</include>
 					<texture>colors/black.png</texture>
-					<colordiffuse>ffFFFFFF</colordiffuse>
+					<colordiffuse>FFFFFFFF</colordiffuse>
 					<aspectratio>stretch</aspectratio>
 				</control>
 				
@@ -88,26 +106,7 @@
 					<aspectratio>stretch</aspectratio>
 				</control>
 			</control>
-			
-			<control type="group">
-				<visible>window.isactive(2)</visible>
-							
-				<control type="image">
-					<include>dimensionsFullscreen</include>
-					<texture>colors/black.png</texture>
-					<colordiffuse>ffFFFFFF</colordiffuse>
-					<aspectratio>stretch</aspectratio>
-				</control>
-				
-				<control type="image">
-					<include>dimensionsFullscreen</include>
-					<animation effect="fade" start="0" end="100" time="1000" delay="100">Windowopen</animation>		
-					<texture>backgrounds/pictures.jpg</texture>
-					<colordiffuse>6affffff</colordiffuse>
-					<aspectratio>stretch</aspectratio>
-				</control>
-			</control>
-								
+										
 			<control type="image">
 				<include>dimensionsFullscreen</include>
 				<texture>backgrounds/vignette.png</texture>
@@ -117,87 +116,6 @@
 
 		</control>
 						
-	</include>
-	
-	<!--fanart slideshow-->
-	<include name="fanartSlides">
-		
-		<control type="group">
-			<visible>!Skin.HasSetting(useGlobalBackground)</visible>
-			
-			<animation type="conditional" condition="true" loop="true">	
-				<effect type="fade" start="0" end="100" time="2000" delay="0" />
-				<effect type="zoom" center="auto" start="130" end="100" time="15000" />
-				<effect type="fade" start="100" end="0" time="500" delay="14500" />
-			</animation>
-		
-			<animation type="windowclose">
-				<effect type="fade" start="100" end="0" time="500"/>
-			</animation>
-			<animation type="windowopen">
-				<effect type="fade" start="0" end="100" time="1000"/>
-			</animation>
-			
-			<control type="image">
-				<posx>0</posx>
-				<posy>0</posy>
-				<include>dimensionsFullscreen</include>
-				<texture>colors/black.png</texture>
-				<colordiffuse>ffffffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-						
-			<control type="multiimage">
-				<posx>0</posx>
-	  			<posy>0</posy>
-				<include>dimensionsFullscreen</include>
-				<imagepath>$INFO[Skin.String(videoFanartLocation)]</imagepath>
-				<timeperimage>15000</timeperimage>
-				<fadetime>0</fadetime>
-				<pauseatend>0</pauseatend>
-				<randomize>true</randomize>
-				<aspectratio>stretch</aspectratio>
-				<colordiffuse>99ffffff</colordiffuse>
-			</control>
-		
-			<control type="image">
-				<include>dimensionsFullscreen</include>
-				<texture>backgrounds/vignette.png</texture>
-				<colordiffuse>ffffffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-		</control>
-		
-		<control type="group">
-			<visible>Skin.HasSetting(useGlobalBackground) + !isempty(skin.string(globalBackground))</visible>
-			<animation effect="fade" start="0" end="100" time="1000">Windowopen</animation>		
-			<animation effect="fade" start="100" end="0" time="500">Windowclose</animation>
-			
-			<control type="image">
-				<posx>0</posx>
-				<posy>0</posy>
-				<include>dimensionsFullscreen</include>
-				<texture>colors/black.png</texture>
-				<colordiffuse>ffffffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-			
-			<control type="image">
-				<include>dimensionsFullscreen</include>
-				<texture>$INFO[skin.string(globalBackground)]</texture>
-				<colordiffuse>6affffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-			
-			<control type="image">
-				<include>dimensionsFullscreen</include>
-				<texture>backgrounds/vignette.png</texture>
-				<colordiffuse>ffffffff</colordiffuse>
-				<aspectratio>stretch</aspectratio>
-			</control>
-			
-		</control>
-			
 	</include>
 	
 	<!--date and time-->
@@ -279,5 +197,5 @@
 	<include name="offset4">
 		<posy>538</posy>
 	</include>
-		
+			
 </includes>
