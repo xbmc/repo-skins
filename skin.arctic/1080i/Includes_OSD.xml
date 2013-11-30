@@ -59,6 +59,20 @@
         <value condition="IntegerGreaterThan(VideoPlayer.Rating,0)">◎</value>
         <value></value>
     </variable>
+    <variable name="OSDTextRating-Music">
+    	<value condition="Skin.HasSetting(infotags.numericrating)">$INFO[MusicPlayer.Rating, ● ,]</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,9)">●●●●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,8)">◎●●●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,7)">●●●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,6)">◎●●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,5)">●●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,4)">◎●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,3)">●●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,2)">◎●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,1)">●</value>
+        <value condition="IntegerGreaterThan(MusicPlayer.Rating,0)">◎</value>
+        <value></value>
+    </variable>
 
     <include name="OSDVisualisation">
         <control type="visualisation" id="2">
@@ -68,6 +82,26 @@
             <width>1920</width>
             <height>1080</height>
         </control>
+    </include>
+    
+    <include name="OSDOnUpDown">
+    	<onback condition="Player.ShowInfo">Action(Info)</onback>
+		<onup condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),small)">SetProperty(ShowNext,1,seekbar)</onup>
+		<onup condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ShowNext,1,seekbar)</onup>
+		<onup condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ExtendPlot,1,seekbar)</onup>
+		<onup condition="!Player.ShowInfo">Action(Info)</onup>
+		<ondown condition="!Player.ShowInfo + IsEmpty(Window(seekbar).Property(ShowNext))">Close</ondown>
+		<ondown condition="Player.ShowInfo + IsEmpty(Window(seekbar).Property(ShowNext))">Action(Info)</ondown>
+		<ondown condition="Player.ShowInfo + !IsEmpty(Window(seekbar).Property(ShowNext))">ClearProperty(ShowNext,seekbar)</ondown>
+		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot)) + !IsEmpty(Window(seekbar).Property(ShowNext))">ClearProperty(ShowNext,seekbar)</onclick>
+		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot)) + IsEmpty(Window(seekbar).Property(ShowNext))">SetProperty(ShowNext,1,seekbar)</onclick>
+		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ExtendPlot,1,seekbar)</onclick>
+    </include>
+    <include name="MusicOSDOnUpDown">
+    	<onup condition="!Player.ShowInfo">Action(Info)</onup>
+		<onup>Close</onup>
+		<ondown condition="Player.ShowInfo">Action(Info)</ondown>
+		<ondown>Close</ondown>
     </include>
     
     <include name="OSDFwRwLabel">
@@ -98,12 +132,13 @@
     </include>
     
     <variable name="OSDPlot">
-        <value condition="!IsEmpty(Window(seekbar).Property(ShowNext))">$INFO[VideoPlayer.NextPlot]</value>
+        <value condition="VideoPlayer.Content(LiveTV) + !IsEmpty(Window(seekbar).Property(ShowNext))">$INFO[VideoPlayer.NextPlot]</value>
+        <value condition="!VideoPlayer.Content(LiveTV) + IsEmpty(Window(seekbar).Property(ShowNext)) + !system.getbool(videolibrary.showunwatchedplots) + IsEmpty(VideoPlayer.PlayCount)">$LOCALIZE[42460]</value>
         <value>$INFO[VideoPlayer.Plot]</value>
     </variable>
     
     <variable name="OSDTitle">
-        <value condition="!IsEmpty(Window(seekbar).Property(ShowNext))">$INFO[VideoPlayer.NextTitle]</value>
+        <value condition="VideoPlayer.Content(LiveTV) + !IsEmpty(Window(seekbar).Property(ShowNext))">$LOCALIZE[209]:  $INFO[VideoPlayer.NextTitle]</value>
         <value>$INFO[VideoPlayer.Title]</value>
     </variable>
     
@@ -120,18 +155,19 @@
     
     <include name="OSDChapterInfo">
         <control type="group">
-        	<visible>[[!IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo)] + !Player.ShowCodec + !Window.IsActive(script-XBMC_Lyrics-main.xml) + !IsEmpty(Player.Chapter) + IntegerGreaterThan(Player.ChapterCount,0)]</visible>
-            <animation effect="slide" end="-70"  time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)] + !stringcompare(Skin.String(video.seekbar.type),small) + !stringcompare(Skin.String(video.seekbar.type),onscreen)">Conditional</animation>
-            <animation effect="slide" end="-220"  time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)] + !stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full)">Conditional</animation>
-            <animation effect="slide" end="1150" condition="!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full)">Conditional</animation>
+        	<visible>[[!IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo)] + !Player.ShowCodec + !Window.IsActive(script-XBMC_Lyrics-main.xml) + !IsEmpty(Player.Chapter) + IntegerGreaterThan(Player.ChapterCount,0)]</visible>
+            <!--<animation effect="slide" end="-70"  time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)]">Conditional</animation>-->
             <include>OSDClockAnimation</include>
-            <posx>-10</posx>
-            <animation effect="slide" end="0,20" condition="[!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + [Skin.HasSetting(musicvis.noinfo) | Skin.HasSetting(musicvis.small)]]">Conditional</animation>
+            <!--<posx>990</posx>-->
+            <posx>0</posx>
+			<animation type="Conditional" condition="Window.IsActive(infodialog)">
+                <effect type="fade" start="100" end="8" tween="sine" easing="out" time="300" /> 
+                <effect type="zoom" start="100" end="50" center="1569,97" tween="sine" easing="inout" time="300" />
+            </animation>
             <control type="group">
-            	<visible>[!stringcompare(Skin.String(video.seekbar.type),small) + !stringcompare(Skin.String(video.seekbar.type),onscreen) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + [!Skin.HasSetting(musicvis.noinfo) + !Skin.HasSetting(musicvis.small)]]</visible>
 				<control type="image">
 					<posx>150</posx>
-					<posy>-30</posy>
+					<posy>-26</posy>
 					<width>320</width>
 					<height>110</height>
 					<bordertexture border="40">arctic/common/border-20.png</bordertexture>
@@ -143,36 +179,9 @@
 				</control>
 				<control type="image">
 					<posx>150</posx>
-					<posy>-30</posy>
+					<posy>-26</posy>
 					<width>320</width>
 					<height>110</height>
-					<bordertexture border="40">arctic/common/border-20.png</bordertexture>
-					<bordersize>20</bordersize>
-					<texture border="25">arctic/common/whitepanel8.png</texture>
-					<aspectratio>stretch</aspectratio>
-					<visible>Skin.HasSetting(osd.darkpanel)</visible>
-					<colordiffuse>mod-infotags-d</colordiffuse>
-				</control>
-			</control>
-			<control type="group">
-            	<visible>[!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + [Skin.HasSetting(musicvis.noinfo) | Skin.HasSetting(musicvis.small)]]</visible>
-				<control type="image">
-					<posx>150</posx>
-					<posy>-23</posy>
-					<width>320</width>
-					<height>104</height>
-					<bordertexture border="40">arctic/common/border-20.png</bordertexture>
-					<bordersize>20</bordersize>
-					<texture border="25">arctic/common/whitepanel8.png</texture>
-					<aspectratio>stretch</aspectratio>
-					<visible>!Skin.HasSetting(osd.darkpanel)</visible>
-					<colordiffuse>mod-osdbar</colordiffuse>
-				</control>
-				<control type="image">
-					<posx>150</posx>
-					<posy>-23</posy>
-					<width>320</width>
-					<height>104</height>
 					<bordertexture border="40">arctic/common/border-20.png</bordertexture>
 					<bordersize>20</bordersize>
 					<texture border="25">arctic/common/whitepanel8.png</texture>
@@ -196,8 +205,6 @@
     </include>
     <include name="OSDWeatherClock">
         <control type="group">
-        	<animation effect="slide" time="300" end="-150" condition="Window.IsVisible(visualisation) + [Player.Muted | substring(Player.Volume,-60.0) | Window.IsActive(volumebar) | Control.IsVisible(99221)]">Conditional</animation>
-        	<animation effect="slide" end="0,20" condition="[!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + !stringcompare(Skin.String(music.seekbar.type),medium) + !stringcompare(Skin.String(music.seekbar.type),full)]">Conditional</animation>
             <include>OSDClockAnimation</include>
             <visible>[Player.Muted | substring(Player.Volume,-60.0) | Window.IsActive(volumebar) | Window.IsActive(mutebug) | !IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo) | Window.IsActive(visualisation)] + !Player.ShowCodec</visible>
             <animation type="Conditional" condition="Window.IsActive(infodialog)">
@@ -206,14 +213,12 @@
             </animation>
 			<!-- Clocks -->
             <control type="group">
-            	<animation effect="slide" end="-70" time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)]">Conditional</animation>
-            	<animation effect="slide" end="150" time="200" tween="sine" easing="inout" condition="Window.IsVisible(visualisation) | [!Window.IsVisible(volumebar) + !Window.IsVisible(mutebug) + !stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full)]">Conditional</animation>
+            	<animation effect="slide" end="-70" time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)] + !Player.Passthrough">Conditional</animation>
             	<posx>1430</posx>
             	<control type="group">
-            		<visible>[!stringcompare(Skin.String(video.seekbar.type),small) + !stringcompare(Skin.String(video.seekbar.type),onscreen) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + !stringcompare(Skin.String(music.seekbar.type),small) + !stringcompare(Skin.String(music.seekbar.type),onscreen)]</visible>
 					<control type="image">
 						<posx>0</posx>
-						<posy>-30</posy>
+						<posy>-26</posy>
 						<width>340</width>
 						<height>110</height>
 						<bordertexture border="40">arctic/common/border-20.png</bordertexture>
@@ -222,39 +227,12 @@
 						<aspectratio>stretch</aspectratio>
 						<colordiffuse>mod-osdbar</colordiffuse>
 						<visible>!Skin.HasSetting(osd.darkpanel)</visible>
-					</control>
+					</control>	
 					<control type="image">
 						<posx>0</posx>
-						<posy>-30</posy>
+						<posy>-26</posy>
 						<width>340</width>
 						<height>110</height>
-						<bordertexture border="40">arctic/common/border-20.png</bordertexture>
-						<bordersize>20</bordersize>
-						<texture border="25">arctic/common/whitepanel8.png</texture>
-						<aspectratio>stretch</aspectratio>
-						<colordiffuse>mod-infotags-d</colordiffuse>
-						<visible>Skin.HasSetting(osd.darkpanel)</visible>
-					</control>
-				</control>
-				<control type="group">
-            		<visible>[!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full) + Window.IsActive(fullscreenvideo)] | [Window.IsActive(visualisation) + !stringcompare(Skin.String(music.seekbar.type),medium) + !stringcompare(Skin.String(music.seekbar.type),full)]</visible>
-					<control type="image">
-						<posx>0</posx>
-						<posy>-23</posy>
-						<width>340</width>
-						<height>104</height>
-						<bordertexture border="40">arctic/common/border-20.png</bordertexture>
-						<bordersize>20</bordersize>
-						<texture border="25">arctic/common/whitepanel8.png</texture>
-						<aspectratio>stretch</aspectratio>
-						<colordiffuse>mod-osdbar</colordiffuse>
-						<visible>!Skin.HasSetting(osd.darkpanel)</visible>
-					</control>
-					<control type="image">
-						<posx>0</posx>
-						<posy>-23</posy>
-						<width>340</width>
-						<height>104</height>
 						<bordertexture border="40">arctic/common/border-20.png</bordertexture>
 						<bordersize>20</bordersize>
 						<texture border="25">arctic/common/whitepanel8.png</texture>
@@ -336,7 +314,6 @@
 					</control>
 				</control>
 				<control type="group">
-					<!--<visible>[Player.Forwarding | Player.Rewinding] + [[!stringcompare(Skin.String(video.seekbar.type),medium) + !stringcompare(Skin.String(video.seekbar.type),full) + !Window.IsVisible(videoosd)] | !stringcompare(Skin.String(video.seekbar.type),small) + !stringcompare(Skin.String(video.seekbar.type),onscreen)]</visible>-->
 					<visible>[Player.Forwarding | Player.Rewinding]</visible>
 					<include>visiblehidefadeinfo</include>
 					<control type="label">
