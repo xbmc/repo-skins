@@ -17,6 +17,7 @@
 		<value condition="!IsEmpty(Player.Art(poster))">$INFO[Player.Art(poster)]</value>
 		<value condition="!IsEmpty(Player.Art(tvshow.poster))">$INFO[Player.Art(tvshow.poster)]</value>
 		<value condition="!IsEmpty(Player.Art(thumb))">$INFO[Player.Art(thumb)]</value>
+		<value condition="!IsEmpty(VideoPlayer.Cover)">$INFO[VideoPlayer.Cover]</value>
 		<value condition="Player.HasVideo">views/fallbacks/DefaultVideo.png/large.png</value>
 		<value condition="!Player.HasVideo">views/fallbacks/DefaultAudio.png/square-large.png</value>
 	</variable>
@@ -25,6 +26,7 @@
 		<value condition="!IsEmpty(Player.Art(clearlogo))">$INFO[Player.Art(clearlogo)]</value>
 		<value condition="!IsEmpty(Player.Art(tvshow.clearlogo))">$INFO[Player.Art(tvshow.clearlogo)]</value>
 		<value condition="!IsEmpty(Player.Art(thumb))">$INFO[Player.Art(thumb)]</value>
+		<value condition="!IsEmpty(VideoPlayer.Cover)">$INFO[VideoPlayer.Cover]</value>
 	</variable>
 	
 	<variable name="OSDAudioChannels">
@@ -74,6 +76,21 @@
         <value></value>
     </variable>
 
+	<variable name="OSD.Player.FinishTime">
+		<value condition="Player.Rewinding2x">«   2x   «</value>
+		<value condition="Player.Forwarding2x">»   2x   »</value>
+		<value condition="Player.Rewinding4x">«   4x   «</value>
+		<value condition="Player.Forwarding4x">»   4x   »</value>
+		<value condition="Player.Rewinding8x">«   8x   «</value>
+		<value condition="Player.Forwarding8x">»   8x   »</value>
+		<value condition="Player.Rewinding16x">«   16x   «</value>
+		<value condition="Player.Forwarding16x">»   16x   »</value>
+		<value condition="Player.Rewinding32x">«   32x   «</value>
+		<value condition="Player.Forwarding32x">»   32x   »</value>
+		<value>$INFO[Player.FinishTime(hh:mm:xx)]</value>
+	</variable>
+	
+
     <include name="OSDVisualisation">
         <control type="visualisation" id="2">
             <description>visualisation</description>
@@ -90,9 +107,11 @@
 		<onup condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ShowNext,1,seekbar)</onup>
 		<onup condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ExtendPlot,1,seekbar)</onup>
 		<onup condition="!Player.ShowInfo">Action(Info)</onup>
-		<ondown condition="!Player.ShowInfo + IsEmpty(Window(seekbar).Property(ShowNext))">Close</ondown>
-		<ondown condition="Player.ShowInfo + IsEmpty(Window(seekbar).Property(ShowNext))">Action(Info)</ondown>
-		<ondown condition="Player.ShowInfo + !IsEmpty(Window(seekbar).Property(ShowNext))">ClearProperty(ShowNext,seekbar)</ondown>
+		<ondown condition="!stringcompare(Skin.String(video.seekbar.type),onscreen) + !IsEmpty(Window(seekbar).Property(ExtendPlot)) + IsEmpty(Window(seekbar).Property(ShowNext)) + Skin.HasSetting(video.seekbar.showplot)">ClearProperty(ExtendPlot,seekbar)</ondown>
+		<ondown condition="!stringcompare(Skin.String(video.seekbar.type),onscreen) + Player.ShowInfo + IsEmpty(Window(seekbar).Property(ShowNext))">Action(Info)</ondown>
+		<ondown condition="!stringcompare(Skin.String(video.seekbar.type),onscreen) + Player.ShowInfo + !IsEmpty(Window(seekbar).Property(ShowNext))">ClearProperty(ShowNext,seekbar)</ondown>
+		<ondown condition="stringcompare(Skin.String(video.seekbar.type),onscreen) + Player.ShowInfo">Action(Info)</ondown>
+		<ondown condition="!Player.ShowInfo">Close</ondown>
 		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot)) + !IsEmpty(Window(seekbar).Property(ShowNext))">ClearProperty(ShowNext,seekbar)</onclick>
 		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + !IsEmpty(Window(seekbar).Property(ExtendPlot)) + IsEmpty(Window(seekbar).Property(ShowNext))">SetProperty(ShowNext,1,seekbar)</onclick>
 		<onclick condition="Player.ShowInfo + stringcompare(Skin.String(video.seekbar.type),medium) + IsEmpty(Window(seekbar).Property(ExtendPlot))">SetProperty(ExtendPlot,1,seekbar)</onclick>
@@ -133,7 +152,8 @@
     
     <variable name="OSDPlot">
         <value condition="VideoPlayer.Content(LiveTV) + !IsEmpty(Window(seekbar).Property(ShowNext))">$INFO[VideoPlayer.NextPlot]</value>
-        <value condition="!VideoPlayer.Content(LiveTV) + IsEmpty(Window(seekbar).Property(ShowNext)) + !system.getbool(videolibrary.showunwatchedplots) + IsEmpty(VideoPlayer.PlayCount)">$LOCALIZE[42460]</value>
+        <!--<value condition="!VideoPlayer.Content(LiveTV) + IsEmpty(Window(seekbar).Property(ShowNext)) + !system.getbool(videolibrary.showunwatchedplots) + IsEmpty(VideoPlayer.PlayCount)">$LOCALIZE[42460]</value>-->
+        <value condition="!VideoPlayer.Content(LiveTV) + IsEmpty(Window(seekbar).Property(ShowNext)) + Skin.HasSetting(video.seekbar.showplot) + stringcompare(Skin.String(video.seekbar.type),small) + !Skin.HasSetting(video.seekbar.showinfo)">$LOCALIZE[42460]</value>
         <value>$INFO[VideoPlayer.Plot]</value>
     </variable>
     
@@ -155,6 +175,7 @@
     
     <include name="OSDChapterInfo">
         <control type="group">
+        	<animation effect="slide" end="0,20" condition="Skin.HasSetting(osd.topitems)">Conditional</animation>
         	<visible>[[!IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo)] + !Player.ShowCodec + !Window.IsActive(script-XBMC_Lyrics-main.xml) + !IsEmpty(Player.Chapter) + IntegerGreaterThan(Player.ChapterCount,0)]</visible>
             <!--<animation effect="slide" end="-70"  time="200" tween="sine" easing="inout" condition="[Window.IsVisible(volumebar) | Window.IsVisible(mutebug)]">Conditional</animation>-->
             <include>OSDClockAnimation</include>
@@ -206,7 +227,8 @@
     <include name="OSDWeatherClock">
         <control type="group">
             <include>OSDClockAnimation</include>
-            <visible>[Player.Muted | substring(Player.Volume,-60.0) | Window.IsActive(volumebar) | Window.IsActive(mutebug) | !IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo) | Window.IsActive(visualisation)] + !Player.ShowCodec</visible>
+            <animation effect="slide" end="0,20" condition="Skin.HasSetting(osd.topitems)">Conditional</animation>
+            <visible>[Player.ShowInfo | Player.Muted | substring(Player.Volume,-60.0) | Window.IsActive(volumebar) | Window.IsActive(mutebug) | !IsEmpty(Window(seekbar).Property(ShowInfo)) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(fullscreenvideo)] + [!Player.ShowCodec | Window.IsActive(visualisation)]</visible>
             <animation type="Conditional" condition="Window.IsActive(infodialog)">
                 <effect type="fade" start="100" end="8" tween="sine" easing="out" time="300" /> 
                 <effect type="zoom" start="100" end="50" center="1569,97" tween="sine" easing="inout" time="300" />
