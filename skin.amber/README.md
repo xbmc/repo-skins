@@ -1,4 +1,4 @@
 skin.amber
 ==========
 
-Amber skin for XBMC
+Amber skin for XBMC Gotham
