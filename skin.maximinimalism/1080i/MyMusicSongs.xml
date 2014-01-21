@@ -6,11 +6,31 @@
 	<controls>
 
 		<include>fadeInOut</include>
+		<include>globalBackground</include>
+		
+		<!--loading indicator-->
+		<control type="group">
+			<visible>!IntegerGreaterThan(container.numitems,0)</visible>
+			<posx>0</posx>
+			<posy>0</posy>
+			
+			<!--animations-->
+			<include>fadeInOut</include>
+
+			<control type="image">
+				<description>Busy animation</description>
+				<posx>12-col</posx>
+				<posy>row-8-begin</posy>
+				<width>3-col-gutter</width>
+				<height>3-col-gutter</height>
+				<texture>UIControls/busy.png</texture>
+				<aspectratio>keep</aspectratio>
+				<animation effect="rotate" start="0" end="-360" center="auto" time="1200" loop="true" condition="true">conditional</animation>
+			</control>
+		</control>
 
 		<!--page container group-->
 		<control type="group">
-
-			<include>globalBackground</include>
 
 			<!--window fader-->			
 			<animation type="conditional" condition="window.next(0) | window.next(1)">
@@ -40,9 +60,8 @@
 						<width>3-col</width>
 						<height>12-row</height>
 						<orientation>vertical</orientation>
-						<onleft>61</onleft>
+						<onleft>62</onleft>
 						<onright>9999</onright>
-						<ondown>9000</ondown>
 
 						<itemlayout width="4-col" height="43">
 
@@ -82,7 +101,20 @@
 						</focusedlayout>
 
 						<content>
-
+							<item id="26">
+								<visible>Player.HasAudio</visible>
+								<label>13350</label>
+								<label2></label2>
+								<onclick>action(FullScreen)</onclick>
+							</item>
+							
+							<item id="25">
+								<visible>System.HasMediaDVD</visible>
+								<label>341</label>
+								<label2></label2>
+								<onclick>XBMC.PlayDVD()</onclick>
+							</item>							
+							
 							<item id="1">
 								<label>31005</label>
 								<label2></label2>
@@ -204,8 +236,8 @@
 							<!--final bits and bobs-->							
 							<item id="21">
 								<label>31010</label>
-								<onclick>Skin.SetString(showRecentMusicItems,false)</onclick>
 								<onclick>ReplaceWindow(MusicFiles,Addons,return)</onclick>
+								<onclick>Skin.SetString(showRecentMusicItems,false)</onclick>
 								<onclick>setfocus(9500)</onclick>	
 							</item>
 
@@ -224,81 +256,36 @@
 				<control type="group">
 					<posx>col-4-begin</posx>
 					<posy>row-2-begin</posy>
+					
+					<animation type="Conditional" condition="!IntegerGreaterThan(container.numitems,0)">
+						<effect type="fade" start="100" end="0" time="300" />
+					</animation>
+					
+					<animation type="Conditional" condition="IntegerGreaterThan(container.numitems,0)">
+						<effect type="fade" start="0" end="100" time="300" />
+					</animation>
 
 					<!--source title-->
 					<control type="label">
-						<visible>!container.content(addons) + !SubString(container.foldername,playlists)</visible>
 						<posx>0</posx>
 						<posy>0</posy>
 						<width>18-col</width>
 						<font>pageTitle</font>
-						<label>30214</label>
-						<textcolor>selected</textcolor>
-					</control>
-
-					<control type="label">
-						<visible>container.content(addons) + !SubString(container.foldername,playlists)</visible>
-						<posx>0</posx>
-						<posy>0</posy>
-						<width>14-col</width>
-						<font>pageTitle</font>
-						<label>31055</label>
-						<textcolor>selected</textcolor>
-					</control>
-
-					<control type="label">
-						<visible>SubString(container.foldername,playlists)</visible>
-						<posx>0</posx>
-						<posy>0</posy>
-						<width>14-col</width>
-						<font>pageTitle</font>
-						<label>20011</label>
+						<label>$VAR[listTitle]</label>
 						<textcolor>selected</textcolor>
 					</control>
 
 					<!--source subtitle-->
 					<control type="label">
-						<visible>IntegerGreaterThan(container.Numitems,0) + SubString(skin.string(showRecentMusicItems),false) + !container.content(songs)</visible>
 						<posx>0</posx>
 						<posy>45</posy>
 						<width>24-col</width>
 						<font>regular</font>
-						<label>$INFO[container.Numitems,, $LOCALIZE[31014]]</label>
+						<label>$VAR[listSubTitle]</label>
 						<textcolor>selected</textcolor>
 					</control>
-
-					<control type="label">
-						<visible>IntegerGreaterThan(container.Numitems,0) + SubString(skin.string(showRecentMusicItems),false) + container.content(songs)</visible>
-						<posx>0</posx>
-						<posy>45</posy>
-						<width>24-col</width>
-						<font>regular</font>
-						<label>$INFO[container.Numitems,, $LOCALIZE[31049]]</label>
-						<textcolor>selected</textcolor>
-					</control>
-
-					<control type="label">
-						<visible>IntegerGreaterThan(container.Numitems,0) + SubString(skin.string(showRecentMusicItems),true)</visible>
-						<posx>0</posx>
-						<posy>45</posy>
-						<width>24-col</width>
-						<font>regular</font>
-						<label>31013</label>
-						<textcolor>selected</textcolor>
-					</control>
-
-					<control type="label">
-						<visible>!IntegerGreaterThan(container.Numitems,0) + SubString(skin.string(showRecentMusicItems),false)</visible>
-						<posx>0</posx>
-						<posy>45</posy>
-						<width>24-col</width>
-						<font>regular</font>
-						<label>31052</label>
-						<textcolor>selected</textcolor>
-					</control>
-
 				</control>
-
+				
 				<!--Main content listing-->
 				<control type="group" id="9999">
 					<posx>col-4-begin</posx>
@@ -420,45 +407,51 @@
 
 			<!--animations-->
 			<animation type="Conditional" condition="!controlgroup(61).hasfocus">
-				<effect type="fade" start="100" end="0" time="0" tween="sine" easing="in" reversible="false"  />
+				<effect type="fade" start="100" end="0" time="200" />
 			</animation>
 
 			<animation type="Conditional" condition="controlgroup(61).hasfocus">
-				<effect type="slide" start="-456,0" end="0,0" time="200" tween="sine" easing="in" reversible="false"  />
+				<effect type="fade" start="0" end="100" time="200" />
 			</animation>
-
+			
 			<animation type="conditional" condition="window.next(1)">
 				<effect type="fade" start="100" end="0" time="300" />
 			</animation>
-
-			<!--background-->
+			
+			<!--overlay-->
 			<control type="image">
-				<posx>0</posx>
-				<posy>0</posy>
-				<width>col-5-begin</width>
-				<height>fullscreenHeight</height>
+				<include>dimensionsFullscreen</include>
+				<texture>backgrounds/vignette.png</texture>
+				<colordiffuse>ffffffff</colordiffuse>
 				<aspectratio>stretch</aspectratio>
-				<texture>colors/selected.png</texture>
-				<bordersize>0</bordersize>
-			</control>
-
-			<control type="image">
-				<visible>!isempty(Skin.String(customMusicAddon1))</visible>
-				<posx>col-5-begin</posx>
-				<posy>0</posy>
-				<width>1-col-gutter</width>
-				<height>fullscreenHeight</height>
-				<aspectratio>stretch</aspectratio>
-				<texture>colors/selected.png</texture>
-				<bordersize>0</bordersize>
-				<colordiffuse>33ffffff</colordiffuse>
 			</control>
 
 			<!--titles-->
 			<control type="group">
 				<posx>col-1-begin</posx>
-				<posy>row-2-begin</posy>
+				<posy>111</posy>
+				
+				<animation type="Conditional" condition="controlgroup(62).hasfocus">
+		            <effect type="fade" start="0" end="100" time="300" />
+					<effect type="slide" start="-100" end="0" tween="sine" easing="out" time="400" />
+				</animation>
+				
+				<animation type="Conditional" condition="!controlgroup(62).hasfocus | Window.IsActive(5000)">
+					<effect type="fade" start="100" end="0" time="300" />
+					<effect type="slide" start="0" end="-100" tween="sine" easing="out" time="400" />
+				</animation>
 
+				<control type="image">
+					<posx>-96</posx>
+					<posy>-111</posy>
+					<width>col-5-begin</width>
+					<height>fullscreenHeight</height>
+					<aspectratio>stretch</aspectratio>
+					<texture>colors/selected.png</texture>
+					<colordiffuse>ffffffff</colordiffuse>
+					<bordersize>0</bordersize>
+				</control>
+				
 				<control type="label">
 					<posx>0</posx>
 					<posy>0</posy>
@@ -478,233 +471,110 @@
 					<textcolor>black</textcolor>
 					<shadowcolor>-</shadowcolor>
 				</control>
+				
+				<!--menu-->
+				<control type="grouplist" id="62">
+					<posx>-12</posx>
+					<posy>166</posy>
+					<width>4-col</width>
+					<height>10-row</height>
+					<itemgap>0</itemgap>
+					<onright>9000</onright>
+
+					<control type="button" id="101">
+						<description>Search</description>
+						<visible>System.HasAddon(script.globalsearch)</visible>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>137</label>
+						<onclick>RunScript(script.globalsearch,artists=true&albums=true)</onclick>
+						<onclick>Skin.SetString(showRecentMusicItems,true)</onclick>
+					</control>
+
+					<control type="button" id="3">
+						<description>Sort by button</description>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>103</label>
+					</control>
+
+					<control type="togglebutton" id="4">
+						<description>Sort asc</description>
+						<label>30336</label>
+						<altlabel>30337</altlabel>
+						<align>left</align>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<alttexturefocus>colors/black.png</alttexturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+					</control>
+
+					<control type="button" id="102">
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>31041</label>
+						<onclick>Skin.SetString(menuItemTypeFilter,audio)</onclick>
+						<onclick>ActivateWindow(5000)</onclick>
+					</control>
+
+					<control type="button" id="103">
+						<description>Programs menu</description>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>31003</label>
+						<onclick>right</onclick>
+						<onclick>ActivateWindow(programs,addons,return)</onclick>
+					</control>
+
+					<control type="button" id="104">
+						<description>Files menu</description>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>1214</label>
+						<onclick>right</onclick>
+						<onclick>ActivateWindow(MusicFiles,root)</onclick>
+						<onclick>Skin.SetString(showRecentMusicItems,false)</onclick>
+					</control>
+
+				</control>
 			</control>
-
-			<!--menu-->
-			<control type="grouplist" id="62">
-				<posx>82</posx>
-				<posy>282</posy>
-				<width>302</width>
-				<height>10-row</height>
-				<itemgap>0</itemgap>
-				<onright>9000</onright>
-				<ondown>63</ondown>
-
-				<control type="button" id="101">
-					<description>Search</description>
-					<visible>System.HasAddon(script.globalsearch)</visible>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-					<label>137</label>
-					<onclick>RunScript(script.globalsearch,artists=true&albums=true)</onclick>
-					<onclick>Skin.SetString(showRecentMusicItems,true)</onclick>
-				</control>
-
-				<control type="button" id="3">
-					<description>Sort by button</description>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-					<label>103</label>
-				</control>
-
-				<control type="togglebutton" id="4">
-					<description>Sort asc</description>
-					<label>30336</label>
-					<altlabel>30337</altlabel>
-					<align>left</align>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<alttexturefocus>colors/black.png</alttexturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-				</control>
-
-				<control type="button" id="102">
-					<visible>isempty(Skin.String(customMusicAddon1)) | isempty(Skin.String(customMusicAddon2)) | isempty(Skin.String(customMusicAddon3)) | isempty(Skin.String(customMusicAddon4)) | isempty(Skin.String(customMusicAddon5)) | isempty(Skin.String(customMusicAddon6)) | isempty(Skin.String(customMusicAddon7)) | isempty(Skin.String(customMusicAddon8))</visible>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-					<label>31041</label>
-					<onclick>Skin.SetString(menuItemTypeFilter,audio)</onclick>
-					<onclick>ActivateWindow(5000)</onclick>
-				</control>
-
-				<control type="button" id="103">
-					<description>Programs menu</description>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-					<label>31003</label>
-					<onclick>right</onclick>
-					<onclick>ActivateWindow(programs,addons,return)</onclick>
-				</control>
-
-				<control type="button" id="104">
-					<description>Files menu</description>
-					<height>54</height>
-					<width>4-col</width>
-					<font>menuTitle</font>
-					<textcolor>black</textcolor>
-					<focusedcolor>selected</focusedcolor>
-					<texturefocus>colors/black.png</texturefocus>
-					<texturenofocus>colors/unselected.png</texturenofocus>
-					<textoffsetx>12</textoffsetx>
-					<label>1214</label>
-					<onclick>right</onclick>
-					<onclick>ActivateWindow(MusicFiles,root)</onclick>
-					<onclick>Skin.SetString(showRecentMusicItems,false)</onclick>
-				</control>
-
-			</control>
-
-			<!--custom addon removal-->
-			<control type="grouplist" id="63">
-				<posx>398</posx>
-
-				<!--no additions active-->
-				<include condition="!Library.HasContent(Music)">noOffset</include>
-				<include condition="Library.HasContent(Music)">offset4</include>
-
-				<width>4-col</width>
-				<height>10-row</height>
-				<itemgap>0</itemgap>
-				<onright>9000</onright>
-				<onup>62</onup>
-
-				<control type="button" id="102">
-					<visible>!isempty(Skin.String(customMusicAddon1))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon1)</onclick>
-					<onclick>Skin.Reset(customVideoAddon1Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon1Name)</onclick>
-				</control>
-
-				<control type="button" id="103">
-					<visible>!isempty(Skin.String(customMusicAddon2))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon2)</onclick>
-					<onclick>Skin.Reset(customVideoAddon2Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon2Name)</onclick>
-				</control>
-
-				<control type="button" id="104">
-					<visible>!isempty(Skin.String(customMusicAddon3))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon3)</onclick>
-					<onclick>Skin.Reset(customVideoAddon3Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon3Name)</onclick>
-				</control>
-
-				<control type="button" id="105">
-					<visible>!isempty(Skin.String(customMusicAddon4))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon4)</onclick>
-					<onclick>Skin.Reset(customVideoAddon4Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon4Name)</onclick>
-				</control>
-
-				<control type="button" id="106">
-					<visible>!isempty(Skin.String(customMusicAddon5))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon5)</onclick>
-					<onclick>Skin.Reset(customVideoAddon5Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon5Name)</onclick>
-				</control>
-
-				<control type="button" id="107">
-					<visible>!isempty(Skin.String(customMusicAddon6))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon6)</onclick>
-					<onclick>Skin.Reset(customVideoAddon6Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon6Name)</onclick>
-				</control>
-
-				<control type="button" id="108">
-					<visible>!isempty(Skin.String(customMusicAddon7))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon7)</onclick>
-					<onclick>Skin.Reset(customVideoAddon7Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon7Name)</onclick>
-				</control>
-
-				<control type="button" id="109">
-					<visible>!isempty(Skin.String(customMusicAddon8))</visible>
-					<label></label>
-					<width>4-col</width>
-					<height>43</height>
-					<font>symbol</font>
-					<focusedcolor>selected</focusedcolor>
-					<textcolor>unselected</textcolor>
-					<onclick>Skin.Reset(customMusicAddon8)</onclick>
-					<onclick>Skin.Reset(customVideoAddon8Type)</onclick>
-					<onclick>Skin.Reset(customVideoAddon8Name)</onclick>
-				</control>
-
-			</control>
-
 		</control>
-
+		
 		<!--debugging-->
 		<include>Debug_Grid</include>
 		<control type="label">
