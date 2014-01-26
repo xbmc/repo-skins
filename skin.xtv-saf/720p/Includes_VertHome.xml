@@ -1,18 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
 <includes>
 	<include name="VertHomeMenu">
 		<include>background</include>
 		<include>screen-fade</include>
-		<control type="button" id="420">
-			<description>trigger playlist if selected</description>
-			<posx>-12</posx>
-			<posy>-12</posy>
-			<width>1</width>
-			<height>1</height>
-			<onfocus condition="Skin.HasSetting(startup-playlist) + Window.Previous(startup)">PlayMedia($ESCINFO[Skin.String(Startup_Playlist_Path)],isdir)</onfocus>
-			<onfocus>Control.SetFocus(9000)</onfocus>
-			<texturenofocus>-</texturenofocus>
-			<texturefocus>-</texturefocus>
-		</control>
 		<!-- Bring up Player controls if go left -->
 		<control type="button" id="421">
 			<description>trigger player controls if selected</description>
@@ -22,8 +12,6 @@
 			<height>1</height>
 			<onfocus>ActivateWindow(PlayerControls)</onfocus>
 			<onfocus>Control.SetFocus(9000)</onfocus>
-			<texturenofocus>-</texturenofocus>
-			<texturefocus>-</texturefocus>
 		</control>
 		<control type="group">
 			<visible>!Skin.HasSetting(home-time)</visible>
@@ -50,7 +38,7 @@
 			</control>
 		</control>
 		<control type="group">
-			<visible>Skin.HasSetting(home-currentweather)</visible>
+			<visible>Skin.HasSetting(home-currentweather) + !IsEmpty(Weather.plugin)</visible>
 			<!-- Weather Condition -->
 			<control type="label">
 				<description>Can't get current weather conditions</description>
@@ -117,10 +105,10 @@
 		</control>
 
 		<!-- Low memory warning -->
-		<include>memory-low</include>
+		<include condition="!Skin.HasSetting(hidememwarning)">memory-low</include>
 
 		<!-- RSS info -->
-		<include>page-info</include>
+		<include condition="system.getbool(lookandfeel.enablerssfeeds)">page-info</include>
 
 		<!-- Markers for excess menu items -->
 		<control type="image">
@@ -401,7 +389,7 @@
 					<thumb>icon-weather-blur1.png</thumb>
 					<label>31032</label>
 					<onclick>ActivateWindow(Weather,,return)</onclick>
-					<visible>Skin.HasSetting(home-weather)</visible>
+					<visible>Skin.HasSetting(home-weather) + !IsEmpty(Weather.plugin)</visible>
 				</item>
 				<item>
 					<icon>icon-fav.png</icon>
@@ -441,43 +429,8 @@
 					<icon>shut-power.png</icon>
 					<thumb>shut-power-blur1.png</thumb>
 					<label>13009</label>
-					<onclick>XBMC.Quit()</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + [IsEmpty(Skin.String(home-quitaction)) | StringCompare(Skin.String(home-quitaction),$LOCALIZE[13009])]</visible>
-				</item>
-				<item>
-					<icon>shut-power.png</icon>
-					<thumb>shut-power-blur1.png</thumb>
-					<label>13009</label>
-					<onclick>XBMC.Reboot()</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + StringCompare(Skin.String(home-quitaction),$LOCALIZE[13013])</visible>
-				</item>
-				<item>
-					<icon>shut-power.png</icon>
-					<thumb>shut-power-blur1.png</thumb>
-					<label>13009</label>
-					<onclick>XBMC.ShutDown()</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + StringCompare(Skin.String(home-quitaction),$LOCALIZE[13005])</visible>
-				</item>
-				<item>
-					<icon>shut-power.png</icon>
-					<thumb>shut-power-blur1.png</thumb>
-					<label>13009</label>
-					<onclick>XBMC.Hibernate()</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + StringCompare(Skin.String(home-quitaction),$LOCALIZE[13010])</visible>
-				</item>
-				<item>
-					<icon>shut-power.png</icon>
-					<thumb>shut-power-blur1.png</thumb>
-					<label>13009</label>
-					<onclick>XBMC.Suspend()</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + StringCompare(Skin.String(home-quitaction),$LOCALIZE[13011])</visible>
-				</item>
-				<item>
-					<icon>shut-power.png</icon>
-					<thumb>shut-power-blur1.png</thumb>
-					<label>13009</label>
-					<onclick>ActivateWindow(shutdownmenu)</onclick>
-					<visible>!Skin.HasSetting(home-shutdown) + StringCompare(Skin.String(home-quitaction),$LOCALIZE[31558])</visible>
+					<onclick>$VAR[QuitAction]</onclick>
+					<visible>!Skin.HasSetting(home-shutdown)</visible>
 				</item>
 			</content>
 		</control>
@@ -754,113 +707,115 @@
 		<!-- Scroll Bar -->
 		<control type="scrollbar" id="23">
 			<posx>1244</posx>
-			<posy>140</posy>
-			<width>22</width>
+			<posy>142</posy>
+			<width>18</width>
 			<height>512</height>
 			<onleft>9000</onleft>
 			<onright>9000</onright>
 			<visible>Skin.HasSetting(sbar)</visible>
+			<animation condition="!Control.HasFocus(23) + !Container.Scrolling" effect="fade" start="100" end="0" time="200" reversible="true">Conditional</animation>
 		</control>
 		<!-- media infos (music) -->
-		<control type="group">
-			<visible>Skin.HasSetting(overlay) + [Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)] + !Window.IsActive(PlayerControls)</visible>
-			<include>homemediainfo</include>
-			<control type="image">
-				<description>cover image</description>
-				<posx>20</posx>
-				<posy>536</posy>
-				<width>130</width>
-				<height>130</height>
-				<info>MusicPlayer.Cover</info>
-				<aspectratio align="center">keep</aspectratio>
+		<control type="group" id="9950">
+			<visible>Skin.HasSetting(overlay) + !Window.IsActive(PlayerControls)</visible>
+			<control type="group" id="9960">
+				<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+				<control type="image">
+					<description>cover image</description>
+					<posx>20</posx>
+					<posy>536</posy>
+					<width>130</width>
+					<height>130</height>
+					<info>MusicPlayer.Cover</info>
+					<aspectratio align="center">keep</aspectratio>
+				</control>
+				<control type="label">
+					<description>Artist label</description>
+					<posx>170</posx>
+					<posy>537</posy>
+					<width>520</width>
+					<height>31</height>
+					<info>MusicPlayer.Artist</info>
+					<align>left</align>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+				</control>
+				<control type="label">
+					<description>Album label</description>
+					<posx>170</posx>
+					<posy>568</posy>
+					<width>520</width>
+					<height>31</height>
+					<info>MusicPlayer.Album</info>
+					<align>left</align>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+				</control>
+				<control type="label">
+					<description>Title label</description>
+					<posx>170</posx>
+					<posy>600</posy>
+					<width>520</width>
+					<height>31</height>
+					<info>MusicPlayer.Title</info>
+					<align>left</align>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+				</control>
+				<control type="label">
+					<description>Time label</description>
+					<posx>170</posx>
+					<posy>631</posy>
+					<width>520</width>
+					<height>31</height>
+					<label>$INFO[MusicPlayer.Time]$INFO[MusicPlayer.Duration, / ]</label>
+					<align>left</align>
+					<font>font12</font>
+				</control>
 			</control>
-			<control type="label">
-				<description>Artist label</description>
-				<posx>170</posx>
-				<posy>537</posy>
-				<width>520</width>
-				<height>31</height>
-				<info>MusicPlayer.Artist</info>
-				<align>left</align>
-				<font>font12</font>
-				<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
-			</control>
-			<control type="label">
-				<description>Album label</description>
-				<posx>170</posx>
-				<posy>568</posy>
-				<width>520</width>
-				<height>31</height>
-				<info>MusicPlayer.Album</info>
-				<align>left</align>
-				<font>font12</font>
-				<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
-			</control>
-			<control type="label">
-				<description>Title label</description>
-				<posx>170</posx>
-				<posy>600</posy>
-				<width>520</width>
-				<height>31</height>
-				<info>MusicPlayer.Title</info>
-				<align>left</align>
-				<font>font12</font>
-				<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
-			</control>
-			<control type="label">
-				<description>Time label</description>
-				<posx>170</posx>
-				<posy>631</posy>
-				<width>520</width>
-				<height>31</height>
-				<label>$INFO[MusicPlayer.Time]$INFO[MusicPlayer.Duration, / ]</label>
-				<align>left</align>
-				<font>font12</font>
-			</control>
-		</control>
-		<!-- media infos (video) -->
-		<control type="group">
-			<visible>Skin.HasSetting(overlay) + Player.HasVideo + !Window.IsActive(PlayerControls)</visible>
-			<include>homemediainfo</include>
-			<control type="videowindow">
-				<description>video preview window</description>
-				<posx>44</posx>
-				<posy>520</posy>
-				<width>205</width>
-				<height>123</height>
-			</control>
-			<control type="label">
-				<description>Now playing</description>
-				<posx>265</posx>
-				<posy>537</posy>
-				<width>398</width>
-				<height>31</height>
-				<label>13350</label>
-				<align>left</align>
-				<font>font12</font>
-				<textcolor>listselectedtext</textcolor>
-			</control>
-			<control type="label">
-				<description>Video Title label</description>
-				<posx>265</posx>
-				<posy>568</posy>
-				<width>398</width>
-				<height>31</height>
-				<info>VideoPlayer.Title</info>
-				<align>left</align>
-				<font>font12</font>
-				<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
-			</control>
-			<control type="label">
-				<description>Time label</description>
-				<posx>265</posx>
-				<posy>600</posy>
-				<width>398</width>
-				<height>31</height>
-				<label>$INFO[VideoPlayer.Time]$INFO[VideoPlayer.Duration, / ]</label>
-				<align>left</align>
-				<font>font12</font>
-				<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+			<!-- media infos (video) -->
+			<control type="group" id="9970">
+				<visible>Player.HasVideo</visible>
+				<control type="videowindow">
+					<description>video preview window</description>
+					<posx>44</posx>
+					<posy>520</posy>
+					<width>205</width>
+					<height>123</height>
+				</control>
+				<control type="label">
+					<description>Now playing</description>
+					<posx>265</posx>
+					<posy>537</posy>
+					<width>398</width>
+					<height>31</height>
+					<label>13350</label>
+					<align>left</align>
+					<font>font12</font>
+					<textcolor>listselected-text</textcolor>
+				</control>
+				<control type="label">
+					<description>Video Title label</description>
+					<posx>265</posx>
+					<posy>568</posy>
+					<width>398</width>
+					<height>31</height>
+					<info>VideoPlayer.Title</info>
+					<align>left</align>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+				</control>
+				<control type="label">
+					<description>Time label</description>
+					<posx>265</posx>
+					<posy>600</posy>
+					<width>398</width>
+					<height>31</height>
+					<label>$INFO[VideoPlayer.Time]$INFO[VideoPlayer.Duration, / ]</label>
+					<align>left</align>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(autoscroll)">scrolltext</include>
+				</control>
 			</control>
 		</control>
 	</include>
