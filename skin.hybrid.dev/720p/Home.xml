@@ -26,6 +26,8 @@
 	<onload condition="!Skin.HasSetting(disablescriptplaylist) + !IsEmpty(Skin.String(homeitem.8.playlist))">XBMC.RunScript(script.randomandlastitems,playlist=$INFO[Skin.String(homeitem.8.playlist)],method=$VAR[PlaylistSortOrder],limit=12,unwatched=False,resume=False,property=HomeplaylistEight)</onload>
 	<onload condition="!Skin.HasSetting(disablescriptplaylist) + !IsEmpty(Skin.String(homeitem.9.playlist))">XBMC.RunScript(script.randomandlastitems,playlist=$INFO[Skin.String(homeitem.9.playlist)],method=$VAR[PlaylistSortOrder],limit=12,unwatched=False,resume=False,property=HomeplaylistNine)</onload>
 	<onload condition="!Skin.HasSetting(disablescriptplaylist) + !IsEmpty(Skin.String(homeitem.10.playlist))">XBMC.RunScript(script.randomandlastitems,playlist=$INFO[Skin.String(homeitem.10.playlist)],method=$VAR[PlaylistSortOrder],limit=12,unwatched=False,resume=False,property=HomeplaylistTen)</onload>
+	<onload condition="!IsEmpty(Weather.Plugin) + !Weather.IsFetched">Weather.Refresh</onload>
+	<onload condition="!IsEmpty(Weather.Plugin) + !System.HasAlarm(WeatherUpdate)">AlarmClock(WeatherUpdate,Weather.Refresh,21600,true,true)</onload>
 	<onload condition="Window.Previous(startup)">Control.Move(9000,$INFO[Skin.String(initialmenuitem)])</onload>
 	<controls>
 		<include>CommonBackground</include>
@@ -55,9 +57,10 @@
 				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + !IsEmpty(Window(home).Property(RecommendedMovie.1.Title)) + [StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentMovies) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomMovies) | StringCompare(Container(9000).ListItem.Property(WidgetSet),SuggestedMovies)] |
 				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + !IsEmpty(Window(home).Property(RecommendedEpisode.1.Title)) + [StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentEpisodes) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomEpisodes) | StringCompare(Container(9000).ListItem.Property(WidgetSet),SuggestedEpisodes)] |
 				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + !IsEmpty(Window(home).Property(RecommendedMusicVideo.1.Title)) + [StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentConcerts) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomConcerts) | StringCompare(Container(9000).ListItem.Property(WidgetSet),SuggestedConcerts)] |
-				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + !IsEmpty(Window(home).Property(RecommendedAlbum.1.Title)) + [StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentSongs) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomSongs) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentAlbums) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomAlbums) | StringCompare(Container(9000).ListItem.Property(WidgetSet),SuggestedAlbums)]
+				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + !IsEmpty(Window(home).Property(RecommendedAlbum.1.Title)) + [StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentSongs) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomSongs) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RecentAlbums) | StringCompare(Container(9000).ListItem.Property(WidgetSet),RandomAlbums) | StringCompare(Container(9000).ListItem.Property(WidgetSet),SuggestedAlbums)] |
+				![Skin.HasSetting(hidesuggestedinfo) | Player.HasMedia] + StringCompare(Container(9000).ListItem.Property(WidgetSet),Weather)
 			</visible>
-			<include>WidgetPanelVizability</include>
+			<!--include>WidgetPanelVizability</include-->
 			<control type="image">
 				<left>471</left>
 				<top>152</top>
@@ -113,7 +116,7 @@
 				<fadetime>1000</fadetime>
 				<aspectratio>keep</aspectratio>
 				<imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
-				<visible>Player.HasAudio + !Control.HasFocus(510)</visible>
+				<visible>Player.HasAudio + !Player.IsInternetStream + !Control.HasFocus(510)</visible>
 			</control>
 			<control type="image">
 				<left>12</left>
@@ -123,7 +126,7 @@
 				<aspectratio align="left" aligny="top">keep</aspectratio>
 				<texture background="true">$INFO[Skin.String(PhysicalMusicFolder)]$INFO[MusicPlayer.Artist,,/logo.png]</texture>
 				<fadetime>FanartCrossFadeTime</fadetime>
-				<visible>Player.HasAudio + !Control.HasFocus(510)</visible>
+				<visible>Player.HasAudio + !Player.IsInternetStream + !Control.HasFocus(510)</visible>
 			</control>
 			<control type="videowindow" id="8">
 				<left>6</left>
@@ -710,6 +713,8 @@
 				<visible>MusicPlayer.HasNext + !Skin.HasSetting(hidenextsongsinfo)</visible>
 			</control>
 		</control>
+		
+		
 		<control type="group">
 			<top>510</top>
 			<animation type="WindowOpen" reversible="false">
@@ -784,6 +789,7 @@
 			<include condition="!Skin.HasSetting(disabletvnextaired)">WidgetNextAiredContent</include>
 			<include condition="!Skin.HasSetting(disablegamebrowser)">WidgetRomGamesContent</include>
 			<include>WidgetFavouritesContent</include>
+			<include>WidgetWeatherContent</include>
 			<control type="group">
 				<control type="label">
 					<left>10</left>
@@ -849,6 +855,7 @@
 			<shadowcolor>black</shadowcolor>
 			<info>System.ProfileName</info>
 			<include>Window_OpenClose_Animation</include>
+			<animation effect="fade" start="100" end="0" time="200" condition="Window.IsVisible(infodialog)">Conditional</animation>
 			<visible>!StringCompare(System.ProfileName,Master user)</visible>
 		</control>
 		<control type="label">
@@ -863,6 +870,7 @@
 			<shadowcolor>black</shadowcolor>
 			<label>$LOCALIZE[31370]</label>
 			<include>Window_OpenClose_Animation</include>
+			<animation effect="fade" start="100" end="0" time="200" condition="Window.IsVisible(infodialog)">Conditional</animation>
 			<visible>!StringCompare(System.ProfileName,Master user)</visible>
 		</control>
 		<control type="label">
