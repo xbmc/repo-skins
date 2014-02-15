@@ -9,10 +9,11 @@
 
 		<include>fadeInOut</include>
 		<include>globalBackground</include>
+		<include>nowRecording</include>
 		
 		<!--loading indicator-->
 		<control type="group">
-			<visible>!IntegerGreaterThan(container.numitems,0)</visible>
+			<visible>!IntegerGreaterThan(container.numitems,0) + !isEmpty(Window(Home).Property(RecentAlbum.1.Title))</visible>
 			<posx>0</posx>
 			<posy>0</posy>
 			
@@ -259,11 +260,11 @@
 					<posx>col-4-begin</posx>
 					<posy>row-2-begin</posy>
 					
-					<animation type="Conditional" condition="!IntegerGreaterThan(container.numitems,0)">
+					<animation type="Conditional" condition="!IntegerGreaterThan(container.numitems,0) + !isEmpty(Window(Home).Property(RecentAlbum.1.Title))">
 						<effect type="fade" start="100" end="0" time="300" />
 					</animation>
 					
-					<animation type="Conditional" condition="IntegerGreaterThan(container.numitems,0)">
+					<animation type="Conditional" condition="IntegerGreaterThan(container.numitems,0) + !isEmpty(Window(Home).Property(RecentAlbum.1.Title))">
 						<effect type="fade" start="0" end="100" time="300" />
 					</animation>
 
@@ -316,7 +317,7 @@
 
 						<!--no recent items-->
 						<control type="label">
-							<visible>isEmpty(Window(Home).Property(LatestAlbum.1.Title))</visible>
+							<visible>isEmpty(Window(Home).Property(RecentAlbum.1.Title))</visible>
 							<posx>1-col</posx>
 							<posy>4-row</posy>
 							<width>21-col</width>
@@ -328,7 +329,7 @@
 
 						<!--content-->	
 						<control type="panel" id="9998">
-							<visible>!isEmpty(Window(Home).Property(LatestAlbum.1.Title))</visible>
+							<visible>!isEmpty(Window(Home).Property(RecentAlbum.1.Title))</visible>
 							<posx>-12</posx>
 							<posy>0</posy>
 							<width>21-col</width>
@@ -377,7 +378,7 @@
 										<posx>12</posx>
 										<posy>-8</posy>
 										<width>252</width>
-										<font>itemTitleSmall</font>
+										<font>itemTitleSmallCondensed</font>
 										<textcolor>selected</textcolor>
 										<label>$INFO[ListItem.Label]</label>
 									</control>
@@ -438,7 +439,7 @@
 										<posx>12</posx>
 										<posy>-8</posy>
 										<width>252</width>
-										<font>itemTitleSmall</font>
+										<font>itemTitleSmallCondensed</font>
 										<scroll>true</scroll>
 										<textcolor>black</textcolor>
 										<shadowcolor>-</shadowcolor>
@@ -631,7 +632,7 @@
 							<visible>false</visible>
 							<width>3-col</width>
 							<font>buttonTitle</font>
-							<label>$INFO[container.foldername]</label>
+							<label>test</label>
 							<textcolor>selected</textcolor>
 						</control>
 
@@ -666,7 +667,7 @@
 		
 			<!--titles-->
 			<control type="group">
-				<posx>col-1-begin</posx>
+				<posx>24</posx>
 				<posy>111</posy>
 				
 				<animation type="Conditional" condition="controlgroup(62).hasfocus">
@@ -719,6 +720,22 @@
 					<itemgap>0</itemgap>
 					<onright>9000</onright>
 
+					<control type="button" id="106">
+						<description>current playlist (if available)</description>
+						<enable>MusicPlayer.Offset(0).Exists</enable>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>30351</label>
+						<onclick>right</onclick>
+						<onclick>activateWindow(musicplaylist)</onclick>
+					</control>
+					
 					<control type="button" id="101">
 						<description>Search</description>
 						<visible>System.HasAddon(script.globalsearch)</visible>
@@ -792,6 +809,39 @@
 						<onclick>right</onclick>
 						<onclick>ActivateWindow(programs,addons,return)</onclick>
 					</control>
+					
+					<!-- Refresh library (Gotham only) -->
+					<control type="radiobutton" id="20">
+						<visible>SubString(System.BuildVersion,13,left)</visible>
+						<description>Refresh Library</description>
+						<label>653</label>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textureradiofocus>-</textureradiofocus>
+						<textureradionofocus>-</textureradionofocus>
+					</control>
+
+					<!--refresh library (Frodo)-->
+					<control type="button" id="107">
+						<visible>SubString(System.BuildVersion,12,left)</visible>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>653</label>
+						<onclick>UpdateLibrary(music)</onclick>
+						<onclick>Notification(Updating Library,Searching for new content)</onclick>
+						<onclick>right</onclick>
+					</control>
 
 					<control type="button" id="104">
 						<description>Files menu</description>
@@ -807,6 +857,34 @@
 						<onclick>right</onclick>
 						<onclick>ActivateWindow(MusicFiles,root)</onclick>
 						<onclick>Skin.SetString(showRecentMusicItems,false)</onclick>
+					</control>
+					
+					<!--shuffle and party mode-->
+					<control type="button" id="105">
+						<description>Shuffle</description>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
+						<textoffsetx>12</textoffsetx>
+						<label>191</label>
+						<onclick>right</onclick>
+						<onclick>PlayerControl(random)</onclick>
+					</control>
+					
+					<control type="radiobutton" id="16">
+						<description>Party Mode!!</description>
+						<label>589</label>
+						<height>54</height>
+						<width>4-col</width>
+						<font>menuTitle</font>
+						<textcolor>black</textcolor>
+						<focusedcolor>selected</focusedcolor>
+						<texturefocus>colors/black.png</texturefocus>
+						<texturenofocus>colors/unselected.png</texturenofocus>
 					</control>
 
 				</control>
