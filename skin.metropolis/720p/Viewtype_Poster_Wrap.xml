@@ -22,8 +22,18 @@
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
 				<visible>!Skin.HasSetting(NoViewPosterWrap)</visible>
-				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
+				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
 				<itemlayout width="195" height="245">
+					<control type="image">
+						<posx>16</posx>
+						<posy>121</posy>
+						<width>164</width>
+						<height>241</height>
+						<texture background="true" fallback="DefaultThumb.png">$VAR[PosterThumb]</texture>
+						<aspectratio scalediffuse="false">stretch</aspectratio>
+						<fadetime>200</fadetime>
+						<visible>!IsEmpty(ListItem.Title)</visible>
+					</control>
 					<control type="image">
 						<posx>16</posx>
 						<posy>121</posy>
@@ -33,16 +43,6 @@
 						<aspectratio scalediffuse="false">keep</aspectratio>
 						<fadetime>200</fadetime>
 						<visible>IsEmpty(ListItem.Title)</visible>
-					</control>
-					<control type="image">
-						<posx>16</posx>
-						<posy>121</posy>
-						<width>164</width>
-						<height>241</height>
-						<texture background="true">$INFO[ListItem.Icon]</texture>
-						<aspectratio scalediffuse="false">stretch</aspectratio>
-						<fadetime>200</fadetime>
-						<visible>!IsEmpty(ListItem.Title)</visible>
 					</control>
 					<control type="image">
 						<posx>0</posx>
@@ -61,10 +61,26 @@
 						<fadetime>200</fadetime>
 						<texture>$INFO[ListItem.Overlay]</texture>
 						<colordiffuse>WatchedOverlay</colordiffuse>
-						<visible>[Container.Content(movies) + !Skin.HasSetting(HideMovieWatchedOverlays)] | [!Container.Content(movies) + !Skin.HasSetting(HideTVWatchedOverlays)]</visible>
+						<visible>[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]</visible>
 					</control>
 				</itemlayout>
 				<focusedlayout width="265" height="400">
+					<control type="image">
+						<posx>13</posx>
+						<posy>71</posy>
+						<width>240</width>
+						<height>353</height>
+						<texture background="true" fallback="DefaultThumb.png">$VAR[PosterThumb]</texture>
+						<aspectratio scalediffuse="false">stretch</aspectratio>
+						<fadetime>200</fadetime>
+						<animation type="Focus" reversible="false">
+							<effect type="zoom" center="auto" start="68" end="100" time="300" tween="sine" easing="inout" />
+							<!--
+							<effect type="fade" start="0" end="100" time="300" />
+							-->
+						</animation>
+						<visible>!IsEmpty(ListItem.Title)</visible>
+					</control>
 					<control type="image">
 						<posx>13</posx>
 						<posy>71</posy>
@@ -80,22 +96,6 @@
 							-->
 						</animation>
 						<visible>IsEmpty(ListItem.Title)</visible>
-					</control>
-					<control type="image">
-						<posx>13</posx>
-						<posy>71</posy>
-						<width>240</width>
-						<height>353</height>
-						<texture background="true">$INFO[ListItem.Icon]</texture>
-						<aspectratio scalediffuse="false">stretch</aspectratio>
-						<fadetime>200</fadetime>
-						<animation type="Focus" reversible="false">
-							<effect type="zoom" center="auto" start="68" end="100" time="300" tween="sine" easing="inout" />
-							<!--
-							<effect type="fade" start="0" end="100" time="300" />
-							-->
-						</animation>
-						<visible>!IsEmpty(ListItem.Title)</visible>
 					</control>
 					<control type="image">
 						<posx>-2</posx>
@@ -126,7 +126,7 @@
 							<effect type="fade" start="0" end="100" time="300" />
 							-->
 						</animation>
-						<visible>[Container.Content(movies) + !Skin.HasSetting(HideMovieWatchedOverlays)] | [!Container.Content(movies) + !Skin.HasSetting(HideTVWatchedOverlays)]</visible>
+						<visible>[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]</visible>
 					</control>
 				</focusedlayout>
 			</control>
@@ -188,38 +188,26 @@
 				</control>
 				<!-- Movie Sets -->
 				<control type="label">
-					<posx>206</posx>
-					<posy>509</posy>
-					<width>290</width>
+					<posx>500</posx>
+					<posy>481</posy>
+					<width>760</width>
 					<height>30</height>
-					<align>center</align>
 					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsInfo</textcolor>
+					<textcolor>MediaDetailsGenre</textcolor>
 					<label>$LOCALIZE[31313]</label>
-					<visible>Container.Content(movies) + IsEmpty(ListItem.path) + !StringCompare(ListItem.Label,..)</visible>
+					<include>VisibleIfMovieSet</include>
 				</control>
-				<!-- Movies - If the Year Info is empty -->
-				<control type="label">
-					<posx>206</posx>
-					<posy>509</posy>
-					<width>290</width>
-					<height>30</height>
-					<align>center</align>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration,, [LOWERCASE]$LOCALIZE[31299][/LOWERCASE]]</label>
-					<visible>[IsEmpty(ListItem.Year) + !IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min)] + Container.Content(movies)</visible>
-				</control>
-				<control type="label">
-					<posx>206</posx>
-					<posy>509</posy>
-					<width>290</width>
-					<height>30</height>
-					<align>center</align>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration]</label>
-					<visible>[IsEmpty(ListItem.Year) + !IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min)] + Container.Content(movies)</visible>
+				<!-- Tagline -->
+				<control type="textbox">
+					<posx>500</posx>
+					<posy>130</posy>
+					<width>760</width>
+					<height>50</height>
+					<align>left</align>
+					<font>METF_PlotText</font>
+					<textcolor>TextNF</textcolor>
+					<label>$INFO[ListItem.Tagline]</label>
+					<visible>Container.Content(movies) + !IsEmpty(ListItem.Tagline) + !Skin.HasSetting(Hide_MovieTagline)</visible>
 				</control>
 			</control>
 			<control type="grouplist">
@@ -233,6 +221,8 @@
 				<include>Animation_OpenCloseFade</include>
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
+				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
+				<include>VisibleIfNotMovieSet</include>
 				<!-- Year -->
 				<control type="label">
 					<width min="25" max="260">auto</width>
@@ -241,7 +231,7 @@
 					<font>METF_MediaDetailsSmall</font>
 					<textcolor>MediaDetailsYear</textcolor>
 					<label>$INFO[ListItem.Year]</label>
-					<visible>!IsEmpty(ListItem.Year) + [Container.Content(tvshows) | Container.Content(movies)]</visible>
+					<visible>!IsEmpty(ListItem.Year) + !Container.Content(seasons)</visible>
 				</control>
 				<!-- Bullet -->
 				<control type="image">
@@ -250,7 +240,7 @@
 					<texture>Dot.png</texture>
 					<aspectratio align="center" aligny="center">keep</aspectratio>
 					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + [Container.Content(tvshows) | Container.Content(movies)]</visible>
+					<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + !Container.Content(seasons)</visible>
 				</control>
 				<!-- Duration -->
 				<control type="label">
@@ -260,7 +250,7 @@
 					<font>METF_MediaDetailsSmall</font>
 					<textcolor>MediaDetailsDuration</textcolor>
 					<label>$INFO[ListItem.Duration,, [LOWERCASE]$LOCALIZE[31299][/LOWERCASE]]</label>
-					<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + Container.Content(movies)</visible>
+					<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
 				</control>
 				<control type="label">
 					<width min="25" max="260">auto</width>
@@ -269,7 +259,7 @@
 					<font>METF_MediaDetailsSmall</font>
 					<textcolor>MediaDetailsDuration</textcolor>
 					<label>$INFO[ListItem.Duration]</label>
-					<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + Container.Content(movies)</visible>
+					<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
 				</control>
 				<!-- Bullet -->
 				<control type="image">
@@ -278,7 +268,7 @@
 					<texture>Dot.png</texture>
 					<aspectratio align="center" aligny="center">keep</aspectratio>
 					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Duration) | IsEmpty(ListItem.Property(NumEpisodes))] | [IsEmpty(ListItem.Duration) + Container.Content(tvshows)]</visible>
+					<visible>![IsEmpty(ListItem.Duration) | IsEmpty(ListItem.Property(NumEpisodes))] + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
 				</control>
 				<!-- Episode Count -->
 				<control type="label">
