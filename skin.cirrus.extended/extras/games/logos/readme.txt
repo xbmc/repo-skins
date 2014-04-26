@@ -1,0 +1,1 @@
+Drop your game logos inside this folder.
