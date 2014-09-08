@@ -5,24 +5,22 @@ Important considerations are put on usability, performance, and providing the us
 Rapier tries to support all the latest features XBMC has to offer as long as it fits in with the skin's design goals.
 - scarfa / gade
 
+
 CONTACT: 
 
-scarfa: movablemind@gmail.com
+scarfa: -
 gade: christian_gade@hotmail.com
 
-DOWNLOAD:
-
-Download link in the first post: http://forum.xbmc.org/showthread.php?tid=151755
 
 DEVELOPMENT:
 
  - Coming soon!
 
-SUPPORT: 
+
+ SUPPORT: 
 
 http://forum.xbmc.org/forumdisplay.php?fid=120
 
-http://forum.xbmc.org/showthread.php?tid=151755
 
 ---------- INSTALL --------------------------------------------------------------------------
 
