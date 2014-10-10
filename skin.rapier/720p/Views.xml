@@ -16,6 +16,13 @@
 		<value>$INFO[ListItem.Thumb]</value>
 	</variable>
 	
+	<variable name="LandscapeThumb">
+		<value condition="Container.Content(Episodes) + !IsEmpty(ListItem.Art(tvshow.landscape))">$INFO[ListItem.Art(tvshow.landscape)]</value>
+		<value condition="[Container.Content(TVShows) | Container.Content(Seasons)] + !IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value condition="[Container.Content(TVShows) | Container.Content(Seasons)] + IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Path]landscape.jpg</value>
+		<value>$INFO[ListItem.Art(fanart)]</value>
+	</variable>
+	
 	<variable name="WatchedPartial">
 		<value condition="!IntegerGreaterThan(ListItem.PercentPlayed,20)">watched/watched-10pct.png</value>
 		<value condition="IntegerGreaterThan(ListItem.PercentPlayed,20) + !IntegerGreaterThan(ListItem.PercentPlayed,40)">watched/watched-30pct.png</value>
@@ -143,6 +150,11 @@
 	<variable name="3DWrapPoster0">
 		<value condition="!IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
         <value>$INFO[ListItem.Thumb]</value>
+	</variable>
+	
+	<variable name="3DWrapFanart">
+		<value condition="Container.Content(TVShows) + Skin.HasSetting(3DWrapShowLandscape) + !IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+        <value>$INFO[ListItem.Art(fanart)]</value>
 	</variable>
 	
 	<include name="ViewContentPanel">
@@ -438,7 +450,7 @@
 				<top>133</top>
 				<width>24</width>
 				<height>24</height>
-				<texture background="true">$VAR[WatchedPartialAlt]</texture>
+				<texture background="true">$VAR[WatchedPartial]</texture>
 				<aspectratio>keep</aspectratio>
 				<visible>ListItem.IsResumable + !StringCompare(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(HideMoviesThumbsInfoOverlay)</visible>
 			</control>
@@ -605,7 +617,7 @@
 			<texture background="true">$INFO[ListItem.ActualIcon]</texture>
 			<aspectratio align="center">keep</aspectratio>
 			<bordersize>8</bordersize>
-			<visible>IsEmpty(ListItem.Title)</visible>
+			<visible>IsEmpty(ListItem.Art(clearlogo))</visible>
 		</control>
 
 		<control type="image">
@@ -625,6 +637,17 @@
 			<texture background="true">$INFO[ListItem.Overlay]</texture>
 			<aspectratio>keep</aspectratio>
 			<visible>Container.Content(Movies) + !Skin.HasSetting(HideMoviesThumbsInfoOverlay)</visible>
+		</control>
+		
+		<control type="image">
+			<description>Watched Partial</description>
+			<left>236</left>
+			<top>9</top>
+			<width>24</width>
+			<height>24</height>
+			<texture background="true">$VAR[WatchedPartial]</texture>
+			<aspectratio>keep</aspectratio>
+			<visible>Container.Content(Movies) + ListItem.IsResumable + !StringCompare(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(HideMoviesThumbsInfoOverlay)</visible>
 		</control>
 		
 		<control type="group">
@@ -668,7 +691,7 @@
 				<top>13</top>
 				<left>247</left>
 				<width>21</width>
-				<font>ListFont3</font>
+				<font>ListFont4</font>
 				<textcolor>white</textcolor>
 				<align>center</align>
 				<label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
@@ -704,7 +727,7 @@
 			<bordersize>25</bordersize>
 			<texture background="true">$INFO[ListItem.ActualIcon]</texture>
 			<aspectratio align="center">keep</aspectratio>
-			<visible>IsEmpty(ListItem.Title)</visible>
+			<visible>IsEmpty(ListItem.Art(clearlogo))</visible>
 		</control>
 
 		<control type="image">
@@ -768,7 +791,7 @@
 			<top>15</top>
 			<left>244</left>
 			<width>21</width>
-			<font>ListFont3</font>
+			<font>ListFont4</font>
 			<textcolor>white</textcolor>
 			<align>center</align>
 			<label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
@@ -1077,7 +1100,7 @@
 			<texture background="true" diffuse="covers/list-info-2-fanart-diffuse.png">$INFO[ListItem.Thumb]</texture>
 			<aspectratio scalediffuse="false">scale</aspectratio>
 			<fadetime>FanartCrossfadeTime</fadetime>
-			<visible>IsEmpty(ListItem.Art(landscape))</visible>
+			<visible>[Skin.HasSetting(ShowLandscape) + IsEmpty(ListItem.Art(tvshow.landscape))] | Skin.HasSetting(ShowDefaultThumb)</visible>
 		</control>
 		
 		<control type="image">
@@ -1085,10 +1108,10 @@
 			<top>116</top>
 			<width>542</width>
 			<height>304</height>
-			<texture background="true" diffuse="covers/list-info-2-fanart-diffuse.png">$INFO[ListItem.Art(landscape)]</texture>
+			<texture background="true" diffuse="covers/list-info-2-fanart-diffuse.png">$INFO[ListItem.Art(tvshow.landscape)]</texture>
 			<aspectratio scalediffuse="false">scale</aspectratio>
 			<fadetime>FanartCrossfadeTime</fadetime>
-			<visible>!IsEmpty(ListItem.Art(landscape))</visible>
+			<visible>![[Skin.HasSetting(ShowLandscape) + IsEmpty(ListItem.Art(tvshow.landscape))] | Skin.HasSetting(ShowDefaultThumb)]</visible>
 		</control>
 	
 		<control type="image">
@@ -1237,7 +1260,7 @@
 				<height>58</height>
 				<texture border="4">panels/panel3.png</texture>
 				<include>ListInfoViewMediaInfoBackgroundFadeAnim</include>
-				<visible>System.HasAddon(script.tv.show.next.aired) + !Skin.HasSetting(EnableNextAiredInfo) + Container.Content(TVShows)</visible>
+				<visible>System.HasAddon(script.tv.show.next.aired) + !Skin.HasSetting(EnableNextAiredInfo) + [Container.Content(TVShows) | Container.Content(Episodes)]</visible>
 			</control>
 			
 			<control type="image">
@@ -1248,7 +1271,7 @@
 				<height>149</height>
 				<texture border="4">panels/panel3.png</texture>
 				<include>ListInfoViewMediaInfoBackgroundFadeAnim</include>
-				<visible>System.HasAddon(script.tv.show.next.aired) + !Skin.HasSetting(EnableNextAiredInfo) + Container.Content(TVShows)</visible>
+				<visible>System.HasAddon(script.tv.show.next.aired) + !Skin.HasSetting(EnableNextAiredInfo) + [Container.Content(TVShows) | Container.Content(Episodes)]</visible>
 			</control>
 			
 			<control type="image">
@@ -1259,7 +1282,7 @@
 				<height>211</height>
 				<texture border="4">panels/panel3.png</texture>
 				<include>ListInfoViewMediaInfoBackgroundFadeAnim</include>
-				<visible>Container.Content(TVShows) + [!System.HasAddon(script.tv.show.next.aired) | [System.HasAddon(script.tv.show.next.aired) + Skin.HasSetting(EnableNextAiredInfo)]]</visible>
+				<visible>[Container.Content(TVShows) | Container.Content(Episodes)] + [!System.HasAddon(script.tv.show.next.aired) | [System.HasAddon(script.tv.show.next.aired) + Skin.HasSetting(EnableNextAiredInfo)]]</visible>
 			</control>
 			
 			<control type="image">
@@ -1270,7 +1293,7 @@
 				<height>211</height>
 				<texture border="4">panels/panel3.png</texture>
 				<include>ListInfoViewMediaInfoBackgroundFadeAnim</include>
-				<visible>!Container.Content(TVShows)</visible>
+				<visible>![Container.Content(TVShows) | Container.Content(Episodes)]</visible>
 			</control>
 		</control>
 	</include>
@@ -1340,21 +1363,9 @@
 			<top>116</top>
 			<width>404</width>
 			<height>228</height>
-			<texture background="true" diffuse="covers/list-info-3-fanart-diffuse.png">$INFO[ListItem.Art(fanart)]</texture>
+			<texture background="true" diffuse="covers/list-info-3-fanart-diffuse.png">$VAR[LandscapeThumb]</texture>
 			<aspectratio scalediffuse="false" align="center">scale</aspectratio>
 			<fadetime>FanartCrossfadeTime</fadetime>
-			<visible>IsEmpty(ListItem.Art(landscape))</visible>
-		</control>
-		
-		<control type="image">
-			<left>40</left>
-			<top>116</top>
-			<width>404</width>
-			<height>228</height>
-			<texture background="true" diffuse="covers/list-info-3-fanart-diffuse.png">$INFO[ListItem.Art(landscape)]</texture>
-			<aspectratio scalediffuse="false">scale</aspectratio>
-			<fadetime>FanartCrossfadeTime</fadetime>
-			<visible>!IsEmpty(ListItem.Art(landscape))</visible>
 		</control>
 		
 		<control type="image">

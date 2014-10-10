@@ -32,7 +32,7 @@ Manual installation can be done by moving the skin.rapier folder inside the zip 
 Please make sure you have the following scripts installed when doing it manually: 
 
 script.favourites v5.0.2
-script.artistslideshow v1.6.7
+script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0
 script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
