@@ -7,7 +7,10 @@
 	<onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;levels=0)</onload>
 	<onload condition="Skin.HasSetting(AutoShowSubmenu)">SetProperty(submenuloading,loading,Home)</onload>
 	<onload condition="System.HasAddon(plugin.video.xbmb3c)">RunScript(plugin.video.xbmb3c,skin)</onload>
+	<onload condition="System.HasAddon(plugin.video.plexbmc)">RunScript(plugin.video.plexbmc,skin)</onload>
+	<onload condition="Skin.String(GadgetRows, enhanced)">AlarmClock(WidgetMove,Control.Move(1508,1),00:07,silent,loop)</onload>
 	<onunload>XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,HIDE)</onunload>
+	
 	<onload>300</onload>
 	<onload>AlarmClock(hidesplash,SetProperty(hidesplash,hide,Home),00:5,silent)</onload>
     <controls>
@@ -18,14 +21,11 @@
         <include>GlobalBackground</include>
 
 		<!-- home menu Widgets -->
-		<include>HomeMenuWidget</include>
+		<include condition="!Skin.String(GadgetRows, enhanced)">HomeMenuWidget</include>
 		
-
-
         <include>WeatherInfo</include>
 		<include>ProfileInfo</include>
 
-	
 		<!-- Header -->
         <include>Header</include>
 		<!--Time & Weather-->
@@ -39,9 +39,12 @@
 		<!--Footer-->
         <include condition="!skin.hassetting(nofooterbar)">Footer</include>
 		
+		<include condition="System.HasAddon(plugin.video.plexbmc)">PlexBackgroundWidgets</include>
 		
+			
 		<!--Home tiles List 300-->
         <control type="panel" id="300">
+			<visible>!Skin.String(GadgetRows, enhanced)</visible>
             <include>animation_home</include>
             <posx>38</posx>
             <width>1845</width>
@@ -102,6 +105,7 @@
 						<font>Reg45</font>
 						<textcolor>aawhite</textcolor>
 						<shadowcolor>black</shadowcolor>
+						<visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
 					</control>
 				</control>
             </itemlayout>
@@ -132,13 +136,15 @@
 					</control>
 					
                     <control type="image">
-                        <!--Panel Shadow-->
-                        <posx>0</posx>
-                        <posy>0</posy>
-                        <width>623</width>
-                        <height>271</height>
-                        <texture>home/home_shadow.png</texture>
-                    </control>
+						<!--focus image-->
+						<posx>11</posx>
+						<posy>13</posy>
+						<width>600</width>
+						<height>250</height>
+						<bordersize>-4</bordersize>
+						<texture>home/home_matte2.png</texture>
+						<colordiffuse>$INFO[Skin.String(HomeFocusColor)]</colordiffuse>
+					</control>
 					
                     <control type="image">
                         <!--Panel Normal-->
@@ -171,18 +177,10 @@
                         <align>center</align>
                         <info>ListItem.Label</info>
                         <font>Reg45</font>
-                        <textcolor>$VAR[homeMenuFocusLabelColor]</textcolor>
+                        <textcolor>$INFO[Skin.String(HomeFocusColor)]</textcolor>
 						<shadowcolor>black</shadowcolor>
                         <visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
                     </control>
-                    <control type="image">
-                        <posx>1</posx>
-                        <posy>3</posy>
-                        <width>622</width>
-                        <height>271</height>
-                        <texture>home/home_focus.png</texture>
-                    </control>
-
                     <control type="button">
                         <left>150</left>
                         <top>0</top>
@@ -231,11 +229,13 @@
 			<animation time="200" effect="fade">Hidden</animation>
         </control>
 		
+		<!-- enhanced home screen -->
+		<include condition="Skin.String(GadgetRows, enhanced)">EnhancedHomeScreen</include>
 		
 	
 		<!-- submenu -->
-		<include condition="Skin.HasTheme(classic)">HomeMenuSubMenuVertical</include>
-		<include condition="!Skin.HasTheme(classic)">HomeMenuSubMenuHorizontal</include>
+		<include condition="Skin.HasTheme(classic) + !Skin.String(GadgetRows, enhanced)">HomeMenuSubMenuVertical</include>
+		<include condition="!Skin.HasTheme(classic) + !Skin.String(GadgetRows, enhanced)">HomeMenuSubMenuHorizontal</include>
 	
 	</control>	
 		
@@ -244,21 +244,19 @@
 	<include>DimensionsFullscreen</include>
 	<visible>!SubString(Window(Home).Property(hidesplash),hide)</visible>
 	<animation time="1200" effect="fade" reversible="false">Hidden</animation>
-	 <include>GlobalBackground</include>
-		<!-- loginscreen background -->
+		<!-- splashscreen background -->
         <control type="image">
             <include>DimensionsFullscreen</include>
 			<include>backgroundfade</include>
-            <texture background="true">$INFO[Skin.String(LoginBackground)]</texture>
+            <texture background="true">$VAR[splashScreenImage]</texture>
             <fadetime>800</fadetime>
-			<visible>System.HasLoginScreen + Skin.String(LoginBackground)</visible>
         </control>
 		<include>Footer</include>
 		
 		<control type="label">
             <posx>80</posx>
             <posy>985</posy>
-            <width>500</width>
+            <width>520</width>
             <align>left</align>
             <font>Reg41</font>
             <textcolor>white</textcolor>
@@ -270,7 +268,7 @@
 		<control type="label">
             <posx>1840</posx>
             <posy>985</posy>
-            <width>500</width>
+            <width>520</width>
             <align>right</align>
             <font>Reg41</font>
             <textcolor>white</textcolor>
@@ -282,14 +280,14 @@
 		<control type="label">
             <posx>1840</posx>
             <posy>985</posy>
-            <width>500</width>
+            <width>520</width>
             <align>right</align>
             <font>Reg41</font>
             <textcolor>white</textcolor>
             <label>Titan Mediabrowser v$INFO[System.AddonVersion(skin.titan.helix)]</label>
             <include>animation_fade_visible_hidden</include>
             <include>animation_fade_open_close</include>
-			<visible>System.HasAddon(skin.titan.helix)</visible>
+			<visible>System.HasAddon(skin.titan.helix) + !System.HasAddon(skin.titan)</visible>
         </control>
 	</control>
 		
