@@ -4,7 +4,6 @@
 
 	<allowoverlay>no</allowoverlay>
 	<defaultcontrol always="true">211</defaultcontrol>
-	<onunload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu)</onunload>
 	<onload>ClearProperty(shortcutDialog, Home)</onload>
 	<controls>
 	
@@ -19,6 +18,7 @@
         <include>Header</include>
 		
 		<control type="group">
+		<include>animation_window_open_close</include>
 			<posy>30</posy>
 			<control type="image">
 				<posx>0</posx>
@@ -27,16 +27,15 @@
 				<height>940</height>
 				<texture>views/settings_panel.png</texture>
 				<include>animation_fade_visible_hidden</include>
-				<include>animation_list</include>
+				
 			</control>
 		 </control>
 
 		
 		<control type="group">
 			<top>-90</top>
-			<include>FadeandZoom</include>
 			<visible>!Window.IsActive(ShutdownMenu) + !Window.IsActive(contextmenu) + !Window.IsActive(filebrowser) + !Window.IsActive(virtualkeyboard) + !Window.IsVisible(selectdialog)</visible>
-
+			<include>animation_window_open_close</include>
 			<control type="group" id="200">
 
 				<control type="list" id="211"> <!--Current shortcuts -->
@@ -179,6 +178,7 @@
 					<width>465</width>
 					<align>center</align>
 					<onclick>XBMC.RunScript(script.titanskin.helpers,ADDSHORTCUT)</onclick>
+					<onclick>ClearProperty(customWidget, Home)</onclick>
 					<label>$ADDON[script.skinshortcuts 32000]</label>
 				</control>
 				
@@ -209,7 +209,7 @@
 					<align>center</align>
 					<onclick>SetProperty(shortcutDialog, label, Home)</onclick>
 					<label>$ADDON[script.skinshortcuts 32025]</label>
-					<visible>!SubString(Container(211).ListItem.Property(labelID),titanmb3)</visible>
+					<visible>!SubString(Container(211).ListItem.Property(labelID),MediaBrowser.usr)</visible>
 				</control>
 				
 				<control type="button" id="306"> <!--edit thumbnail-->
@@ -217,7 +217,21 @@
 					<align>center</align>
 					<onclick>noop</onclick>
 					<label>31011</label>
-					<visible>StringCompare(Window.Property(groupname),mainmenu) | Skin.String(GadgetRows, enhanced)</visible>
+					<visible>StringCompare(Window.Property(groupname),mainmenu) | Skin.String(GadgetRows, enhanced) | Skin.HasSetting(UseSubmenuImages) | StringCompare(Window.Property(groupname),powermenu)</visible>
+				</control>
+				
+				<!-- disable label -->
+				<control type="radiobutton" id="1404"> 
+					<width>465</width>
+					<label>31202</label>
+					<align>center</align>
+					<onclick condition="!StringCompare(Container(211).ListItem.Property(disableLabel), disable)">SetProperty(customProperty, disableLabel)</onclick>
+					<onclick condition="!StringCompare(Container(211).ListItem.Property(disableLabel), disable)">SetProperty(customValue, disable)</onclick>
+					<onclick condition="StringCompare(Container(211).ListItem.Property(disableLabel), disable)">SetProperty(customProperty, disableLabel)</onclick>
+					<onclick condition="StringCompare(Container(211).ListItem.Property(disableLabel), disable)">SetProperty(customValue, "")</onclick>
+					<onclick>SendClick(404)</onclick>
+					<selected>StringCompare(Container(211).ListItem.Property(disableLabel), disable)</selected>
+					<visible>[StringCompare(Window.Property(groupname),mainmenu) | Skin.String(GadgetRows, enhanced) | Skin.HasSetting(UseSubmenuImages)] + !StringCompare(Window(Home).Property(powermenu), active)</visible>
 				</control>
 				
 				<control type="button" id="309"> <!--widget-->
@@ -225,7 +239,7 @@
 					<align>center</align>
 					<onclick>SetProperty(shortcutDialog, widget, Home)</onclick>
 					<label>$ADDON[script.skinshortcuts 32044]</label>
-					<visible>StringCompare(Window.Property(groupname),mainmenu)</visible>
+					<visible>StringCompare(Window.Property(groupname),mainmenu) | Skin.String(GadgetRows, enhanced)</visible>
 				</control>
 				
 				<control type="button" id="310"> <!--background-->
@@ -235,14 +249,6 @@
 					<label>31169</label>
 					<visible>StringCompare(Window.Property(groupname),mainmenu) + Skin.HasSetting(UseSectionBackground)</visible>
 				</control>
-				
-				<control type="button" id="1310"> <!--background-->
-					<width>465</width>
-					<align>center</align>
-					<onclick>Notification(Section backgrounds are disabled, please enable section backgrounds to set custom backgrounds for tiles) </onclick>
-					<label>31169</label>
-					<visible>StringCompare(Window.Property(groupname),mainmenu) + !Skin.HasSetting(UseSectionBackground)</visible>
-				</control>
 
 				<control type="button" id="405"> <!--sub menu-->
 					<width>465</width>
@@ -250,6 +256,18 @@
 					<onclick>noop</onclick>
 					<label>$ADDON[script.skinshortcuts 32072]</label>
 					<visible>StringCompare(Window.Property(groupname),mainmenu)</visible>
+				</control>
+							
+				<control type="button" id="1406"> <!--custom widget content-->
+					<width>465</width>
+					<align>center</align>
+					<onclick>RunScript(script.skinshortcuts,type=shortcuts&amp;skinLabel=label&amp;skinAction=custom-$INFO[Container(211).ListItem.Property(labelID)])</onclick>
+					<onclick>SetProperty(customProperty, customcontent)</onclick>
+					<onclick>SetProperty(customValue, custom-$INFO[Container(211).ListItem.Property(labelID)])</onclick>
+					<onclick>SetProperty(customWidget, active, Home)</onclick>
+					<onclick>SendClick(404)</onclick>
+					<label>31203</label>
+					<visible>StringCompare(Container(211).ListItem.Property(widget),custom) + !SubString(Container(211).ListItem.Property(labelID),MediaBrowser.usr) + !SubString(Container(211).ListItem.Property(labelID),plexbmc-)</visible>
 				</control>
 				
 				<control type="button" id="307"> <!--edit action-->
@@ -265,8 +283,9 @@
 					<align>center</align>
 					<onclick>Control.SetFocus(4)</onclick>
 					<onclick>SetProperty(shortcutDialog, change, Home)</onclick>
+					<onclick>ClearProperty(customWidget, Home)</onclick>
 					<label>31175</label>
-					<visible>!SubString(Container(211).ListItem.Property(labelID),titanmb3)</visible>
+					<visible>!SubString(Container(211).ListItem.Property(labelID),MediaBrowser.usr) + !StringCompare(Window(Home).Property(powermenu), active)</visible>
 				</control>
 				
 				<control type="button" id="1308"> <!--reset-->
@@ -277,20 +296,28 @@
 					<label>$ADDON[script.skinshortcuts 32028]</label>
 					<visible>StringCompare(Window.Property(groupname),mainmenu)</visible>
 				</control>
-
-				<control type="button" id="404"> <!--hidden button for properties-->
+				
+				<!--hidden button for properties-->
+				<control type="button" id="404"> 
 					<width>465</width>
+					<label>disable title</label>
 					<align>center</align>
-					<onclick>noop</onclick>
+					<onclick>SetProperty(chooseProperty, true)</onclick>
 					<visible>false</visible>
 				</control>
 				
+				
+				
+		
+				
+								
 			</control>
 
 		
 		</control>
 		
 		<control type="group">
+		<include>animation_window_open_close</include>
         <!--Dialog Overlay-->
         <include>GlobalBackground</include>
 		<include>DialogOverlay</include>
