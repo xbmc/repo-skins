@@ -4,27 +4,16 @@
     <defaultcontrol always="true">300</defaultcontrol>
     <allowoverlay>yes</allowoverlay>
     <include>defaultskinsettings</include>
-	<onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;levels=0)</onload>
-	<onload condition="Skin.HasSetting(AutoShowSubmenu)">SetProperty(submenuloading,loading,Home)</onload>
-	<onload condition="System.HasAddon(plugin.video.xbmb3c)">RunScript(plugin.video.xbmb3c,skin)</onload>
-	<onload condition="System.HasAddon(plugin.video.plexbmc)">RunScript(plugin.video.plexbmc,skin)</onload>
+	<onload condition="System.HasAddon(plugin.video.plexbmc)">XBMC.RunScript(script.titanskin.helpers,UPDATEPLEXLINKS)</onload>
+	<onload condition="System.HasAddon(plugin.video.plexbmc)">AlarmClock(updatexplexbg,XBMC.RunScript(script.titanskin.helpers,UPDATEPLEXBACKGROUNDS),00:40,silent,loop)</onload>
 	<onunload>XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,HIDE)</onunload>
-	
+	<onload condition="!SubString(Window(Home).Property(HomeLoaded),loaded)">SetProperty(HomeLoaded,loaded,Home)</onload>
+	<onunload>Dialog.Close(shutdownmenu,true)</onunload>
 	<onload>300</onload>
-	<onload>AlarmClock(hidesplash,SetProperty(hidesplash,hide,Home),00:5,silent)</onload>
     <controls>
 	
-	<control type="group">
-	<visible>SubString(Window(Home).Property(hidesplash),hide)</visible>
-        <!--Global Background-->
+	<!--Global Background-->
         <include>GlobalBackground</include>
-
-		<!-- home menu Widgets -->
-		<include condition="!Skin.String(GadgetRows, enhanced)">HomeMenuWidget</include>
-		
-        <include>WeatherInfo</include>
-		<include>ProfileInfo</include>
-
 		<!-- Header -->
         <include>Header</include>
 		<!--Time & Weather-->
@@ -34,9 +23,18 @@
         <include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
         <include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
 		<include condition="!Skin.HasTheme(classic)">NowPlayingModern</include>
+	
+	<control type="group">
+		<include>animation_window_open_close</include>
+
+		<!-- home menu Widgets -->
+		<include condition="!Skin.String(GadgetRows, enhanced)">HomeMenuWidget</include>
+		
+        <include>WeatherInfo</include>
+		<include>ProfileInfo</include>
 		
 		<!--Footer-->
-        <include condition="!skin.hassetting(nofooterbar)">Footer</include>
+        <include condition="!skin.hassetting(nofooterbar) + !Skin.String(GadgetRows, enhanced)">Footer</include>
 		
 		<include condition="System.HasAddon(plugin.video.plexbmc)">PlexBackgroundWidgets</include>
 		
@@ -44,14 +42,31 @@
 		<!--Home tiles List 300-->
         <control type="panel" id="300">
 			<visible>!Skin.String(GadgetRows, enhanced)</visible>
-            <include>animation_home</include>
             <posx>38</posx>
             <width>1845</width>
-            <include condition="Skin.String(GadgetRows, 1)">Gadget1Row</include>
-            <include condition="!Skin.String(GadgetRows, 1)">Gadget2Row</include>
-			<animation type="Conditional" condition="ControlGroup(77777).HasFocus | !SubString(Window(Home).Property(BackGroundWorkersLoaded),loaded)">
-                <effect type="slide" start="0,-0" end="0,800" time="800" tween="cubic" easing="inout" />
+            <include condition="Skin.String(GadgetRows, 1) + !Skin.HasSetting(DisablePowerMenu)">Gadget1Row</include>
+            <include condition="!Skin.String(GadgetRows, 1) + !Skin.HasSetting(DisablePowerMenu)">Gadget2Row</include>
+			<include condition="Skin.String(GadgetRows, 1) + Skin.HasSetting(DisablePowerMenu)">Gadget1RowNoPowerButton</include>
+            <include condition="!Skin.String(GadgetRows, 1) + Skin.HasSetting(DisablePowerMenu)">Gadget2RowNoPowerButton</include>
+		
+			
+			<animation type="Conditional" condition="ControlGroup(77777).HasFocus">
+                <effect type="slide" start="0,-0" end="0,800" time="400" tween="cubic" easing="inout" delay="0" />
             </animation>
+			
+			<animation type="Conditional" condition="SubString(Window(Home).Property(HomeLoaded),loaded)">
+                <effect type="slide" start="0,800" end="0,0" time="450" delay="600" tween="cubic" easing="inout" />
+            </animation>
+			
+			<animation type="Conditional" condition="[Skin.String(GadgetRows, 1) | Skin.HasSetting(DisablePowerMenu)] + [[Skin.HasSetting(UseSubmenuImages) + SubString(Window(Home).Property(submenu),show) + !skin.hastheme(classic)] | [Skin.HasSetting(UseSubmenuImages) + Skin.HasSetting(AutoShowSubmenu) + !skin.hastheme(classic)]]">
+                <effect type="slide" start="0,-0" end="0,-70" time="300" tween="cubic" easing="inout" />
+            </animation>
+			
+			<animation type="Conditional" condition="!Skin.String(GadgetRows, 1) + [[Skin.HasSetting(UseSubmenuImages) + SubString(Window(Home).Property(submenu),show) + !skin.hastheme(classic)] | [Skin.HasSetting(UseSubmenuImages) + Skin.HasSetting(AutoShowSubmenu) + !skin.hastheme(classic)]] + !Skin.HasSetting(DisablePowerMenu)">
+                <effect type="slide" start="0,-0" end="0,-40" time="300" tween="cubic" easing="inout" />
+            </animation>
+			
+		
 			<onunfocus condition="skin.hastheme(classic)">SetProperty(submenu,hide,Home)</onunfocus>
 			<onup>$VAR[HomeButtonUpAction]</onup>
 			<ondown>$VAR[HomeButtonDownAction]</ondown>
@@ -72,6 +87,17 @@
 						<texture>home/home_shadow.png</texture>
 					</control>
 					<control type="image">
+						<!--focus image-->
+						<posx>11</posx>
+						<posy>13</posy>
+						<width>600</width>
+						<height>250</height>
+						<bordersize>-4</bordersize>
+						<texture>home/home_matte2.png</texture>
+						<colordiffuse>$INFO[Skin.String(HomeFocusColor)]</colordiffuse>
+						<visible>StringCompare(Container(300).ListItem.Label, ListItem.Label)</visible>
+					</control>
+					<control type="image">
 						<!--Panel Normal-->
 						<posx>11</posx>
 						<posy>13</posy>
@@ -90,7 +116,7 @@
 						<height>250</height>
 						<colordiffuse>ccFFFFFF</colordiffuse>
 						<texture diffuse="home/home_matte2.png">home/home_overlay.png</texture>
-						<visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
+						<visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles) + !StringCompare(ListItem.Property(disableLabel), disable)</visible>
 					</control>
 					<control type="label">
 						<!--Label-->
@@ -104,8 +130,22 @@
 						<font>Reg45</font>
 						<textcolor>aawhite</textcolor>
 						<shadowcolor>black</shadowcolor>
-						<visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
+						<visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles) + !StringCompare(ListItem.Property(disableLabel), disable)</visible>
 					</control>
+					<control type="label">
+                        <!--Label Grey-->
+                        <include condition="!SubString(System.BuildVersion,14,left)">HomeTileLabelPosGotham</include>
+						<include condition="SubString(System.BuildVersion,14,left)">HomeTileLabelPosHelix</include>
+                        <posy>170</posy>
+                        <width>600</width>
+                        <height>100</height>
+                        <align>center</align>
+                        <info>ListItem.Label</info>
+                        <font>Reg45</font>
+                        <textcolor>$INFO[Skin.String(HomeFocusColor)]</textcolor>
+						<shadowcolor>black</shadowcolor>
+                        <visible>StringCompare(Container(300).ListItem.Label, ListItem.Label) + ![Skin.HasSetting(NoTitleOnHomeMenuTiles) | StringCompare(ListItem.Property(disableLabel), disable)]</visible>
+                    </control>
 				</control>
             </itemlayout>
             <focusedlayout width="612" height="265">
@@ -164,7 +204,7 @@
 						<height>250</height>
                         <colordiffuse>ccFFFFFF</colordiffuse>
                         <texture diffuse="home/home_matte2.png">home/home_overlay.png</texture>
-                        <visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
+                        <visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles) + !StringCompare(ListItem.Property(disableLabel), disable)</visible>
                     </control>
                     <control type="label">
                         <!--Label Grey-->
@@ -178,7 +218,7 @@
                         <font>Reg45</font>
                         <textcolor>$INFO[Skin.String(HomeFocusColor)]</textcolor>
 						<shadowcolor>black</shadowcolor>
-                        <visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles)</visible>
+                        <visible>!Skin.HasSetting(NoTitleOnHomeMenuTiles) + !StringCompare(ListItem.Property(disableLabel), disable)</visible>
                     </control>
                     <control type="button">
                         <left>150</left>
@@ -191,17 +231,20 @@
                         <aligny>center</aligny>
                         <label>-</label>
                         <visible>false</visible>
-						<onfocus>SetProperty(submenu,hide,Home)</onfocus>
 						<onfocus>Skin.SetString(customwidget, recent)</onfocus>
 						<onfocus condition="Skin.HasSetting(UseSectionBackground) + !Player.HasMedia">Skin.SetString(SectionBackground,$VAR[varBackground])</onfocus>
 						<onfocus condition="!Skin.HasSetting(UseSectionBackground)">Skin.Reset(SectionBackground)</onfocus>
 						<onfocus>SetProperty(submenupos,$INFO[Container(300).Position],Home)</onfocus>
 						<onfocus condition="SubString(Container(300).ListItem.Property(hasSubmenu), True)">SetProperty(submenutype,$INFO[Container(300).ListItem.Property(submenuVisibility)],Home)</onfocus>
 						<onfocus condition="!SubString(Container(300).ListItem.Property(hasSubmenu), True)">ClearProperty(submenutype,Home)</onfocus>
-                        <onfocus condition="SubString(Container(300).ListItem.Property(labelID),info-window-home-property-titanmb3)">SetProperty(MB3.Background.Collection, $INFO[Container(300).ListItem.Label], Home)</onfocus>
+                        <onfocus condition="SubString(Container(300).ListItem.Property(labelID),info-window-home-property-MediaBrowser-usr)">SetProperty(MB3.Background.Collection, $INFO[Container(300).ListItem.Label], Home)</onfocus>
 						<onfocus condition="Skin.HasSetting(AutoShowSubmenu) + skin.hastheme(classic)">XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,SHOW,4444)</onfocus>
 						<onfocus condition="Skin.HasSetting(AutoShowSubmenu) + !skin.hastheme(classic)">XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,SHOW)</onfocus>
-                    </control>
+						<onfocus condition="!IsEmpty(Container(300).ListItem.Property(customcontent))">XBMC.RunScript(script.titanskin.helpers,SETCUSTOM,$INFO[Container(300).ListItem.Property(customcontent)])</onfocus>
+						<onfocus condition="IsEmpty(Container(300).ListItem.Property(customcontent))">ClearProperty(customwidgetcontent,Home)</onfocus>
+						<onfocus condition="!IsEmpty(Container(300).ListItem.Property(widget))">SetProperty(activewidget,$INFO[Container(300).ListItem.Property(widget)],Home)</onfocus>
+						<onfocus condition="IsEmpty(Container(300).ListItem.Property(widget))">ClearProperty(activewidget,Home)</onfocus>
+					</control>
                 </control>
             </focusedlayout>
             <content>
@@ -223,7 +266,7 @@
             <texturenofocus colordiffuse="$VAR[TextColor_white]">icons/icon_power.png</texturenofocus>
             <onclick>ActivateWindow(111)</onclick>
 			<onfocus>ActivateWindow(111)</onfocus>
-			<visible>!Control.IsVisible(445) + !ControlGroup(77777).HasFocus() + !Control.HasFocus(4444) + !Window.IsVisible(DialogButtonMenu.xml) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + StringCompare(Container(300).Position,3)]</visible>
+			<visible>!ControlGroup(77777).HasFocus() + !Control.HasFocus(4444) + !Window.IsVisible(DialogButtonMenu.xml) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + StringCompare(Container(300).Position,3)] + !Skin.HasSetting(DisablePowerMenu)</visible>
 			<animation time="400" effect="fade">Visible</animation>
 			<animation time="200" effect="fade">Hidden</animation>
         </control>
@@ -238,57 +281,7 @@
 	
 	</control>	
 		
-	<!-- splash screen -->
-	<control type="group" id="6666">
-	<include>DimensionsFullscreen</include>
-	<visible>!SubString(Window(Home).Property(hidesplash),hide)</visible>
-	<animation time="1200" effect="fade" reversible="false">Hidden</animation>
-		<!-- splashscreen background -->
-        <control type="image">
-            <include>DimensionsFullscreen</include>
-			<include>backgroundfade</include>
-            <texture background="true">$VAR[splashScreenImage]</texture>
-            <fadetime>800</fadetime>
-        </control>
-		<include>Footer</include>
-		
-		<control type="label">
-            <posx>80</posx>
-            <posy>985</posy>
-            <width>520</width>
-            <align>left</align>
-            <font>Reg41</font>
-            <textcolor>white</textcolor>
-            <label>20186</label>
-            <include>animation_fade_visible_hidden</include>
-            <include>animation_fade_open_close</include>
-			<visible>System.HasAddon(skin.titan)</visible>
-        </control>
-		<control type="label">
-            <posx>1840</posx>
-            <posy>985</posy>
-            <width>520</width>
-            <align>right</align>
-            <font>Reg41</font>
-            <textcolor>white</textcolor>
-            <label>Titan Mediabrowser v$INFO[System.AddonVersion(skin.titan)]</label>
-            <include>animation_fade_visible_hidden</include>
-            <include>animation_fade_open_close</include>
-			<visible>System.HasAddon(skin.titan)</visible>
-        </control>
-		<control type="label">
-            <posx>1840</posx>
-            <posy>985</posy>
-            <width>520</width>
-            <align>right</align>
-            <font>Reg41</font>
-            <textcolor>white</textcolor>
-            <label>Titan Mediabrowser v$INFO[System.AddonVersion(skin.titan.helix)]</label>
-            <include>animation_fade_visible_hidden</include>
-            <include>animation_fade_open_close</include>
-			<visible>System.HasAddon(skin.titan.helix) + !System.HasAddon(skin.titan)</visible>
-        </control>
-	</control>
+	
 		
 		
 	</controls>
