@@ -8,21 +8,46 @@
 	<onload condition="System.HasAddon(plugin.video.plexbmc)">AlarmClock(updatexplexbg,XBMC.RunScript(script.titanskin.helpers,UPDATEPLEXBACKGROUNDS),00:40,silent,loop)</onload>
 	<onunload>XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,HIDE)</onunload>
 	<onload condition="!SubString(Window(Home).Property(HomeLoaded),loaded)">SetProperty(HomeLoaded,loaded,Home)</onload>
+	<onload condition="!Skin.HasSetting(plexbmc)">SetProperty(SkinWidgets_RandomItems_Update,true)</onload>
 	<onunload>Dialog.Close(shutdownmenu,true)</onunload>
 	<onload>300</onload>
     <controls>
 	
 	<!--Global Background-->
-        <include>GlobalBackground</include>
-		<!-- Header -->
-        <include>Header</include>
-		<!--Time & Weather-->
-        <include>TimeInfo</include>
-		
-		<!--NowPlaying-->
-        <include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
-        <include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
-		<include condition="!Skin.HasTheme(classic)">NowPlayingModern</include>
+	<include>GlobalBackground</include>
+	<!-- Header -->
+	<include condition="!SubString(System.BuildVersion,14,left)">Header</include>
+	<!--Time & Weather-->
+	<include>TimeInfo</include>
+	
+	<!-- Kodi Logo image -->
+	<control type="image">
+		<posx>35</posx>
+		<posy>10</posy>
+		<height>120</height>
+		<aspectratio align="left">keep</aspectratio>
+		<texture>kodi_logo_dark.png</texture>
+		<visible>SubString(System.BuildVersion,14,left)</visible>
+		<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Control.IsVisible(88888) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + ![Skin.HasSetting(AutoShowWidgets) + !IsEmpty(Container(300).ListItem.Property(widget))]</visible>
+		<visible>Skin.String(ColorTheme, white)</visible>
+		<include>animation_fade_visible_hidden</include>
+	</control>
+	<control type="image">
+		<posx>35</posx>
+		<posy>10</posy>
+		<height>120</height>
+		<aspectratio align="left">keep</aspectratio>
+		<texture>kodi_logo_light.png</texture>
+		<visible>SubString(System.BuildVersion,14,left)</visible>
+		<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Control.IsVisible(88888) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + ![Skin.HasSetting(AutoShowWidgets) + !IsEmpty(Container(300).ListItem.Property(widget))]</visible>
+		<visible>!Skin.String(ColorTheme, white)</visible>
+		<include>animation_fade_visible_hidden</include>
+	</control>
+	
+	<!--NowPlaying-->
+	<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
+	<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
+	<include condition="!Skin.HasTheme(classic)">NowPlayingModern</include>
 	
 	<control type="group">
 		<include>animation_window_open_close</include>
@@ -38,7 +63,6 @@
 		
 		<include condition="System.HasAddon(plugin.video.plexbmc)">PlexBackgroundWidgets</include>
 		
-			
 		<!--Home tiles List 300-->
         <control type="panel" id="300">
 			<visible>!Skin.String(GadgetRows, enhanced)</visible>
@@ -50,7 +74,7 @@
             <include condition="!Skin.String(GadgetRows, 1) + Skin.HasSetting(DisablePowerMenu)">Gadget2RowNoPowerButton</include>
 		
 			
-			<animation type="Conditional" condition="ControlGroup(77777).HasFocus">
+			<animation type="Conditional" condition="[ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)]">
                 <effect type="slide" start="0,-0" end="0,800" time="400" tween="cubic" easing="inout" delay="0" />
             </animation>
 			
@@ -66,7 +90,7 @@
                 <effect type="slide" start="0,-0" end="0,-40" time="300" tween="cubic" easing="inout" />
             </animation>
 			
-		
+			<onfocus>SetProperty(CurrentContainer,300,Home</onfocus>
 			<onunfocus condition="skin.hastheme(classic)">SetProperty(submenu,hide,Home)</onunfocus>
 			<onup>$VAR[HomeButtonUpAction]</onup>
 			<ondown>$VAR[HomeButtonDownAction]</ondown>
@@ -75,6 +99,7 @@
             <orientation>horizontal</orientation>
             <focusposition>-</focusposition>
             <scrolltime tween="cubic" easing="inout">500</scrolltime>
+			<pagecontrol>60</pagecontrol>
             <itemlayout width="612" height="265">
 				<control type="group">
 				<posy>20></posy>
@@ -85,6 +110,7 @@
 						<width>623</width>
 						<height>271</height>
 						<texture>home/home_shadow.png</texture>
+						<visible>!Skin.HasSetting(NoShadowOnHomeMenuTiles)</visible>
 					</control>
 					<control type="image">
 						<!--focus image-->
@@ -160,7 +186,7 @@
                         <width>149</width>
                         <height>30</height>
                         <texture>basichome_up.png</texture>
-						<visible>!IsEmpty(ListItem.Property(widget)) + [[Skin.String(GadgetRows, 2) + [StringCompare(Container(300).Position,0) | StringCompare(Container(300).Position,2) | StringCompare(Container(300).Position,4)]] | Skin.String(GadgetRows, 1)]</visible>
+						<visible>!Skin.HasSetting(EnableTouchSupport) + !IsEmpty(ListItem.Property(widget)) + [[Skin.String(GadgetRows, 2) + [StringCompare(Container(300).Position,0) | StringCompare(Container(300).Position,2) | StringCompare(Container(300).Position,4)]] | Skin.String(GadgetRows, 1)]</visible>
                     </control>
 					<control type="image">
                         <!--widget Arrow DOWN-->
@@ -171,7 +197,7 @@
                         <height>30</height>
                         <texture>basichome_down.png</texture>
 						<!-- show arrow down button if submenu available or widget at 2 rows of home tiles -->
-						<visible>[SubString(ListItem.Property(HasSubMenu), True) + Skin.String(GadgetRows, 1) + !skin.hastheme(classic)] | [!IsEmpty(ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + [StringCompare(Container(300).Position,1) | StringCompare(Container(300).Position,3) | StringCompare(Container(300).Position,5)]]</visible>
+						<visible>!Skin.HasSetting(EnableTouchSupport) + [[IntegerGreaterThan(Container(4444).NumItems,0) + Skin.String(GadgetRows, 1) + !skin.hastheme(classic)] | [!IsEmpty(ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + [StringCompare(Container(300).Position,1) | StringCompare(Container(300).Position,3) | StringCompare(Container(300).Position,5)]]]</visible>
 					</control>
 					
                     <control type="image">
@@ -237,7 +263,6 @@
 						<onfocus>SetProperty(submenupos,$INFO[Container(300).Position],Home)</onfocus>
 						<onfocus condition="SubString(Container(300).ListItem.Property(hasSubmenu), True)">SetProperty(submenutype,$INFO[Container(300).ListItem.Property(submenuVisibility)],Home)</onfocus>
 						<onfocus condition="!SubString(Container(300).ListItem.Property(hasSubmenu), True)">ClearProperty(submenutype,Home)</onfocus>
-                        <onfocus condition="SubString(Container(300).ListItem.Property(labelID),info-window-home-property-MediaBrowser-usr)">SetProperty(MB3.Background.Collection, $INFO[Container(300).ListItem.Label], Home)</onfocus>
 						<onfocus condition="Skin.HasSetting(AutoShowSubmenu) + skin.hastheme(classic)">XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,SHOW,4444)</onfocus>
 						<onfocus condition="Skin.HasSetting(AutoShowSubmenu) + !skin.hastheme(classic)">XBMC.RunScript(script.titanskin.helpers,SHOWSUBMENU,SHOW)</onfocus>
 						<onfocus condition="!IsEmpty(Container(300).ListItem.Property(customcontent))">XBMC.RunScript(script.titanskin.helpers,SETCUSTOM,$INFO[Container(300).ListItem.Property(customcontent)])</onfocus>
@@ -266,13 +291,25 @@
             <texturenofocus colordiffuse="$VAR[TextColor_white]">icons/icon_power.png</texturenofocus>
             <onclick>ActivateWindow(111)</onclick>
 			<onfocus>ActivateWindow(111)</onfocus>
-			<visible>!ControlGroup(77777).HasFocus() + !Control.HasFocus(4444) + !Window.IsVisible(DialogButtonMenu.xml) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + StringCompare(Container(300).Position,3)] + !Skin.HasSetting(DisablePowerMenu)</visible>
+			<visible>!ControlGroup(77777).HasFocus() + !Control.HasFocus(4444) + !Window.IsVisible(DialogButtonMenu.xml) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + Skin.String(GadgetRows, 2) + StringCompare(Container(300).Position,3)] + !Skin.HasSetting(DisablePowerMenu) + !Skin.HasSetting(EnableTouchSupport)</visible>
 			<animation time="400" effect="fade">Visible</animation>
 			<animation time="200" effect="fade">Hidden</animation>
         </control>
 		
 		<!-- enhanced home screen -->
 		<include condition="Skin.String(GadgetRows, enhanced)">EnhancedHomeScreen</include>
+		
+		<!-- touchscreen support -->
+		<include condition="Skin.HasSetting(EnableTouchSupport)">TouchControlsHome</include>
+		
+		<control type="scrollbar" id="60">
+			<posx>1835</posx>
+			<posy>390</posy>
+			<height>570</height>
+			<onleft>50</onleft>
+			<onright>noop</onright>
+			<visible>false</visible>
+		</control>
 		
 	
 		<!-- submenu -->
