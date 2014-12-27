@@ -12,12 +12,17 @@ scarfa: -
 gade: christian_gade@hotmail.com
 
 
+DOWNLOAD:
+
+Can be installed through the official XBMC repository.
+
+
 DEVELOPMENT:
 
- - Coming soon!
+https://github.com/gade01/Rapier
 
 
- SUPPORT: 
+SUPPORT: 
 
 http://forum.xbmc.org/forumdisplay.php?fid=120
 
@@ -46,3 +51,4 @@ You may also want to delete the textures.db file that resides in userdata->datab
 Doing these steps will prevent any unforeseen problems that may pop up.
 
 Rapier uses text images for the home menu categories. More categories can be found in skin.rapier->extras folder when customizing the home menu.
+Additional home category images can be requested at the forum: http://forum.kodi.tv/showthread.php?tid=101862
