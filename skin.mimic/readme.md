@@ -10,6 +10,20 @@ Mimic is a Kodi skin that combines features from reFocus and Aeon Nox. Based on 
 
 More screenshots available here: http://imgur.com/a/anSBV#0
 
+***
+**1.0.2**
+- Changed window animations.
+- Fixed fanart overlay for Favourites and Global Search.
+- Added additional info to Music/Addon list and slim list views.
+- Added a full screen Wall view.
+- Added foreign language support with Arial font.
+- Made Webly Sleek UI the default font, added Roboto 2014.
+- Replaced Logo view with Fanart view.
+- Added a 7th line to the EPG.
+- Added Black-Green, Black-Mauve, and Black-Purple color themes.
+- Updated language files from Transifex.
+- Added support for script.extendedinfo.
+- Added an optional bottom bar to display now playing music info.
 
 ***
 **1.0.1**
