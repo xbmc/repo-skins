@@ -30,20 +30,119 @@
 		</control>
 	</include>
 	<include name="background">
-		<control type="image"><!-- Use a black background until background image has had a chance to load -->
-			<include>fullscreenimage</include>
-			<texture>colours/black.png</texture>
-			<aspectratio>stretch</aspectratio>
-		</control>
 		<control type="group">
-			<visible>!Container().Scrolling</visible>
-			<animation effect="fade" start="0" end="100" time="500" delay="2500">Visible</animation>
-			<animation effect="fade" start="100" end="0" time="0">Hidden</animation>
-			<control type="image">
+			<visible>!Window.IsActive(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
+			<control type="image"><!-- Use a black background until background image has had a chance to load -->
 				<include>fullscreenimage</include>
-				<texture background="true">$VAR[BackgroundImage]</texture>
-				<fadetime>200</fadetime>
-				<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo]</visible>
+				<texture>colours/black.png</texture>
+				<aspectratio>stretch</aspectratio>
+			</control>
+			<control type="group">
+				<visible>!Container().Scrolling</visible>
+				<animation effect="fade" start="0" end="100" time="400" delay="2600" tween="quadratic" easing="out">Visible</animation>
+				<control type="image"><!-- Fallback background image -->
+					<include>fullscreenimage</include>
+					<aspectratio>stretch</aspectratio>
+					<fadetime>200</fadetime>
+					<texture background="false">$VAR[BackgroundImage]</texture>
+				</control>
+				<control type="group">
+					<visible>Skin.HasSetting(background-playingmedia)</visible>
+					<control type="videowindow">
+						<include>fullscreenimage</include>
+						<aspectratio>stretch</aspectratio>
+						<visible>Player.HasVideo</visible>
+					</control>
+					<control type="visualisation">
+						<include>fullscreenimage</include>
+						<aspectratio>stretch</aspectratio>
+						<visible>Player.HasAudio</visible>
+					</control>
+				</control>
+				<control type="group">
+					<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+					<control type="image"><!-- Mask out any backgrounds showing around ArtistSlideshow Fanart -->
+						<include>fullscreenimage</include>
+						<texture>colours/black.png</texture>
+						<aspectratio>stretch</aspectratio>
+					</control>
+					<control type="multiimage"><!-- Backgroung ArtistSlideshow fanart image -->
+						<include>fullscreenimage</include>
+						<imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
+						<aspectratio>keep</aspectratio>
+						<timeperimage>6000</timeperimage>
+						<fadetime>200</fadetime>
+						<randomize>true</randomize>
+					</control>
+				</control>
+			</control>
+			<control type="image"><!-- mask to fade backgrounds -->
+				<include>fullscreenimage</include>
+				<texture>colours/black.png</texture>
+				<colordiffuse>mask-background</colordiffuse>
+				<include>background-fade</include>
+				<aspectratio>stretch</aspectratio>
+				<visible>!IsEmpty(Skin.String(background-customweather)) | Skin.HasSetting(background-fanart) | Skin.HasSetting(background-playingmedia) | Skin.HasSetting(background-slideshow)</visible>
+			</control>
+		</control>
+	</include>
+
+	<include name="backgroundvideo">
+		<control type="group">
+			<visible>!Window.IsActive(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
+			<control type="group">
+				<visible>!Container().Scrolling</visible>
+				<animation effect="fade" start="0" end="100" time="400" delay="2600" tween="quadratic" easing="out">Visible</animation>
+				<control type="group">
+					<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo] + !IsEmpty(ListItem.Title)</visible>
+					<control type="group">
+						<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos)]</visible>
+						<control type="image"><!-- Fallback background image -->
+							<include>fullscreenimage</include>
+							<aspectratio>stretch</aspectratio>
+							<fadetime>200</fadetime>
+							<texture background="false">$VAR[VideoBackgndImage]</texture>
+						</control>
+					</control>
+					<control type="group">
+						<visible>[Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)] + Skin.HasSetting(background-fanart)</visible>
+						<control type="multiimage" id="6300">
+							<include>fullscreenimage</include>
+							<randomize>true</randomize>
+							<timeperimage>6000</timeperimage>
+							<fadetime>200</fadetime>
+							<imagepath background="false">$INFO[ListItem.Path,,extrafanart/]</imagepath>
+							<aspectratio>stretch</aspectratio>
+							<visible>Skin.HasSetting(background-extrafanart) + Skin.HasSetting(background-fanart)</visible>
+						</control>
+						<control type="image"><!-- Fallback background image -->
+							<include>fullscreenimage</include>
+							<aspectratio>stretch</aspectratio>
+							<fadetime>200</fadetime>
+							<texture background="false">$VAR[VideoBackgndImage]</texture>
+							<visible>!Skin.HasSetting(background-extrafanart) | IsEmpty(Control.GetLabel(6300))</visible>
+						</control>
+					</control>
+					<control type="group">
+						<visible>Container.Content(episodes)</visible>
+						<control type="multiimage" id="6340">
+							<include>fullscreenimage</include>
+							<randomize>true</randomize>
+							<timeperimage>6000</timeperimage>
+							<fadetime>200</fadetime>
+							<imagepath background="false">$INFO[ListItem.Path,,../extrafanart/]</imagepath>
+							<aspectratio>stretch</aspectratio>
+							<visible>Skin.HasSetting(background-extrafanart) + !Window.IsVisible(infodialog) + !IsEmpty(ListItem.Path)</visible>
+						</control>
+						<control type="image">
+							<include>fullscreenimage</include>
+							<texture background="false">$VAR[VideoBackgndImage]</texture>
+							<aspectratio>stretch</aspectratio>
+							<fadetime>200</fadetime>
+							<visible>!Skin.HasSetting(background-extrafanart) | IsEmpty(Control.GetLabel(6340))</visible>
+						</control>
+					</control>
+				</control>
 			</control>
 			<control type="group">
 				<visible>Skin.HasSetting(background-playingmedia)</visible>
@@ -55,7 +154,8 @@
 				<control type="visualisation">
 					<include>fullscreenimage</include>
 					<aspectratio>stretch</aspectratio>
-					<visible>Player.HasAudio</visible>
+					<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+					<animation effect="fade" time="200">VisibleChange</animation>
 				</control>
 			</control>
 			<control type="group">
@@ -63,132 +163,31 @@
 				<control type="image"><!-- Mask out any backgrounds showing around ArtistSlideshow Fanart -->
 					<include>fullscreenimage</include>
 					<texture>colours/black.png</texture>
-					<aspectratio>stretch</aspectratio>
+					<aspectratio>scale</aspectratio>
 				</control>
 				<control type="multiimage"><!-- Backgroung ArtistSlideshow fanart image -->
 					<include>fullscreenimage</include>
-					<imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
+					<imagepath background="false">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
 					<aspectratio>keep</aspectratio>
-					<timeperimage>5000</timeperimage>
-					<fadetime>400</fadetime>
+					<timeperimage>6000</timeperimage>
+					<fadetime>200</fadetime>
 					<randomize>true</randomize>
 				</control>
 			</control>
-		</control>
-		<control type="image"><!-- mask to fade backgrounds -->
-			<include>fullscreenimage</include>
-			<texture>colours/black.png</texture>
-			<colordiffuse>mask-background</colordiffuse>
-			<include>background-fade</include>
-			<aspectratio>stretch</aspectratio>
-			<visible>!IsEmpty(Skin.String(background-customweather)) | Skin.HasSetting(background-fanart) | Skin.HasSetting(background-playingmedia) | Skin.HasSetting(background-slideshow)</visible>
-		</control>
-	</include>
-
-	<include name="backgroundvideo">
-		<control type="image"><!-- Use a black background until background image has had a chance to load -->
-			<include>fullscreenimage</include>
-			<texture>colours/black.png</texture>
-			<aspectratio>stretch</aspectratio>
-		</control>
-		<control type="group">
-			<visible>!Container().Scrolling</visible>
-			<animation effect="fade" start="0" end="100" time="2500" delay="500" tween="quadratic" easing="out">Visible</animation>
-			<animation effect="fade" start="100" end="0" time="0">Hidden</animation>
-			<control type="group">
-				<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo] + !IsEmpty(ListItem.Title)</visible>
-				<control type="group">
-					<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos)]</visible>
-					<control type="image"><!-- Fallback background image -->
-						<include>fullscreenimage</include>
-						<aspectratio>stretch</aspectratio>
-						<fadetime>300</fadetime>
-						<texture background="true">$VAR[VideoBackgndImage]</texture>
-					</control>
-				</control>
-				<control type="group">
-					<visible>[Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)] + Skin.HasSetting(background-fanart)</visible>
-					<control type="multiimage" id="6300">
-						<include>fullscreenimage</include>
-						<randomize>true</randomize>
-						<timeperimage>5000</timeperimage>
-						<fadetime>300</fadetime>
-						<imagepath background="true">$INFO[ListItem.Path,,extrafanart/]</imagepath>
-						<aspectratio>stretch</aspectratio>
-						<visible>Skin.HasSetting(background-extrafanart) + Skin.HasSetting(background-fanart)</visible>
-					</control>
-					<control type="image"><!-- Fallback background image -->
-						<include>fullscreenimage</include>
-						<aspectratio>stretch</aspectratio>
-						<fadetime>300</fadetime>
-						<texture background="true">$VAR[VideoBackgndImage]</texture>
-						<visible>!Skin.HasSetting(background-extrafanart) | IsEmpty(Control.GetLabel(6300))</visible>
-					</control>
-				</control>
-				<control type="group">
-					<visible>Container.Content(episodes)</visible>
-					<control type="multiimage" id="6340">
-						<include>fullscreenimage</include>
-						<randomize>true</randomize>
-						<timeperimage>5000</timeperimage>
-						<fadetime>300</fadetime>
-						<imagepath background="true">$INFO[ListItem.Path,,../extrafanart/]</imagepath>
-						<aspectratio>stretch</aspectratio>
-						<visible>Skin.HasSetting(background-extrafanart) + !Window.IsVisible(InfoDialog) + !IsEmpty(ListItem.Path)</visible>
-					</control>
-					<control type="image" id="6342">
-						<include>fullscreenimage</include>
-						<texture background="true">$VAR[VideoBackgndImage]</texture>
-						<aspectratio>stretch</aspectratio>
-						<fadetime>300</fadetime>
-						<visible>IsEmpty(Control.GetLabel(6340)) | !Skin.HasSetting(background-extrafanart)</visible>
-					</control>
-				</control>
-			</control>
-		</control>
-		<control type="group">
-			<visible>Skin.HasSetting(background-playingmedia)</visible>
-			<control type="videowindow">
-				<include>fullscreenimage</include>
-				<aspectratio>stretch</aspectratio>
-				<visible>Player.HasVideo</visible>
-			</control>
-			<control type="visualisation">
-				<include>fullscreenimage</include>
-				<aspectratio>stretch</aspectratio>
-				<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
-				<animation effect="fade" time="300">VisibleChange</animation>
-			</control>
-		</control>
-		<control type="group">
-			<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
-			<control type="image"><!-- Mask out any backgrounds showing around ArtistSlideshow Fanart -->
+			<control type="image"><!-- mask to fade backgrounds -->
 				<include>fullscreenimage</include>
 				<texture>colours/black.png</texture>
-				<aspectratio>scale</aspectratio>
+				<colordiffuse>mask-background</colordiffuse>
+				<include>background-fade</include>
+				<aspectratio>stretch</aspectratio>
+				<visible>Skin.HasSetting(background-fanart) | Skin.HasSetting(background-playingmedia) | Skin.HasSetting(background-slideshow)</visible>
 			</control>
-			<control type="multiimage"><!-- Backgroung ArtistSlideshow fanart image -->
-				<include>fullscreenimage</include>
-				<imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
-				<aspectratio>keep</aspectratio>
-				<timeperimage>5000</timeperimage>
-				<fadetime>300</fadetime>
-				<randomize>true</randomize>
-			</control>
-		</control>
-		<control type="image"><!-- mask to fade backgrounds -->
-			<include>fullscreenimage</include>
-			<texture>colours/black.png</texture>
-			<colordiffuse>mask-background</colordiffuse>
-			<include>background-fade</include>
-			<aspectratio>stretch</aspectratio>
-			<visible>Skin.HasSetting(background-fanart) | Skin.HasSetting(background-playingmedia) | Skin.HasSetting(background-slideshow)</visible>
 		</control>
 	</include>
 
 	<include name="player-mediaicon">
 		<control type="group"><!-- Player Media Icon -->
-			<visible>Window.IsVisible(FullscreenVideo)</visible>
+			<visible>Window.IsVisible(fullscreenvideo)</visible>
 			<control type="group">
 				<control type="group">
 					<visible>VideoPlayer.Content(Movies) | VideoPlayer.Content(episodes)</visible><!-- Movies or Tv Episodes -->
@@ -247,13 +246,13 @@
 			<texture diffuse="mask-squ.png">$INFO[MusicPlayer.Cover]</texture>
 			<aspectratio scalediffuse="false" align="left" aligny="bottom">keep</aspectratio>
 			<animation effect="fade" time="200">VisibleChange</animation>
-			<visible>Player.HasAudio + Window.IsVisible(Visualisation) + !Window.IsVisible(MusicOSD) + !Player.ShowInfo</visible>
+			<visible>Player.HasAudio + Window.IsVisible(visualisation) + !Window.IsVisible(musicosd) + !Player.ShowInfo</visible>
 		</control>
 	</include>
 
 	<include name="home-mediaoverlay">
 		<control type="group" id="9950">
-			<visible>Skin.HasSetting(media-overlay) + !Window.IsActive(PlayerControls)</visible>
+			<visible>Skin.HasSetting(media-overlay) + !Window.IsActive(playercontrols)</visible>
 			<control type="group" id="9960"><!-- media infos (music) -->
 				<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
 				<control type="image">
@@ -552,7 +551,6 @@
 
 	<include name="transition-fade">
 		<animation effect="fade" time="100">Visible</animation>
-		<animation effect="fade" time="100">Hidden</animation>
 	</include>
 
 	<include name="screen-fade">
@@ -566,7 +564,7 @@
 	
 	<include name="Screen-settings">
 		<animation effect="slide" time="0" start="0,0" end="0,-720">Visible</animation>
-		<visible allowhiddenfocus="true">ControlGroup(9000).HasFocus() + !Skin.HasSetting(lock-screensettings)</visible>
+		<visible allowhiddenfocus="true">[ControlGroup(9000).HasFocus() | Control.HasFocus(9001) | Control.HasFocus(9002)] + !Skin.HasSetting(lock-screensettings)</visible>
 	</include>
 
 </includes>
