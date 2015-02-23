@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
-	<include name="Viewtype_FanartList">
+	<include name="Viewtype_ListFanart">
 		<control type="group">
 			<visible>Control.IsVisible(509)</visible>
 			<!-- Browser -->
 			<control type="fixedlist" id="509">
-				<viewtype label="$LOCALIZE[20445] $LOCALIZE[535]">biglist</viewtype>
+				<viewtype label="$LOCALIZE[535] $LOCALIZE[20445]">biglist</viewtype>
 				<posx>658</posx>
 				<posy>60</posy>
 				<height>455</height>
@@ -22,7 +22,7 @@
 				<include>Animation_OpenCloseFade</include>
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
-				<visible>!Skin.HasSetting(NoViewFanartList)</visible>
+				<visible>!Skin.HasSetting(NoViewListFanart)</visible>
 				<visible>Window.IsActive(pictures) | Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
 				<itemlayout width="600" height="35">
 					<!-- List Line Item Divider -->
@@ -42,7 +42,7 @@
 						<height>35</height>
 						<align>left</align>
 						<aligny>center</aligny>
-						<label>$INFO[ListItem.Label]</label>
+						<label>$VAR[ListItemTitle]</label>
 						<font>METF_TitleText</font>
 						<textcolor>LowListTitle</textcolor>
 					</control>
@@ -93,7 +93,7 @@
 						<height>35</height>
 						<align>left</align>
 						<aligny>center</aligny>
-						<label>$INFO[ListItem.Label]</label>
+						<label>$VAR[ListItemTitle]</label>
 						<font>METF_TitleText</font>
 						<textcolor>FocusBarText</textcolor>
 					</control>
@@ -194,7 +194,7 @@
 					<texture>frames/ClassicFrame_FanartMedium.png</texture>
 					<aspectratio scalediffuse="false">scale</aspectratio>
 				</control>
-				<!-- Title -->
+				<!-- Movie and TV Show Titles -->
 				<control type="label">
 					<posx>35</posx>
 					<posy>430</posy>
@@ -204,7 +204,21 @@
 					<aligny>center</aligny>
 					<font>METF_TitleTextLarge</font>
 					<textcolor>TitleText</textcolor>
-					<label>$INFO[ListItem.Label]</label>
+					<label>$VAR[ListItemTitle]</label>
+					<visible>!Container.Content(seasons)</visible>
+				</control>
+				<!-- Season - TV Show Title -->
+				<control type="label">
+					<posx>35</posx>
+					<posy>430</posy>
+					<width>600</width>
+					<height>30</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>METF_TitleTextLarge</font>
+					<textcolor>TitleText</textcolor>
+					<label>$INFO[ListItem.TVShowTitle]</label>
+					<visible>Container.Content(seasons)</visible>
 				</control>
 				<!-- Genre -->
 				<control type="label">
@@ -228,9 +242,9 @@
 					<align>center</align>
 					<aligny>center</aligny>
 					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsGenre</textcolor>
-					<label>$LOCALIZE[20416] $INFO[ListItem.Date]</label>
-					<visible>!IsEmpty(ListItem.Date) + Container.Content(episodes)</visible>
+					<textcolor>MediaDetailsYear</textcolor>
+					<label>$LOCALIZE[20416] $INFO[ListItem.Premiered]</label>
+					<visible>!IsEmpty(ListItem.Premiered) + Container.Content(episodes)</visible>
 				</control>
 				<!-- Picture Date -->
 				<control type="label">
@@ -259,7 +273,7 @@
 					<include>VisibleIfMovieSet</include>
 				</control>
 			</control>
-			<!-- Info Details -->
+			<!-- Details -->
 			<control type="grouplist">
 				<posx>35</posx>
 				<posy>487</posy>
@@ -271,84 +285,9 @@
 				<include>Animation_OpenCloseFade</include>
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
+				<include>ViewDetailsYearDurEpsUnwatched</include>
 				<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
 				<include>VisibleIfNotMovieSet</include>
-				<!-- Year -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsYear</textcolor>
-					<label>$INFO[ListItem.Year]</label>
-					<visible>!IsEmpty(ListItem.Year) + ![Container.Content(episodes) | Container.Content(seasons)]</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + ![Container.Content(episodes) | Container.Content(seasons)]</visible>
-				</control>
-				<!-- Duration -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration,, [LOWERCASE]$LOCALIZE[31299][/LOWERCASE]]</label>
-					<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
-				</control>
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration]</label>
-					<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Duration) | IsEmpty(ListItem.Property(TotalEpisodes))] + ![Container.Content(tvshows) | Container.Content(seasons)]</visible>
-				</control>
-				<!-- Episode Count -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsEpisodes</textcolor>
-					<label>$INFO[ListItem.Property(TotalEpisodes)] $LOCALIZE[20360]</label>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + [Container.Content(tvshows) | Container.Content(seasons)]</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + [Container.Content(seasons) | Container.Content(tvshows)]</visible>
-				</control>
-				<!-- Unwatched Episode Count -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsEpisodes</textcolor>
-					<label>$INFO[ListItem.Property(UnWatchedEpisodes)] $LOCALIZE[16101]</label>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + [Container.Content(seasons) | Container.Content(tvshows)]</visible>
-				</control>
 			</control>
 			<!-- Picture Info -->
 			<control type="grouplist">

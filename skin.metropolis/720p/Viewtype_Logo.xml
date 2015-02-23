@@ -26,6 +26,7 @@
 				<visible>Window.IsActive(videolibrary) + [Container.Content(movies) | Container.Content(tvshows)]</visible>
 				<itemlayout width="294" height="194">
 					<control type="image">
+						<include>Animation_HiddenByInfo</include>
 						<posx>9</posx>
 						<posy>98</posy>
 						<width>272</width>
@@ -34,7 +35,28 @@
 						<fadetime>200</fadetime>
 						<colordiffuse>LandscapeDiffuse</colordiffuse>
 						<aspectratio aligny="center">keep</aspectratio>
-						<include>Animation_HiddenByInfo</include>
+						<visible>!Skin.HasSetting(LogoViewSingleItem)</visible>
+					</control>
+					<control type="image">
+						<posx>245</posx>
+						<posy>162</posy>
+						<width>24</width>
+						<height>24</height>
+						<texture>$INFO[ListItem.Overlay]</texture>
+						<colordiffuse>WatchedOverlay</colordiffuse>
+						<visible>!ListItem.IsResumable + [[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]]</visible>
+						<visible>!Skin.HasSetting(LogoViewSingleItem)</visible>
+					</control>
+					<!-- Watched Overlay for In-Progress Items -->
+					<control type="image">
+						<posx>241</posx>
+						<posy>157</posy>
+						<width>35</width>
+						<height>35</height>
+						<texture>flags/Progress/$INFO[ListItem.PercentPlayed].png</texture>
+						<colordiffuse>WatchedOverlay</colordiffuse>
+						<visible>ListItem.IsResumable + [[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]]</visible>
+						<visible>!Skin.HasSetting(LogoViewSingleItem)</visible>
 					</control>
 				</itemlayout>
 				<focusedlayout width="318" height="178">
@@ -46,29 +68,53 @@
 						<texture background="true">$VAR[ListClearartClearlogo]</texture>
 						<fadetime>200</fadetime>
 						<aspectratio aligny="center">keep</aspectratio>
+						<animation effect="zoom" center="auto" start="50" end="100" time="400" tween="back" easing="out" condition="!Skin.HasSetting(LogoViewSingleItem)">Focus</animation>
+					</control>
+					<control type="image">
+						<posx>305</posx>
+						<posy>169</posy>
+						<width>24</width>
+						<height>24</height>
+						<texture>$INFO[ListItem.Overlay]</texture>
+						<colordiffuse>WatchedOverlay</colordiffuse>
+						<animation effect="zoom" center="152,92" start="70" end="100" time="300" tween="back" easing="out" condition="!Skin.HasSetting(LogoViewSingleItem)">Focus</animation>
 						<animation type="Focus" reversible="false">
-							<effect type="zoom" center="auto" start="50" end="100" time="400" tween="back" easing="out" />
+							<effect type="fade" start="50" end="100" time="300" />
 						</animation>
+						<visible>!ListItem.IsResumable + [[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]]</visible>
+					</control>
+					<!-- Watched Overlay for In-Progress Items -->
+					<control type="image">
+						<posx>301</posx>
+						<posy>164</posy>
+						<width>35</width>
+						<height>35</height>
+						<texture>flags/Progress/$INFO[ListItem.PercentPlayed].png</texture>
+						<colordiffuse>WatchedOverlay</colordiffuse>
+						<animation effect="zoom" center="152,92" start="70" end="100" time="300" tween="back" easing="out" condition="!Skin.HasSetting(LogoViewSingleItem)">Focus</animation>
+						<animation type="Focus" reversible="false">
+							<effect type="fade" start="50" end="100" time="300" />
+						</animation>
+						<visible>ListItem.IsResumable + [[[Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideMovieWatchedOverlays)] | [![Container.Content(movies) | Container.Content(sets)] + !Skin.HasSetting(HideTVWatchedOverlays)]]</visible>
 					</control>
 				</focusedlayout>
 			</control>
-			<!-- Browser labels -->
 			<!-- Title -->
 			<control type="label">
 				<posx>40</posx>
 				<posy>472</posy>
 				<width>1200</width>
-				<height>30</height>
+				<height>40</height>
 				<align>center</align>
-				<aligny>center</aligny>
 				<font>METF_TitleTextLarge</font>
 				<textcolor>TitleText</textcolor>
-				<label>$INFO[ListItem.Label]</label>
+				<label>$VAR[ListItemTitle]</label>
 				<include>Animation_OpenCloseFade</include>
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
-				<visible>Window.IsActive(videolibrary) + [Container.Content(tvshows) | Container.Content(movies)]</visible>
+				<visible>Window.IsActive(VideoLibrary) + [Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(episodes)]</visible>
 			</control>
+			<!-- Details -->
 			<control type="grouplist">
 				<posx>40</posx>
 				<posy>505</posy>
@@ -80,105 +126,10 @@
 				<include>Animation_OpenCloseFade</include>
 				<include>Animation_FadedByMenu</include>
 				<include>Animation_HiddenByInfo</include>
+				<include>ViewDetailsGenreYearDurEpsUnwatched</include>
 				<visible>Window.IsActive(VideoLibrary) + [Container.Content(movies) | Container.Content(tvshows)]</visible>
 				<include>VisibleIfNotMovieSet</include>
-				<!-- Genre -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsGenre</textcolor>
-					<label>$INFO[ListItem.Genre]</label>
-					<visible>!IsEmpty(ListItem.Genre)</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Genre) | IsEmpty(ListItem.Year)]</visible>
-				</control>
-				<!-- Year -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsYear</textcolor>
-					<label>$INFO[ListItem.Year]</label>
-					<visible>!IsEmpty(ListItem.Year)</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)]</visible>
-				</control>
-				<!-- Duration -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration,, [LOWERCASE]$LOCALIZE[31299][/LOWERCASE]]</label>
-					<visible>!IsEmpty(ListItem.Duration) + !SubString(ListItem.Duration,min) + !Container.Content(tvshows)</visible>
-				</control>
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsDuration</textcolor>
-					<label>$INFO[ListItem.Duration]</label>
-					<visible>!IsEmpty(ListItem.Duration) + SubString(ListItem.Duration,min) + !Container.Content(tvshows)</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>![IsEmpty(ListItem.Duration) | IsEmpty(ListItem.Property(TotalEpisodes))] + !Container.Content(tvshows)</visible>
-				</control>
-				<!-- Episode Count -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsEpisodes</textcolor>
-					<label>$INFO[ListItem.Property(TotalEpisodes)] $LOCALIZE[20360]</label>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + Container.Content(tvshows)</visible>
-				</control>
-				<!-- Bullet -->
-				<control type="image">
-					<width>8</width>
-					<height>32</height>
-					<texture>Dot.png</texture>
-					<aspectratio align="center" aligny="center">keep</aspectratio>
-					<colordiffuse>BulletDiffuse</colordiffuse>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + Container.Content(tvshows)</visible>
-				</control>
-				<!-- Unwatched Episode Count -->
-				<control type="label">
-					<width min="25" max="1200">auto</width>
-					<height>30</height>
-					<aligny>center</aligny>
-					<font>METF_MediaDetailsSmall</font>
-					<textcolor>MediaDetailsEpisodes</textcolor>
-					<label>$INFO[ListItem.Property(UnWatchedEpisodes)] $LOCALIZE[16101]</label>
-					<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + Container.Content(tvshows)</visible>
-				</control>
 			</control>
-			<!-- Movie Sets -->
 			<control type="label">
 				<posx>240</posx>
 				<posy>503</posy>

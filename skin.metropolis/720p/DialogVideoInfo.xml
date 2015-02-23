@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window type="dialog" id="2003">
-	<onload condition="System.HasAddon(script.videoextras)">XBMC.RunScript(script.videoextras,check,"$INFO[ListItem.FilenameAndPath]")</onload>
+	<onload condition="System.HasAddon(script.videoextras)">RunScript(script.videoextras,check,"$INFO[ListItem.FilenameAndPath]")</onload>
 	<onload condition="Skin.HasSetting(TvTunes) + !SubString(Window(Videos).Property(CinemaExperienceRunning),True)">RunScript(script.tvtunes,backend=True)</onload>
 	<defaultcontrol always="true">7003</defaultcontrol>
 	<controls>
@@ -120,8 +120,8 @@
 				<aligny>center</aligny>
 				<font>METF_InfoTextLarger</font>
 				<textcolor>MediaDetailsInfo</textcolor>
-				<label>$LOCALIZE[20416] $INFO[ListItem.Date]</label>
-				<visible>!IsEmpty(ListItem.Date) + Container.Content(episodes)</visible>
+				<label>$LOCALIZE[20416] $INFO[ListItem.Premiered]</label>
+				<visible>!IsEmpty(ListItem.Premiered) + Container.Content(episodes)</visible>
 			</control>
 			<!-- MPAA Long Description -->
 			<control type="textbox">
@@ -135,7 +135,21 @@
 				<label>$INFO[ListItem.mpaa]</label>
 				<visible>[Container.Content(movies) + !IsEmpty(ListItem.mpaa) + ![StringCompare(ListItem.mpaa,Rated PG) | StringCompare(ListItem.mpaa,Rated PG-13) | StringCompare(ListItem.mpaa,Rated R) | StringCompare(ListItem.mpaa,Rated G) | StringCompare(ListItem.mpaa,Rated NC-17) | StringCompare(ListItem.mpaa,Rated TV-14) | StringCompare(ListItem.mpaa,Rated TV-G) | StringCompare(ListItem.mpaa,Rated TV-MA) | StringCompare(ListItem.mpaa,Rated TV-PG) | StringCompare(ListItem.mpaa,Rated TV-Y) | StringCompare(ListItem.mpaa,Rated TV-Y7)]] + !Skin.HasSetting(ShowVideoPath)</visible>
 			</control>	 
-			
+
+			<control type="fadelabel">
+				<posx>-8</posx>
+				<posy>489</posy>
+				<width>515</width>
+				<height>47</height>
+				<align>left</align>
+				<scroll>true</scroll>
+				<scrollout>false</scrollout>
+				<pauseatend>1000</pauseatend>
+				<font>METF_MPAA</font>
+				<textcolor>MPAADescription</textcolor>
+				<label>$INFO[ListItem.FilenameAndPath]</label>
+				<visible>!SubString(ListItem.FilenameAndPath," ") + [Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
+			</control>	
 			<control type="textbox">
 				<posx>-8</posx>
 				<posy>489</posy>
@@ -145,7 +159,7 @@
 				<font>METF_MPAA</font>
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.FilenameAndPath]</label>
-				<visible>[Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
+				<visible>SubString(ListItem.FilenameAndPath," ") + [Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
 			</control>	
 			<control type="group">
 				<posx>550</posx>
@@ -248,7 +262,7 @@
 				<posx>-8</posx>
 				<posy>138</posy>
 				<width>515</width>
-				<height>339</height>
+				<height>342</height>
 				<align>justify</align>
 				<font>METF_PlotText</font>
 				<textcolor>TextNF</textcolor>
@@ -364,11 +378,7 @@
 			</control>
 			<!-- Bullet -->
 			<control type="image">
-				<width>8</width>
-				<height>32</height>
-				<texture>Dot.png</texture>
-				<aspectratio align="center" aligny="center">keep</aspectratio>
-				<colordiffuse>BulletDiffuse</colordiffuse>
+				<include>ViewDetailsBullet</include>
 				<visible>!IsEmpty(ListItem.Country) + [Container.Content(tvshows) | Container.Content(movies) | Container.Content(MusicVideos)]</visible>
 			</control>
 			<!-- Year -->
@@ -383,11 +393,7 @@
 			</control>
 			<!-- Bullet -->
 			<control type="image">
-				<width>8</width>
-				<height>32</height>
-				<texture>Dot.png</texture>
-				<aspectratio align="center" aligny="center">keep</aspectratio>
-				<colordiffuse>BulletDiffuse</colordiffuse>
+				<include>ViewDetailsBullet</include>
 				<visible>![IsEmpty(ListItem.Year) | IsEmpty(ListItem.Duration)] + [Container.Content(movies) | Container.Content(MusicVideos)]</visible>
 			</control>
 			<!-- Duration -->
@@ -443,7 +449,7 @@
 				<texturefocus>buttons/button_cinemaFO.png</texturefocus>
 				<onclick>Playlist.Clear</onclick>
 				<onclick>Dialog.Close(MovieInformation)</onclick>
-				<onclick>XBMC.RunScript(script.cinema.experience)</onclick>
+				<onclick>RunScript(script.cinema.experience)</onclick>
 				<include>Animation_ButtonFocus</include>
 				<visible>Container.Content(movies) + system.hasaddon(script.cinema.experience) + !SubString(Container.FolderPath,plugin)</visible>
 			</control>
@@ -467,8 +473,8 @@
 				<include>VideoInfoButton</include>
 				<texturenofocus>osd/osd_button_channel_previous_nf.png</texturenofocus>
 				<texturefocus>osd/osd_button_channel_previous_fo.png</texturefocus>
-				<onclick condition="Container.Content(tvshows)">XBMC.RunScript(script.artwork.downloader, mode=gui, mediatype=tvshow, dbid=$INFO[ListItem.DBID])</onclick>
-				<onclick condition="Container.Content(movies)">XBMC.RunScript(script.artwork.downloader, mode=gui, mediatype=movie, dbid=$INFO[ListItem.DBID])</onclick>
+				<onclick condition="Container.Content(tvshows)">RunScript(script.artwork.downloader, mode=gui, mediatype=tvshow, dbid=$INFO[ListItem.DBID])</onclick>
+				<onclick condition="Container.Content(movies)">RunScript(script.artwork.downloader, mode=gui, mediatype=movie, dbid=$INFO[ListItem.DBID])</onclick>
 				<include>Animation_ButtonFocus</include>
 				<visible>System.HasAddon(script.artwork.downloader) + [Container.Content(movies) | Container.Content(tvshows)]</visible>
 			</control>
@@ -480,7 +486,7 @@
 				<visible>Skin.HasSetting(TvTunes) + System.HasAddon(script.tvtunes) + [Container.Content(TVShows) | Container.Content(movies) | Container.Content(musicvideos)]</visible>
 				<include>Animation_ButtonFocus</include>
 				<label>$LOCALIZE[31956]</label>
-				<onclick>XBMC.RunScript(script.tvtunes,mode=solo)</onclick>
+				<onclick>RunScript(script.tvtunes,mode=solo)</onclick>
 			</control>
 			<!-- Video Extras -->
 			<control type="button" id="22">
