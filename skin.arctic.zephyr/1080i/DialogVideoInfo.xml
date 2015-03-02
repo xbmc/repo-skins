@@ -62,6 +62,19 @@
                     <texture colordiffuse="Black70">flags/dvd.png</texture>
                     <visible>substring(ListItem.FilenameAndPath,dvd) + !substring(ListItem.FilenameAndPath,hddvd)</visible>
                 </control>
+                <control type="image">
+                    <width>64</width>
+                    <height>64</height>
+                    <texture colordiffuse="Black70">flags/imdb.png</texture>
+                    <visible>!IsEmpty(ListItem.Top250)</visible>
+                </control>
+                <control type="label">
+                    <width>60</width>
+                    <height>64</height>            
+                    <label>$INFO[ListItem.Top250,[B]#,[/B]]</label>
+                    <font>TinyBold</font>
+                    <visible>!IsEmpty(ListItem.Top250)</visible>
+                </control>
 
                 <control type="image">
                     <width>64</width>
@@ -266,8 +279,9 @@
                 <itemgap>3</itemgap>
                 <onup>9000</onup>
                 <ondown>9000</ondown>
-                <onright condition="Control.IsVisible(50) + !IsEmpty(ListItem.Director)">52</onright>
-                <onright condition="Control.IsVisible(50) + IsEmpty(ListItem.Director)">51  </onright>
+                <onright condition="!Control.IsVisible(50)">SendClick(2003,5)</onright>
+                <onright condition="!IsEmpty(ListItem.Director)">52</onright>
+                <onright condition="IsEmpty(ListItem.Director)">51</onright>
                 <orientation>vertical</orientation>
 
                 <control type="button" id ="5">
@@ -308,6 +322,7 @@
                     <texturenofocus colordiffuse="Black12" border="5">common/box.png</texturenofocus>
                     <texturefocus colordiffuse="Highlight" border="5">common/box.png</texturefocus>
                     <include>DefDialogButtons</include>
+                    <visible>!IsEmpty(ListItem.Trailer)</visible>
                 </control>
                 
                 <control type="button" id="49">
@@ -353,15 +368,14 @@
                     <texturenofocus colordiffuse="Black12" border="5">common/box.png</texturenofocus>
                     <texturefocus colordiffuse="Highlight" border="5">common/box.png</texturefocus>
                     <include>DefDialogButtons</include>
-                    <visible>!System.HasAddon(script.artwork.downloader) | [!Container.Content(tvshows) + !Container.Content(movies) + !Container.Content(musicvideos)]</visible>
                 </control>
 
                 <control type="button" id="9001">
-                    <label>$LOCALIZE[13405]</label>
+                    <label>$LOCALIZE[31203]</label>
                     <onclick condition="Container.Content(tvshows)">XBMC.RunScript(script.artwork.downloader, mode=gui, mediatype=tvshow, dbid=$INFO[ListItem.DBID])</onclick>
                     <onclick condition="Container.Content(movies)">XBMC.RunScript(script.artwork.downloader, mode=gui, mediatype=movie, dbid=$INFO[ListItem.DBID])</onclick>
                     <onclick condition="Container.Content(musicvideos)">XBMC.RunScript(script.artwork.downloader, mode=gui, mediatype=musicvideo, dbid=$INFO[ListItem.DBID])</onclick>
-                    <description>Get Thumb</description>
+                    <description>Get Artwork</description>
                     <width>450</width>
                     <height>68</height>
                     <texturenofocus colordiffuse="Black12" border="5">common/box.png</texturenofocus>
@@ -372,7 +386,7 @@
             </control>
 
             <control type="button" id="52">
-                <visible>Control.IsVisible(50)</visible>
+                <visible allowhiddenfocus="true">Control.IsVisible(50)</visible>
                 <top>100</top>
                 <height>68</height>
                 <left>510</left>
@@ -380,8 +394,16 @@
                 <ondown>51</ondown>
                 <label>$INFO[ListItem.Director,$LOCALIZE[31191] ,]</label>
                 <align>left</align>
+                <onleft condition="Control.IsVisible(50)">SendClick(2003,5)</onleft>
                 <onleft>9000</onleft>
-                <onclick>RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Director])</onclick>
+                <onclick>SetProperty(ExtDirector,$INFO[ListItem.Director],home)</onclick>
+                <onclick>SetProperty(ExtWriter,$INFO[ListItem.Writer],home)</onclick>
+                <onclick>SetProperty(ExtMovie,$INFO[ListItem.Label],home)</onclick>
+                <onclick>SetProperty(ExtStudio,$INFO[ListItem.Studio],home)</onclick>
+                <onclick>SetProperty(ExtDBID,$INFO[ListItem.DBID],home)</onclick>
+                <onclick>ActivateWindow(3203)</onclick>
+                <onclick>Close</onclick>
+                <onclick>Dialog.Close(DialogVideoInfo.xml)</onclick>
                 <texturenofocus border="5" colordiffuse="Black12">common/box.png</texturenofocus>
                 <texturefocus border="5" colordiffuse="Highlight">common/box.png</texturefocus>
                 <visible>!IsEmpty(ListItem.Director)</visible>
@@ -394,6 +416,7 @@
                 <include condition="IsEmpty(ListItem.Director)">DefVideoInfoCastWithoutDirector</include>
                 <onup>50</onup>
                 <ondown>50</ondown>
+                <onleft condition="Control.IsVisible(50)">SendClick(2003,5)</onleft>
                 <onleft>9000</onleft>
                 <orientation>vertical</orientation>
                 <scrolltime>200</scrolltime>
@@ -474,6 +497,7 @@
             <ondown condition="!IsEmpty(Container(50).ListItemNoWrap(1).Label)">Control.Move(50,1)</ondown>
             <onup condition="!IsEmpty(Container(50).ListItemNoWrap(-1).Label)">Control.Move(50,-1)</onup>
             <onup condition="IsEmpty(Container(50).ListItemNoWrap(-1).Label) + !IsEmpty(ListItem.Director)">52</onup>
+            <onleft condition="Control.IsVisible(50)">SendClick(2003,5)</onleft>
             <onleft>9000</onleft>
             <onclick>RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[Container(50).ListItem.Label])</onclick>
         </control>
