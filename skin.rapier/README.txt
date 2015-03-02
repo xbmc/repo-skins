@@ -14,7 +14,7 @@ gade: christian_gade@hotmail.com
 
 DOWNLOAD:
 
-Can be installed through the official XBMC repository.
+Can be installed through the official Kodi repository.
 
 
 DEVELOPMENT:
