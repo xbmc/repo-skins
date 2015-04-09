@@ -19,12 +19,17 @@ Can be installed through the official XBMC repository.
 
 DEVELOPMENT:
 
-https://github.com/gade01/Rapier
+https://github.com/gade01/Rapier/tree/Gotham
 
 
 SUPPORT: 
 
 http://forum.xbmc.org/forumdisplay.php?fid=120
+
+
+SCREENSHOTS:
+
+http://kodi.wiki/view/Add-on:Rapier#Screenshots
 
 
 ---------- INSTALL --------------------------------------------------------------------------
@@ -44,11 +49,6 @@ script.tv.show.next.aired v6.0.10
 script.grab.fanart v0.13.0
 script.globalsearch v2.0.8
 service.skin.widgets v0.0.29
-
-Troubleshoot: If there is a previous installation of Rapier, it is best to delete it first than to overwrite the files if installing manually.
-Once installed it is also recommended to reset the skin settings by going to System->Skin Settings->Reset Skin.
-You may also want to delete the textures.db file that resides in userdata->database of your XBMC profile directory.
-Doing these steps will prevent any unforeseen problems that may pop up.
 
 Rapier uses text images for the home menu categories. More categories can be found in skin.rapier->extras folder when customizing the home menu.
 Additional home category images can be requested at the forum: http://forum.kodi.tv/showthread.php?tid=101862
