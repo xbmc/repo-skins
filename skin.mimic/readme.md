@@ -12,6 +12,18 @@ More screenshots available here: http://imgur.com/a/anSBV#0
 
 
 ***
+**2.0.1**
+- Added IMDb flag for views when sorted by Top 250.
+- Added LowList view from Aeon Nox 5.
+- Added skin setting to disable autoscroll for home widgets.
+- Redesigned video bookmarks window.
+- Replaced premade color themes with color customizer in skin settings.
+- Added a sidebar menu for the Settings section.
+- Replaced similar artists with artist bio in music viz options.
+- Added EPG support to Global Search (requires version 4.x).
+- Updated language files from Transifex.
+
+***
 **2.0.0**
 - Initial release for Kodi Isengard, includes updates to the skinning engine.
 - Added a dialog to the sidebar for choosing view modes.
