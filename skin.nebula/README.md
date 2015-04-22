@@ -50,7 +50,7 @@ If you can't wait for the official skin update in Kodi add-on repository, you ca
 
 and delete every file starting with "skin.nebula"
 
-5. Download the zipped skin for HELIX from https://github.com/Tgxcorporation/skin.nebula/archive/master.zip
+5. Download the zipped skin for HELIX from https://github.com/Tgxcorporation/skin.nebula/archive/helix.zip
 6. Start Kodi and go to Settings -> Add-ons and select "Install from zipped file". Browse for the file downloaded in point n. 5 and press "ok". The updated skin should install.
 
 
