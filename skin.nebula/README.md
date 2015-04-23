@@ -17,12 +17,13 @@ Some pictures of the skin: [Screenshots](http://forum.xbmc.org/showthread.php?ti
 * Custom home items: Script.skinshortcuts - http://forum.xbmc.org/showthread.php?tid=178294
 * CdArt for Movies, TV Series, MusicVideos: Artwork Downloader - http://wiki.xbmc.org/index.php?title=Add-on:Artwork_Downloader
 * CdArt for Music: CdArt Manager - http://wiki.xbmc.org/index.php?title=Add-on:CdART_Manager
-* Clear Art for Movies, TV Series, MusicVideos: Artwork Downloader - http://wiki.xbmc.org/index.php?title=Add-on:Artwork_Downloader
-* Clear Art for Music: CdArt Manager - http://wiki.xbmc.org/index.php?title=Add-on:CdART_Manager
+* ClearArt and ClearLogo for Movies, TV Series, MusicVideos: Artwork Downloader - http://wiki.xbmc.org/index.php?title=Add-on:Artwork_Downloader
+* ClearArt and ClearLogo for Music: CdArt Manager - http://wiki.xbmc.org/index.php?title=Add-on:CdART_Manager
 * Extra Fanart for Movies, TV Series, MusicVideos: Artwork Downloader - http://wiki.xbmc.org/index.php?title=Add-on:Artwork_Downloader
+* Global Search - http://kodi.wiki/view/Add-on:Global_Search
 * TvTunes - http://wiki.xbmc.org/index.php?title=Add-on:TvTunes
-* Recently added/Random items: Skin Widgets - http://wiki.xbmc.org/index.php?title=Add-on:Skin_Widgets
-* Extra data for actors/movies/tvshows: Script Extended Info - https://github.com/phil65/script.extendedinfo
+* Recently added/Recommended/Random items: Skin Widgets - http://wiki.xbmc.org/index.php?title=Add-on:Skin_Widgets
+* Extended Info for Movies/TvShows/Music/LiveTv: Script Extended Info - https://github.com/phil65/script.extendedinfo
 * Cinema Experience - http://wiki.xbmc.org/index.php?title=Add-on:Cinema_Experience
 * Music playing screen: Artist Slideshow - http://wiki.xbmc.org/index.php?title=Add-on:Artist_Slideshow
 * VideoExtras - http://wiki.xbmc.org/index.php?title=Add-on:VideoExtras
@@ -59,5 +60,3 @@ and delete every file starting with "skin.nebula"
 If you like this skin so much that you want to help a little bit, you can donate here (much appreciated):
 
 [![PayPal Donate](https://www.paypal.com/en_US/i/btn/x-click-but04.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=BQTJSRCZ8GWHY&lc=US&item_name=Skins%20by%20Tgx%20for%20Kodi%20Entertainment%20Center&item_number=Kodi&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)
-
-[![Pledgie Donate](https://pledgie.com/campaigns/25218.png?skin_name=chrome)](https://pledgie.com/campaigns/25218)
