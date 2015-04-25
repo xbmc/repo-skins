@@ -120,7 +120,7 @@
 					<width>1800</width>
 					<height>450</height>
 					<itemgap>15</itemgap>
-					<onup>noop</onup>
+					<onup>50</onup>
 					<ondown>noop</ondown>
 					<orientation>horizontal</orientation>
 					
@@ -220,6 +220,7 @@
 						<textoffsetx>0</textoffsetx>
 						<label>YouTube $LOCALIZE[20410]</label>
 						<onclick>Dialog.Close(MovieInformation)</onclick>
+						<onclick condition="!System.HasAddon(plugin.video.youtube)">ActivateWindow(Videos,plugin://plugin.video.youtube)</onclick>
 						<onclick condition="SubString(System.AddonVersion(plugin.video.youtube),4,left)">ActivateWindow(videos,plugin://plugin.video.youtube/?path=/root/search&amp;feed=search&amp;search=$ESCINFO[ListItem.Label] Trailer,return)</onclick>
 						<onclick condition="SubString(System.AddonVersion(plugin.video.youtube),5,left)">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$ESCINFO[ListItem.Label] Trailer,return)</onclick>
 						<visible>Container.Content(movies) | Container.Content(tvshows) | stringcompare(ListItem.Property(ItemType),Movie)</visible>
@@ -287,6 +288,7 @@
 						<textoffsetx>0</textoffsetx>
 						<label>31300</label>
 						<onclick>RunScript(script.tvtunes,mode=solo)</onclick>
+						<enable>!Skin.HasSetting(KioskMode.Enabled)</enable>
 						<visible>Skin.HasSetting(EnableTVTunes) + System.HasAddon(script.tvtunes) + [Container.Content(TVShows) | Container.Content(movies) | Container.Content(musicvideos)] + IsEmpty(Window(movieinformation).Property("TvTunes_HideVideoInfoButton"))</visible>
 					</control>
 					<control type="button" id="101">
@@ -296,6 +298,7 @@
 						<height>60</height>
 						<align>center</align>
 						<textoffsetx>0</textoffsetx>
+						<enable>!Skin.HasSetting(KioskMode.Enabled)</enable>
 						<onclick condition="System.HasAddon(script.artwork.downloader)">ActivateWindow(3004)</onclick>
 					</control>
 					<control type="button" id="6">
@@ -305,6 +308,7 @@
 						<height>60</height>
 						<align>center</align>
 						<textoffsetx>0</textoffsetx>
+						<enable>!Skin.HasSetting(KioskMode.Enabled)</enable>
 					</control>
 				</control>
 				
@@ -537,27 +541,12 @@
 								<scroll>false</scroll>
 							</control>
 						</control>
+						
 						<control type="group">
-							<!--filename-->
+							<!--Studio textbased-->
 							<width>1150</width>
 							<height>40</height>
-							<visible>!IsEmpty(ListItem.FileName)</visible>
-							<control type="label">
-								<posy>0</posy>
-								<width>1150</width>
-								<font>Reg28</font>
-								<align>left</align>
-								<label>$INFO[ListItem.FileName,[B]$LOCALIZE[21800]: [/B]]</label>
-								<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-								<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
-								<scroll>false</scroll>
-							</control>
-						</control>
-						<control type="group">
-							<!--Studio-->
-							<width>1150</width>
-							<height>40</height>
-							<visible>!IsEmpty(ListItem.Studio)</visible>
+							<visible>!IsEmpty(ListItem.Studio) + IsEmpty(Control.GetLabel(800011))</visible>
 							<control type="label">
 								<posy>0</posy>
 								<width>1150</width>
@@ -570,10 +559,28 @@
 							</control>
 						</control>
 						<control type="group">
+							<!--Studio imagebased-->
+							<width>1150</width>
+							<height>5</height>
+							<visible>true</visible>
+							<control type="image" id="800011">
+								<colordiffuse>white</colordiffuse>
+								<right>-40</right>
+								<top>0</top>
+								<width>161</width>
+								<height>109</height>
+								<aspectratio aligny="bottom" align="right">keep</aspectratio>
+								<fadetime>250</fadetime>
+								<colordiffuse>white</colordiffuse>
+								<bordersize>2</bordersize>
+								<texture>$INFO[ListItem.Studio,special://skin/extras/flags/studios/,.png]</texture>
+							</control>
+						</control>
+						<control type="group">
 							<!--Total: Episodes-->
 							<width>1150</width>
 							<height>40</height>
-							<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + !Container.Content(Movies) + !stringcompare(ListItem.Property(ItemType),Movie)</visible>
+							<visible>!IsEmpty(ListItem.Property(TotalEpisodes)) + IntegerGreaterThan(ListItem.Property(TotalEpisodes),0)</visible>
 							<control type="label">
 								<posy>0</posy>
 								<width>1150</width>
@@ -638,6 +645,23 @@
 							<include>mediaflags</include>
 							<visible>skin.hastheme(classic)</visible>
 						</control>
+						<control type="group">
+							<!--filename-->
+							<width>1150</width>
+							<height>40</height>
+							<visible>!IsEmpty(ListItem.FileName)</visible>
+							<control type="label">
+								<posy>0</posy>
+								<width>1150</width>
+								<font>Reg20</font>
+								<align>left</align>
+								<scroll>true</scroll>
+								<label>$INFO[ListItem.FileNameAndPath,[B]$LOCALIZE[21800]: [/B]]</label>
+								<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
+								<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+								<scroll>false</scroll>
+							</control>
+						</control>
 					</control>
 				
 				
@@ -683,7 +707,7 @@
 								<posy>0</posy>
 								<width>950</width>
 								<height>50</height>
-								<label>$INFO[ListItem.label]</label>
+								<label>$INFO[ListItem.label,[B],[/B]] $INFO[ListItem.label2,(,)]</label>
 								<font>Reg28</font>
 								<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
 								<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
@@ -698,7 +722,7 @@
 								<posy>0</posy>
 								<width>950</width>
 								<height>50</height>
-								<label>$INFO[ListItem.label]</label>
+								<label>$INFO[ListItem.label,[B],[/B]] $INFO[ListItem.label2,(,)]</label>
 								<textcolor>$INFO[Skin.String(ViewDetailsFocusColor)]</textcolor>
 								<shadowcolor>$INFO[Skin.String(ViewDetailsFocusShadowColor)]</shadowcolor>
 								<font>Reg28</font>
