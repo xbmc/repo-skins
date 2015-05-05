@@ -12,13 +12,26 @@ More screenshots available here: http://imgur.com/a/anSBV#0
 
 
 ***
+**2.1.1**
+- Added support for SimplePlaylists addon.
+- Fixed LowList view for video/music addons, added it for picture addons.
+- Updated language files from Transifex.
+
+***
+**2.1.0**
+- Added two new home layouts: top menu and vertical menu.
+- Added support for series recording with pvr.wmc.
+- Fixed critical error with color customizer when enabled for the first time.
+- Added skin setting to show submenus all the time on alternative home layouts.
+
+***
 **2.0.1**
 - Added IMDb flag for views when sorted by Top 250.
 - Added LowList view from Aeon Nox 5.
 - Added skin setting to disable autoscroll for home widgets.
 - Redesigned video bookmarks window.
 - Replaced premade color themes with color customizer in skin settings.
-- Added a sidebar menu for the Settings section.
+- Added a sidebar menu for the Settings section and Global Search.
 - Replaced similar artists with artist bio in music viz options.
 - Added EPG support to Global Search (requires version 4.x).
 - Updated language files from Transifex.

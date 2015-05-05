@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
     <defaultcontrol always="true">500</defaultcontrol>
+    <onload>ClearProperty(MediaMenu,Home)</onload>
     <controls>
 		<control type="group">
 			<animation effect="fade" time="300">WindowOpen</animation>
@@ -20,7 +21,7 @@
 		</control>
         <control type="group">
             <animation effect="slide" tween="cubic" time="720" start="0,1080" end="0,0">WindowOpen</animation>
-            <animation effect="slide" tween="cubic" time="720" start="0,0" end="0,1080">WindowClose</animation>                        
+            <animation effect="slide" tween="cubic" time="720" start="0,0" end="0,1080">WindowClose</animation>
             <control type="panel" id="500">
                 <left>120</left>
 				<top>179</top>
@@ -28,7 +29,9 @@
 				<height>720</height>
                 <preloaditems>2</preloaditems>
                 <scrolltime tween="quadratic">300</scrolltime>
-                <onleft>9000</onleft>
+                <onleft condition="!Skin.HasSetting(KioskMode.Enabled)">SetProperty(MediaMenu,True,home)</onleft>
+                <onleft condition="!Skin.HasSetting(KioskMode.Enabled)">SetFocus(9000)</onleft>
+                <!--<onleft condition="!Skin.HasSetting(KioskMode.Enabled)">9000</onleft>-->
                 <onright>500</onright>
                 <onup>700</onup>
                 <ondown>600</ondown>
@@ -108,7 +111,7 @@
 					<align>left</align>
 					<font>font16_title</font>
 					<scroll>true</scroll>
-					<label>[B]$INFO[Container(500).ListItem.Label,, • ][COLOR $VAR[ColorHighlightVar]]$INFO[Container(500).ListItem.Property(User_Rating)][/COLOR][/B]</label>
+					<label>[B]$INFO[Container(500).ListItem.Label]$INFO[Container(500).ListItem.Property(User_Rating), • ][/B]</label>
 					<textoffsety>-2</textoffsety>
 				</control>
 				<control type="grouplist">
@@ -154,16 +157,28 @@
 			</control>
 			<control type="group">
 				<top>-2</top>
-				<control type="label">
-					<width>900</width>
-					<height>45</height>
-					<font>topbar</font>
-					<textoffsetx>15</textoffsetx>
-					<textcolor>maintext</textcolor>
-					<align>left</align>
-					<aligny>center</aligny>
-					<label>$INFO[Control.GetLabel(5001)]</label>
-				</control>
+                <control type="group">
+                    <animation effect="slide" time="400" tween="" easing="" start="0" end="35" condition="Control.IsVisible(1996)">Conditional</animation>
+                    <control type="image" id="1996">
+                        <visible>![Window.IsActive(settings) | Window.IsActive(addoninformation) | Skin.HasSetting(KioskMode.Enabled)]</visible>
+                        <top>8</top>
+                        <left>-27</left>
+                        <width>32</width>
+                        <height>32</height>
+                        <texture>arrow.png</texture>
+                        <colordiffuse>maintext</colordiffuse>
+                    </control>
+    				<control type="label">
+    					<width>900</width>
+    					<height>45</height>
+    					<font>topbar</font>
+    					<textoffsetx>15</textoffsetx>
+    					<textcolor>maintext</textcolor>
+    					<align>left</align>
+    					<aligny>center</aligny>
+    					<label>$INFO[Control.GetLabel(5001)]</label>
+    				</control>
+                </control>
 				<control type="label">
 					<left>0</left>
 					<width>1920</width>
@@ -188,18 +203,35 @@
 				</control>
 			</control>
 		</control>
+        <include>Bottombar</include>
         <control type="group">
-            <animation type="Conditional" condition="!ControlGroup(9000).HasFocus">
-                <effect type="slide" end="-440" time="400" tween="quadratic" easing="out" />
-            </animation>
-            <control type="image">
+            <animation effect="slide" start="440,0" end="0,0" time="400" tween="quadratic" easing="out" condition="IsEmpty(Window(home).Property(MediaMenu))">Conditional</animation>
+            <animation effect="slide" start="0,0" end="440,0" time="400" tween="quadratic" easing="out" condition="Control.HasFocus(9000)">Conditional</animation>
+            <left>-440</left>
+            <control type="button">
                 <left>-12</left>
                 <top>-12</top>
                 <width>442</width>
                 <height>1104</height>
-                <texture border="12">dialog_context.png</texture>
+                <texturefocus border="12">dialog_context.png</texturefocus>
+                <texturenofocus border="12">dialog_context.png</texturenofocus>
 				<colordiffuse>$VAR[ColorDialogVar]</colordiffuse>
             </control>
+            <control type="button">
+                <left>420</left>
+                <width>30</width>
+                <height>1080</height>
+                <texturefocus>-</texturefocus>
+                <onfocus>SetProperty(MediaMenu,True,home)</onfocus>
+                <visible>system.getbool(input.enablemouse)</visible>
+            </control>
+            <include name="SideBladeCloseIcon">
+                <param name="CloseIconDialogClose" value="noop" />
+                <param name="CloseIconDialogClose2" value="noop" />
+                <param name="ClearMediaMenu" value="ClearProperty(MediaMenu,Home)" />
+                <param name="CloseIconSetFocus" value="SetFocus(500)" />
+                <param name="CloseIconVisibility" value="system.getbool(input.enablemouse)" />
+            </include>
             <control type="image">
                 <description>LOGO</description>
                 <left>0</left>
@@ -219,8 +251,11 @@
                 <scroll>true</scroll>
                 <onup>9000</onup>
                 <ondown>9000</ondown>
+                <onright>ClearProperty(MediaMenu,Home)</onright>
                 <onright>500</onright>
                 <onleft>noop</onleft>
+                <onback>ClearProperty(MediaMenu,Home)</onback>
+                <onback>500</onback>
                 <control type="label" id="200">
                     <description>View Options Heading</description>
                     <width>400</width>
@@ -329,6 +364,5 @@
                 </control>
             </control>
         </control>
-		<include>Bottombar</include>
     </controls>
 </window>
