@@ -5,11 +5,6 @@
 		<value>default</value>
 	</variable>
 	
-	<variable name="DVDFlagging">
-		<value condition="substring(ListItem.FilenameAndPath,hddvd) | substring(ListItem.FilenameAndPath,hd-dvd)">hddvd</value>
-		<value condition="substring(ListItem.FileExtension,iso) | substring(ListItem.FileExtension,img) | substring(ListItem.FilenameAndPath,dvd) | substring(ListItem.FileExtension,ifo) | substring(ListItem.FileExtension,vob) | substring(ListItem.FilenameAndPath,dvdrip) | substring(ListItem.FilenameAndPath,dvdr5) | substring(ListItem.FilenameAndPath,.r5) | substring(ListItem.FilenameAndPath,dvdscreener) | substring(ListItem.FilenameAndPath,dvdscr) | substring(ListItem.FilenameAndPath,screener)">dvd</value>
-	</variable>
-	
 	<include name="VideoSourceMediaFlags">
 		<control type="image" id="600">
 			<description>Blu-ray</description>
@@ -39,13 +34,22 @@
 			<visible>ListItem.IsStereoscopic | substring(ListItem.FilenameAndPath,.3d.) | substring(ListItem.FilenameAndPath,hsbs) | substring(ListItem.FilenameAndPath,sbs) | substring(ListItem.FilenameAndPath,half-sbs)</visible>
 		</control>
 		<control type="image" id="602">
-			<description>HDDVD / DVD</description>
+			<description>HDDVD</description>
 			<width>82</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
-			<texture>flagging/$VAR[MediaFlagTheme]/video/$VAR[DVDFlagging].png</texture>
+			<texture>flagging/$VAR[MediaFlagTheme]/video/hddvd.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
-			<visible>substring(ListItem.FilenameAndPath,hddvd) | substring(ListItem.FilenameAndPath,hd-dvd) | substring(ListItem.FileExtension,iso) | substring(ListItem.FileExtension,img) | substring(ListItem.FilenameAndPath,dvd) | substring(ListItem.FileExtension,ifo) | substring(ListItem.FileExtension,vob) | substring(ListItem.FilenameAndPath,dvdrip) | substring(ListItem.FilenameAndPath,dvdr5) | substring(ListItem.FilenameAndPath,.r5) | substring(ListItem.FilenameAndPath,dvdscreener) | substring(ListItem.FilenameAndPath,dvdscr) | substring(ListItem.FilenameAndPath,screener)</visible>
+			<visible>substring(ListItem.FilenameAndPath,hddvd) | substring(ListItem.FilenameAndPath,hd-dvd)</visible>
+		</control>
+		<control type="image" id="718">
+			<description>DVD</description>
+			<width>55</width>
+			<height>35</height>
+			<aspectratio>stretch</aspectratio>
+			<texture>flagging/$VAR[MediaFlagTheme]/video/dvd.png</texture>
+			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
+			<visible>[substring(ListItem.FileExtension,iso) | substring(ListItem.FileExtension,img) | substring(ListItem.FilenameAndPath,dvd) | substring(ListItem.FileExtension,ifo) | substring(ListItem.FileExtension,vob) | substring(ListItem.FilenameAndPath,dvdrip) | substring(ListItem.FilenameAndPath,dvdr5) | substring(ListItem.FilenameAndPath,.r5) | substring(ListItem.FilenameAndPath,dvdscreener) | substring(ListItem.FilenameAndPath,dvdscr) | substring(ListItem.FilenameAndPath,screener)] + ![substring(ListItem.FilenameAndPath,hddvd) | substring(ListItem.FilenameAndPath,hd-dvd)]</visible>
 		</control>
 		<control type="image" id="603">
 			<description>HDTV</description>
@@ -64,6 +68,15 @@
 			<texture>flagging/$VAR[MediaFlagTheme]/video/sdtv.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
 			<visible>SubString(ListItem.FilenameAndPath,PDTV) | substring(ListItem.FilenameAndPath,sdtv)</visible>
+		</control>
+		<control type="image" id="741">
+			<description>Movie Set</description>
+			<width>70</width>
+			<height>35</height>
+			<aspectratio>stretch</aspectratio>
+			<texture>flagging/$VAR[MediaFlagTheme]/video/set.png</texture>
+			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
+			<visible>SubString(ListItem.Path,videodb://movies/sets,left)</visible>
 		</control>
 		<control type="image" id="608">
 			<description>Telesync</description>
@@ -242,7 +255,49 @@
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/subtitle/cc.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
-			<visible>!IsEmpty(ListItem.SubtitleLanguage)</visible>
+			<visible>![IsEmpty(ListItem.SubtitleLanguage) | System.HasAddon(script.skin.info.service) | !Skin.HasSetting(HideSubtitleMediaFlag)]</visible>
+		</control>
+		
+		<control type="image">
+			<width>56</width>
+			<height>35</height>
+			<texture border="6">flagging/$VAR[MediaFlagTheme]/audio/audio_language.png</texture>
+			<visible>![IsEmpty(Window(movieinformation).Property(AudioLanguage.1)) | !Skin.HasSetting(HideAudioLanguageMediaFlag)] + System.HasAddon(script.skin.info.service)</visible>
+		</control>
+				
+		<control type="label">
+			<description>Audio Language Count Label</description>
+			<left>-35</left>
+			<width>30</width>
+			<height>35</height>
+			<font>MediaFlagSubtitleFont</font>
+			<textcolor>SelectedColor</textcolor>
+			<align>center</align>
+			<aligny>center</aligny>
+			<label>[B]$INFO[Window(movieinformation).Property(AudioLanguage.Count)][/B]</label>
+			<animation effect="fade" end="60" condition="true">Conditional</animation>
+			<visible>![IsEmpty(Window(movieinformation).Property(AudioLanguage.1)) | !Skin.HasSetting(HideAudioLanguageMediaFlag)] + System.HasAddon(script.skin.info.service)</visible>
+		</control>
+		
+		<control type="image">
+			<width>56</width>
+			<height>35</height>
+			<texture border="6">flagging/$VAR[MediaFlagTheme]/subtitle/subtitle.png</texture>
+			<visible>![IsEmpty(Window(movieinformation).Property(SubtitleLanguage.1)) | !Skin.HasSetting(HideSubtitleMediaFlag)] + System.HasAddon(script.skin.info.service)</visible>
+		</control>
+				
+		<control type="label">
+			<description>Subtitle Count Label</description>
+			<left>-35</left>
+			<width>30</width>
+			<height>35</height>
+			<font>MediaFlagSubtitleFont</font>
+			<textcolor>SelectedColor</textcolor>
+			<align>center</align>
+			<aligny>center</aligny>
+			<label>[B]$INFO[Window(movieinformation).Property(SubtitleLanguage.Count)][/B]</label>
+			<animation effect="fade" end="60" condition="true">Conditional</animation>
+			<visible>![IsEmpty(Window(movieinformation).Property(SubtitleLanguage.1)) | !Skin.HasSetting(HideSubtitleMediaFlag)] + System.HasAddon(script.skin.info.service)</visible>
 		</control>
 	</include>
 	
@@ -339,7 +394,7 @@
 		</control>
 		<control type="image" id="629">
 			<description>WMA STD V2/WMA Codec</description>
-			<width>95</width>
+			<width>80</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/wma.png</texture>
@@ -348,7 +403,7 @@
 		</control>
 		<control type="image" id="686">
 			<description>WMA Pro Codec</description>
-			<width>95</width>
+			<width>80</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/wmapro.png</texture>
@@ -384,7 +439,7 @@
 		</control>
 		<control type="image" id="632">
 			<description>DTS-HD Master Audio Codec</description>
-			<width>108</width>
+			<width>66</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/dtshd_ma.png</texture>
@@ -393,7 +448,7 @@
 		</control>
 		<control type="image" id="633">
 			<description>DTS-HD High Resolution Audio</description>
-			<width>108</width>
+			<width>66</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/dtshd_hra.png</texture>
@@ -549,7 +604,7 @@
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/ratings/no-rating.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
-			<visible>IsEmpty(ListItem.MPAA)</visible>  
+			<visible>IsEmpty(ListItem.MPAA) + !SubString(ListItem.Path,videodb://movies/sets,left)</visible>  
 		</control>
 	</include>
 	
@@ -582,13 +637,22 @@
 			<visible>VideoPlayer.IsStereoscopic | substring(Player.FilenameAndPath,.3d.) | substring(Player.FilenameAndPath,hsbs) | substring(Player.FilenameAndPath,sbs) | substring(Player.FilenameAndPath,half-sbs)</visible>
 		</control>
 		<control type="image" id="672">
-			<description>DVD</description>
+			<description>HDDVD</description>
 			<width>82</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
-			<texture>flagging/$VAR[MediaFlagTheme]/video/$VAR[DVDFlagging].png</texture>
+			<texture>flagging/$VAR[MediaFlagTheme]/video/hddvd.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
-			<visible>substring(Player.FilenameAndPath,hddvd) | substring(Player.FilenameAndPath,hd-dvd) | substring(Player.filename,.iso,right) | substring(Player.filename,.img,right) | substring(Player.FilenameAndPath,dvd) | substring(Player.filename,.ifo,right) | substring(Player.filename,.vob,right) | substring(Player.FilenameAndPath,dvdrip) | substring(Player.FilenameAndPath,dvdr5) | substring(Player.FilenameAndPath,.r5) | substring(Player.FilenameAndPath,dvdscreener) | substring(Player.FilenameAndPath,dvdscr) | substring(Player.FilenameAndPath,screener)</visible>
+			<visible>substring(Player.FilenameAndPath,hddvd) | substring(Player.FilenameAndPath,hd-dvd)</visible>
+		</control>
+		<control type="image" id="719">
+			<description>DVD</description>
+			<width>55</width>
+			<height>35</height>
+			<aspectratio>stretch</aspectratio>
+			<texture>flagging/$VAR[MediaFlagTheme]/video/dvd.png</texture>
+			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
+			<visible>[substring(Player.FilenameAndPath,.iso,Right) | substring(Player.FilenameAndPath,.img,Right) | substring(Player.FilenameAndPath,dvd) | substring(Player.FilenameAndPath,.ifo,Right) | substring(Player.FilenameAndPath,.vob,Right) | substring(Player.FilenameAndPath,dvdrip) | substring(Player.FilenameAndPath,dvdr5) | substring(Player.FilenameAndPath,.r5) | substring(Player.FilenameAndPath,dvdscreener) | substring(Player.FilenameAndPath,dvdscr) | substring(Player.FilenameAndPath,screener)] + ![substring(Player.FilenameAndPath,hddvd) | substring(Player.FilenameAndPath,hd-dvd)]</visible>
 		</control>
 		<control type="image" id="673">
 			<description>HDTV</description>
@@ -867,7 +931,7 @@
 		</control>
 		<control type="image" id="657">
 			<description>WMA STD V2/WMA Codec</description>
-			<width>95</width>
+			<width>80</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/wma.png</texture>
@@ -876,7 +940,7 @@
 		</control>
 		<control type="image" id="687">
 			<description>WMA Pro Codec</description>
-			<width>95</width>
+			<width>80</width>
 			<height>35</height>
 			<aspectratio>stretch</aspectratio>
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/wmapro.png</texture>
@@ -909,6 +973,24 @@
 			<texture>flagging/$VAR[MediaFlagTheme]/audio/ogg.png</texture>
 			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
 			<visible>substring(VideoPlayer.AudioCodec,ogg)</visible>
+		</control>
+		<control type="image" id="716">
+			<description>DTS-HD Master Audio Codec</description>
+			<width>66</width>
+			<height>35</height>
+			<aspectratio>stretch</aspectratio>
+			<texture>flagging/$VAR[MediaFlagTheme]/audio/dtshd_ma.png</texture>
+			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
+			<visible>substring(VideoPlayer.AudioCodec,dtshd_ma)</visible>
+		</control>
+		<control type="image" id="717">
+			<description>DTS-HD High Resolution Audio</description>
+			<width>66</width>
+			<height>35</height>
+			<aspectratio>stretch</aspectratio>
+			<texture>flagging/$VAR[MediaFlagTheme]/audio/dtshd_hra.png</texture>
+			<!--<fadetime>MediaFlagsCrossfadeTime</fadetime>-->
+			<visible>substring(VideoPlayer.AudioCodec,dtshd_hra)</visible>
 		</control>
 		<control type="image" id="660">
 			<description>Audio Channels</description>
