@@ -1,5 +1,5 @@
 ## Nebula skin for Kodi 15 ISENGARD
-Ported from MediaPortal, Black Glass Nova is an easy to use and fanart oriented skin designed for Full HD TV screens.
+Simple and full-featured light or dark color skin designed for Full HD TV screens.
 
 ![](http://i.imgur.com/UVLYuNY.jpg)
 
