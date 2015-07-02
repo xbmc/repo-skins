@@ -27,14 +27,15 @@
 			<texture>colours/black.png</texture>
 			<aspectratio>scale</aspectratio>
 			<colordiffuse>mask-background</colordiffuse>
+			<visible>!Window.IsVisible(fullscreenvideo)</visible><!-- Don't fade background if on Fullscreen video screen -->
 		</control>
 	</include>
 	<include name="background">
 		<control type="group">
-			<visible>!Window.IsActive(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
+			<visible>!Window.IsVisible(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
 			<control type="image"><!-- Use a black background until background image has had a chance to load -->
 				<include>fullscreenimage</include>
-				<texture>colours/black.png</texture>
+				<texture>background.png</texture>
 				<aspectratio>stretch</aspectratio>
 			</control>
 			<control type="group">
@@ -50,17 +51,15 @@
 					<visible>Skin.HasSetting(background-playingmedia)</visible>
 					<control type="videowindow">
 						<include>fullscreenimage</include>
-						<aspectratio>stretch</aspectratio>
 						<visible>Player.HasVideo</visible>
 					</control>
 					<control type="visualisation">
 						<include>fullscreenimage</include>
-						<aspectratio>stretch</aspectratio>
 						<visible>Player.HasAudio</visible>
 					</control>
 				</control>
 				<control type="group">
-					<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+					<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia))</visible>
 					<control type="image"><!-- Mask out any backgrounds showing around ArtistSlideshow Fanart -->
 						<include>fullscreenimage</include>
 						<texture>colours/black.png</texture>
@@ -89,14 +88,14 @@
 
 	<include name="backgroundvideo">
 		<control type="group">
-			<visible>!Window.IsActive(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
+			<visible>!Window.IsVisible(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
 			<control type="group">
 				<visible>!Container().Scrolling</visible>
 				<animation effect="fade" start="0" end="100" time="400" delay="2600" tween="quadratic" easing="out">Visible</animation>
 				<control type="group">
-					<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo] + !IsEmpty(ListItem.Title)</visible>
+					<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo]</visible>
 					<control type="group">
-						<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos)]</visible>
+						<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos)] | !Skin.HasSetting(background-extrafanart) | IsEmpty(ListItem.Path) | IsEmpty(ListItem.Title)</visible>
 						<control type="image"><!-- Fallback background image -->
 							<include>fullscreenimage</include>
 							<aspectratio>stretch</aspectratio>
@@ -105,41 +104,60 @@
 						</control>
 					</control>
 					<control type="group">
-						<visible>[Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)] + Skin.HasSetting(background-fanart)</visible>
-						<control type="multiimage" id="6300">
-							<include>fullscreenimage</include>
-							<randomize>true</randomize>
-							<timeperimage>6000</timeperimage>
-							<fadetime>200</fadetime>
-							<imagepath background="false">$INFO[ListItem.Path,,extrafanart/]</imagepath>
-							<aspectratio>stretch</aspectratio>
-							<visible>Skin.HasSetting(background-extrafanart) + Skin.HasSetting(background-fanart)</visible>
+						<visible>Skin.HasSetting(background-extrafanart) + !IsEmpty(ListItem.Path) + !IsEmpty(ListItem.Title)</visible>
+						<control type="group">
+							<visible>[Container.Content(movies) | Container.Content(musicvideos)]</visible>
+							<control type="multiimage" id="6300">
+								<include>fullscreenimage</include>
+								<randomize>true</randomize>
+								<timeperimage>6000</timeperimage>
+								<fadetime>200</fadetime>
+								<imagepath background="false">$INFO[ListItem.Path]extrafanart/</imagepath>
+								<aspectratio>stretch</aspectratio>
+							</control>
+							<control type="image"><!-- Fallback background image -->
+								<include>fullscreenimage</include>
+								<aspectratio>stretch</aspectratio>
+								<fadetime>200</fadetime>
+								<texture background="false">$VAR[VideoBackgndImage]</texture>
+								<visible>IsEmpty(Control.GetLabel(6300))</visible>
+							</control>
 						</control>
-						<control type="image"><!-- Fallback background image -->
-							<include>fullscreenimage</include>
-							<aspectratio>stretch</aspectratio>
-							<fadetime>200</fadetime>
-							<texture background="false">$VAR[VideoBackgndImage]</texture>
-							<visible>!Skin.HasSetting(background-extrafanart) | IsEmpty(Control.GetLabel(6300))</visible>
+						<control type="group">
+							<visible>[Container.Content(tvshows) | Container.Content(seasons)]</visible>
+							<control type="multiimage" id="6320">
+								<include>fullscreenimage</include>
+								<randomize>true</randomize>
+								<timeperimage>6000</timeperimage>
+								<fadetime>200</fadetime>
+								<imagepath background="false">$INFO[ListItem.Path,,extrafanart/]</imagepath>
+								<aspectratio>stretch</aspectratio>
+							</control>
+							<control type="image"><!-- Fallback background image -->
+								<include>fullscreenimage</include>
+								<aspectratio>stretch</aspectratio>
+								<fadetime>200</fadetime>
+								<texture background="false">$VAR[VideoBackgndImage]</texture>
+								<visible>IsEmpty(Control.GetLabel(6320))</visible>
+							</control>
 						</control>
-					</control>
-					<control type="group">
-						<visible>Container.Content(episodes)</visible>
-						<control type="multiimage" id="6340">
-							<include>fullscreenimage</include>
-							<randomize>true</randomize>
-							<timeperimage>6000</timeperimage>
-							<fadetime>200</fadetime>
-							<imagepath background="false">$INFO[ListItem.Path,,../extrafanart/]</imagepath>
-							<aspectratio>stretch</aspectratio>
-							<visible>Skin.HasSetting(background-extrafanart) + !Window.IsVisible(infodialog) + !IsEmpty(ListItem.Path)</visible>
-						</control>
-						<control type="image">
-							<include>fullscreenimage</include>
-							<texture background="false">$VAR[VideoBackgndImage]</texture>
-							<aspectratio>stretch</aspectratio>
-							<fadetime>200</fadetime>
-							<visible>!Skin.HasSetting(background-extrafanart) | IsEmpty(Control.GetLabel(6340))</visible>
+						<control type="group">
+							<visible>Container.Content(episodes)</visible>
+							<control type="multiimage" id="6340">
+								<include>fullscreenimage</include>
+								<randomize>true</randomize>
+								<timeperimage>6000</timeperimage>
+								<fadetime>200</fadetime>
+								<imagepath background="false">$INFO[ListItem.Path,,../extrafanart/]</imagepath>
+								<aspectratio>stretch</aspectratio>
+							</control>
+							<control type="image">
+								<include>fullscreenimage</include>
+								<texture background="false">$VAR[VideoBackgndImage]</texture>
+								<aspectratio>stretch</aspectratio>
+								<fadetime>200</fadetime>
+								<visible>IsEmpty(Control.GetLabel(6340))</visible>
+							</control>
 						</control>
 					</control>
 				</control>
@@ -148,18 +166,16 @@
 				<visible>Skin.HasSetting(background-playingmedia)</visible>
 				<control type="videowindow">
 					<include>fullscreenimage</include>
-					<aspectratio>stretch</aspectratio>
 					<visible>Player.HasVideo</visible>
 				</control>
 				<control type="visualisation">
 					<include>fullscreenimage</include>
-					<aspectratio>stretch</aspectratio>
-					<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+					<visible>Player.HasAudio + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia))</visible>
 					<animation effect="fade" time="200">VisibleChange</animation>
 				</control>
 			</control>
 			<control type="group">
-				<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+				<visible>Skin.HasSetting(background-slideshow) + Player.HasAudio + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia))</visible>
 				<control type="image"><!-- Mask out any backgrounds showing around ArtistSlideshow Fanart -->
 					<include>fullscreenimage</include>
 					<texture>colours/black.png</texture>
@@ -254,7 +270,7 @@
 		<control type="group" id="9950">
 			<visible>Skin.HasSetting(media-overlay) + !Window.IsActive(playercontrols)</visible>
 			<control type="group" id="9960"><!-- media infos (music) -->
-				<visible>Player.HasAudio + !SubString(Window(VideoLibrary).Property(TvTunesIsAlive),True)</visible>
+				<visible>Player.HasAudio + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia))</visible>
 				<control type="image">
 					<left>30</left>
 					<top>616</top>
@@ -338,51 +354,41 @@
 		</control>
 	</include>
 
-	<include name="skin-logo">
-		<control type="image">
-			<left>150</left>
-			<top>150</top>
-			<width>512</width>
-			<height>256</height>
-			<aspectratio>keep</aspectratio>
-			<texture>skin-logo-big.png</texture>
-			<animation effect="fade" start="0" delay="150" time="50" condition="Window.Previous(Home) + !Window.Previous(Settings)">WindowOpen</animation>
-			<animation effect="fade" start="10" time="0" condition="Window.Next(Home)">WindowClose</animation>
-		</control>
-	</include>
-
 	<include name="page-info">
-		<control type="image"><!-- RSS Logo -->
-			<left>5</left>
-			<top>682</top>
-			<width>32</width>
-			<height>32</height>
-			<aspectratio>keep</aspectratio>
-			<texture>rss.png</texture>
-		</control>
-		<control type="rss">
-			<left>40</left>
-			<top>682</top>
-			<width>1240</width>
-			<height>22</height>
-			<font>font10</font>
-			<urlset>1</urlset>
-			<textcolor>info-text</textcolor>
-			<titlecolor>rss-title-text</titlecolor>
-			<headlinecolor>rss-headline-text</headlinecolor>
-			<visible>IsEmpty(Skin.String(custom-watermark))</visible>
-		</control>
-		<control type="rss">
-			<left>40</left>
-			<top>682</top>
-			<width>1064</width>
-			<height>22</height>
-			<font>font10</font>
-			<urlset>1</urlset>
-			<textcolor>info-text</textcolor>
-			<titlecolor>rss-title-text</titlecolor>
-			<headlinecolor>rss-headline-text</headlinecolor>
-			<visible>!IsEmpty(Skin.String(custom-watermark))</visible>
+		<control type="group">
+			<visible>!System.ScreenSaverActive</visible>
+			<control type="image"><!-- RSS Logo -->
+				<left>5</left>
+				<top>682</top>
+				<width>32</width>
+				<height>32</height>
+				<aspectratio>keep</aspectratio>
+				<texture>rss.png</texture>
+			</control>
+			<control type="rss">
+				<left>40</left>
+				<top>682</top>
+				<width>1240</width>
+				<height>22</height>
+				<font>font10</font>
+				<urlset>1</urlset>
+				<textcolor>info-text</textcolor>
+				<titlecolor>rss-title-text</titlecolor>
+				<headlinecolor>rss-headline-text</headlinecolor>
+				<visible>IsEmpty(Skin.String(custom-watermark))</visible>
+			</control>
+			<control type="rss">
+				<left>40</left>
+				<top>682</top>
+				<width>1064</width>
+				<height>22</height>
+				<font>font10</font>
+				<urlset>1</urlset>
+				<textcolor>info-text</textcolor>
+				<titlecolor>rss-title-text</titlecolor>
+				<headlinecolor>rss-headline-text</headlinecolor>
+				<visible>!IsEmpty(Skin.String(custom-watermark))</visible>
+			</control>
 		</control>
 	</include>
 
@@ -400,11 +406,11 @@
 
 	<include name="SortLetterNotification">
 		<control type="group">
-			<visible>Container.Scrolling + !Window.IsVisible(progressdialog)</visible>
+			<visible>Container.Scrolling + !Window.IsVisible(progressdialog) + [Container.Content(TVshows) | Container.Content(albums) | Container.Content(artists) | Container.Content(songs) | Container.Content(Movies)]</visible>
 			<animation effect="fade" time="200">Visible</animation>
 			<animation effect="fade" time="200" delay="500">Hidden</animation>
 			<left>598</left>
-			<top>4</top>
+			<top>24</top>
 			<width>82</width>
 			<height>70</height>
 			<control type="image">
@@ -435,7 +441,6 @@
 				<top>5</top>
 				<width>167</width>
 				<height>100</height>
-				<aspectratio>keep</aspectratio>
 			</control>
 			<control type="label"><!-- Now playing -->
 				<left>212</left>
@@ -465,7 +470,7 @@
 			</control>
 		</control>
 		<control type="group"><!-- Audio Stuff -->
-			<visible>Player.HasAudio + Skin.HasSetting(media-overlay) + !SubString(Window(videolibrary).Property(TvTunesIsAlive),True) + !Window.IsActive(PlayerControls)</visible>
+			<visible>Player.HasAudio + Skin.HasSetting(media-overlay) + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia)) + !Window.IsActive(PlayerControls)</visible>
 			<control type="image">
 				<left>24</left>
 				<top>2</top>
@@ -512,6 +517,171 @@
 		</control>
 	</include>
 
+	<include name="touch-screen-workaround">
+		<control type="button" id="11000">
+			<left>0</left>
+			<top>0</top>>
+			<width>1280</width>
+			<height>720</height>
+			<texturefocus>blank.png</texturefocus>
+			<texturenofocus>blank.png</texturenofocus>
+			<visible>system.getbool(input.enablemouse)</visible>
+		</control>
+	</include>
+
+	<include name="touch-controls">
+		<control type="grouplist" id="8000">
+			<visible>system.getbool(input.enablemouse)</visible>
+			<left>10</left>
+			<top>678</top>
+			<width>376</width>
+			<height>32</height>
+			<orientation>horizontal</orientation>
+			<control type="button"><!-- Back -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-back.png</texturefocus>
+				<texturenofocus>touch-back.png</texturenofocus>
+				<onclick>Back</onclick>
+			</control>
+			<control type="button"><!-- OSD Play -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-play.png</texturefocus>
+				<texturenofocus>touch-play.png</texturenofocus>
+				<onclick>ActivateWindow(playercontrols)</onclick>
+				<visible>Player.Playing</visible>
+			</control>
+			<control type="button"><!-- OSD Pause -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-pause.png</texturefocus>
+				<texturenofocus>touch-pause.png</texturenofocus>
+				<onclick>ActivateWindow(playercontrols)</onclick>
+				<visible>Player.Paused</visible>
+			</control>
+			<control type="button"><!-- Search -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-search.png</texturefocus>
+				<texturenofocus>touch-search.png</texturenofocus>
+				<onclick condition="!System.HasAddon(script.globalsearch)">VideoLibrary.Search</onclick>
+				<onclick condition="System.HasAddon(script.globalsearch)">RunScript(script.globalsearch)</onclick>
+			</control>
+			<control type="button"><!-- Favourite -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-fav.png</texturefocus>
+				<texturenofocus>touch-fav.png</texturenofocus>
+				<onclick>ActivateWindow(favourites)</onclick>
+			</control>
+			<control type="button"><!-- Screen Settings -->
+				<width>32</width>
+				<height>32</height>
+				<texturefocus>touch-settings.png</texturefocus>
+				<texturenofocus>touch-settings.png</texturenofocus>
+				<onclick condition="!StringCompare(Window(Home).Property(ShowScreenSettings),show)">SetProperty(ShowScreenSettings,show,Home)</onclick>
+				<onclick condition="StringCompare(Window(Home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,Home)</onclick>
+				<visible>!Skin.HasSetting(lock-screensettings)</visible>
+			</control>
+		</control>
+	</include>
+
+	<include name="group-focusvert">
+		<control type="grouplist">
+			<left>592</left>
+			<top>0</top>
+			<width>96</width>
+			<height>32</height>
+			<orientation>horizontal</orientation>
+			<visible>[Control.IsVisible(50) | Control.IsVisible(52) | Control.IsVisible(53) | Control.IsVisible(58)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>[ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + !Skin.HasSetting(lock-screensettings)</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>![ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + !Skin.HasSetting(lock-screensettings)</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>![ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show) | Control.HasFocus(1250) | Control.HasFocus(1252) | Control.HasFocus(1253) | Control.HasFocus(1258)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>[ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show) | Control.HasFocus(1250) | Control.HasFocus(1252) | Control.HasFocus(1253) | Control.HasFocus(1258)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>[!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)] + [Control.HasFocus(1250) | Control.HasFocus(1252) | Control.HasFocus(1253) | Control.HasFocus(1258)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>[!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)] + ![Control.HasFocus(1250) | Control.HasFocus(1252) | Control.HasFocus(1253) | Control.HasFocus(1258)]</visible>
+			</control>
+		</control>
+	</include>
+	
+	<include name="group-focushorz">
+		<control type="grouplist">
+			<left>0</left>
+			<top>90</top>
+			<width>32</width>
+			<height>96</height>
+			<aligny>center</aligny>
+			<align>center</align>
+			<visible>[Control.IsVisible(54) | Control.IsVisible(57)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>[ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + !Skin.HasSetting(lock-screensettings)</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>![ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + !Skin.HasSetting(lock-screensettings)</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>![ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + ![Control.HasFocus(1254) | Control.HasFocus(1257)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>[ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show) | Control.HasFocus(1254) | Control.HasFocus(1257)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupfocused.png</texture>
+				<visible>[!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + [IntegerGreaterThan(Container(54).NumItems,6) | IntegerGreaterThan(Container(57).NumItems,9)]] + [Control.HasFocus(1254) | Control.HasFocus(1257)]</visible>
+			</control>
+			<control type="image">
+				<width>32</width>
+				<height>32</height>
+				<texture>groupunfocused.png</texture>
+				<visible>[!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + [IntegerGreaterThan(Container(54).NumItems,6) | IntegerGreaterThan(Container(57).NumItems,9)]] + ![Control.HasFocus(1254) | Control.HasFocus(1257)]</visible>
+			</control>
+		</control>
+	</include>
+
 	<include name="settings-submenu-common">
 		<width>885</width>
 		<height>56</height>
@@ -538,6 +708,7 @@
 
 	<include name="scrolltext">
 		<scroll>true</scroll>
+		<visible>![System.ScreenSaverActive]</visible>
 	</include>
 
 	<include name="background-fade">
@@ -562,9 +733,9 @@
 		<animation effect="rotate" start="360" end="0" center="auto" time="5400" loop="true" condition="true">conditional</animation>
 	</include>
 	
-	<include name="Screen-settings">
+	<include name="screen-settings">
 		<animation effect="slide" time="0" start="0,0" end="0,-720">Visible</animation>
-		<visible allowhiddenfocus="true">[ControlGroup(9000).HasFocus() | Control.HasFocus(9001) | Control.HasFocus(9002)] + !Skin.HasSetting(lock-screensettings)</visible>
+		<visible allowhiddenfocus="true">[ControlGroup(9000).HasFocus() | StringCompare(Window(Home).Property(ShowScreenSettings),show)] + !Skin.HasSetting(lock-screensettings)</visible>
 	</include>
 
 </includes>
