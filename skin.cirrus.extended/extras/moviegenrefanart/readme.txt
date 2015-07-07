@@ -1,0 +1,1 @@
+Drop your genre fanart inside this folder.
