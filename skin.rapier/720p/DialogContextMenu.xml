@@ -47,7 +47,8 @@
 					<description>Button Trailer</description>
 					<label>$LOCALIZE[20410]</label>
 					<onclick condition="!IsEmpty(ListItem.Trailer)">PlayMedia($ESCINFO[ListItem.Trailer],noresume)</onclick>
-					<onclick condition="IsEmpty(ListItem.Trailer)">ActivateWindow(videos,$ESCINFO[ListItem.Label,plugin://plugin.video.youtube/?path=/root/search&amp;feed=search&amp;search=, Trailer],return)</onclick>
+					<onclick condition="IsEmpty(ListItem.Trailer) + !Container.Content(Episodes)">ActivateWindow(videos,$INFO[ListItem.Label,plugin://plugin.video.youtube/kodion/search/query/?q=, trailer],return)</onclick>
+					<onclick condition="IsEmpty(ListItem.Trailer) + Container.Content(Episodes)">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer],return)</onclick>
 					<include>ContextMenuBtn</include>
 					<visible>Container.Content(Movies) | Container.Content(TVShows)</visible>
 				</control>
@@ -59,9 +60,11 @@
 				<control type="button" id="2001">
 					<description>ExtendedInfo</description>
 					<label>$VAR[ContextMenuLabel2001]</label>
-					<onclick>RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
+					<onclick condition="Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
+					<onclick condition="Container.Content(Movies)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="Container.Content(TVShows)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>[Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)] + System.HasAddon(script.extendedinfo)</visible>
+					<visible>[Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists) | [[Container.Content(Movies) | Container.Content(TVShows)] + !System.HasAddon(context.extendedinfo.dialog)]] + System.HasAddon(script.extendedinfo)</visible>
 				</control>
 				<control type="button" id="2064">
 					<description>Movie Set Information</description>
