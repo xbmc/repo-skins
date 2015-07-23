@@ -4,12 +4,34 @@
 
 Mimic is a Kodi skin that combines features from reFocus and Aeon Nox. Based on Aeon Nox 5. Many thanks to BigNoid and Jeroen for creating the skins that are the inspiration for this release.
 
-![Home] (http://i.imgur.com/pTO2ftq.jpg)
+![Home Default] (http://i.imgur.com/sdvbu79.jpg)
 
-![Home Grey] (http://i.imgur.com/AjSbxQ2.jpg)
+![Home TopMenu] (http://i.imgur.com/hiGdO55.jpg)
 
-More screenshots available here: http://imgur.com/a/anSBV#0
+More screenshots available here: http://imgur.com/a/RH3ln#0
 
+
+***
+**2.2.0**
+- Updated all of the panel views using Phil65's design.
+- Added support for Phil65's YouTube Browser addon.
+- Added YouTube videos to Artist/Album and Movie/TV Show info dialogs.
+- Added a basic weather view.
+- Added skin setting to change default background image.
+- Added 8 custom widgets to skin settings.
+- Added large icon option to InfoWall view for videos.
+- Added extra fanart option to InfoWall, Showcase, and BannerInfo views for videos.
+- Added support for Rom Collection Browser.
+
+***
+**2.1.2**
+- Updated language files from Transifex.
+- Added skin settings to import/export the skin settings.
+- Added keyboard auto-complete via Extended Info script.
+- Skinned T9 keyboard for Extended Info.
+- Added support for Nextup Notification Service addon.
+- Added blurred album cover background for music viz, courtesy of AN5.
+- Changed Extended Info video list to Shift view.
 
 ***
 **2.1.1**
