@@ -1,4 +1,4 @@
-## Black Glass Nova skin for Kodi 14 HELIX
+## Black Glass Nova skin for Kodi 15 ISENGARD
 Ported from MediaPortal, Black Glass Nova is an easy to use and fanart oriented skin designed for Full HD TV screens.
 
 ![](http://i.imgur.com/bNT9T4C.jpg)
@@ -11,7 +11,7 @@ Ported from MediaPortal, Black Glass Nova is an easy to use and fanart oriented 
 
 #### [Wiki](https://github.com/Tgxcorporation/skin.blackglassnova/wiki)
 
-#### [Changelog](https://github.com/Tgxcorporation/skin.blackglassnova/blob/helix/changelog.txt)
+#### [Changelog](https://github.com/Tgxcorporation/skin.blackglassnova/blob/master/changelog.txt)
 
 #### [Download from GitHub](https://github.com/Tgxcorporation/skin.blackglassnova/wiki/Install-from-GitHub)
 
