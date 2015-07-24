@@ -45,36 +45,6 @@
             <include>ScrollOffsetLabel</include>
         </control>
     </include>
-    <include name="ScrollOffsetLabel">
-        <!--<visible>Container.Scrolling</visible>-->
-        <visible>Container.Scrolling + [StringCompare(Container.SortMethod,$LOCALIZE[551]) | StringCompare(Container.SortMethod,$LOCALIZE[561]) | StringCompare(Container.SortMethod,$LOCALIZE[558]) | StringCompare(Container.SortMethod,$LOCALIZE[557]) | StringCompare(Container.SortMethod,$LOCALIZE[556])]</visible>
-        <include>ScrollOffsetLabelVisibleFadeEffect</include>
-        <control type="image">
-            <posx>0</posx>
-            <posy>10</posy>
-            <width>300</width>
-            <height>163</height>
-            <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
-        </control>
-        <control type="image">
-            <posx>0</posx>
-            <posy>10</posy>
-            <width>300</width>
-            <height>163</height>
-            <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
-        </control>
-        <control type="label">
-            <left>0</left>
-            <top>0</top>
-            <width>300</width>
-            <height>183</height>
-            <align>center</align>
-            <aligny>center</aligny>
-            <label>$INFO[ListItem.SortLetter]</label>
-            <include>TextColor_AlternateColor</include>
-            <font>WindowTitleFont</font>
-        </control>
-    </include>
     <include name="BigList_Layout">
         <itemlayout height="135" width="1920">
             <include>50_RecOverlayNoFocus</include>
@@ -138,12 +108,7 @@
                 </control>
                 <control type="image">
                     <visible>![Window.IsActive(DialogPVRChannelsOSD.xml)|Window.IsActive(MyPVRChannels.xml)]</visible>
-                    <animation effect="fade" tween="cubic" easing="out" time="3000" delay="3000" start="100" end="0" pulse="true"
-                               condition="Skin.HasSetting(EnableCdArt)+!IsEmpty(ListItem.Art(discart))+!Skin.HasSetting(plexbmc)">Conditional</animation>
-                    <animation effect="fade" tween="cubic" easing="out" time="3000" delay="3000" start="100" end="0" pulse="true"
-                               condition="Skin.HasSetting(EnableCdArt)+!IsEmpty(ListItem.Thumb)+
-                               [[Container.content(songs)+Window.IsActive(MyMusicNav.xml)]|Window.IsActive(MyMusicSongs.xml)]
-                               +!Skin.HasSetting(plexbmc)">Conditional</animation>
+                    <include>PulseThumb</include>
                     <posx>25</posx>
                     <posy>0</posy>
                     <width>405</width>
@@ -198,7 +163,7 @@
                     <visible>Skin.HasSetting(EnableCdArt)+!IsEmpty(ListItem.Thumb)+
                         [[Container.content(songs)+Window.IsActive(MyMusicNav.xml)]|
                         [Window.IsActive(MyMusicSongs.xml)+!Skin.HasSetting(plexbmc)]]</visible>
-                    <animation effect="fade" tween="cubic" easing="out" time="3000" delay="3000" start="0" end="100" pulse="true" condition="true">Conditional</animation>
+                    <include>PulseCdArtAudio</include>
                     <control type="image">
                         <posx>70</posx>
                         <posy>45</posy>
@@ -206,14 +171,14 @@
                         <height>315</height>
                         <texture background="true" fallback="white/common/cdart_default.png" diffuse="white/common/cdart_diffuse.png">$VAR[Cd.Art]</texture>
                         <aspectratio align="center" aligny="center">keep</aspectratio>
-                        <include>Animation_ViewsCDart</include>
+                        <!--<include>Animation_ViewsCDart</include>-->
                     </control>
                 </control>
                 <control type="group">
                     <!-- CDART VIDEO -->
                     <visible>!Skin.HasSetting(plexbmc)</visible>
                     <visible>Skin.HasSetting(EnableCdArt)+[Container.content(movies)|Container.content(MusicVideos)]+!IsEmpty(ListItem.Art(discart))</visible>
-                    <animation effect="fade" tween="cubic" easing="out" time="3000" delay="3000" start="0" end="100" pulse="true" condition="true">Conditional</animation>
+                    <include>PulseCdArtVideo</include>
                     <control type="image">
                         <posx>70</posx>
                         <posy>45</posy>
@@ -221,7 +186,7 @@
                         <height>315</height>
                         <texture background="true" fallback="white/common/cdart_default.png" diffuse="white/common/cdart_diffuse.png">$INFO[ListItem.Art(discart)]</texture>
                         <aspectratio align="center" aligny="center">keep</aspectratio>
-                        <include>Animation_ViewsCDart</include>
+                        <!--<include>Animation_ViewsCDart</include>-->
                     </control>
                 </control>
                 <control type="image">
@@ -256,8 +221,8 @@
                     <posx>395</posx>
                     <posy>35</posy>
                     <control type="group">
-                        <visible>IntegerGreaterThan(ListItem.Rating,0)|[Container.Content(songs)+!StringCompare(ListItem.Label,..)+!Skin.HasSetting(plexbmc)]</visible>
-                        <visible>!Container.Content(Addons)</visible>
+                        <visible>Window.IsVisible(script-ExtendedInfo Script-VideoList.xml)|
+                            [!Container.Content(Addons)+[IntegerGreaterThan(ListItem.Rating,0)|[Container.Content(songs)+!StringCompare(ListItem.Label,..)+!Skin.HasSetting(plexbmc)]]]</visible>
                         <control type="image">
                             <posx>TextMargin</posx>
                             <posy>85</posy>
@@ -352,17 +317,27 @@
         <control type="group">
             <visible>Control.IsVisible(50)</visible>
             <include>Icon_Fade</include>
+            <include>FacadeFadeDialogs</include>
             <include>ScrollOffsetLabel_50</include>
             <control type="group">
                 <!-- CLEAR ART / LOGO -->
                 <control type="image">
-                    <visible>Skin.HasSetting(EnableClearArt) | Skin.HasSetting(EnableClearLogo)</visible>
                     <posx>645r</posx>
                     <posy>34</posy>
                     <width>300</width>
                     <height>149</height>
                     <aspectratio align="right" aligny="bottom">keep</aspectratio>
-                    <texture background="true">$VAR[DefaultClearArtLogo]</texture>
+                    <include>PulseClearArt</include>
+                    <texture background="true">$VAR[DefaultClearArt]</texture>
+                </control>
+                <control type="image">
+                    <posx>645r</posx>
+                    <posy>34</posy>
+                    <width>300</width>
+                    <height>149</height>
+                    <aspectratio align="right" aligny="bottom">keep</aspectratio>
+                    <include>PulseClearLogo</include>
+                    <texture background="true">$VAR[DefaultClearLogo]</texture>
                 </control>
             </control>
             <control type="group">
@@ -402,17 +377,27 @@
         <control type="group">
             <visible>Control.IsVisible(51)</visible>
             <include>Icon_Fade</include>
+            <include>FacadeFadeDialogs</include>
             <include>ScrollOffsetLabel_50</include>
             <control type="group">
                 <!-- CLEAR ART / LOGO -->
                 <control type="image">
-                    <visible>Skin.HasSetting(EnableClearArt) | Skin.HasSetting(EnableClearLogo)</visible>
                     <posx>645r</posx>
                     <posy>34</posy>
                     <width>300</width>
                     <height>149</height>
                     <aspectratio align="right" aligny="bottom">keep</aspectratio>
-                    <texture background="true">$VAR[DefaultClearArtLogo]</texture>
+                    <include>PulseClearArt</include>
+                    <texture background="true">$VAR[DefaultClearArt]</texture>
+                </control>
+                <control type="image">
+                    <posx>645r</posx>
+                    <posy>34</posy>
+                    <width>300</width>
+                    <height>149</height>
+                    <aspectratio align="right" aligny="bottom">keep</aspectratio>
+                    <include>PulseClearLogo</include>
+                    <texture background="true">$VAR[DefaultClearLogo]</texture>
                 </control>
             </control>
             <control type="group">
@@ -452,6 +437,7 @@
         <control type="group">
             <visible>Control.IsVisible(50)</visible>
             <include>Icon_Fade</include>
+            <include>FacadeFadeDialogs</include>
             <include>ScrollOffsetLabel_50</include>
             <control type="group">
                 <control type="image">
@@ -710,6 +696,7 @@
             <!--BIG LIST-->
             <visible>Skin.String(WeatherView,biglist)|Skin.String(WeatherView,)</visible>
             <include>Icon_Fade</include>
+            <include>FacadeFadeDialogs</include>
             <control type="image">
                 <posx>0</posx>
                 <posy>142</posy>
