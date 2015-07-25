@@ -1,0 +1,1 @@
+Drop your genre logos inside this folder.
