@@ -2,7 +2,6 @@
 <window>
 	<defaultcontrol>1</defaultcontrol>
     <visible>Window.IsActive(fullscreenvideo) + !Window.IsActive(script.pseudotv.TVOverlay.xml) + !Window.IsActive(script.pseudotv.live.TVOverlay.xml)</visible>
-    <visible>Window.IsActive(fullscreenvideo) + !Window.IsActive(script.pseudotv.TVOverlay.xml) + !Window.IsActive(script.pseudotv.live.TVOverlay.xml)</visible>
 	<visible>Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding</visible>
 	<visible>Window.IsActive(MusicVisualisation.xml) | Window.IsActive(VideoFullScreen.xml)</visible>
 	<controls>
@@ -10,29 +9,164 @@
         <control type="group">
             <visible>!Window.IsActive(filebrowser)</visible>
 			<visible>!Window.IsActive(VideoOSDBookmarks.xml)</visible>
-			<visible>[!Window.IsActive(VideoOSD.xml) + !Window.Isactive(DialogFullScreenInfo.xml) + !Skin.HasSetting(OSDLargeSeekingLabel)] | [Skin.HasSetting(OSDShowInfoOnPause) + Player.Paused]</visible>
+			<visible>!Window.IsActive(virtualkeyboard)</visible>
+			<visible>Skin.HasSetting(OSDShowInfoOnPause) | [!Skin.HasSetting(OSDShowInfoOnPause) + [[Pvr.IsPlayingTv | Pvr.IsPlayingRadio] + Player.DisplayAfterSeek + IsEmpty(Player.SeekOffset)]]</visible>
+			<visible>!Window.IsActive(VideoOSD.xml) + !Window.Isactive(DialogFullScreenInfo.xml)</visible>
 			<animation effect="slide" start="0,400" end="0,0" tween="cubic" easing="out" delay="300" time="250" reversible="false" condition="!Window.IsActive(VideoOSD.xml) + !Window.Isactive(DialogFullScreenInfo.xml)">WindowOpen</animation>
 			<animation effect="slide" start="0,0" end="0,400" tween="cubic" easing="out" delay="2000" time="250" reversible="false" condition="!Window.IsActive(VideoOSD.xml) + !Window.Isactive(DialogFullScreenInfo.xml) + [Window.IsActive(MusicVisualisation.xml) | Window.IsActive(VideoFullScreen.xml)]">WindowClose</animation>
-            <include condition="Skin.HasTheme(classic)">OSDPanelClassic</include>
-			<include condition="!Skin.HasTheme(classic)">OSDPanelModern</include>
-			<include condition="Skin.HasSetting(ShowWeatherVideoInfoOSD)">WeatherInfoOSD</include>
+            <include condition="!Skin.HasTheme(classic) + !Skin.HasSetting(UseSlimOSDPanel)">OSDPanelModern</include>
+			<include condition="!Skin.HasTheme(classic) + Skin.HasSetting(UseSlimOSDPanel)">OSDPanelModernSlim</include>
+			<include condition="Skin.HasTheme(classic)">OSDPanelClassic</include>
+			<include condition="Skin.HasSetting(ShowWeatherVideoInfoOSD) + !Skin.HasSetting(UseSlimOSDPanel) + !Skin.HasTheme(classic)">WeatherInfoOSD</include>
         </control>
 		
 		<!-- large forward and rewind labels -->
 		<control type="label">
 			<posx>0</posx>
 			<posy>0</posy>
-			<height>1080</height>
-			<width>1920</width>
+			<height>100%</height>
+			<width>100%</width>
 			<align>center</align>
 			<aligny>center</aligny>
 			<font>Bold120</font>
-			<textcolor>white</textcolor>
+			<textcolor>$INFO[Skin.String(GeneralTextColor)]</textcolor>
 			<label>$VAR[PlayerActionLabelLarge]</label>
 			<animation effect="fade" start="0" end="100" tween="cubic" easing="out" delay="300" time="250" reversible="false">WindowOpen</animation>
 			<animation effect="slide" start="100" end="0" tween="cubic" easing="out" delay="2000" time="250" reversible="false">WindowClose</animation>
 			<animation effect="fade" reversible="false" end="60" time="0" condition="true">Conditional</animation>
 			<visible>Skin.HasSetting(OSDLargeSeekingLabel) + !Window.IsActive(DialogSubtitles.xml)</visible>
 		</control>
+		
+		<!-- small panel if OSD disabled on seek -->
+		<control type="group">
+			<visible>!Skin.HasSetting(OSDShowInfoOnPause) + ![[Pvr.IsPlayingTv | Pvr.IsPlayingRadio] + Player.DisplayAfterSeek + IsEmpty(Player.SeekOffset)]</visible>
+			<visible>!Skin.HasSetting(OSDShowInfoOnPause)</visible>
+			<visible>!Window.IsActive(VideoOSD.xml) + !Window.Isactive(DialogFullScreenInfo.xml)</visible>
+			<left>705r</left>
+			<top>20</top>
+			<include>animation_fade_visible_hidden</include>
+
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>490</width>
+				<height>150</height>
+				<texture border="5">diffuse/panel.png</texture>
+				<colordiffuse>$INFO[Skin.String(GeneralPanelsColor)]</colordiffuse>
+				<animation effect="fade" reversible="false" end="40" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="image">
+				<left>10</left>
+				<top>10</top>
+				<width>470</width>
+				<height>130</height>
+				<texture border="5">diffuse/panel.png</texture>
+				<colordiffuse>$INFO[Skin.String(GeneralPanelsColor)]</colordiffuse>
+				<animation effect="fade" reversible="false" end="40" time="0" condition="true">Conditional</animation>
+			</control>
+			
+			<control type="label">
+				<posx>20</posx>
+				<posy>0</posy>
+				<width>350</width>
+				<align>left</align>
+				<font>Reg24</font>
+				<textcolor>$INFO[Skin.String(ViewDetailsFocusColor)]</textcolor>
+				<label>$VAR[PlayerActionLabelSmall]</label>
+				<visible>!StringCompare(Window(Home).Property(subtitlemenu), show)</visible>
+			</control>
+			
+			<!-- total runtime -->
+			<control type="label">
+				<posx>20</posx>
+				<posy>40</posy>
+				<width>800</width>
+				<align>left</align>
+				<font>Reg20</font>
+				<textcolor>$INFO[Skin.String(GeneralTextColor)]</textcolor>
+				<label>$INFO[Player.Duration,[B]$LOCALIZE[180]: [/B]]</label>
+				<visible>Player.HasDuration</visible>
+			</control>
+
+			<control type="image">
+				<visible>player.paused</visible>
+				<left>390</left>
+				<top>10</top>
+				<width>80</width>
+				<height>80</height>
+				<texture>osd/osd_pause.png</texture>
+			</control>
+			<control type="image">
+				<visible>player.forwarding</visible>
+				<left>400</left>
+				<top>25</top>
+				<width>60</width>
+				<height>60</height>
+				<texture>osd/ff.png</texture>
+			</control>
+			<control type="image">
+				<visible>player.rewinding</visible>
+				<left>395</left>
+				<top>25</top>
+				<width>60</width>
+				<height>60</height>
+				<texture flipx="true">osd/ff.png</texture>
+			</control>
+			
+			<control type="image">
+				<visible>!player.rewinding + !player.forwarding + !player.paused</visible>
+				<left>380</left>
+				<top>10</top>
+				<width>80</width>
+				<height>80</height>
+				<texture>DefaultAddonInfoLibrary.png</texture>
+			</control>
+			
+			<control type="label">
+				<!--elapsed Time-->
+				<left>20</left>
+				<top>80</top>
+				<width>150</width>
+				<align>left</align>
+				<font>Reg20</font>
+				<textcolor>white</textcolor>
+				<label>$INFO[Player.Time]</label>
+				<visible>Player.HasDuration</visible>
+			</control>
+			<control type="label">
+				<!--remaining Time-->
+				<left>260</left>
+				<top>80</top>
+				<width>200</width>
+				<align>right</align>
+				<font>Reg20</font>
+				<textcolor>white</textcolor>
+				<label>$INFO[Player.TimeRemaining,- ]</label>
+				<visible>Player.HasDuration</visible>
+			</control>
+
+			<control type="progress">
+				<description>ProgressbarCache</description>
+				<left>120</left>
+				<top>104</top>
+				<width>230</width>
+				<height>15</height>
+				<info>Player.ProgressCache</info>
+				<visible>!StringCompare(Window(Home).Property(subtitlemenu), show)</visible>
+			</control>
+			<control type="progress" id="23">
+				<description>Progressbar</description>
+				<left>120</left>
+				<top>104</top>
+				<width>230</width>
+				<height>15</height>
+				<info>Player.Progress</info>
+				<visible>true</visible>
+			</control>
+
+			
+		</control>
+		
+		
 	</controls>
 </window>

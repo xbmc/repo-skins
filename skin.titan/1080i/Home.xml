@@ -3,30 +3,25 @@
 <window id="0">
     <defaultcontrol always="true">300</defaultcontrol>
     <allowoverlay>yes</allowoverlay>
-	
+	<onload condition="!Skin.String(GadgetRows, netflix)">RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu)</onload>
+	<onload condition="Skin.String(GadgetRows, netflix)">RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=9000&amp;group=mainmenu|powermenu)</onload>
     <include>defaultskinsettings</include>
-	<onload condition="System.HasAddon(plugin.video.plexbmc)">XBMC.RunScript(script.titanskin.helpers,UPDATEPLEXLINKS)</onload>
-	
-	<onload condition="Skin.HasSetting(EnableWeatherNotifications)">XBMC.RunScript(script.titanskin.helpers,CHECKNOTIFICATIONS,weather)</onload>
+	<onload>300</onload>
 	<onload condition="!SubString(Window(Home).Property(HomeLoaded),loaded)">SetProperty(HomeLoaded,loaded,Home)</onload>
 	<onload condition="Skin.String(GadgetRows, enhanced)">AlarmClock(SpotlightMove,Control.Move(1508,1),00:08,silent,loop)</onload>
+	<onload condition="Skin.String(GadgetRows, netflix)">AlarmClock(SpotlightMove,Control.Move(510,1),00:30,silent,loop)</onload>
+	<onunload>ClearProperty(ShowViewSubMenu)</onunload>
 	<onunload>CancelAlarm(SpotlightMove,true)</onunload>
-	<onunload>SetProperty(ShowFastAllMovies, hide, Home)</onunload>
 	<onunload>ClearProperty(submenu)</onunload>
+	<onunload>ClearProperty(ShowWidget)</onunload>
     <onload>ClearProperty(submenu)</onload>
 	<onunload>Dialog.Close(shutdownmenu,true)</onunload>
-	<onunload>ClearProperty(activewidget)</onunload>
-	<onload>ClearProperty(ExtraFanArtPath, Home)</onload>
-	
-	<!-- unload widgets from memory when home not active -->
-	<onunload condition="!Skin.ToggleSetting(DisableWidgetRefresh)">SetProperty(refreshwidgets,hide,home)</onunload>
-	<onload condition="!Skin.HasSetting(HomeMenuUseMBforMovies) + !Skin.ToggleSetting(DisableWidgetRefresh)">ClearProperty(refreshwidgets,home)</onload>
-	
-	<!-- refresh widgets after 5 seconds -->
-	<onload condition="Skin.HasSetting(HomeMenuUseMBforMovies) + !Skin.ToggleSetting(DisableWidgetRefresh)">AlarmClock(refreshwidgets1,SetProperty(refreshwidgets,refresh,home),00:06,silent)</onload>
-	<onload condition="Skin.HasSetting(HomeMenuUseMBforMovies) + !Skin.ToggleSetting(DisableWidgetRefresh)">AlarmClock(refreshwidgets2,ClearProperty(refreshwidgets,home),00:06,silent)</onload>
-	
-	<onload>300</onload>
+	<onload>ClearProperty(ExtraFanArtPath)</onload>
+	<onload>SetProperty(homevisible,visible)</onload>
+	<onunload>SetProperty(homevisible,hidden)</onunload>
+	<onload condition="Skin.HasSetting(UseSectionBackground)">SetProperty(SectionBackground,$INFO[Container(300).ListItem.Property(defaultID)],Home)</onload>
+	<onload condition="Skin.HasSetting(UseSectionBackground) + !IsEmpty(Container(300).ListItem.Property(Background))">SetProperty(SectionBackgroundValue,$INFO[Container(300).ListItem.Property(Background)],Home)</onload>
+	<onload condition="Skin.HasSetting(UseSectionBackground) + IsEmpty(Container(300).ListItem.Property(Background))">ClearProperty(SectionBackgroundValue,Home)</onload>
     <controls>
 	
 	<!--Global Background-->
@@ -43,7 +38,7 @@
 		
 		<!--Footer-->
 		<control type="group">
-			<include condition="[!skin.hassetting(nofooterbar) + !Skin.String(GadgetRows, enhanced) + !Skin.String(GadgetRows, simplever)] + ![Skin.String(GadgetRows, simplehor) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(EnableTouchSupport)]">Footer</include>
+			<include condition="[!skin.hassetting(nofooterbar) + !Skin.String(GadgetRows, enhanced) + !Skin.String(GadgetRows, simplever) + !Skin.String(GadgetRows, netflix)] + ![Skin.String(GadgetRows, simplehor) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(EnableTouchSupport)]">Footer</include>
 		</control>
 		
 		<!--Time-->
@@ -52,12 +47,10 @@
 			<include>TimeInfo</include>
 		</control>
 	
-	
 		<!-- Home Screen -->
 		<control type="group">
 			<include>animation_window_open_close</include>
-			<visible>Window.IsActive(home)</visible>
-			<include>WeatherInfo</include>
+			<include condition="Skin.HasSetting(WeatherOnHome)">WeatherInfo</include>
 			<include>ProfileInfo</include>
 					
 			<!-- Kodi Logo image -->
@@ -66,13 +59,26 @@
 				<posy>10</posy>
 				<height>110</height>
 				<aspectratio align="left">keep</aspectratio>
-				<texture>$VAR[LogoImage]</texture>
+				<colordiffuse>$INFO[Skin.String(HeaderTextColor)]</colordiffuse>
+				<texture>home/kodi_logo_light.png</texture>
 				<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Skin.HasSetting(WeatherOnHome) + !Skin.HasSetting(ShowProfile) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + !Control.IsVisible(88888)</visible>
 				<visible>!Skin.String(GadgetRows, simplever)</visible>
 				<visible>!Skin.HasSetting(ShowProfile) + !Skin.HasSetting(WeatherOnHome)</visible>
+				<visible>!Skin.String(CustomLogoImage)</visible>
 			</control>
-					
-			<include condition="System.HasAddon(plugin.video.plexbmc)">PlexBackgroundWidgets</include>
+			<!-- custom Logo image -->
+			<control type="image">
+				<posx>35</posx>
+				<posy>10</posy>
+				<height>110</height>
+				<aspectratio align="left">keep</aspectratio>
+				<colordiffuse></colordiffuse>
+				<texture>$INFO[Skin.String(CustomLogoImage)]</texture>
+				<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Skin.HasSetting(WeatherOnHome) + !Skin.HasSetting(ShowProfile) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + !Control.IsVisible(88888)</visible>
+				<visible>!Skin.String(GadgetRows, simplever)</visible>
+				<visible>!Skin.HasSetting(ShowProfile) + !Skin.HasSetting(WeatherOnHome)</visible>
+				<visible>Skin.String(CustomLogoImage)</visible>
+			</control>
 			
 			<!--Home tiles List 300-->
 			<include condition="[!Skin.HasSetting(UseFixedHomeFocus) + Skin.String(GadgetRows, 1)] | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3)">HomeLayoutNormal</include>
@@ -81,6 +87,7 @@
 			<include condition="Skin.String(GadgetRows, enhanced)">EnhancedHomeScreen</include>
 			<include condition="Skin.String(GadgetRows, simplehor)">simplehome_horizontal</include>
 			<include condition="Skin.String(GadgetRows, simplever)">simplehome_vertical</include>
+			<include condition="Skin.String(GadgetRows, netflix)">HomeLayoutNetflix</include>
 		
 		
 			<control type="scrollbar" id="60">
@@ -94,7 +101,7 @@
 			
 	
 			<!-- submenu -->
-			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, vertical) + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2)]">HomeMenuSubMenuVertical</include>
+			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, vertical) + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3)]">HomeMenuSubMenuVertical</include>
 			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, horizontal) + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3)]">HomeMenuSubMenuHorizontal</include>
 			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, tiles) + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3)]">HomeMenuSubMenuSmallTiles</include>
 
@@ -119,17 +126,18 @@
 			<texturenofocus colordiffuse="white">common/shutdown2.png</texturenofocus>
 			<onclick>ActivateWindow(111)</onclick>
 			<onfocus>ActivateWindow(111)</onfocus>
-			<visible>!Skin.String(GadgetRows, simplever)</visible>
 			<visible>!Skin.HasSetting(EnableTouchSupport)</visible>
 			<visible>!Skin.HasSetting(DisablePowerMenu)</visible>
 			<include>animation_fade_visible_hidden</include>
 			<visible allowhiddenfocus="true">![[Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3)] + Control.IsVisible(4444) + [Skin.String(SubmenuLayout, horizontal) | Skin.String(SubmenuLayout, tiles)]]</visible>
-			<visible>!system.getbool(lookandfeel.enablerssfeeds)</visible>
-			<animation type="Conditional" condition="[ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2)]">
+			<visible>![system.getbool(lookandfeel.enablerssfeeds) + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2) | Skin.String(GadgetRows, 3) | Skin.String(GadgetRows, simplehor) | Skin.String(GadgetRows, enhanced)]]</visible>
+			
+			<animation type="Conditional" condition="[[ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + [Skin.String(GadgetRows, 1) | Skin.String(GadgetRows, 2)]] | Skin.HasSetting(DisablePowerMenu)">
 				<effect type="slide" start="0,0" end="0,800" time="400" tween="cubic" easing="inout" delay="0" />
 			</animation>
-			<animation effect="slide" end="0,-17" time="0" condition="skin.hastheme(classic)">Conditional</animation>
-		
+			<animation effect="slide" end="0,-17" time="0" condition="skin.hastheme(classic) + !Skin.String(GadgetRows, simplever)">Conditional</animation>
+			<animation effect="slide" end="-580" time="0" condition="Skin.String(GadgetRows, simplever)">Conditional</animation>
+			<visible allowhiddenfocus="true">Skin.String(GadgetRows, simplever) + Skin.HasSetting(VerticalHomeInlineSubmenu)</visible>
 		
 		</control>
 		
