@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window type="dialog" id="2003">
 	<onload condition="System.HasAddon(script.videoextras)">RunScript(script.videoextras,check,"$INFO[ListItem.FilenameAndPath]")</onload>
-	<onload condition="Skin.HasSetting(TvTunes) + !SubString(Window(Videos).Property(CinemaExperienceRunning),True)">RunScript(script.tvtunes,backend=True)</onload>
 	<defaultcontrol always="true">7003</defaultcontrol>
 	<controls>
 		<control type="button" id="7050">
@@ -14,7 +13,7 @@
 			<texturefocus>-</texturefocus>
 			<texturenofocus>-</texturenofocus>
 			<onfocus>SendClick(MovieInformation,5)</onfocus>
-			<onfocus>SetFocus(50)</onfocus>
+			<onfocus>SetFocus(300)</onfocus>
 		</control>
 		<control type="button" id="5">
 			<label>-</label>
@@ -133,8 +132,8 @@
 				<font>METF_MPAA</font>
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.mpaa]</label>
-				<visible>[Container.Content(movies) + !IsEmpty(ListItem.mpaa) + ![StringCompare(ListItem.mpaa,Rated PG) | StringCompare(ListItem.mpaa,Rated PG-13) | StringCompare(ListItem.mpaa,Rated R) | StringCompare(ListItem.mpaa,Rated G) | StringCompare(ListItem.mpaa,Rated NC-17) | StringCompare(ListItem.mpaa,Rated TV-14) | StringCompare(ListItem.mpaa,Rated TV-G) | StringCompare(ListItem.mpaa,Rated TV-MA) | StringCompare(ListItem.mpaa,Rated TV-PG) | StringCompare(ListItem.mpaa,Rated TV-Y) | StringCompare(ListItem.mpaa,Rated TV-Y7)]] + !Skin.HasSetting(ShowVideoPath)</visible>
-			</control>	 
+				<visible>Container.Content(movies) + !IsEmpty(ListItem.mpaa) + !Skin.HasSetting(ShowVideoPath)</visible>
+			</control>
 
 			<control type="fadelabel">
 				<posx>-8</posx>
@@ -149,7 +148,7 @@
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.FilenameAndPath]</label>
 				<visible>!SubString(ListItem.FilenameAndPath," ") + [Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
-			</control>	
+			</control>
 			<control type="textbox">
 				<posx>-8</posx>
 				<posy>489</posy>
@@ -160,23 +159,12 @@
 				<textcolor>MPAADescription</textcolor>
 				<label>$INFO[ListItem.FilenameAndPath]</label>
 				<visible>SubString(ListItem.FilenameAndPath," ") + [Container.Content(movies) | Container.Content(videos) | Container.Content(episodes) | Container.Content(MusicVideos)] + Skin.HasSetting(ShowVideoPath)</visible>
-			</control>	
+			</control>
 			<control type="group">
 				<posx>550</posx>
 				<posy>225</posy>
 				<visible>!Control.IsVisible(50) + [![Container.Content(tvshows) | Container.Content(seasons)] | !Skin.HasSetting(NextAired)]</visible>
 				<!-- Director -->
-				<control type="label">
-					<posx>0</posx>
-					<posy>76</posy>
-					<width>340</width>
-					<height>24</height>
-					<font>METF_InfoText</font>
-					<textcolor>MediaDetailsInfo</textcolor>
-					<align>center</align>
-					<aligny>center</aligny>
-					<label>$LOCALIZE[20339]</label>
-				</control>
 				<control type="label">
 					<posx>0</posx>
 					<posy>99</posy>
@@ -196,17 +184,6 @@
 				<!-- TV Show Status -->
 				<control type="label">
 					<posx>0</posx>
-					<posy>76</posy>
-					<width>340</width>
-					<height>24</height>
-					<font>METF_InfoText</font>
-					<textcolor>MediaDetailsInfo</textcolor>
-					<align>center</align>
-					<aligny>center</aligny>
-					<label>$LOCALIZE[31471]</label>
-				</control>
-				<control type="label">
-					<posx>0</posx>
 					<posy>99</posy>
 					<width>340</width>
 					<height>24</height>
@@ -221,18 +198,7 @@
 				<posx>550</posx>
 				<posy>353</posy>
 				<visible>!Control.IsVisible(50)</visible>
-				<!-- Cast -->
-				<control type="label">
-					<posx>0</posx>
-					<posy>0</posy>
-					<width>340</width>
-					<height>24</height>
-					<align>center</align>
-					<aligny>center</aligny>
-					<font>METF_InfoText</font>
-					<textcolor>MediaDetailsInfo</textcolor>
-					<label>$LOCALIZE[344]</label>
-				</control>
+				<!-- Cast (Actor) -->
 				<control type="textbox">
 					<posx>0</posx>
 					<posy>20</posy>
@@ -271,6 +237,67 @@
 				<include condition="Skin.HasSetting(AutoScrollFast)">AutoScrollLongFast</include>
 				<visible>!Control.IsVisible(50)</visible>
 			</control>
+			
+			<!-- Director/Status/Cast selector -->		
+			<control type="panel" id="300">
+				<posx>552</posx>
+				<posy>302</posy>
+				<width>340</width>
+				<height>300</height>
+				<onup>300</onup>
+				<ondown>7050</ondown>
+				<onleft>7050</onleft>
+				<onright>7050</onright>
+				<orientation>vertical</orientation>
+				<itemlayout height="51" width="340">		
+					<control type="label">
+						<top>0</top>
+						<width>340</width>
+						<height>48</height>
+						<align>center</align>
+						<aligny>top</aligny>
+						<font>METF_PlotText</font>
+						<textcolor>MediaDetailsInfo</textcolor>
+						<label fallback="161">$INFO[ListItem.Label]</label>
+					</control>		
+				</itemlayout>
+				<focusedlayout height="51" width="340">
+					<control type="image">
+						<top>0</top>
+						<width>340</width>
+						<height>24</height>
+						<texture border="4">ButtonFo.png</texture>
+						<visible>Control.HasFocus(300)</visible>
+					</control>
+					<control type="label">
+						<top>0</top>
+						<width>340</width>
+						<height>48</height>
+						<align>center</align>
+						<aligny>top</aligny>
+						<font>METF_PlotText</font>
+						<textcolor>MediaDetailsInfo</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</focusedlayout>
+				<content>
+					<item>
+						<label>$LOCALIZE[31471]</label>
+						<onclick>noop</onclick>
+						<visible>Container.Content(episodes) | Container.Content(tvshows) | Container.Content(seasons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[20339]</label>
+						<onclick>SendClick(2003,13)</onclick>
+						<visible>![Container.Content(episodes) | Container.Content(tvshows) | Container.Content(seasons)]</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[344]</label>
+						<onclick>SetFocus(5)</onclick>
+					</item>
+				</content>
+			</control>			
+
 			<!-- Cast -->
 			<control type="panel" id="50">
 				<posx>-8</posx>
@@ -282,6 +309,7 @@
 				<onup>50</onup>
 				<ondown>50</ondown>
 				<viewtype label="">list</viewtype>
+				<visible>!Control.HasFocus(300) + !Control.HasFocus(7003) + !Control.HasFocus(7050) + !Control.HasFocus(7051)</visible>
 				<pagecontrol>-</pagecontrol>
 				<scrolltime>0</scrolltime>
 				<orientation>vertical</orientation>
@@ -297,6 +325,17 @@
 						<textcolor>TextNF</textcolor>
 						<label>$INFO[ListItem.Label]</label>
 					</control>
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>515</width>
+						<height>24</height>
+						<align>right</align>
+						<aligny>center</aligny>
+						<font>METF_InfoText</font>
+						<textcolor>TextNF</textcolor>
+						<label>$INFO[ListItem.Label2]</label>
+					</control>
 				</itemlayout>
 				<focusedlayout height="24" width="516">
 					<control type="label">
@@ -310,6 +349,18 @@
 						<textcolor>TextFO</textcolor>
 						<scrollspeed>30</scrollspeed>
 						<label>[B]$INFO[ListItem.Label][/B]</label>
+					</control>
+					<control type="label">
+						<posx>0</posx>
+						<posy>0</posy>
+						<width>515</width>
+						<height>24</height>
+						<align>right</align>
+						<aligny>center</aligny>
+						<font>METF_InfoText</font>
+						<textcolor>TextFO</textcolor>
+						<scrollspeed>30</scrollspeed>
+						<label>[B]$INFO[ListItem.Label2][/B]</label>
 					</control>
 				</focusedlayout>
 			</control>
