@@ -66,16 +66,6 @@
 			<param name="CloseIconSetFocus" value="SetFocus(50)" />
 			<param name="CloseIconVisibility" value="system.getbool(input.enablemouse) + !Window.IsActive(1118) + !Window.IsActive(1129) + !Window.IsActive(1133)" />
 		</include>
-		<control type="image">
-			<description>LOGO</description>
-			<left>0</left>
-			<top>25</top>
-			<width>400</width>
-			<height>70</height>
-			<aspectratio>keep</aspectratio>
-			<texture>logo.png</texture>
-			<colordiffuse>$VAR[ColorHighlightVar]</colordiffuse>
-		</control>
 	</include>
 	<include name="SideBladeCloseIcon">
 		<control type="button" id="8999">
@@ -110,7 +100,7 @@
 	</include>
 	<include name="MediaMenuTop">
 		<left>0</left>
-		<top>115</top>
+		<top>10</top>
 		<width>400</width>
 		<height>1080</height>
 		<onleft>9050</onleft>
@@ -157,6 +147,14 @@
 			<usealttexture>Container.SortDirection(Ascending)</usealttexture>
 			<visible>false</visible>
 		</control>
+		<control type="button" id="1801">
+			<description>Sort direction</description>
+			<include>ButtonCommonValues</include>
+			<label>31156</label>
+			<label2>$VAR[SortDirection]</label2>
+			<onclick>SendClick(4)</onclick>
+			<enable>Control.IsEnabled(4)</enable>
+		</control>
 		<control type="button" id="1800">
 			<description>Sort by button</description>
 			<include>ButtonCommonValues</include>
@@ -164,14 +162,6 @@
 			<label2>$INFO[Container.SortMethod]</label2>
 			<onclick>Container.NextSortMethod</onclick>
 			<enable>Control.IsEnabled(3)</enable>
-		</control>
-		<control type="button" id="1801">
-			<description>Sort direction</description>
-			<include>ButtonCommonValues</include>
-			<label>31156</label>
-			<label2>$VAR[SortDirection]</label2>
-			<onclick>Container.SortDirection</onclick>
-			<enable>Control.IsEnabled(4)</enable>
 		</control>
 		<control type="button" id="1804">
 			<label>$LOCALIZE[31152]</label>
@@ -222,6 +212,13 @@
 			<onclick>Skin.ToggleSetting(Enable.SlimList)</onclick>
 			<selected>Skin.HasSetting(Enable.SlimList)</selected>
 			<visible>Control.IsVisible(50) + ![Window.IsActive(eventlog) | Window.IsActive(tvchannels) | Window.IsActive(tvrecordings) | Window.IsActive(tvtimers) | Window.IsActive(tvsearch) | Window.IsActive(radiochannels) | Window.IsActive(radiorecordings) | Window.IsActive(radiotimers) | Window.IsActive(radiosearch)]</visible>
+		</control>
+		<control type="button" id="1811">
+			<label>31926</label>
+			<include>ButtonCommonValues</include>
+			<onclick condition="Player.HasVideo">ActivateWindow(fullscreenvideo)</onclick>
+			<onclick condition="Player.HasAudio">ActivateWindow(visualisation)</onclick>
+			<visible>Player.HasMedia</visible>
 		</control>
 	</include>
 	<include name="PVRMediaMenu">
@@ -336,7 +333,7 @@
 			<left>-440</left>
 			<include>SideBladeLeft</include>
 			<control type="label">
-				<top>115</top>
+				<top>10</top>
 				<height>60</height>
 				<textoffsetx>15</textoffsetx>
 				<font>font13_title</font>
@@ -345,7 +342,7 @@
 			</control>
 			<control type="list" id="9050">
 				<left>0</left>
-				<top>175</top>
+				<top>65</top>
 				<width>400</width>
 				<height>1080</height>
 				<onleft>9050</onleft>
@@ -510,6 +507,7 @@
 					<font>-</font>
 					<onclick>PlayerControl(Rewind)</onclick>
 					<colordiffuse>$VAR[ColorTextVar]</colordiffuse>
+					<enable>Player.SeekEnabled</enable>
 				</control>
 				<control type="togglebutton" id="6053">
 					<texturefocus>osd/buttons/OSDPause.png</texturefocus>
@@ -524,6 +522,7 @@
 					<usealttexture>Player.Paused | Player.Forwarding | Player.Rewinding</usealttexture>
 					<onclick>PlayerControl(Play)</onclick>
 					<colordiffuse>$VAR[ColorTextVar]</colordiffuse>
+					<enable>Player.PauseEnabled</enable>
 				</control>
 				<control type="button" id="6054">
 					<texturefocus>osd/buttons/OSDStop.png</texturefocus>
@@ -544,6 +543,7 @@
 					<font>-</font>
 					<onclick>PlayerControl(Forward)</onclick>
 					<colordiffuse>$VAR[ColorTextVar]</colordiffuse>
+					<enable>Player.SeekEnabled</enable>
 				</control>
 				<control type="button" id="6056">
 					<texturefocus>osd/buttons/OSDNextTrack.png</texturefocus>
@@ -800,14 +800,14 @@
 	<!-- Extras -->
 	<include name="PlayListStatsList">
 		<control type="list" id="43260">
-			<visible>StringCompare(Container(9000).ListItem.Property(InfoLine),9) | StringCompare(Container(9000).ListItem.Property(InfoLine),10) | StringCompare(Container(9000).ListItem.Property(InfoLine),11)</visible>
+			<visible>StringCompare(Container(9000).ListItem.Property(InfoLine),$LOCALIZE[31130]) | StringCompare(Container(9000).ListItem.Property(InfoLine),$LOCALIZE[31131]) | StringCompare(Container(9000).ListItem.Property(InfoLine),$LOCALIZE[31132])</visible>
 			<posx>0</posx>
 			<posy>0</posy>
 			<width>1</width>
 			<height>1</height>
 			<focusedlayout/>
 			<itemlayout/>
-			<content>plugin://service.library.data.provider?type=playliststats&amp;id=$INFO[Container(9000).ListItem.Property(Path)]</content>
+			<content>plugin://service.library.data.provider?type=playliststats&amp;id=$INFO[Container(9000).ListItem.Property(list)]</content>
 		</control>
 	</include>
 	<include name="DialogBackgroundCommons">
@@ -832,6 +832,70 @@
 			<textcolor>$VAR[ColorTextVar]</textcolor>
 			<scroll>true</scroll>
 			<scrollspeed>20</scrollspeed>
+		</control>
+	</include>
+	<include name="ExtendedInfoAutoComplete">
+		<control type="group">
+			<visible>!IsEmpty(Control.GetLabel(312).index(1)) + !Window.IsVisible(1130) + !Control.IsVisible(313)</visible>
+			<top>563</top>
+			<control type="group">
+				<animation effect="fade" time="300" tween="cubic" start="0" end="100" reversible="false" condition="!IsEmpty(Container(5000).ListItem.Label)">Conditional</animation>
+				<animation effect="fade" time="150" tween="cubic" start="100" end="0" reversible="false" condition="IsEmpty(Container(5000).ListItem.Label)">Conditional</animation>
+				<include name="DialogBackgroundCommons">
+					<param name="DialogBackgroundWidth" value="1320" />
+					<param name="DialogBackgroundHeight" value="220" />
+				</include>
+			</control>
+			<control type="panel" id="5000">
+				<left>35</left>
+				<top>30</top>
+				<width>1280</width>
+				<height>160</height>
+				<onleft>5000</onleft>
+				<onright>5000</onright>
+				<onup>4000</onup>
+				<ondown>4000</ondown>
+				<onback>noop</onback>
+				<orientation>vertical</orientation>
+				<scrolltime tween="quadratic" easing="out">200</scrolltime>
+				<itemlayout height="80" width="315">
+					<control type="image">
+						<top>5</top>
+						<width>305</width>
+						<height>70</height>
+						<texture colordiffuse="shadow">topbar.png</texture>
+					</control>
+					<control type="label">
+						<top>5</top>
+						<width>305</width>
+						<height>70</height>
+						<align>center</align>
+						<textcolor>grey</textcolor>
+						<textoffsetx>5</textoffsetx>
+						<font>font14</font>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout height="80" width="315">
+					<control type="image">
+						<top>5</top>
+						<width>305</width>
+						<height>70</height>
+						<texture colordiffuse="$VAR[ColorHighlightVar]">listselect_fo.png</texture>
+						<visible>Control.HasFocus(5000)</visible>
+					</control>
+					<control type="label">
+						<top>5</top>
+						<width>305</width>
+						<height>70</height>
+						<align>center</align>
+						<textoffsetx>5</textoffsetx>
+						<font>font14</font>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</focusedlayout>
+				<content>plugin://script.extendedinfo?info=autocomplete&amp;&amp;id=$INFO[Control.GetLabel(312).index(1)]&amp;&amp;limit=8</content>
+			</control>
 		</control>
 	</include>
 </includes>
