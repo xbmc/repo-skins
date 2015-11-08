@@ -2,7 +2,6 @@
 <window>
 	<defaultcontrol always="true">6000</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
-	<include>screen-fade</include>
 	<controls>
 		<control type="group"><!-- Weather screen background image -->
 			<control type="image"><!-- Solid background -->
@@ -69,12 +68,13 @@
 			</control>
 		</control>
 
-		<control type="button" id="6000"><!-- Fake button to steal focus -->
+		<control type="button" id="6000"><!-- Fake button to steal focus, don't show if Open weather map screen is showing -->
 			<onleft>9000</onleft>
-			<onright>9000</onright>
+			<onright>noop</onright>
 			<texturefocus>-</texturefocus>
 			<texturenofocus>-</texturenofocus>
 			<onclick>noop</onclick>
+			<visible>![StringCompare(Skin.String(weather-view),$LOCALIZE[33035]) + SubString(Weather.plugin,weather.openweathermap.extended)]</visible>
 		</control>
 
 		<control type="label"><!-- Weather heading label -->
@@ -122,22 +122,24 @@
 				<top>50</top>
 				<width>636</width>
 				<height>37</height>
-				<font>font18</font>
+				<font>font13</font>
 				<include condition="Skin.HasSetting(text-autoscroll)">scrolltext</include>
 				<label>$INFO[Window(Weather).Property(Location)]</label>
 			</control>
 		</control>
 
-		<include file="Includes_Weather.xml">weather</include>
+		<include file="Includes_Weather.xml">standardweather</include>
+		<include condition="SubString(Weather.plugin,weather.ozweather)" file="Includes_Weather.xml">ozweather</include>
+		<include condition="SubString(Weather.plugin,weather.openweathermap.extended)" file="Includes_Weather.xml">openweatherextended</include>
 
 		<control type="label"><!-- Update label -->
-			<left>624</left>
+			<left>900</left>
 			<top>685</top>
-			<width>636</width>
+			<width>370</width>
 			<height>25</height>
-			<font>font11</font>
+			<font>font10</font>
 			<align>right</align>
-			<label>$LOCALIZE[31531] - $INFO[Window(Weather).Property(Updated)]</label>
+			<label>$LOCALIZE[31531] $INFO[Window(Weather).Property(Updated)]</label>
 		</control>
 
 		<control type="group"><!-- Screen-settings Menu -->
@@ -147,14 +149,14 @@
 			<include>fadebackground</include>
 			<control type="image"><!-- Button background -->
 				<left>390</left>
-				<top>196</top>
+				<top>120</top>
 				<width>496</width>
-				<height>328</height>
+				<height>414</height>
 				<texture border="8">button-menu-background.png</texture>
 			</control>
 			<control type="label"><!-- Dialog heading -->
 				<left>400</left>
-				<top>206</top>
+				<top>130</top>
 				<width>476</width>
 				<height>34</height>
 				<font>font12</font>
@@ -163,29 +165,36 @@
 			</control>
 			<control type="button"><!-- Touch Close button -->
 				<left>864</left>
-				<top>188</top>
+				<top>112</top>
 				<width>32</width>
 				<height>32</height>
 				<texturefocus>touch-close.png</texturefocus>
 				<texturenofocus>touch-close.png</texturenofocus>
 				<onclick condition="!StringCompare(Window(Home).Property(ShowScreenSettings),show)">SetProperty(ShowScreenSettings,show,Home)</onclick>
 				<onclick condition="StringCompare(Window(Home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,Home)</onclick>
-				<visible>system.getbool(input.enablemouse)</visible>
+				<visible>System.GetBool(input.enablemouse)</visible>
 			</control>
 			<control type="image">
 				<left>400</left>
-				<top>242</top>
+				<top>166</top>
 				<width>476</width>
 				<height>4</height>
 				<texture>separator.png</texture>
 			</control>
 			<control type="grouplist" id="9000">
 				<left>400</left>
-				<top>248</top>
+				<top>172</top>
 				<width>476</width>
-				<height>250</height>
+				<height>350</height>
+				<itemgap>0</itemgap>
 				<onright>6000</onright>
 				<onleft>6000</onleft>
+				<control type="button" id="200"><!-- View (types of forecasts) -->
+					<width>476</width>
+					<height>50</height>
+					<label>$LOCALIZE[31562] $INFO[Skin.String(weather-view)]</label>
+					<onclick>$VAR[WeatherView]</onclick>
+				</control>
 				<control type="spincontrolex" id="3"><!-- Change location button -->
 					<width>476</width>
 					<height>50</height>
@@ -194,26 +203,38 @@
 				<control type="button" id="2"><!-- Refresh button -->
 					<width>476</width>
 					<height>50</height>
-					<label>$LOCALIZE[103]</label>
-					<align>center</align>
 				</control>
-				<control type="togglebutton" id="999"><!-- Radar/forecast button -->
+				<control type="button" id="208"><!-- Custom Weather Backgrounds Button -->
 					<width>476</width>
 					<height>50</height>
-					<font>font11</font>
-					<align>center</align>
-					<label>$LOCALIZE[33035]</label>
-					<altlabel>$LOCALIZE[31528]</altlabel>
-					<onclick>Skin.ToggleSetting(showradar)</onclick>
-					<usealttexture>Skin.HasSetting(showradar)</usealttexture>
-					<visible>SubString(Weather.plugin,weather.ozweather)</visible>
+					<label>$LOCALIZE[31866]</label>
+					<onclick>SetFocus(6000)</onclick>
+					<onclick>SetProperty(SelectDialogType,weatherbackgrounds,Home)</onclick>
+					<onclick>ActivateWindow(1154)</onclick>
+				</control>
+				<control type="button" id="209"><!-- Custom Weather Icons Button -->
+					<width>476</width>
+					<height>50</height>
+					<label>$LOCALIZE[31873]</label>
+					<onclick>SetFocus(6000)</onclick>
+					<onclick>SetProperty(SelectDialogType,weathericons,Home)</onclick>
+					<onclick>ActivateWindow(1154)</onclick>
+				</control>
+				<control type="radiobutton" id="210"><!-- Alerts  -->
+					<width>476</width>
+					<height>50</height>
+					<label>$LOCALIZE[33050]</label>
+					<onclick>Skin.ToggleSetting(weather-alerts)</onclick>
+					<selected>Skin.HasSetting(weather-alerts)</selected>
+					<radioposx>440</radioposx>
+					<enable>SubString(Weather.plugin,weather.openweathermap.extended)</enable>
 				</control>
 				<control type="button" id="4"><!-- Settings button -->
 					<width>476</width>
 					<height>50</height>
-					<label>$LOCALIZE[5]</label>
-					<align>center</align>
-					<onclick>ActivateWindow(MyWeatherSettings)</onclick>
+					<label>$LOCALIZE[10014]</label>
+					<onclick>ActivateWindow(weathersettings)</onclick>
+					<onclick>Skin.SetString(weather-view,$LOCALIZE[10508])</onclick>
 				</control>
 			</control>
 		</control>

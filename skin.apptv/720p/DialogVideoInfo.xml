@@ -3,8 +3,6 @@
 	<defaultcontrol always="true">999</defaultcontrol>
 	<allowoverlay>no</allowoverlay>
 	<onload condition="System.HasAddon(script.videoextras)">RunScript(script.videoextras,check,"$INFO[ListItem.FilenameAndPath]")</onload>
-	<onload condition="System.HasAddon(script.duration)">RunScript(script.duration,duration=$INFO[ListItem.Duration])</onload>
-	<include>screen-fade</include>
 	<controls>
 		<control type="image"><!-- Use a black background until background image has finished loading -->
 			<include>fullscreenimage</include>
@@ -120,24 +118,24 @@
 				<pagecontrol>1023</pagecontrol>
 				<visible>IsEmpty(ListItem.Plot)</visible>
 			</control>
+			<control type="scrollbar" id="1023"><!-- Plot Scrollbar -->
+				<left>1252</left>
+				<top>112</top>
+				<width>16</width>
+				<height>116</height>
+				<onup>1023</onup>
+				<onright>1023</onright>
+				<onleft>999</onleft>
+				<ondown>999</ondown>
+				<animation condition="!Control.HasFocus(1023) + !StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31875])" effect="fade" start="100" end="20" time="200" reversible="true">Conditional</animation>
+				<visible>StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31875]) | StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31876])</visible>
+			</control>
 			<control type="image">
 				<left>340</left>
 				<top>232</top>
 				<width>900</width>
 				<height>4</height>
 				<texture>separator.png</texture>
-			</control>
-			<control type="scrollbar" id="1023"><!-- Plot Scrollbar -->
-				<left>1252</left>
-				<top>112</top>
-				<width>16</width>
-				<height>118</height>
-				<onup>noop</onup>
-				<onright>noop</onright>
-				<onleft>999</onleft>
-				<ondown>999</ondown>
-				<animation condition="!Control.HasFocus(1023) + !StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31875])" effect="fade" start="100" end="0" time="200" reversible="true">Conditional</animation>
-				<visible>!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877])</visible>
 			</control>
 			<control type="group">
 				<control type="image"><!-- Video cover-->
@@ -163,9 +161,18 @@
 					<top>80</top>
 					<width>230</width>
 					<height>230</height>
-					<aspectratio scalediffuse="false">keep</aspectratio>
+					<aspectratio scalediffuse="true">keep</aspectratio>
 					<texture background="true" fallback="DefaultTvshows.png" diffuse="mask-rect.png">$VAR[IconPoster]</texture>
-					<visible>Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</visible>
+					<visible>Container.Content(seasons) | Container.Content(episodes)</visible>
+				</control>
+				<control type="image">
+					<left>55</left>
+					<top>80</top>
+					<width>230</width>
+					<height>230</height>
+					<aspectratio scalediffuse="true">keep</aspectratio>
+					<texture background="true" fallback="DefaultMusicVideos.png" diffuse="mask-rect.png">$VAR[IconPoster]</texture>
+					<visible>Container.Content(musicvideos)</visible>
 				</control>
 			</control>
 			<control type="label"><!-- Details heading -->
@@ -204,7 +211,7 @@
 				<height>20</height>
 				<font>font10</font>
 				<label>$LOCALIZE[31133] $VAR[VideoDuration]</label>
-				<visible>!IsEmpty(listitem.Duration)</visible>
+				<visible>!IsEmpty(Listitem.Duration)</visible>
 			</control>
 			<control type="label"><!-- Premiered -->
 				<left>340</left>
@@ -317,10 +324,11 @@
 			<control type="image"><!-- Star Rating -->
 				<left>340</left>
 				<top>370</top>
-				<width>143</width>
+				<width>144</width>
 				<height>18</height>
 				<texture>$VAR[MediaRating]</texture>
 				<colordiffuse>StarDiffuse</colordiffuse>
+				<aspectratio>keep</aspectratio>
 				<visible>!IsEmpty(ListItem.StarRating)</visible>
 			</control>
 			<control type="group">
@@ -436,17 +444,16 @@
 				<alttexturefocus>button-info-play-focus.png</alttexturefocus>
 				<alttexturenofocus>button-info-play.png</alttexturenofocus>
 				<usealttexture>Container.Content(tvshows)</usealttexture>
-				<visible>[!System.HasAddon(script.cinema.experience) + Container.Content(movies)] | [Container.Content(episodes) | Container.Content(TVShows) | Container.Content(musicvideos)]</visible>
+				<visible>!System.HasAddon(script.cinema.experience) + [Container.Content(movies) | Container.Content(episodes) | Container.Content(TVShows) | Container.Content(musicvideos)]</visible>
 			</control>
 			<control type="button" id="18"><!-- Home cinema button -->
 				<include>videoinfo-options-common</include>
 				<label>$LOCALIZE[31692]</label>
 				<texturefocus>button-info-play-focus.png</texturefocus>
 				<texturenofocus>button-info-play.png</texturenofocus>
-				<onclick>Playlist.Clear</onclick>
 				<onclick>Dialog.Close(MovieInformation)</onclick>
-				<onclick>RunScript(script.cinema.experience)</onclick>
-				<visible>System.HasAddon(script.cinema.experience) + Container.Content(movies)</visible>
+				<onclick>RunScript(script.cinemavision,experience)</onclick>
+				<visible>System.HasAddon(script.cinemavision) + [Container.Content(movies) | Container.Content(episodes) | Container.Content(TVShows) | Container.Content(musicvideos)]</visible>
 			</control>
 			<control type="button" id="11"><!-- Trailer button -->
 				<include>videoinfo-options-common</include>
@@ -475,6 +482,7 @@
 					<onright>6</onright>
 					<ondown condition="Control.IsVisible(50)">50</ondown>
 					<ondown condition="Control.IsVisible(950)">950</ondown>
+					<onup>1023</onup>
 					<textcolor>HideControl</textcolor>
 					<focusedcolor>HideControl</focusedcolor>
 					<colordiffuse>HideControl</colordiffuse>
@@ -567,6 +575,7 @@
 				<label>$LOCALIZE[31693]</label>
 				<texturefocus>button-info-more-focus.png</texturefocus>
 				<texturenofocus>button-info-more.png</texturenofocus>
+				<onclick>SetProperty(SelectDialogType,videoinfomore,Home)</onclick>
 				<onclick>ActivateWindow(1154)</onclick>
 			</control>
 		</control>
@@ -578,17 +587,17 @@
 			<label>$LOCALIZE[206]</label>
 			<font>font11</font>
 			<align>right</align>
-			<visible>substring(Control.GetLabel(5),$LOCALIZE[207])</visible>
+			<visible>SubString(Control.GetLabel(5),$LOCALIZE[207])</visible>
 		</control>
 		<control type="label">
 			<left>20</left>
 			<top>488</top>
 			<height>20</height>
 			<width>300</width>
-			<label>$LOCALIZE[31955]</label>
+			<label>$LOCALIZE[31691]</label>
 			<font>font10</font>
 			<align>right</align>
-			<visible>!substring(Control.GetLabel(5),$LOCALIZE[207]) + ![IsEmpty(Container(950).ListItem.Label)]</visible><!-- Not showing Cast and recommended video list has something to show -->
+			<visible>!SubString(Control.GetLabel(5),$LOCALIZE[207]) + ![IsEmpty(Container(950).ListItem.Label)]</visible><!-- Not showing Cast and recommended video list has something to show -->
 		</control>
 		<control type="image">
 			<left>340</left>
@@ -691,78 +700,78 @@
 			</control>
 		</control>
 		<control type="list" id="950">
-			<visible>!substring(Control.GetLabel(5),$LOCALIZE[207])</visible>
+			<visible>!SubString(Control.GetLabel(5),$LOCALIZE[207])</visible>
 			<left>10</left>
-			<top>510</top>
+			<top>508</top>
 			<width>1260</width>
-			<height>202</height>
+			<height>208</height>
 			<onleft>noop</onleft>
 			<onright>noop</onright>
 			<onup>999</onup>
 			<viewtype label="31028">list</viewtype>
 			<orientation>horizontal</orientation>
-			<itemlayout height="202" width="210">
+			<itemlayout height="208" width="210">
 				<control type="image">
-					<left>51</left>
+					<left>48</left>
 					<top>8</top>
-					<width>108</width>
-					<height>142</height>
+					<width>114</width>
+					<height>150</height>
 					<aspectratio scalediffuse="true">keep</aspectratio>
 					<texture diffuse="mask-rect.png" fallback="DefaultVideo.png" background="true">$INFO[ListItem.Thumb]</texture>
 					<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
 				</control>
 				<control type="image">
-					<left>51</left>
+					<left>48</left>
 					<top>8</top>
-					<width>108</width>
-					<height>142</height>
+					<width>114</width>
+					<height>150</height>
 					<aspectratio scalediffuse="true">keep</aspectratio>
-					<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Art(tvshow.poster)]</texture>
+					<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Thumb]</texture>
 					<visible>Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
 				</control>
 			</itemlayout>
-			<focusedlayout height="202" width="210">
+			<focusedlayout height="208" width="210">
 				<control type="group">
 					<visible>!Control.HasFocus(950)</visible>
 					<control type="image">
-						<left>51</left>
+						<left>48</left>
 						<top>8</top>
-						<width>108</width>
-						<height>142</height>
+						<width>114</width>
+						<height>150</height>
 						<aspectratio scalediffuse="true">keep</aspectratio>
 						<texture diffuse="mask-rect.png" fallback="DefaultVideo.png" background="true">$INFO[ListItem.Thumb]</texture>
 						<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
 					</control>
 					<control type="image">
-						<left>51</left>
+						<left>48</left>
 						<top>8</top>
-						<width>108</width>
-						<height>142</height>
+						<width>114</width>
+						<height>150</height>
 						<aspectratio scalediffuse="true">keep</aspectratio>
-						<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Art(tvshow.poster)]</texture>
+						<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Thumb]</texture>
 						<visible>Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
 					</control>
 				</control>
 				<control type="group">
 					<visible>Control.HasFocus(950)</visible>
 					<control type="image">
-						<left>44</left>
+						<left>40</left>
 						<top>0</top>
-						<width>122</width>
-						<height>158</height>
+						<width>130</width>
+						<height>166</height>
 						<aspectratio scalediffuse="true">keep</aspectratio>
 						<texture diffuse="mask-rect.png" fallback="DefaultVideo.png" background="true">$INFO[ListItem.Thumb]</texture>
-						<bordertexture  border="8">mask-hilite2.png</bordertexture>
+						<bordertexture border="8">mask-hilite2.png</bordertexture>
 						<bordersize>8</bordersize>
 						<visible>![Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
 					</control>
 					<control type="image">
-						<left>44</left>
+						<left>40</left>
 						<top>0</top>
-						<width>122</width>
-						<height>158</height>
+						<width>130</width>
+						<height>166</height>
 						<aspectratio scalediffuse="true">keep</aspectratio>
-						<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Art(tvshow.poster)]</texture>
+						<texture diffuse="mask-rect.png" fallback="DefaultTVShows.png" background="true">$INFO[ListItem.Thumb]</texture>
 						<bordertexture border="8">mask-hilite2.png</bordertexture>
 						<bordersize>8</bordersize>
 						<visible>Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
@@ -770,7 +779,7 @@
 				</control>
 				<control type="textbox">
 					<left>0</left>
-					<top>154</top>
+					<top>160</top>
 					<width>210</width>
 					<height>48</height>
 					<label>$INFO[ListItem.Label]</label>
@@ -780,13 +789,12 @@
 					<visible>Control.HasFocus(950)</visible>
 				</control>
 			</focusedlayout>
-			<content target="video">$VAR[VideoInfoIcons]</content>
+			<content target="video" limit="12">$VAR[VideoInfoIcons]</content>
 		</control>
 		<control type="group"><!-- Markers for control area items -->
-			<visible>Control.HasFocus(950)</visible>
 			<control type="image">
 				<left>20</left>
-				<top>584</top>
+				<top>582</top>
 				<height>16</height>
 				<width>16</width>
 				<texture>scroll-left.png</texture>
@@ -794,7 +802,7 @@
 			</control>
 			<control type="image">
 				<left>1244</left>
-				<top>584</top>
+				<top>582</top>
 				<height>16</height>
 				<width>16</width>
 				<texture>scroll-right.png</texture>
