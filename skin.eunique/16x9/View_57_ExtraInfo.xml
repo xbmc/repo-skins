@@ -4,13 +4,12 @@
 	<include name="View_57_ExtraInfo">
 		<description>List View (id=57)</description>
 		<control type="group">
-			<include>Animation.Common</include>
+			<include condition="!Skin.HasSetting(low.power)">Animation.Common</include>
+			<include condition="Skin.HasSetting(low.power)">Animation.Common.Lowpower</include>
+			<include condition="!Skin.HasSetting(low.power)">Animation.Common.Overlay</include>
+			<include condition="Skin.HasSetting(low.power)">Animation.Common.Overlay.Lowpower</include>
 			<visible>Control.IsVisible(57)</visible>
 			<visible>!Window.IsVisible(DialogVideoInfo.xml) + !Window.IsVisible(DialogAlbumInfo.xml)</visible>
-			<animation type="Conditional" reversible="true" condition="![Skin.HasSetting(osd.hidespoilers) + Container.Content(episodes) + [stringcompare(ListItem.Overlay,OverlayUnWatched.png) | ListItem.IsResumable]] + [Container.Content(musicvideos) | Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(sets) | Container.Content(episodes)] + !System.IdleTime(26) + System.IdleTime(5) + Skin.HasSetting(furniture.overlayinfo) + ![ControlGroup(9000).HasFocus() | Window.IsVisible(DialogContextMenu.xml)]">
-				<effect type="fade" start="100" end="00" time="200" tween="quadratic" easing="out" />
-				<effect type="zoom" end="1000,7" time="200" center="auto" tween="quadratic" easing="out" />
-			</animation>
 			<control type="group">
 				<control type="image">
 					<height>740</height>
@@ -21,14 +20,27 @@
 					<aspectratio align="left" aligny="center" scalediffuse="false">scale</aspectratio>
 					<texture background="true">$VAR[LandscapeImage]</texture>
 				</control>
+				<control type="progress">
+					<left>10</left>
+					<top>814.7272727272727</top>
+					<width>960</width>
+					<height>8</height>
+					<info>ListItem.PercentPlayed</info>
+					<overlaytexture>-</overlaytexture>
+					<texturebg colordiffuse="$VAR[BackingColourHighlight]">osd/progress-bg.png</texturebg>
+					<lefttexture colordiffuse="$VAR[UnwatchedColourHighlight]">osd/progress-end.png</lefttexture>
+					<midtexture colordiffuse="$VAR[UnwatchedColourHighlight]">osd/progress-end.png</midtexture>
+					<righttexture colordiffuse="$VAR[EmbyMenuTextColourHighlight]">osd/progress-end.png</righttexture>
+					<visible>ListItem.IsResumable</visible>
+				</control>
 				<control type="image">
 					<height>740</height>
 					<top>TopPad</top>
 					<left>970</left>
 					<width>365</width>
-					<fadetime>1000</fadetime>
+					<fadetime>200</fadetime>
 					<aspectratio align="right" aligny="center" scalediffuse="false">scale</aspectratio>
-					<texture background="true" diffuse="diffuse/extraposter-ref-blur.png">$INFO[Window(home).Property(VideoInfoExtra.ImageFilter)]</texture>
+					<texture background="true" diffuse="diffuse/extraposter-ref-blur.png">$VAR[ColorboxPowerModeImage]</texture>
 				</control>
 				<control type="list" id="57">
 					<visible>Container.Content(musicvideos) | Container.Content(artists) | Container.Content(movies) | Container.Content(tvshows) | Container.Content(episodes) | Container.Content(actors) | Container.Content(sets) | Container.Content(seasons)</visible>
@@ -36,9 +48,9 @@
 					<height>740</height>
 					<left>970</left>
 					<width>940</width>
-					<onleft condition="!Skin.HasSetting(global.kioskmode)">9000</onleft>
-					<onright>508923</onright>
-					<onright>60</onright>
+					<onleft>508923</onleft>
+					<onright condition="Control.IsVisible(60)">60</onright>
+					<onright condition="!Control.IsVisible(60) + !Skin.HasSetting(global.kioskmode)">9000</onright>
 					<onup>57</onup>
 					<ondown>57</ondown>
 					<focusposition>3</focusposition>
@@ -47,17 +59,23 @@
 					<viewtype label="31147">list</viewtype>
 					<scrolltime tween="quadratic">400</scrolltime>
 					<itemlayout width="940" height="67.27272727272727">
-						<include>50itemlayout</include>
+						<control type="group">
+							<animation effect="fade" end="65" start="100" time="200" condition="Control.HasFocus(508923)">Conditional</animation>
+							<include>50itemlayout</include>
+						</control>
 					</itemlayout>
 					<focusedlayout width="940" height="134.5454545454545" condition="[Skin.HasSetting(movies.57list.showplot) + Container.Content(movies)] | [Skin.HasSetting(tvshows.57list.showplot) + Container.Content(tvshows)] | [Skin.HasSetting(seasons.57list.showplot) + Container.Content(seasons)] | [Skin.HasSetting(episodes.57list.showplot) + Container.Content(episodes)] | [Skin.HasSetting(artists.57list.showplot) + Container.Content(artists)] | [Skin.HasSetting(albums.57list.showplot) + Container.Content(albums)] | [Skin.HasSetting(songs.57list.showplot) + Container.Content(songs)] | [Skin.HasSetting(general.57list.showplot) + !Container.Content(songs) + !Container.Content(albums) + !Container.Content(artists) + !Container.Content(episodes) + !Container.Content(seasons) + !Container.Content(tvshows) + !Container.Content(movies)]">
 						<control type="button">
 							<texturefocus>-</texturefocus>
 							<texturenofocus>-</texturenofocus>
+
 							<onfocus condition="Container.Content(movies)">ClearProperty(TVShowID,home)</onfocus>
 							<onfocus condition="Container.Content(tvshows)">SetProperty(TVShowID,$INFO[ListItem.DBID],home)</onfocus>
-							<onfocus condition="!Container.Scrolling">RunScript(script.toolbox,info=blur,id='"$VAR[LandscapeImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfoExtra)</onfocus>
+							<onfocus>SetProperty(cfa_ignore_set,True,home)</onfocus>
+							<onfocus condition="!Skin.HasSetting(low.power)">RunScript(script.colorbox,info=bluronly,id='"$VAR[LandscapeImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfoExtra)</onfocus>
 						</control>
 						<control type="group">
+							<animation effect="fade" end="65" start="100" time="200" condition="Control.HasFocus(508923)">Conditional</animation>
 							<include>50focuslayout</include>
 							<control type="textbox">
 								<height>68</height>
@@ -75,11 +93,14 @@
 						<control type="button">
 							<texturefocus>-</texturefocus>
 							<texturenofocus>-</texturenofocus>
+
 							<onfocus condition="Container.Content(movies)">ClearProperty(TVShowID,home)</onfocus>
 							<onfocus condition="Container.Content(tvshows)">SetProperty(TVShowID,$INFO[ListItem.DBID],home)</onfocus>
-							<onfocus condition="!Container.Scrolling">RunScript(script.toolbox,info=blur,id='"$VAR[LandscapeImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfoExtra)</onfocus>
+							<onfocus>SetProperty(cfa_ignore_set,True,home)</onfocus>
+							<onfocus condition="!Skin.HasSetting(low.power)">RunScript(script.colorbox,info=bluronly,id='"$VAR[LandscapeImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfoExtra)</onfocus>
 						</control>
 						<control type="group">
+							<animation effect="fade" end="65" start="100" time="200" condition="Control.HasFocus(508923)">Conditional</animation>
 							<include>50focuslayout</include>
 						</control>
 					</focusedlayout>
@@ -148,8 +169,8 @@
 					<height>100</height>
 					<width>125%</width>
 					<font>SmallBold</font>
-					<textcolor>Dark1</textcolor>
-					<selectedcolor>Dark1</selectedcolor>
+					<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
+					<selectedcolor>$VAR[EmbyMenuTextColourHighlight]</selectedcolor>
 					<label>$VAR[LabelDirector]</label>
 				</control>
 				<control type="label">
@@ -158,13 +179,13 @@
 					<height>64</height>
 					<align>right</align>
 					<aligny>center</aligny>
-					<font>SmallBold</font>
+					<font>Small</font>
 					<width>950</width>
-					<textcolor>Dark1</textcolor>
-					<selectedcolor>Dark1</selectedcolor>
+					<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
+					<selectedcolor>$VAR[EmbyMenuTextColourHighlight]</selectedcolor>
 					<label>$VAR[LabelGenre]</label>
 				</control>
-				</control>
+			</control>
 		</control>
 	</include>
 </includes>

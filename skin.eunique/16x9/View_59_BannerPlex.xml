@@ -3,17 +3,16 @@
 <includes>
 	<include name="View_59_BannerPlex">
 		<control type="group">
-			<include>Animation.Common</include>
+			<include condition="!Skin.HasSetting(low.power)">Animation.Common</include>
+			<include condition="Skin.HasSetting(low.power)">Animation.Common.Lowpower</include>
+			<include condition="!Skin.HasSetting(low.power)">Animation.Common.Overlay</include>
+			<include condition="Skin.HasSetting(low.power)">Animation.Common.Overlay.Lowpower</include>
 			<visible>Control.IsVisible(59)</visible>
 			<visible>!Window.IsVisible(DialogVideoInfo.xml) + !Window.IsVisible(DialogAlbumInfo.xml)</visible>
 			<animation effect="slide" end="-159,0" center="auto" time="200" condition="Container.Column(2) + !Control.HasFocus(60)">Conditional</animation>
 			<animation effect="slide" end="159,0" center="auto" time="200" condition="Container.Column(0) + !Control.HasFocus(60)">Conditional</animation>
 			<animation effect="slide" end="-20,0" center="auto" time="200" condition="Container.Column(2) + Control.HasFocus(60)">Conditional</animation>
 			<animation effect="slide" end="20,0" center="auto" time="200" condition="Container.Column(0) + Control.HasFocus(60)">Conditional</animation>
-			<animation type="Conditional" reversible="true" condition="![Skin.HasSetting(osd.hidespoilers) + Container.Content(episodes) + [stringcompare(ListItem.Overlay,OverlayUnWatched.png) | ListItem.IsResumable]] + [Container.Content(musicvideos) | Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(sets) | Container.Content(episodes)] + !System.IdleTime(26) + System.IdleTime(5) + Skin.HasSetting(furniture.overlayinfo) + ![ControlGroup(9000).HasFocus() | Window.IsVisible(DialogContextMenu.xml)]">
-				<effect type="fade" start="100" end="00" time="200" tween="quadratic" easing="out" />
-				<effect type="zoom" end="1000,7" time="200" center="auto" tween="quadratic" easing="out" />
-			</animation>
 			<control type="panel" id="59">
 				<visible>Container.Content(movies) | Container.Content(tvshows)</visible>
 				<top>TopPad</top>
@@ -39,21 +38,22 @@
 					<control type="button">
 						<texturefocus>-</texturefocus>
 						<texturenofocus>-</texturenofocus>
+						<onfocus>ClearProperty(cfa_ignore_set,home)</onfocus>
 						<onfocus condition="Container.Content(movies)">ClearProperty(TVShowID,home)</onfocus>
 						<onfocus condition="Container.Content(tvshows)">SetProperty(TVShowID,$INFO[ListItem.DBID],home)</onfocus>
-						<onfocus condition="!Container.Scrolling">RunScript(script.toolbox,info=blur,id='"$VAR[PosterImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfo)</onfocus>
+						<onfocus condition="!Skin.HasSetting(low.power)">RunScript(script.colorbox,info=blur,id='"$VAR[PosterImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=VideoInfo)</onfocus>
 					</control>
 					<control type="group">
 						<control type="image">
 							<width>50%</width>
 							<aspectratio scalediffuse="false">scale</aspectratio>
-							<texture background="true" colordiffuse="$VAR[BorderHighlight]">$VAR[FocusedBorderImage]</texture>
+							<texture background="true" colordiffuse="$VAR[BorderHighlightColour]">$VAR[FocusedBorderImage]</texture>
 						</control>
 						<control type="image">
 							<left>316.665</left>
 							<width>50%</width>
 							<aspectratio scalediffuse="false">scale</aspectratio>
-							<texture background="true" colordiffuse="$VAR[BorderHighlight]" flipx="true">$VAR[FocusedBorderImage]</texture>
+							<texture background="true" colordiffuse="$VAR[BorderHighlightColour]" flipx="true">$VAR[FocusedBorderImage]</texture>
 						</control>
 						<animation type="Focus" reversible="false">
 							<effect type="zoom" start="160,164" end="158,160" time="200" center="auto" tween="quadratic" easing="out"/>
@@ -94,7 +94,7 @@
 			<align>center</align>
 			<font>symbolbig</font>
 			<label>$VAR[SwapDefaultImage]</label>
-			<textcolor>white</textcolor>
+			<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
 		</control>
 		<control type="label">
 			<left>130</left>
@@ -104,7 +104,7 @@
 			<align>right</align>
 			<aligny>center</aligny>
 			<font>Tiny</font>
-			<textcolor>white</textcolor>
+			<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
 			<label>$INFO[ListItem.Label2]</label>
 		</control>
 		<control type="group">
@@ -115,7 +115,7 @@
 				<height>40</height>
 				<font>symbolback</font>
 				<label>$VAR[PercentWatchedBack]</label>
-				<textcolor>white2</textcolor>
+				<textcolor>$VAR[BackingColourHighlight]</textcolor>
 			</control>
 		<control type="group">
 			<control type="label">
@@ -127,6 +127,7 @@
 				<font>minisymbol</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[UnwatchedColourHighlight]</textcolor>
+				<selectedcolor>$VAR[UnwatchedColourHighlight]</selectedcolor>
 				<scroll>true</scroll>
 				<visible>[Container.Content(tvshows) | Container.Content(seasons)]</visible>
 			</control>
@@ -138,19 +139,21 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[UnwatchedColourHighlight]</textcolor>
+				<selectedcolor>$VAR[UnwatchedColourHighlight]</selectedcolor>
 				<visible>![Container.Content(tvshows) | Container.Content(seasons)]</visible>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + stringcompare(ListItem.Overlay,OverlayUnwatched.png) + Skin.HasSetting(furniture.unwatched) + !ListItem.IsResumable</visible>
 		</control>
 		<control type="group">
 			<control type="label">
-				<right>10</right>
+				<right>7</right>
 				<top>10</top>
 				<width>32</width>
 				<height>32</height>
 				<font>symbolview</font>
-				<label>$VAR[PercentWatchedLabel]</label>
-				<textcolor>$VAR[PlayingColourHighlight]</textcolor>
+                    <label>$VAR[ItemsPlayingIcon]</label>
+                    <textcolor>$VAR[PlayingColourHighlight]</textcolor>
+                    <selectedcolor>$VAR[PlayingColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + ListItem.IsPlaying</visible>
 		</control>
@@ -163,6 +166,7 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[WatchedColourHighlight]</textcolor>
+								<selectedcolor>$VAR[WatchedColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + stringcompare(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(furniture.unwatched)</visible>
 		</control>
@@ -175,19 +179,13 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[ResumeColourHighlight]</textcolor>
+								<selectedcolor>$VAR[ResumeColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + ListItem.IsResumable</visible>
 		</control>
 		</control>
 	</include>
 	<include name="View_59_FocusLayout">
-		<control type="button">
-			<texturefocus>-</texturefocus>
-			<texturenofocus>-</texturenofocus>
-			<onfocus condition="Container.Content(movies)">ClearProperty(TVShowID,home)</onfocus>
-			<onfocus condition="Container.Content(tvshows)">SetProperty(TVShowID,$INFO[ListItem.DBID],home)</onfocus>
-			<onfocus condition="!Container.Scrolling">RunScript(script.toolbox,info=blur,id='"$VAR[BannerImage]"',radius=$VAR[VideoInfoBlurLevel],prefix=BannerPlex)</onfocus>
-		</control>
 		<control type="label" id="13370">
 			<left>10</left>
 			<top>10</top>
@@ -197,7 +195,7 @@
 			<align>center</align>
 			<font>symbolbig</font>
 			<label>$VAR[SwapDefaultImage]</label>
-			<textcolor>white</textcolor>
+			<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
 		</control>
 		<control type="label">
 			<left>130</left>
@@ -207,7 +205,7 @@
 			<align>right</align>
 			<aligny>center</aligny>
 			<font>Tiny</font>
-			<textcolor>$VAR[ColourSelected]</textcolor>
+			<textcolor>$VAR[ColorboxPowerModeColor]</textcolor>
 			<label>$INFO[ListItem.Label2]</label>
 		</control>
 		<control type="group">
@@ -218,7 +216,7 @@
 				<height>40</height>
 				<font>symbolback</font>
 				<label>$VAR[PercentWatchedBack]</label>
-				<textcolor>white2</textcolor>
+				<textcolor>$VAR[BackingColourHighlight]</textcolor>
 			</control>
 		<control type="group">
 			<control type="label">
@@ -230,6 +228,7 @@
 				<font>minisymbol</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[UnwatchedColourHighlight]</textcolor>
+								<selectedcolor>$VAR[UnwatchedColourHighlight]</selectedcolor>
 				<scroll>true</scroll>
 				<visible>[Container.Content(tvshows) | Container.Content(seasons)]</visible>
 			</control>
@@ -241,19 +240,21 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[UnwatchedColourHighlight]</textcolor>
+								<selectedcolor>$VAR[UnwatchedColourHighlight]</selectedcolor>
 				<visible>![Container.Content(tvshows) | Container.Content(seasons)]</visible>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + stringcompare(ListItem.Overlay,OverlayUnwatched.png) + Skin.HasSetting(furniture.unwatched) + !ListItem.IsResumable</visible>
 		</control>
 		<control type="group">
 			<control type="label">
-				<right>10</right>
+				<right>7</right>
 				<top>10</top>
 				<width>32</width>
 				<height>32</height>
 				<font>symbolview</font>
-				<label>$VAR[PercentWatchedLabel]</label>
-				<textcolor>$VAR[PlayingColourHighlight]</textcolor>
+                    <label>$VAR[ItemsPlayingIcon]</label>
+                    <textcolor>$VAR[PlayingColourHighlight]</textcolor>
+                    <selectedcolor>$VAR[PlayingColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + ListItem.IsPlaying</visible>
 		</control>
@@ -266,6 +267,7 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[WatchedColourHighlight]</textcolor>
+				<selectedcolor>$VAR[WatchedColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + stringcompare(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(furniture.unwatched)</visible>
 		</control>
@@ -278,6 +280,7 @@
 				<font>symbolview</font>
 				<label>$VAR[PercentWatchedLabel]</label>
 				<textcolor>$VAR[ResumeColourHighlight]</textcolor>
+				<selectedcolor>$VAR[ResumeColourHighlight]</selectedcolor>
 			</control>
 			<visible>!stringcompare(ListItem.Label,..) + ListItem.IsResumable</visible>
 		</control>
