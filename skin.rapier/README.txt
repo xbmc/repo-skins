@@ -1,4 +1,4 @@
----------- ABOUT ----------------------------------------------------------------------------
+---------- ABOUT RAPIER 8.x FOR KODI 15 ISENGARD----------------------------------------------------------------------------
 
 The goal is to provide a simple to use but clean and elegant interface that focuses on efficiency when browsing your media. 
 Important considerations are put on usability, performance, and providing the user with flexibility when it comes to customization. 
@@ -19,7 +19,7 @@ Can be installed through the official Kodi repository.
 
 DEVELOPMENT:
 
-https://github.com/gade01/Rapier
+https://github.com/gade01/Rapier/tree/Isengard
 
 
 SUPPORT: 
@@ -46,7 +46,7 @@ script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0
 script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
-script.grab.fanart v0.13.0
+script.skin.helper.service v1.0.11
 script.globalsearch v2.0.8
 service.skin.widgets v0.0.29
 
