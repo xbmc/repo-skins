@@ -1,4 +1,4 @@
----------- ABOUT ----------------------------------------------------------------------------
+---------- ABOUT RAPIER 9.x FOR KODI 16 JARVIS----------------------------------------------------------------------------
 
 The goal is to provide a simple to use but clean and elegant interface that focuses on efficiency when browsing your media. 
 Important considerations are put on usability, performance, and providing the user with flexibility when it comes to customization. 
@@ -46,9 +46,12 @@ script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0
 script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
-script.grab.fanart v0.13.0
+script.skin.helper.service v1.0.11
 script.globalsearch v2.0.8
 service.skin.widgets v0.0.29
+script.image.resource.select 0.0.5
+resource.uisounds.rapier 1.0.1
+resource.images.studios.white 0.0.2
 
 Rapier uses text images for the home menu categories. More categories can be found in skin.rapier->extras folder when customizing the home menu. 
 Additional home category images can be requested at the forum: http://forum.kodi.tv/showthread.php?tid=101862
