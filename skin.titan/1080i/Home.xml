@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--Titan-->
-<window  >
+<window>
     
     <defaultcontrol always="true">1000</defaultcontrol>
     <include>defaultskinsettings</include>
-    <onload condition="![Skin.String(ColorTheme) | Skin.String(GadgetRows)]">RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu|netflixmenu)</onload>
+    <onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu|netflixmenu)</onload>
 	<onunload>CancelAlarm(SpotlightMove,true)</onunload>
     <onunload>SetProperty(SectionBackground,$INFO[Control.GetLabel(99004)])</onunload>
     <!-- auto close homemenu and focus mainmenu when home is unloaded -->
     <onunload condition="!Skin.String(HomeLayout, netflix)">SetFocus(300)</onunload>
     <onunload>ClearProperty(submenu)</onunload>
     <onunload>ClearProperty(ShowWidget)</onunload>
+    <onload>ClearProperty(ShowWidget)</onload>
+    <onunload>ClearProperty(ShowViewSubMenu)</onunload>
+    <menucontrol>300</menucontrol>
 	<controls>
 	
 	<!--Global Background-->
@@ -18,11 +21,10 @@
     
         <control type="button" id="1000">
 			<description>hidden button for onload actions as placing them in onload causes strange behaviour</description>
-            <onfocus condition="Skin.String(HomeLayout, enhanced)">AlarmClock(SpotlightMove,Control.Move(1508,1),00:08,silent,loop)</onfocus>
+            <onfocus condition="Skin.String(HomeLayout, enhanced) | [Skin.String(HomeLayout, netflix) + !Skin.HasSetting(NetflixHomeDisableFirstRow)]">AlarmClock(SpotlightMove,Control.Move(1508,1),00:20,silent,loop)</onfocus>
             <onfocus condition="!Skin.String(HomeLayout, enhanced) + Skin.String(widgetstyle, single box)">AlarmClock(SpotlightMove,Control.Move(510,1),00:30,silent,loop)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout, netflix) + !Skin.HasSetting(NetflixHomeDisableFirstRow)">AlarmClock(SpotlightMove,Control.Move(510,1),00:30,silent,loop)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout, netflix)">SetFocus(51)</onfocus>
-            <onfocus condition="!Skin.String(HomeLayout, netflix)">SetFocus(300)</onfocus>
+            <onfocus condition="Skin.String(HomeLayout, netflix) | Skin.String(HomeLayout, win10)">SetFocus(9000)</onfocus>
+            <onfocus condition="!Skin.String(HomeLayout, netflix) + !Skin.String(HomeLayout, win10)">SetFocus(300)</onfocus>
 			<texturenofocus>-</texturenofocus>
 			<texturefocus>-</texturefocus>
             <onleft>300</onleft>
@@ -37,9 +39,7 @@
 		<include condition="Skin.HasSetting(EnableTouchSupport)">TouchScreenWorkaround</include>
 		
 		<!--NowPlaying-->
-		<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
-		<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
-		<include condition="!Skin.HasTheme(classic)">NowPlayingModern</include>
+		<include condition="!Skin.HasTheme(classic)">nowplayingbackground</include>
 		
         <!-- Hidden control to load weather conditions -->
 		<control type="label">
@@ -47,25 +47,36 @@
 			<label>$INFO[Weather.Conditions]</label>
 		</control>
         
+        <!--hidden label with widget style-->
+        <control type="label" id="17888">
+            <font>-</font>
+            <label>$VAR[widgetstyle_active]</label>
+        </control>
+        
 		<!--Footer-->
 		<control type="group">
-			<include condition="[!skin.hassetting(nofooterbar) + !Skin.String(HomeLayout, enhanced) + !Skin.String(HomeLayout, simplever) + !Skin.String(HomeLayout, netflix)] + ![Skin.String(HomeLayout, simplehor) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(EnableTouchSupport)]">Footer</include>
+			<include condition="[!skin.hassetting(nofooterbar) + !Skin.String(HomeLayout, enhanced) + ![Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)] + !Skin.String(HomeLayout, netflix)+ !Skin.String(HomeLayout, win10)] + ![Skin.String(HomeLayout, simplehor) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(EnableTouchSupport)]">Footer</include>
 		</control>
 		
 		<!--Time-->
 		<control type="group">
 			<animation effect="slide" end="-20" time="0" condition="Skin.HasSetting(HideWidgetPanelBackground) + Skin.String(HomeLayout, enhanced)">Conditional</animation>
-			<include>TimeInfo</include>
+			<include condition="!Skin.String(HomeLayout, win10)">TimeInfo</include>
 		</control>
         
+		<!-- Snow on Home -->
+		<control type="group">
+        <include condition="Skin.HasSetting(enablesnow)">snow</include>
+		</control>
+		
         <!-- hidden submenu for count calculations -->
         <include condition="!Skin.String(HomeLayout, enhanced) + !Skin.HasSetting(DisableAllSubmenus)">hiddenSubmenu</include>
 	
 		<!-- Home Screen -->
 		<control type="group">
 			<include>animation_window_open_close</include>
-			<include condition="Skin.HasSetting(WeatherOnHome)">WeatherInfo</include>
-			<include>ProfileInfo</include>
+			<include condition="Skin.HasSetting(WeatherOnHome) + !Skin.String(HomeLayout, win10)">WeatherInfo</include>
+			<include condition="Skin.HasSetting(ShowProfile) + !Skin.String(HomeLayout, win10)">ProfileInfo</include>
 			<defaultcontrol always="true">300</defaultcontrol>
 			<!-- Kodi Logo image -->
 			<control type="image">
@@ -76,9 +87,10 @@
 				<colordiffuse>$INFO[Skin.String(HeaderTextColor)]</colordiffuse>
 				<texture>home/kodi_logo_light.png</texture>
 				<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Skin.HasSetting(WeatherOnHome) + !Skin.HasSetting(ShowProfile) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + !Control.IsVisible(88888)</visible>
-				<visible>!Skin.String(HomeLayout, simplever)</visible>
+				<visible>![Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)]</visible>
 				<visible>!Skin.HasSetting(ShowProfile) + !Skin.HasSetting(WeatherOnHome)</visible>
 				<visible>!Skin.String(CustomLogoImage)</visible>
+                <visible>!Skin.String(HomeLayout, win10)</visible>
 			</control>
 			<!-- custom Logo image -->
 			<control type="image">
@@ -89,19 +101,21 @@
 				<colordiffuse></colordiffuse>
 				<texture>$INFO[Skin.String(CustomLogoImage)]</texture>
 				<visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Skin.HasSetting(WeatherOnHome) + !Skin.HasSetting(ShowProfile) + ![ControlGroup(77777).HasFocus | StringCompare(Window(Home).Property(ShowWidget),show)] + !Control.IsVisible(88888)</visible>
-				<visible>!Skin.String(HomeLayout, simplever)</visible>
+				<visible>![Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)]</visible>
 				<visible>!Skin.HasSetting(ShowProfile) + !Skin.HasSetting(WeatherOnHome)</visible>
 				<visible>Skin.String(CustomLogoImage)</visible>
+                <visible>!Skin.String(HomeLayout, win10)</visible>
 			</control>
 			
 			<!--Home tiles List 300-->
-			<include condition="[!Skin.HasSetting(UseFixedHomeFocus) + Skin.String(HomeLayout, 1)] | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3)">HomeLayoutNormal</include>
-			<include condition="Skin.HasSetting(UseFixedHomeFocus) + Skin.String(HomeLayout, 1)">HomeLayoutFixedFocus</include>
+			<include condition="[!Skin.HasSetting(UseFixedHomeFocus) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 1small)]] | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)">HomeLayoutNormal</include>
+			<include condition="Skin.HasSetting(UseFixedHomeFocus) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 1small)]">HomeLayoutFixedFocus</include>
 			
 			<include condition="Skin.String(HomeLayout, enhanced)">EnhancedHomeScreen</include>
 			<include condition="Skin.String(HomeLayout, simplehor)">simplehome_horizontal</include>
-			<include condition="Skin.String(HomeLayout, simplever)">simplehome_vertical</include>
+			<include condition="[Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)]">simplehome_vertical</include>
 			<include condition="Skin.String(HomeLayout, netflix)">HomeLayoutNetflix</include>
+            <include condition="Skin.String(HomeLayout, win10)">HomeLayoutWin10</include>
 		
 		
 			<control type="scrollbar" id="60">
@@ -115,15 +129,24 @@
 			
 	
 			<!-- submenu -->
-			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, vertical) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3)]">HomeMenuSubMenuVertical</include>
-			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, horizontal) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3)]">HomeMenuSubMenuHorizontal</include>
-			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, tiles) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3)]">HomeMenuSubMenuSmallTiles</include>
+			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, vertical) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)]">HomeMenuSubMenuVertical</include>
+			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, horizontal) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)]">HomeMenuSubMenuHorizontal</include>
+			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, tiles) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)]">HomeMenuSubMenuSmallTiles</include>
 
 			<!-- subpages submenu -->
-			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, subpage) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3)]">HomeMenuSubMenuPage</include>
+			<include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.String(SubmenuLayout, subpage) + [Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)]">HomeMenuSubMenuPage</include>
+
 
 		</control>
 	
 	<include condition="Skin.HasSetting(DebugGrid) | Skin.HasSetting(DebugInfo)">DebugInfo</include>
+		
+        <!--NowPlaying-->
+		<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
+		<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
+		<include condition="!Skin.HasTheme(classic)">NowPlayingInfoBar</include>
+		
+		
+		
 	</controls>
 </window>
