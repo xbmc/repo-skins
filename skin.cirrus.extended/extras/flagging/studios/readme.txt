@@ -1,0 +1,1 @@
+Drop your studio icons inside this folder.

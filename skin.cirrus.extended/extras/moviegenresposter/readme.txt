@@ -1,0 +1,1 @@
+Drop your genre poster inside this folder.
