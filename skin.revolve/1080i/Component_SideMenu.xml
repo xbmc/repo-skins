@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
-    <include name="ButtonListForSideMenu">
+    <include name="BeginOfButtonListForSideMenu">
         <param name="onup" default="9010" />
         <param name="ondown" default="9010" />
         <param name="onleft" default="Noop" />
@@ -11,27 +11,56 @@
 			<posy>20</posy>
 			<width>482</width>
 			<height>460</height>
+            <pagecontrol>9002</pagecontrol>
 			<orientation>vertical</orientation>
 			<itemgap>0</itemgap>
 			<onup>$PARAM[onup]</onup>
 			<ondown>$PARAM[ondown]</ondown>
 			<onleft>$PARAM[onleft]</onleft>
 			<onright>$PARAM[onright]</onright>
+
+            <control type="button" id="9003">
+                <visible>false</visible>
+                <onup>$PARAM[onup]</onup>
+            </control>
         </definition>
     </include>
 
+	<include name="EndOfButtonListForSideMenu">
+        <param name="ondown" default="9010" />
+        
+        <definition>
+            <control type="button" id="9004">
+                <visible>false</visible>
+                <ondown>$PARAM[ondown]</ondown>
+            </control>
+        </definition>
+	</include>
+    
     <include name="PlayerControlsForSideMenu">
-        <param name="onup" default="9001" />
-        <param name="ondown" default="9001" />
+        <param name="onup" default="9004" />
+        <param name="ondown" default="9003" />
         <param name="onleft" default="Noop" />
         <param name="onright" default="52" />
         
         <definition>
 			<control type="group">
-				<visible>Player.HasMedia</visible>
-				<posx>120</posx>
-				<posy>490</posy>
+				<visible>Player.HasMedia + !IntegerGreaterThan(Container(9001).NumItems,10)</visible>
+				<posx>PosXForSideMenuCircleControlsForPlayer</posx>
+				<posy>PosYForSideMenuCircleControlsForPlayer</posy>
 				<include name="CircleControlsForPlayer">
+                    <param name="onup" value="$PARAM[onup]" />
+                    <param name="ondown" value="$PARAM[ondown]" />
+                    <param name="onleft" value="$PARAM[onleft]" />
+                    <param name="onright" value="$PARAM[onright]" />
+                </include>
+			</control>
+            
+			<control type="group">
+				<visible>Player.HasMedia + IntegerGreaterThan(Container(9001).NumItems,10)</visible>
+				<posx>PosXForSideMenuButtonControlsForPlayer</posx>
+				<posy>PosYForSideMenuButtonControlsForPlayer</posy>
+				<include name="ButtonControlsForPlayer">
                     <param name="onup" value="$PARAM[onup]" />
                     <param name="ondown" value="$PARAM[ondown]" />
                     <param name="onleft" value="$PARAM[onleft]" />
@@ -45,12 +74,14 @@
         <definition>
             <posx>20</posx>
             <posy>100</posy>
-		
+
+            <animation effect="slide" start="0,0" end="-800,0" time="500" reversible="false">WindowClose</animation>
+
             <animation type="conditional" condition="!ControlGroup(9000).HasFocus() + !ControlGroup(9001).HasFocus() + !ControlGroup(9010).HasFocus() + !ControlGroup(9020).HasFocus() + !Skin.HasSetting(SideMenu.Visible) + !Control.IsVisible(10) + !Control.IsVisible(53) + !Control.IsVisible(56) + !Control.IsVisible(57)">
-                <effect type="slide" start="0,0" end="-610,0" time="200" />
+                <effect type="slide" start="0,0" end="-615,0" time="200" />
             </animation>
             <animation type="conditional" condition="!ControlGroup(9000).HasFocus() + !ControlGroup(9001).HasFocus() + !ControlGroup(9010).HasFocus() + !ControlGroup(9020).HasFocus() + Skin.HasSetting(SideMenu.Visible) + !Control.IsVisible(10) + !Control.IsVisible(53) + !Control.IsVisible(56) + !Control.IsVisible(57)">
-                <effect type="slide" start="0,0" end="-515,0" time="200" />
+                <effect type="slide" start="0,0" end="-520,0" time="200" />
             </animation>
 		
             <animation type="conditional" condition="!ControlGroup(9000).HasFocus() + !ControlGroup(9001).HasFocus() + !ControlGroup(9010).HasFocus() + !ControlGroup(9020).HasFocus() + !Skin.HasSetting(SideMenu.Visible) + [Control.IsVisible(10) | Control.IsVisible(53) | Control.IsVisible(56) | Control.IsVisible(57)]">
@@ -79,6 +110,32 @@
                     <fadetime>100</fadetime>
                     <aspectratio>stretch</aspectratio>
                     <texture colordiffuse="BackgroundColor" fallback="white.png">elements/poster-background.png</texture>
+                </control>
+                
+                <control type="scrollbar" id="9002">
+                    <description>Invisible Scrollbar</description>
+                    <enable>false</enable>
+                    <posx>24</posx>
+                    <posy>20</posy>
+                    <width>20</width>
+                    <height>460</height>
+                    <showonepage>false</showonepage>
+                    <texturesliderbackground>-</texturesliderbackground>
+                    <texturesliderbar>-</texturesliderbar>
+                    <texturesliderbarfocus>-</texturesliderbarfocus>
+                </control>
+
+                <control type="label">
+                    <description>More Options Label</description>
+                    <visible>Control.IsVisible(9002)</visible>
+                    <posx>500</posx>
+                    <posy>480</posy>
+                    <width>480</width>
+                    <height>20</height>
+                    <font>SideMenuGroupFont</font>
+                    <textcolor>MainColor</textcolor>
+                    <align>right</align>
+                    <label>$LOCALIZE[31971]</label>
                 </control>
             </control>
 			
@@ -133,542 +190,612 @@
 	</include>
 
 	<include name="ViewGroupLabelForSideMenu">
-		<description>View Options Label For Side Menu</description>
-		<control type="label" id="990">
-            <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
-            <height>20</height>
-			<align>left</align>
-			<font>SideMenuGroupFont</font>
-			<textcolor>SelectColor</textcolor>
-			<label>  [UPPERCASE]$LOCALIZE[14018][/UPPERCASE]</label>
-		</control>
+        <definition>
+            <control type="label" id="990">
+                <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
+                <height>20</height>
+                <align>left</align>
+                <font>SideMenuGroupFont</font>
+                <textcolor>SelectColor</textcolor>
+                <label>  [UPPERCASE]$LOCALIZE[14018][/UPPERCASE]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="NavigationGroupLabelForSideMenu">
-		<description>Navigation Options Label For Side Menu</description>
-		<control type="label" id="991">
-            <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
-            <height>20</height>
-			<align>left</align>
-			<font>SideMenuGroupFont</font>
-			<textcolor>SelectColor</textcolor>
-			<label>  [UPPERCASE]$LOCALIZE[31106][/UPPERCASE]</label>
-		</control>
+        <param name="visible" default="Skin.HasSetting(SideMenu.Grouped)" />
+    
+        <definition>
+            <control type="label" id="991">
+                <visible>$PARAM[visible]</visible>
+                <height>20</height>
+                <align>left</align>
+                <font>SideMenuGroupFont</font>
+                <textcolor>SelectColor</textcolor>
+                <label>  [UPPERCASE]$LOCALIZE[31106][/UPPERCASE]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="PlaylistLibraryGroupLabelForSideMenu">
-		<description>Manage Options Label For Side Menu</description>
-		<control type="label" id="992">
-            <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
-            <height>20</height>
-			<align>left</align>
-			<font>SideMenuGroupFont</font>
-			<textcolor>SelectColor</textcolor>
-			<label>  [UPPERCASE]$LOCALIZE[31107][/UPPERCASE]</label>
-		</control>
+        <definition>
+            <control type="label" id="992">
+                <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
+                <height>20</height>
+                <align>left</align>
+                <font>SideMenuGroupFont</font>
+                <textcolor>SelectColor</textcolor>
+                <label>  [UPPERCASE]$LOCALIZE[31107][/UPPERCASE]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="SlideshowGroupLabelForSideMenu">
-		<description>Display Options Label For Side Menu</description>
-		<control type="label" id="993">
-            <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
-            <height>20</height>
-			<align>left</align>
-			<font>SideMenuGroupFont</font>
-			<textcolor>SelectColor</textcolor>
-			<label>  [UPPERCASE]$LOCALIZE[31108][/UPPERCASE]</label>
-		</control>
+        <definition>
+            <control type="label" id="993">
+                <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
+                <height>20</height>
+                <align>left</align>
+                <font>SideMenuGroupFont</font>
+                <textcolor>SelectColor</textcolor>
+                <label>  [UPPERCASE]$LOCALIZE[31108][/UPPERCASE]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="SettingsGroupLabelForSideMenu">
-		<description>Set Options Label For Side Menu</description>
-		<control type="label" id="994">
-            <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
-            <height>20</height>
-			<align>left</align>
-			<font>SideMenuGroupFont</font>
-			<textcolor>SelectColor</textcolor>
-			<label>  [UPPERCASE]$LOCALIZE[31109][/UPPERCASE]</label>
-		</control>
+        <definition>
+            <control type="label" id="994">
+                <visible>Skin.HasSetting(SideMenu.Grouped)</visible>
+                <height>20</height>
+                <align>left</align>
+                <font>SideMenuGroupFont</font>
+                <textcolor>SelectColor</textcolor>
+                <label>  [UPPERCASE]$LOCALIZE[31109][/UPPERCASE]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="MusicPlaylistButtonForSideMenu">
-		<description>Music Playlist Button For Side Menu</description>
-		<control type="button" id="1">
-			<align>left</align>
-			<label>$LOCALIZE[13350]</label>
-			<onclick>ActivateWindow(musicplaylist)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="1">
+                <align>left</align>
+                <label>$LOCALIZE[13350]</label>
+                <onclick>ActivateWindow(musicplaylist)</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="VideoPlaylistButtonForSideMenu">
-		<description>Video Playlist Button For Side Menu</description>
-		<control type="button" id="1">
-			<align>left</align>
-			<label>$LOCALIZE[13350]</label>
-			<onclick>ActivateWindow(videoplaylist)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="1">
+                <align>left</align>
+                <label>$LOCALIZE[13350]</label>
+                <onclick>ActivateWindow(videoplaylist)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="GenericPlaylistButtonForSideMenu">
-		<description>Generic Playlist Button For Side Menu</description>
-		<control type="button" id="1">
-            <visible>Player.HasVideo | Player.HasAudio</visible>
-			<align>left</align>
-			<label>$LOCALIZE[13350]</label>
-			<onclick condition="Player.HasVideo">ActivateWindow(videoplaylist)</onclick>
-			<onclick condition="Player.HasAudio">ActivateWindow(musicplaylist)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="1">
+                <visible>Player.HasVideo | Player.HasAudio</visible>
+                <align>left</align>
+                <label>$LOCALIZE[13350]</label>
+                <onclick condition="Player.HasVideo">ActivateWindow(videoplaylist)</onclick>
+                <onclick condition="Player.HasAudio">ActivateWindow(musicplaylist)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="ViewTypeButtonForSideMenu">
-		<description>View Type Button For Side Menu</description>
-		<control type="button" id="2">
-			<align>left</align>
-		</control>
+        <definition>
+            <control type="button" id="2">
+                <align>left</align>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="FavouritesMenuTypeButtonForSideMenu">
-		<description>Favourites Menu Type Button For Side Menu</description>
-		<control type="togglebutton" id="2">
-            <usealttexture>!Skin.HasSetting(FavouritesMenu.Default)</usealttexture>
-			<label>$LOCALIZE[33061]: $LOCALIZE[31934]</label>
-			<altlabel>$LOCALIZE[33061]: $LOCALIZE[31932]</altlabel>
-			<align>left</align>
-            <onclick>Skin.Reset(FavouritesMenu.Default)</onclick>
-            <altclick>Skin.SetBool(FavouritesMenu.Default)</altclick>
-		</control>
+        <definition>
+            <control type="togglebutton" id="2">
+                <usealttexture>!Skin.HasSetting(FavouritesMenu.Default)</usealttexture>
+                <label>$LOCALIZE[33061]: $LOCALIZE[31934]</label>
+                <altlabel>$LOCALIZE[33061]: $LOCALIZE[31932]</altlabel>
+                <align>left</align>
+                <onclick>Skin.Reset(FavouritesMenu.Default)</onclick>
+                <altclick>Skin.SetBool(FavouritesMenu.Default)</altclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="MyItemsMenuTypeButtonForSideMenu">
-		<description>My Items Menu Type Button For Side Menu</description>
-		<control type="togglebutton" id="2">
-            <usealttexture>!Skin.HasSetting(MyItemsMenu.Default)</usealttexture>
-			<label>$LOCALIZE[33061]: $LOCALIZE[31934]</label>
-			<altlabel>$LOCALIZE[33061]: $LOCALIZE[31932]</altlabel>
-			<align>left</align>
-            <onclick>Skin.Reset(MyItemsMenu.Default)</onclick>
-            <altclick>Skin.SetBool(MyItemsMenu.Default)</altclick>
-		</control>
+        <definition>
+            <control type="togglebutton" id="2">
+                <usealttexture>!Skin.HasSetting(MyItemsMenu.Default)</usealttexture>
+                <label>$LOCALIZE[33061]: $LOCALIZE[31934]</label>
+                <altlabel>$LOCALIZE[33061]: $LOCALIZE[31932]</altlabel>
+                <align>left</align>
+                <onclick>Skin.Reset(MyItemsMenu.Default)</onclick>
+                <altclick>Skin.SetBool(MyItemsMenu.Default)</altclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="WeatherRefreshButtonForSideMenu">
-		<description>Weather Refresh Button For Side Menu</description>
-		<control type="button" id="2">
-			<align>left</align>
-			<label>$LOCALIZE[184]</label>
-		</control>
+        <definition>
+            <control type="button" id="2">
+                <align>left</align>
+                <label>$LOCALIZE[184]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="SortCriteriumButtonForSideMenu">
-		<description>Sort Criterium Button For Side Menu</description>
-		<control type="button" id="3">
-			<align>left</align>
-		</control>
+        <definition>
+            <control type="button" id="3">
+                <align>left</align>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="WeatherLocationSpinnerForSideMenu">
-		<description>Weather Location Spinner For Side Menu</description>
-		<control type="spincontrolex" id="3">
-			<align>left</align>
-		</control>
+        <definition>
+            <control type="spincontrolex" id="3">
+                <align>left</align>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="SortOrderButtonForSideMenu">
-		<description>Sort Order Button For Side Menu</description>
-		<control type="togglebutton" id="4">
-			<align>left</align>
-			<label>$LOCALIZE[31105] $LOCALIZE[584]</label>
-			<altlabel>$LOCALIZE[31105] $LOCALIZE[585]</altlabel>
-		</control>
+        <definition>
+            <control type="togglebutton" id="4">
+                <align>left</align>
+                <label>$LOCALIZE[31105] $LOCALIZE[584]</label>
+                <altlabel>$LOCALIZE[31105] $LOCALIZE[585]</altlabel>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="WeatherSettingsButtonForSideMenu">
-		<description>Weather Settings Button For Side Menu</description>
-		<control type="button" id="4">
-			<align>left</align>
-			<label>$LOCALIZE[5]</label>
-			<onclick>ActivateWindow(weathersettings)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="4">
+                <align>left</align>
+                <label>$LOCALIZE[5]</label>
+                <onclick>ActivateWindow(weathersettings)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="FilesButtonForSideMenu">
-		<description>Files Button For Side Menu</description>
-		<control type="button" id="5">
-			<align>left</align>
-			<label>$LOCALIZE[744]</label>
-			<onclick>SetFocus(50)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="5">
+                <align>left</align>
+                <label>$LOCALIZE[744]</label>
+                <onclick>SetFocus(50)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="GroupByButtonForSideMenu">
-		<description>Group By Folder Structure Button For Side Menu</description>
-		<control type="radiobutton" id="5">
-			<align>left</align>
-			<label>$LOCALIZE[19270]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="5">
+                <align>left</align>
+                <label>$LOCALIZE[19270]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="AutoUpdatesButtonForSideMenu">
-		<description>Auto-Updates Button For Side Menu</description>
-		<control type="button" id="5">
-			<align>left</align>
-			<label>$LOCALIZE[24063]</label>
-		</control>
+        <definition>
+            <control type="button" id="5">
+                <align>left</align>
+                <label>$LOCALIZE[24063]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="SlideshowButtonForSideMenu">
-		<description>Slideshow Button For Side Menu</description>
-		<control type="button" id="6">
-			<visible>!ListItem.IsFolder</visible>
-			<align>left</align>
-			<label>$LOCALIZE[108]</label>
-		</control>
+        <definition>
+            <control type="button" id="6">
+                <visible>!ListItem.IsFolder</visible>
+                <align>left</align>
+                <label>$LOCALIZE[108]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="NotificationsButtonForSideMenu">
-		<description>Notifications Button For Side Menu</description>
-		<control type="radiobutton" id="6">
-			<align>left</align>
-			<label>$LOCALIZE[25000]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="6">
+                <align>left</align>
+                <label>$LOCALIZE[25000]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="EditorOpenButtonForSideMenu">
-		<description>Editor Open Button For Side Menu</description>
-		<control type="button" id="6">
-			<align>left</align>
-			<label>$LOCALIZE[502]</label>
-		</control>
+        <definition>
+            <control type="button" id="6">
+                <align>left</align>
+                <label>$LOCALIZE[502]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="HiddenChannelsButtonForSideMenu">
-		<description>Show Hidden Channels Button For Side Menu</description>
-		<control type="radiobutton" id="6">
-			<align>left</align>
-			<label>$LOCALIZE[31411]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="6">
+                <align>left</align>
+                <label>$LOCALIZE[31411]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="PlaylistsButtonForSideMenu">
-		<description>Playlists Button For Side Menu</description>
-		<control type="button" id="7">
-			<align>left</align>
-			<label>$LOCALIZE[136]</label>
-		</control>
+        <definition>
+            <control type="button" id="7">
+                <align>left</align>
+                <label>$LOCALIZE[136]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="RecursiveSlideshowButtonForSideMenu">
-		<description>Recursive Slideshow Button For Side Menu</description>
-		<control type="button" id="7">
-			<visible>ListItem.IsFolder</visible>
-			<align>left</align>
-			<label>$LOCALIZE[108]</label>
-		</control>
+        <definition>
+            <control type="button" id="7">
+                <visible>ListItem.IsFolder</visible>
+                <align>left</align>
+                <label>$LOCALIZE[108]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="LanguageFilterButtonForSideMenu">
-		<description>Foreign Language Filter Button For Side Menu</description>
-		<control type="radiobutton" id="7">
-			<align>left</align>
-			<label>$LOCALIZE[25001]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="7">
+                <align>left</align>
+                <label>$LOCALIZE[25001]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="DeletedRecordingsButtonForSideMenu">
-		<description>Show Deleted Recordings Button For Side Menu</description>
-		<control type="radiobutton" id="7">
-			<align>left</align>
-			<label>$LOCALIZE[31410]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="7">
+                <align>left</align>
+                <label>$LOCALIZE[31410]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="EditorSaveButtonForSideMenu">
-		<description>Editor Save Button For Side Menu</description>
-		<control type="button" id="7">
-			<align>left</align>
-			<label>$LOCALIZE[190]</label>
-		</control>
+        <definition>
+            <control type="button" id="7">
+                <align>left</align>
+                <label>$LOCALIZE[190]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="LibrarySearchButtonForSideMenu">
-		<description>Library Search Button For Side Menu</description>
-		<control type="button" id="8">
-			<align>left</align>
-			<label>$LOCALIZE[137]</label>
-		</control>
+        <definition>
+            <control type="button" id="8">
+                <align>left</align>
+                <label>$LOCALIZE[137]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="HideBrokenButtonForSideMenu">
-		<description>Hide Broken Button For Side Menu</description>
-		<control type="radiobutton" id="8">
-			<align>left</align>
-			<label>$LOCALIZE[24999]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="8">
+                <align>left</align>
+                <label>$LOCALIZE[24999]</label>
+            </control>
+        </definition>
 	</include>
-	
     
 	<include name="EditorClearButtonForSideMenu">
-		<description>Editor Clear Button For Side Menu</description>
-		<control type="button" id="8">
-			<align>left</align>
-			<label>$LOCALIZE[192]</label>
-		</control>
+        <definition>
+            <control type="button" id="8">
+                <align>left</align>
+                <label>$LOCALIZE[192]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="RandomiseButtonForSideMenu">
-		<description>Randomise Button For Side Menu</description>
-		<control type="radiobutton" id="9">
-			<align>left</align>
-			<label>$LOCALIZE[13319]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="9">
+                <align>left</align>
+                <label>$LOCALIZE[13319]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="AddonUpdateButtonForSideMenu">
-		<description>Addon Update Button For Side Menu</description>
-		<control type="button" id="9">
-			<align>left</align>
-			<label>$LOCALIZE[24034]</label>
-		</control>
+        <definition>
+            <control type="button" id="9">
+                <align>left</align>
+                <label>$LOCALIZE[24034]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="MusicRipCDButtonForSideMenu">
-		<description>Music Rip CD Button For Side Menu</description>
-		<control type="button" id="11">
-			<align>left</align>
-			<label>$LOCALIZE[600]</label>
-		</control>
+        <definition>
+            <control type="button" id="11">
+                <align>left</align>
+                <label>$LOCALIZE[600]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="UnlockSharesButtonForSideMenu">
-		<description>Unlock Shares Button For Side Menu</description>
-		<control type="radiobutton" id="11">
-			<visible>System.HasLocks</visible>
-			<align>left</align>
-			<label>$LOCALIZE[20336]</label>
-			<selected>System.IsMaster</selected>
-			<onclick>Mastermode()</onclick>
-		</control>
+        <definition>
+            <control type="radiobutton" id="11">
+                <visible>System.HasLocks</visible>
+                <align>left</align>
+                <label>$LOCALIZE[20336]</label>
+                <selected>System.IsMaster</selected>
+                <onclick>Mastermode()</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="PartyModeButtonForSideMenu">
-		<description>Party Mode Button For Side Menu</description>
-		<control type="radiobutton" id="16">
-			<align>left</align>
-			<label>$LOCALIZE[589]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="16">
+                <align>left</align>
+                <label>$LOCALIZE[589]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="ShuffleButtonForSideMenu">
-		<description>Music Shuffle Button For Side Menu</description>
-		<control type="radiobutton" id="20">
-			<align>left</align>
-			<label>$LOCALIZE[191]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="20">
+                <align>left</align>
+                <label>$LOCALIZE[191]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="SettingsLevelButtonForSideMenu">
-		<description>Settings Level Button For Side Menu</description>
-		<control type="button" id="20">
-			<align>left</align>
-			<label>-</label>
-			<onclick>SettingsLevelChange</onclick>
-		</control>
+        <definition>
+            <control type="button" id="20">
+                <align>left</align>
+                <label>-</label>
+                <onclick>SettingsLevelChange</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="LibraryUpdateButtonForSideMenu">
-		<description>Library Update Button For Side Menu</description>
-		<control type="togglebutton" id="20">
-			<align>left</align>
-			<label>$LOCALIZE[653]</label>
-			<altlabel>$LOCALIZE[13353]</altlabel>
-		</control>
+        <definition>
+            <control type="togglebutton" id="20">
+                <align>left</align>
+                <label>$LOCALIZE[653]</label>
+                <altlabel>$LOCALIZE[13353]</altlabel>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="SaveButtonForSideMenu">
-		<description>Save Button For Side Menu</description>
-		<control type="button" id="21">
-			<align>left</align>
-			<label>$LOCALIZE[190]</label>
-		</control>
+        <definition>
+            <control type="button" id="21">
+                <align>left</align>
+                <label>$LOCALIZE[190]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="VideoFilterActivateButtonForSideMenu">
-		<description>Video Filter Activate Button For Side Menu</description>
-		<control type="button" id="21">
-			<visible>IsEmpty(Window.Property(filter))</visible>
-			<align>left</align>
-			<label>$LOCALIZE[587]</label>
-			<onclick>SendClick(videolibrary,19)</onclick>
-			<onclick>SetFocus(22)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="21">
+                <visible>IsEmpty(Window.Property(filter))</visible>
+                <align>left</align>
+                <label>$LOCALIZE[587]</label>
+                <onclick>SendClick(videolibrary,19)</onclick>
+                <onclick>SetFocus(22)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="MusicFilterActivateButtonForSideMenu">
-		<description>Music Filter Activate Button For Side Menu</description>
-		<control type="button" id="21">
-			<visible>IsEmpty(Window.Property(filter))</visible>
-			<align>left</align>
-			<label>$LOCALIZE[587]</label>
-			<onclick>SendClick(musiclibrary,19)</onclick>
-			<onclick>SetFocus(22)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="21">
+                <visible>IsEmpty(Window.Property(filter))</visible>
+                <align>left</align>
+                <label>$LOCALIZE[587]</label>
+                <onclick>SendClick(musiclibrary,19)</onclick>
+                <onclick>SetFocus(22)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="ClearButtonForSideMenu">
-		<description>Clear Button For Side Menu</description>
-		<control type="button" id="22">
-			<align>left</align>
-			<label>$LOCALIZE[192]</label>
-		</control>
+        <definition>
+            <control type="button" id="22">
+                <align>left</align>
+                <label>$LOCALIZE[192]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="VideoFilterShowButtonForSideMenu">
-		<description>Video Filter Show Button For Side Menu</description>
-		<control type="button" id="22">
-			<visible>!IsEmpty(Window.Property(filter))</visible>
-			<align>left</align>
-			<label>$INFO[Window.Property(filter)]</label>
-			<onclick>SendClick(videolibrary,19)</onclick>
-			<onclick>SetFocus(21)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="22">
+                <visible>!IsEmpty(Window.Property(filter))</visible>
+                <align>left</align>
+                <label>$INFO[Window.Property(filter)]</label>
+                <onclick>SendClick(videolibrary,19)</onclick>
+                <onclick>SetFocus(21)</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="MusicFilterShowButtonForSideMenu">
-		<description>Music Filter Show Button For Side Menu</description>
-		<control type="button" id="22">
-			<visible>!IsEmpty(Window.Property(filter))</visible>
-			<align>left</align>
-			<label>$LOCALIZE[587] - $INFO[Window.Property(filter)]</label>
-			<onclick>SendClick(musiclibrary,19)</onclick>
-			<onclick>SetFocus(21)</onclick>
-		</control>
+        <definition>
+            <control type="button" id="22">
+                <visible>!IsEmpty(Window.Property(filter))</visible>
+                <align>left</align>
+                <label>$LOCALIZE[587] - $INFO[Window.Property(filter)]</label>
+                <onclick>SendClick(musiclibrary,19)</onclick>
+                <onclick>SetFocus(21)</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="PlayButtonForSideMenu">
-		<description>Play Button For Side Menu</description>
-		<control type="button" id="23">
-			<align>left</align>
-			<label>$LOCALIZE[208]</label>
-		</control>
+        <definition>
+            <control type="button" id="23">
+                <align>left</align>
+                <label>$LOCALIZE[208]</label>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="ClearPlaylistButtonForSideMenu">
-		<description>Clear Playlist Button For Side Menu</description>
-		<control type="button" id="25">
-			<align>left</align>
-			<label>$LOCALIZE[31104]</label>
-			<onclick>Playlist.Clear</onclick>
-		</control>
+        <definition>
+            <control type="button" id="25">
+                <align>left</align>
+                <label>$LOCALIZE[31104]</label>
+                <onclick>Playlist.Clear</onclick>
+            </control>
+        </definition>
 	</include>
 	
 	<include name="ChannelGroupButtonForSideMenu">
-		<description>Channel Group Button For Side Menu</description>
-        <control type="button" id="28">
-			<align>left</align>
-            <label>-</label>
-        </control>
+        <definition>
+            <control type="button" id="28">
+                <align>left</align>
+                <label>-</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="PVRFilterButtonForSideMenu">
-		<description>PVR Filter Button For Side Menu</description>
-		<control type="radiobutton" id="31">
-			<align>left</align>
-			<label>$LOCALIZE[587]</label>
-		</control>
+        <definition>
+            <control type="radiobutton" id="31">
+                <align>left</align>
+                <label>$LOCALIZE[587]</label>
+            </control>
+        </definition>
 	</include>
 
 	<include name="GuideButtonForSideMenu">
-		<description>Guide Button For Side Menu</description>
-        <control type="button" id="32">
-			<align>left</align>
-            <label>$LOCALIZE[22020]</label>
-            <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvguide)</onclick>
-            <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radioguide)</onclick>
-            <onclick>Control.SetFocus(10)</onclick>
-        </control>
+        <definition>
+            <control type="button" id="32">
+                <align>left</align>
+                <label>$LOCALIZE[22020]</label>
+                <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvguide)</onclick>
+                <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radioguide)</onclick>
+                <onclick>Control.SetFocus(10)</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="ChannelsButtonForSideMenu">
-		<description>Channels Button For Side Menu</description>
-		<control type="button" id="33">
-			<align>left</align>
-            <label>$LOCALIZE[19019]</label>
-            <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvchannels)</onclick>
-            <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiochannels)</onclick>
-        </control>
+        <definition>
+            <control type="button" id="33">
+                <align>left</align>
+                <label>$LOCALIZE[19019]</label>
+                <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvchannels)</onclick>
+                <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiochannels)</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="RecordingsButtonForSideMenu">
-		<description>Recordings Button For Side Menu</description>
-        <control type="button" id="34">
-			<align>left</align>
-            <label>$LOCALIZE[19163]</label>
-            <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvrecordings)</onclick>
-            <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiorecordings)</onclick>
-        </control>
+        <definition>
+            <control type="button" id="34">
+                <align>left</align>
+                <label>$LOCALIZE[19163]</label>
+                <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvrecordings)</onclick>
+                <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiorecordings)</onclick>
+            </control>
+        </definition>
 	</include>
 
 	<include name="TimersButtonForSideMenu">
-		<description>Timers Button For Side Menu</description>
-        <control type="button" id="35">
-			<align>left</align>
-            <label>$LOCALIZE[19040]</label>
-            <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvtimers)</onclick>
-			<onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiotimers)</onclick>            
-        </control>
+        <definition>
+            <control type="button" id="35">
+                <align>left</align>
+                <label>$LOCALIZE[19040]</label>
+                <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvtimers)</onclick>
+                <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiotimers)</onclick>            
+            </control>
+        </definition>
 	</include>
 
 	<include name="PVRSearchButtonForSideMenu">
-		<description>Search Button For Side Menu</description>
-        <control type="button" id="36">
-			<align>left</align>
-            <label>$LOCALIZE[137]</label>
-			<onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvsearch)</onclick>
-			<onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiosearch)</onclick>
-        </control>
+        <definition>
+            <control type="button" id="36">
+                <align>left</align>
+                <label>$LOCALIZE[137]</label>
+                <onclick condition="IsEmpty(Window.Property(IsRadio))">ReplaceWindow(tvsearch)</onclick>
+                <onclick condition="!IsEmpty(Window.Property(IsRadio))">ReplaceWindow(radiosearch)</onclick>
+            </control>
+        </definition>
 	</include>
-	
+
+	<include name="GlobalSearchButtonForSideMenu">
+        <definition>
+            <control type="button" id="91">
+                <visible>Skin.HasSetting(SideMenu.GlobalSearch) + System.HasAddon(script.globalsearch)</visible>
+                <align>left</align>
+                <label>$LOCALIZE[31482]</label>
+                <onclick>RunScript(script.globalsearch)</onclick>
+            </control>
+        </definition>
+	</include>
+    
     <include name="SettingsHelpButtonForSideMenu">
-        <description>Help For Settings Button For Side Menu</description>
-		<control type="radiobutton" id="92">
-			<align>left</align>
-			<label>$LOCALIZE[10043]</label>
-			<selected>Skin.HasSetting(Settings.HelpVisible)</selected>
-			<onclick>Skin.ToggleSetting(Settings.HelpVisible)</onclick>
-		</control>
+        <definition>
+            <control type="radiobutton" id="92">
+                <align>left</align>
+                <label>$LOCALIZE[10043]</label>
+                <selected>Skin.HasSetting(Settings.HelpVisible)</selected>
+                <onclick>Skin.ToggleSetting(Settings.HelpVisible)</onclick>
+            </control>
+        </definition>
 	</include>
     
     <include name="NameForThumbnailsButtonForSideMenu">
-        <description>Name in Thumbnails And Panels Button For Side Menu</description>
-		<control type="radiobutton" id="97">
-            <visible>Control.IsVisible(55) | Control.IsVisible(56)</visible>
-			<align>left</align>
-			<label>$LOCALIZE[31928]</label>
-			<selected>Skin.HasSetting(Thumbnails.NameVisible)</selected>
-			<onclick>Skin.ToggleSetting(Thumbnails.NameVisible)</onclick>
-		</control>
+        <definition>
+            <control type="radiobutton" id="97">
+                <visible>Control.IsVisible(55) | Control.IsVisible(56)</visible>
+                <align>left</align>
+                <label>$LOCALIZE[31928]</label>
+                <selected>Skin.HasSetting(Thumbnails.NameVisible)</selected>
+                <onclick>Skin.ToggleSetting(Thumbnails.NameVisible)</onclick>
+            </control>
+        </definition>
 	</include>
     
     <include name="DescriptionForLandscapeButtonForSideMenu">
-		<description>Description in Landscape Button For Side Menu</description>
-		<control type="radiobutton" id="98">
-            <visible>Control.IsVisible(53)</visible>
-			<align>left</align>
-			<label>$LOCALIZE[21821]</label>
-			<selected>Skin.HasSetting(Landscape.DescriptionVisible)</selected>
-			<onclick>Skin.ToggleSetting(Landscape.DescriptionVisible)</onclick>
-		</control>
+        <definition>
+            <control type="radiobutton" id="98">
+                <visible>Control.IsVisible(53)</visible>
+                <align>left</align>
+                <label>$LOCALIZE[21821]</label>
+                <selected>Skin.HasSetting(Landscape.DescriptionVisible)</selected>
+                <onclick>Skin.ToggleSetting(Landscape.DescriptionVisible)</onclick>
+            </control>
+        </definition>
 	</include>
     
 	<include name="MusicLibraryButtonForSideMenu">
-		<description>Music Library Button For Side Menu</description>
-		<control type="button" id="99">
-			<align>left</align>
-			<label>$LOCALIZE[29800]</label>
-			<onclick>ReplaceWindow(musiclibrary)</onclick>
-			<onclick>SetFocus(50)</onclick>
-			<enable>Library.HasContent(Music)</enable>
-		</control>
+        <definition>
+            <control type="button" id="99">
+                <align>left</align>
+                <label>$LOCALIZE[29800]</label>
+                <onclick>ReplaceWindow(musiclibrary)</onclick>
+                <onclick>SetFocus(50)</onclick>
+                <enable>Library.HasContent(Music)</enable>
+            </control>
+        </definition>
 	</include>
 </includes>
