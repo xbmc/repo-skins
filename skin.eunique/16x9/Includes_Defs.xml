@@ -85,9 +85,16 @@
 	</variable>
 	<variable name="DefWidgetCast">
 		<value condition="Container.Content(sets) | substring(ListItem.Path,videodb://movies/sets,left)">plugin://script.skin.helper.service/?action=getcast&amp;movieset=$INFO[ListItem.DBID]</value>
-		<value condition="Container.Content(movies)">plugin://script.skin.helper.service/?action=getcast&amp;movie=$INFO[ListItem.DBID]</value>
-		<value condition="[Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)] + !IsEmpty(Window(home).Property(TVShowID))">plugin://script.skin.helper.service/?action=getcast&amp;tvshow=$INFO[Window(home).Property(TVShowID)]</value>
+		<value condition="Container.Content(movies) + [!IsEmpty(ListItem.DBID) + IntegerGreaterThan(ListItem.DBID,-1)]">plugin://script.skin.helper.service/?action=getcast&amp;movie=$INFO[ListItem.DBID]</value>
+		<value condition="[Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)] + !IsEmpty(Window(home).Property(TVShowID))">plugin://script.skin.helper.service/?action=getcast&amp;tvshow=$INFO[Window(home).Property(TVShowID)]</value><value condition="[Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]">plugin://script.skin.helper.service/?action=getcast&amp;tvshow=$INFO[ListItem.Title]</value>
 		<value>plugin://service.library.data.provider?type=randommovies&amp;reload=$INFO[Window.Property(randommovies)]</value>
+	</variable>
+	<variable name="DefOSDCast">
+		<value condition="!IsEmpty(Window(home).Property(NextUpNotification.NowPlaying.Type)) + StringCompare(Window(home).Property(NextUpNotification.NowPlaying.Type),movie) + IntegerGreaterThan(Window(home).Property(NextUpNotification.NowPlaying.DBID),-1)">plugin://script.skin.helper.service/?action=getcast&amp;movie=$INFO[Window(home).Property(NextUpNotification.NowPlaying.DBID)]</value>
+		<value condition="!IsEmpty(Window(home).Property(NextUpNotification.NowPlaying.Type)) + StringCompare(Window(home).Property(NextUpNotification.NowPlaying.Type),episode) + IntegerGreaterThan(Window(home).Property(NextUpNotification.NowPlaying.DBID),-1)">plugin://script.skin.helper.service/?action=getcast&amp;tvshow=$INFO[Window(home).Property(NextUpNotification.NowPlaying.DBID)]</value>
+		<value condition="VideoPlayer.Content(movies)">plugin://script.skin.helper.service/?action=getcast&amp;movie=$INFO[VideoPlayer.Title]</value>
+		<value condition="VideoPlayer.Content(episodes)">plugin://script.skin.helper.service/?action=getcast&amp;tvshow=$INFO[VideoPlayer.TvShowTitle]</value>
+		<value condition="VideoPlayer.Content(livetv)">plugin://script.skin.helper.service/?action=getcast&amp;movie=$INFO[VideoPlayer.Title]</value>
 	</variable>
 	<variable name="DefWidgetContent">
 		<!-- Individual Widget Paths -->
@@ -109,7 +116,7 @@
 	</variable>
 	<variable name="DefWidget1Content">
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath))">$INFO[Container(300).ListItem.Property(widgetPath)]</value>
-		<value>plugin://script.extendedinfo?info=trendingshows</value>
+		<value>plugin://script.extendedinfo?info=trendingmovies</value>
 	</variable>
 	<variable name="DefWidget1Target">
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetTarget))">$INFO[Container(300).ListItem.Property(widgetTarget)]</value>
@@ -117,7 +124,7 @@
 	</variable>
 	<variable name="DefWidget2Content">
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.1))">$INFO[Container(300).ListItem.Property(widgetPath.1)]</value>
-		<value>plugin://script.extendedinfo?info=trendingmovies</value>
+		<value>plugin://script.extendedinfo?info=trendingshows</value>
 	</variable>
 	<variable name="DefWidget2Target">
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.1))">$INFO[Container(300).ListItem.Property(widgetPath.1)]</value>
@@ -593,10 +600,10 @@
 		</item>
 	</include>
 	<include name="DefDialogButtons">
-		<width>300</width>
+		<width>380</width>
 		<font>Button</font>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
-		<disabledcolor>black3</disabledcolor>
+		<disabledcolor>$VAR[DisabledColour]</disabledcolor>
 		<textureup flipy="true" colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</textureup>
 		<texturedown colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</texturedown>
 		<textureupfocus flipy="true" colordiffuse="$VAR[ColourSelected]">buttons/spin-down.png</textureupfocus>
@@ -759,7 +766,7 @@
 		<width>85</width>
 		<height>75</height>
 		<texturenofocus colordiffuse="$VAR[EmbyMenuTextColourHighlight]">common/box.png</texturenofocus>
-		<texturefocus colordiffuse="$VAR[BorderHighlightColour]">common/box.png</texturefocus>
+		<texturefocus colordiffuse="$VAR[ColourHighlight]">common/box.png</texturefocus>
 		<textoffsetx>0</textoffsetx>
 		<textcolor>$VAR[EmbyMenuColourHighlight]</textcolor>
 		<focusedcolor>$VAR[ColourSelected]</focusedcolor>
@@ -782,7 +789,7 @@
 		<width>90</width>
 		<height>90</height>
 		<texturenofocus colordiffuse="white3">common/box.png</texturenofocus>
-		<texturefocus colordiffuse="$VAR[BorderHighlightColour]">common/box.png</texturefocus>
+		<texturefocus colordiffuse="$VAR[ColourHighlight]">common/box.png</texturefocus>
 		<textoffsetx>0</textoffsetx>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
 		<focusedcolor>$VAR[ColourSelected]</focusedcolor>
@@ -801,6 +808,20 @@
 		<alttexturefocus colordiffuse="Dark1">common/white.png</alttexturefocus>
 		<texturefocus colordiffuse="Dark1">common/white.png</texturefocus>
 	</include>
+	<include name="DefContextButton2">
+		<textoffsetx>5</textoffsetx>
+		<radioposx>400</radioposx>
+		<width>433</width>
+		<height>55</height>
+		<font>Mini</font>
+		<textcolor>black</textcolor>
+		<textureradiofocus colordiffuse="$VAR[ColourHighlight2]">buttons/radio-on.png</textureradiofocus>
+		<textureradionofocus colordiffuse="Black30">buttons/radio-off.png</textureradionofocus>
+		<focusedcolor>$VAR[ColourSelected]</focusedcolor>
+		<alttexturefocus colordiffuse="white">common/white.png</alttexturefocus>
+		<texturenofocus colordiffuse="$VAR[EmbyMenuColourHighlight]">common/box.png</texturenofocus>
+		<texturefocus colordiffuse="$VAR[ColourHighlight]">common/white.png</texturefocus>
+	</include>
 	<include name="DefContextButtonBlade">
 		<textoffsetx>5</textoffsetx>
 		<radioposx>415</radioposx>
@@ -813,14 +834,14 @@
 		<focusedcolor>$VAR[ColourSelected]</focusedcolor>
 		<alttexturefocus colordiffuse="$VAR[ColourHighlight]">common/white.png</alttexturefocus>
 		<texturenofocus colordiffuse="$VAR[EmbyMenuColourHighlight]">common/box.png</texturenofocus>
-		<texturefocus colordiffuse="$VAR[BorderHighlightColour]">common/white.png</texturefocus>
+		<texturefocus colordiffuse="$VAR[ColourHighlight]">common/white.png</texturefocus>
 	</include>
 	<include name="DefSettingsButton2">
 		<radioposx>1330</radioposx>
 		<align>left</align>
 		<font>Small</font>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
-		<disabledcolor>black3</disabledcolor>
+		<disabledcolor>$VAR[DisabledColour]</disabledcolor>
 		<height>103</height>
 		<textureup flipy="true" colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</textureup>
 		<texturedown colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</texturedown>
@@ -838,7 +859,7 @@
 		<align>left</align>
 		<font>symbol</font>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
-		<disabledcolor>black3</disabledcolor>
+		<disabledcolor>$VAR[DisabledColour]</disabledcolor>
 		<height>103</height>
 		<textureup flipy="true" colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</textureup>
 		<texturedown colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</texturedown>
@@ -856,7 +877,7 @@
 		<align>center</align>
 		<font>Small</font>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
-		<disabledcolor>black3</disabledcolor>
+		<disabledcolor>$VAR[DisabledColour]</disabledcolor>
 		<height>60</height>
 		<textureup flipy="true" colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</textureup>
 		<texturedown colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</texturedown>
@@ -874,7 +895,7 @@
 		<align>left</align>
 		<font>Small</font>
 		<textcolor>$VAR[EmbyMenuTextColourHighlight]</textcolor>
-		<disabledcolor>black3</disabledcolor>
+		<disabledcolor>$VAR[DisabledColour]</disabledcolor>
 		<height>64</height>
 		<textureup flipy="true" colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</textureup>
 		<texturedown colordiffuse="$VAR[EmbyMenuTextColourHighlight]">buttons/spin-down.png</texturedown>
@@ -1117,22 +1138,23 @@
 			<align>left</align>
 			<label>$LOCALIZE[31946]:   $INFO[Skin.String(border.image)]</label>
 			<onclick>ActivateWindow(1114)</onclick>
-			<visible>!Control.IsVisible(518)</visible>
 		</control>
 		<control type="button" id="336">
 			<description>widget</description>
 			<include>DefContextButtonBlade</include>
 			<align>left</align>
 			<label>$LOCALIZE[32089]: $INFO[Skin.String(background.effect)]</label>
-			<onclick>SetProperty(Dialog.NumItems,3)</onclick>
+			<onclick>SetProperty(Dialog.NumItems,4)</onclick>
 			<onclick>SetProperty(Dialog.1.Label,Blur)</onclick>
 			<onclick>SetProperty(Dialog.1.BuiltIn,Skin.SetString(background.effect,Blur))</onclick>
 			<onclick>SetProperty(Dialog.2.Label,Pixelate)</onclick>
 			<onclick>SetProperty(Dialog.2.BuiltIn,Skin.SetString(background.effect,Pixelate))</onclick>
 			<onclick>SetProperty(Dialog.3.Label,Posterize)</onclick>
 			<onclick>SetProperty(Dialog.3.BuiltIn,Skin.SetString(background.effect,Posterize))</onclick>
+			<onclick>SetProperty(Dialog.4.Label,None)</onclick>
+			<onclick>SetProperty(Dialog.4.BuiltIn,Skin.SetString(background.effect,None))</onclick>
 			<onclick>RunScript(script.toolbox,info=selectdialog,header=Select Background Effect)</onclick>
-			<visible>Control.IsVisible(518)</visible>
+			<visible>Control.IsVisible(518) | Control.IsVisible(56)</visible>
 		</control>
 		<control type="radiobutton" id="9001" description="Plot Overlay">
 			<include>DefContextButtonBlade</include>
@@ -1275,7 +1297,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(movies.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(movies.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(movies)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(movies)</visible>
 		</control>
 		<control type="radiobutton" id="9021" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1283,7 +1305,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(tvshows.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(tvshows.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(tvshows)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(tvshows)</visible>
 		</control>
 		<control type="radiobutton" id="9022" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1291,7 +1313,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(seasons.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(seasons.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(seasons)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(seasons)</visible>
 		</control>
 		<control type="radiobutton" id="9023" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1299,7 +1321,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(episodes.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(episodes.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(episodes)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(episodes)</visible>
 		</control>
 		<control type="radiobutton" id="9024" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1307,7 +1329,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(artists.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(artists.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(artists)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(artists)</visible>
 		</control>
 		<control type="radiobutton" id="9025" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1315,7 +1337,7 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(albums.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(albums.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + Container.Content(albums)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + Container.Content(albums)</visible>
 		</control>
 		<control type="radiobutton" id="9026" description="Banner List (53)">
 			<include>DefContextButtonBlade</include>
@@ -1331,7 +1353,25 @@
 			<label>32075</label>
 			<selected>Skin.HasSetting(general.53banner.hide)</selected>
 			<onclick>Skin.ToggleSetting(general.53banner.hide)</onclick>
-			<visible>[Control.IsVisible(53) | Control.IsVisible(52)] + !Container.Content(songs) + !Container.Content(albums) + !Container.Content(artists) + !Container.Content(episodes) + !Container.Content(seasons) + !Container.Content(tvshows) + !Container.Content(movies)</visible>
+			<visible>[Control.IsVisible(53) | Control.IsVisible(52) | Control.IsVisible(58)] + !Container.Content(songs) + !Container.Content(albums) + !Container.Content(artists) + !Container.Content(episodes) + !Container.Content(seasons) + !Container.Content(tvshows) + !Container.Content(movies)</visible>
+		</control>
+		<control type="radiobutton" id="9028" description="Banner List (53)">
+			<include>DefContextButtonBlade</include>
+			<align>left</align>
+			<label>32104</label>
+			<selected>Skin.HasSetting(general.58logos.slide)</selected>
+			<onclick>Skin.ToggleSetting(general.58logos.slide)</onclick>
+			<visible>Control.IsVisible(58)</visible>
+		</control>
+		<control type="radiobutton" id="9029" description="Banner List (53)">
+			<include>DefContextButtonBlade</include>
+			<align>left</align>
+			<label>32098</label>
+			<selected>Skin.HasSetting(furniture.hidecastwidget)</selected>
+			<onclick>Skin.ToggleSetting(furniture.hidecastwidget)</onclick>
+			<!--
+			<visible>Control.IsVisible(50) | Control.IsVisible(55) | Control.IsVisible(57) | Control.IsVisible(59) | Control.IsVisible(155) | Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(516)</visible>
+			-->
 		</control>
 		<control type="radiobutton" id="9031" description="Banner show poster (54)">
 			<include>DefContextButtonBlade</include>
@@ -1341,7 +1381,7 @@
 			<onclick>Skin.ToggleSetting(54banner.showinfo)</onclick>
 			<visible>Control.IsVisible(54) + !Container.Content(seasons)</visible>
 		</control>
-		<!--<control type="radiobutton" id="9017" description="Animate Discart (513,514)"><include>DefContextButtonBlade</include><align>left</align><label> - Rotate DiscArt</label><selected>Skin.HasSetting(AnimateDiscArt)</selected><onclick>Skin.ToggleSetting(AnimateDiscArt)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514)</visible><visible>Skin.HasSetting(views.discart)</visible></control><control type="radiobutton" id="9018" description="Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label>Use Cases</label><selected>Skin.HasSetting(views.cases)</selected><onclick>Skin.ToggleSetting(views.cases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(56)</visible></control><control type="radiobutton" id="9019" description="Clear Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - Clear Cases</label><selected>Skin.HasSetting(views.clearcases)</selected><onclick>Skin.Reset(views.bddvdcases)</onclick><onclick>Skin.Reset(views.colourcases)</onclick><onclick>Skin.ToggleSetting(views.clearcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(56)</visible><visible>Skin.HasSetting(views.cases)</visible></control><control type="radiobutton" id="9020" description="Colour Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - Colour Cases</label><selected>Skin.HasSetting(views.colourcases)</selected><onclick>Skin.Reset(views.bddvdcases)</onclick><onclick>Skin.Reset(views.clearcases)</onclick><onclick>Skin.ToggleSetting(views.colourcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(56)</visible><visible>Skin.HasSetting(views.cases)</visible></control><control type="radiobutton" id="9021" description="BD/DVD Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - BD/DVD Cases</label><selected>Skin.HasSetting(views.bddvdcases)</selected><onclick>Skin.Reset(views.colourcases)</onclick><onclick>Skin.Reset(views.clearcases)</onclick><onclick>Skin.ToggleSetting(views.bddvdcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(56)</visible><visible>Skin.HasSetting(views.cases)</visible></control>--><control type="radiobutton" id="9032" description="Title Overlay (515)">
+		<!--<control type="radiobutton" id="9017" description="Animate Discart (513,514)"><include>DefContextButtonBlade</include><align>left</align><label> - Rotate DiscArt</label><selected>Skin.HasSetting(AnimateDiscArt)</selected><onclick>Skin.ToggleSetting(AnimateDiscArt)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514)</visible><visible>Skin.HasSetting(views.discart)</visible></control><control type="radiobutton" id="9018" description="Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label>Use Cases</label><selected>Skin.HasSetting(views.cases)</selected><onclick>Skin.ToggleSetting(views.cases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(58)</visible></control><control type="radiobutton" id="9019" description="Clear Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - Clear Cases</label><selected>Skin.HasSetting(views.clearcases)</selected><onclick>Skin.Reset(views.bddvdcases)</onclick><onclick>Skin.Reset(views.colourcases)</onclick><onclick>Skin.ToggleSetting(views.clearcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(58)</visible><visible>Skin.HasSetting(views.cases)</visible></control><control type="radiobutton" id="9020" description="Colour Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - Colour Cases</label><selected>Skin.HasSetting(views.colourcases)</selected><onclick>Skin.Reset(views.bddvdcases)</onclick><onclick>Skin.Reset(views.clearcases)</onclick><onclick>Skin.ToggleSetting(views.colourcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(58)</visible><visible>Skin.HasSetting(views.cases)</visible></control><control type="radiobutton" id="9021" description="BD/DVD Cases (513,514,50,53,56)"><include>DefContextButtonBlade</include><align>left</align><label> - BD/DVD Cases</label><selected>Skin.HasSetting(views.bddvdcases)</selected><onclick>Skin.Reset(views.colourcases)</onclick><onclick>Skin.Reset(views.clearcases)</onclick><onclick>Skin.ToggleSetting(views.bddvdcases)</onclick><visible>Control.IsVisible(513) | Control.IsVisible(514) | Control.IsVisible(50) | Control.IsVisible(53) | Control.IsVisible(58)</visible><visible>Skin.HasSetting(views.cases)</visible></control>--><control type="radiobutton" id="9032" description="Title Overlay (515)">
 			<include>DefContextButtonBlade</include>
 			<align>left</align>
 			<label>$LOCALIZE[31844] $LOCALIZE[369] $LOCALIZE[31845]</label>
@@ -3124,9 +3164,11 @@
 		<param name="top" default="-50"/>
 		<param name="width" default="50"/>
 		<param name="height" default="50"/>
-		<param name="font" default="symbolbiggerest"/>
+		<param name="font" default="symbolbig"/>
+		<param name="fontsize" default="58"/>
 		<param name="symbol" default=""/>
 		<param name="textcolor" default="$VAR[EmbyMenuColourHighlight]"/>
+		<param name="id" default="-"/>
 		<param name="imagepath" default="$INFO[Window(Home).Property(SkinHelper.AllMoviesBackground.Wall)]"/>
 		<definition>
 			<control type="group">
@@ -3140,17 +3182,24 @@
 					<fadetime>100</fadetime>
 					<aspectratio scalediffuse="false">scale</aspectratio>
 					<imagepath background="true">$PARAM[imagepath]</imagepath>
+					<animation effect="fade" start="30" end="30" time="0" condition="true">Conditional</animation>
+					<visible>!Control.HasFocus($PARAM[id])</visible>
+					<visible>!ControlGroup($PARAM[id]).HasFocus</visible>
 				</control>
-				<control type="label">
-					<description>Loading symbol</description>
-					<width>$PARAM[width]</width>
-					<height>$PARAM[height]</height>
-					<label>$PARAM[symbol]</label>
-					<align>center</align>
-					<aligny>center</aligny>
-					<font>$PARAM[font]</font>
-					<textcolor>$PARAM[textcolor]</textcolor>
-                    <animation effect="rotate" start="00" end="360" center="auto" delay="0" time="1500" loop="true" condition="true">Conditional</animation>
+				<control type="group">
+					<top>0</top>
+					<right>0</right>
+					<width>$PARAM[fontsize]</width>
+					<height>$PARAM[fontsize]</height>
+					<control type="label">
+						<description>Loading symbol</description>
+						<label>$PARAM[symbol]</label>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>$PARAM[font]</font>
+						<textcolor>$PARAM[textcolor]</textcolor>
+						<animation effect="rotate" start="00" end="-360" center="auto" delay="0" time="1500" loop="true" condition="true">Conditional</animation>
+					</control>
 				</control>
 			</control>
 		</definition>
@@ -3261,6 +3310,7 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetPath)]</value>
 
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">plugin://script.skin.helper.service/?action=recentalbums&amp;limit=12&amp;reload=$INFO[Window(Home).Property(widgetreload)]</value>
 		<value>plugin://service.library.data.provider?type=recentmovies&amp;reload=$INFO[Window.Property(recentmovies)]</value>
 	</variable>
 
@@ -3274,7 +3324,8 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.1)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetPath.1)]</value>
 
-		<value>plugin://service.library.data.provider?type=recentmovies&amp;reload=$INFO[Window.Property(recentmovies)]</value>
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">plugin://script.skin.helper.service/?action=recentplayedalbums&amp;limit=12&amp;reload=$INFO[Window(Home).Property(widgetreload)]</value>
+		<value>plugin://script.extendedinfo?info=trendingshows</value>
 	</variable>
 
 	<variable name="DefWidget_3_Content">
@@ -3287,7 +3338,8 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.2)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetPath.2)]</value>
 
-		<value>plugin://service.library.data.provider?type=recentmovies&amp;reload=$INFO[Window.Property(recentmovies)]</value>
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">plugin://script.skin.helper.service/?action=recommendedalbums&amp;limit=12&amp;reload=$INFO[Window(Home).Property(widgetreload)]</value>
+		<value>plugin://script.extendedinfo?info=popularmovies</value>
 	</variable>
 
 	<variable name="DefWidget_4_Content">
@@ -3300,7 +3352,8 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.3)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetPath.3)]</value>
 
-		<value>plugin://service.library.data.provider?type=recentmovies&amp;reload=$INFO[Window.Property(recentmovies)]</value>
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">plugin://script.skin.helper.service/?action=recentalbums&amp;limit=12&amp;reload=$INFO[Window(Home).Property(widgetreload)]</value>
+		<value>plugin://script.skin.helper.service/?action=similarmovies&amp;limit=12&amp;reload=$INFO[Window(Home).Property(widgetreload)]</value>
 	</variable>
 
 <!-- 2,1,3,15 [defs] -->
@@ -3317,6 +3370,7 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetTarget)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetTarget)]</value>
 
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">music</value>
 		<value>video</value>
 	</variable>
 
@@ -3330,6 +3384,7 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetTarget.1)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetTarget.1)]</value>
 
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">music</value>
 		<value>video</value>
 	</variable>
 
@@ -3343,6 +3398,7 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetTarget.2)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetTarget.2)]</value>
 
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">music</value>
 		<value>video</value>
 	</variable>
 
@@ -3356,6 +3412,7 @@
 
 		<value condition="!IsEmpty(Container(300).ListItem.Property(widgetTarget.3)) + !StringCompare(Container(300).ListItem.Property(defaultID),movies) + !StringCompare(Container(300).ListItem.Property(defaultID),tvshows) + !StringCompare(Container(300).ListItem.Property(defaultID),music) + !StringCompare(Container(300).ListItem.Property(defaultID),Weather) + !StringCompare(Container(300).ListItem.Property(defaultID),livetv)">$INFO[Container(300).ListItem.Property(widgetTarget.3)]</value>
 
+		<value condition="StringCompare(Container(300).ListItem.Property(defaultID),music)">music</value>
 		<value>video</value>
 	</variable>
 
