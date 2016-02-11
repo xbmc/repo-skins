@@ -5,14 +5,14 @@
     <controls>
         <!--Dialog Overlay-->
 		<control type="group">
-			<visible>!Window.IsActive(VideoFullScreen.xml) + !Window.IsActive(filebrowser)</visible>
+			<visible>!Window.IsActive(VideoFullScreen.xml) + !Window.IsActive(filebrowser) + !Window.IsVisible(DialogAlbumInfo.xml)</visible>
 			<include>DialogOverlayExtra</include>
 			<animation effect="fade" time="250" start="0" end="100" reversible="false">WindowOpen</animation>
         </control>
 		
         <!--Dialog Info-->
         <control type="group">
-            <visible>!Window.IsVisible(yesnodialog) + !Window.IsActive(filebrowser)</visible>
+            <visible>!Window.IsVisible(yesnodialog) + !Window.IsActive(filebrowser) + !Window.IsVisible(DialogAlbumInfo.xml)</visible>
 			<animation type="WindowOpen">
 				<effect type="slide" start="1200" end="0" time="250" tween="cubic" easing="inout" />
 			</animation>
@@ -29,11 +29,11 @@
 				
 				<colordiffuse>$INFO[Skin.String(GeneralPanelsColor)]</colordiffuse>
             </control>
-            
             <!-- close dialog -->
             <control type="group">
                 <include>animation_fade_visible_hidden</include>
                 <right>60</right>
+                <width>60</width>
                 <posy>40</posy>
                 <include condition="Skin.HasSetting(EnableTouchSupport)">close_button</include>
             </control>
@@ -111,17 +111,68 @@
 					<disabledcolor>$INFO[Skin.String(GeneralTextColor)]</disabledcolor>
                 </control>
                 <control type="button">
-                    <description>Rating</description>
+                    <description>Album</description>
                     <width>800</width>
                     <height>60</height>
                     <align>left</align>
                     <textoffsetx>20</textoffsetx>
                     <textwidth>540</textwidth>
-                    <texturenofocus>-</texturenofocus>
-                    <label>$LOCALIZE[563]:</label>
-                    <label2 fallback="161">$INFO[ListItem.Rating]</label2>
+                    <texturenofocus>dialogs/default/separator.png</texturenofocus>
+                    <label>$LOCALIZE[558]:</label>
+                    <label2>$INFO[ListItem.Album]</label2>
                     <enable>false</enable>
 					<disabledcolor>$INFO[Skin.String(GeneralTextColor)]</disabledcolor>
+                </control>
+                <control type="grouplist">
+                    <!-- Rating -->
+                    <orientation>horizontal</orientation>
+                    <control type="label">
+                        <description>blank space</description>
+                        <width>20</width>
+                    </control>
+                    <control type="label">
+                        <description>Rating</description>
+                        <width>555</width>
+                        <height>60</height>
+                        <align>left</align>
+                        <label>$LOCALIZE[563]:</label>
+                    </control>
+                    <control type="image">
+                        <!--Stars music-->
+                        <width>200</width>
+                        <height>60</height>
+                        <aspectratio aligny="center" align="center">keep</aspectratio>
+                        <colordiffuse>$INFO[Skin.String(GeneralTextColor)]</colordiffuse>
+                        <texture fallback="leftrating/rating0.png">$INFO[ListItem.StarRating,leftrating/]</texture>
+                    </control>
+                    <control type="label">
+                        <description>blank space</description>
+                        <width>10</width>
+                    </control>
+                    <control type="button" id="14">
+						<description>Decrease Rating</description>
+						<width>40</width>
+						<height>60</height>
+						<onclick>DecreaseRating</onclick>
+                        <texturefocus colordiffuse="$INFO[Skin.String(ButtonFocusColor)]" border="5">common/spinctrl/arrow-down-nf.png</texturefocus>
+                        <texturenofocus colordiffuse="$INFO[Skin.String(GeneralTextColor)]" border="5">common/spinctrl/arrow-down-nf.png</texturenofocus>
+						<onleft>15</onleft>
+						<onright>15</onright>
+						<ondown>9000</ondown>
+						<onup>9000</onup>
+					</control>
+					<control type="button" id="15">
+						<description>Increase Rating</description>
+						<width>40</width>
+						<height>60</height>
+						<onclick>IncreaseRating</onclick>
+						<texturefocus colordiffuse="$INFO[Skin.String(ButtonFocusColor)]" border="5">common/spinctrl/arrow-up-nf.png</texturefocus>
+                        <texturenofocus colordiffuse="$INFO[Skin.String(GeneralTextColor)]" border="5">common/spinctrl/arrow-up-nf.png</texturenofocus>
+						<onleft>14</onleft>
+						<onright>14</onright>
+						<ondown>9000</ondown>
+						<onup>9000</onup>
+					</control>
                 </control>
             </control>
             <control type="image">
@@ -139,7 +190,18 @@
                 <height>388</height>
                 <align>justify</align>
                 <pagecontrol>60</pagecontrol>
-                <label fallback="19055">$INFO[ListItem.Plot]</label>
+                <label>$INFO[ListItem.Plot]</label>
+            </control>
+            <control type="textbox">
+                <description>Plot value fallback</description>
+                <posx>700</posx>
+                <posy>506</posy>
+                <width>1160</width>
+                <height>388</height>
+                <align>justify</align>
+                <pagecontrol>60</pagecontrol>
+                <label fallback="19055">$INFO[Window(Home).Property(SkinHelper.Music.Info)]</label>
+                <visible>IsEmpty(Control.GetLabel(4))</visible>
             </control>
 			<!--Button Group-->
             <control type="grouplist" id="9000">
@@ -148,15 +210,8 @@
 				<orientation>horizontal</orientation>
 				<itemgap>20</itemgap>
                 <defaultcontrol>5</defaultcontrol>
-				<onup>50</onup>
-				<control type="button" id="10">
-                    <!--OK-->
-                    <width>290</width>
-                    <height>80</height>
-                    <align>center</align>
-                    <label>186</label>
-					<include>DialogButtonOther</include>
-                </control>
+				<onup>14</onup>
+                <width>1200</width>
 				<control type="button" id="11">
                     <!--Cancel-->
                     <width>290</width>
@@ -164,6 +219,7 @@
                     <align>center</align>
                     <label>222</label>
 					<include>DialogButtonOther</include>
+                    <onclick>Close</onclick>
                 </control>
 				<control type="button" id="12">
                     <!--Album Info button-->
@@ -182,6 +238,33 @@
                     <label>13405</label>
 					<enable>!Skin.HasSetting(KioskMode.Enabled)</enable>
                 </control>
+            </control>
+            <!--Arrows-->
+            <control type="image">
+                <animation effect="fade" start="100" end="50" tween="sine" easing="inout" time="800" pulse="true" reversible="false" condition="true">Conditional</animation>
+                <right>10</right>
+                <bottom>72</bottom>
+                <posy>50</posy>
+                <width>20</width>
+                <height>60</height>
+                <aspectratio>keep</aspectratio>
+                <texture>dialogs/videoinfo/arrow.png</texture>
+                <visible>!Control.HasFocus(51)</visible>
+                <colordiffuse>white</colordiffuse>
+                <visible>Container(9000).HasNext</visible>
+            </control>
+            <control type="image">
+                <animation effect="fade" start="100" end="50" tween="sine" easing="inout" time="800" pulse="true" reversible="false" condition="true">Conditional</animation>
+                <right>1240</right>
+                <bottom>72</bottom>
+                <posy>50</posy>
+                <width>20</width>
+                <height>60</height>
+                <aspectratio>keep</aspectratio>
+                <texture flipx="true">dialogs/videoinfo/arrow.png</texture>
+                <visible>!Control.HasFocus(51)</visible>
+                <colordiffuse>white</colordiffuse>
+                <visible>Container(9000).HasPrevious</visible>
             </control>
         </control>
     </controls>
