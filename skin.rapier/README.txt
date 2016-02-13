@@ -48,7 +48,6 @@ script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
 script.skin.helper.service v1.0.11
 script.globalsearch v2.0.8
-service.skin.widgets v0.0.29
 script.image.resource.select 0.0.5
 resource.uisounds.rapier 1.0.1
 resource.images.studios.white 0.0.2
