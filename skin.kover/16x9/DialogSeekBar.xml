@@ -3,11 +3,7 @@
 	<!-- seekbar -->
 	<defaultcontrol always="true">901</defaultcontrol>
 	<visible>[VideoPlayer.IsFullscreen | Window.IsVisible(visualisation)] + [Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsVisible(videoosd) | Window.IsVisible(musicosd) | Window.IsVisible(fullscreeninfo) | Window.IsVisible(osdvideosettings) | Window.IsVisible(osdaudiosettings) | Window.IsVisible(numericinput) | Window.IsVisible(pvrosdchannels) | Window.IsVisible(pvrosdguide)]</visible>
-	<onload>SetProperty(SidebarPos,$INFO[Skin.String(HOM.View1.BBSidebar)],Home)</onload>
-	<onload>SetProperty(DialogPos,$INFO[Skin.String(HOM.View1.DIAPanel)],Home)</onload>	
 	<onload>SetProperty(CompPrefix,HOM.View1,Home)</onload>	
-	<onunload>SetProperty(SidebarPos,$INFO[Skin.String(HOM.View1.BBSidebar)],Home)</onunload>
-	<onunload>SetProperty(DialogPos,$INFO[Skin.String(HOM.View1.DIAPanel)],Home)</onunload>	
 	<onunload>SetProperty(CompPrefix,HOM.View1,Home)</onunload>	
 	
 	<controls>
@@ -18,14 +14,14 @@
 			<control type="group">
 				<width>636</width>
 				<height>357</height>
-				<animation effect="slide" start="0,0" end="0,592" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM)">Conditional</animation>
-				<animation effect="slide" start="0,0" end="132,0" time="0" condition="Skin.String(HOM.View1.BBSidebar,LEFT)">Conditional</animation>
-				<animation effect="slide" start="0,0" end="1152,0" time="0" condition="Skin.String(HOM.View1.BBSidebar,RIGHT)">Conditional</animation>
-				<animation effect="slide" start="0,0" end="0,132" time="0" condition="Skin.String(HOM.View1.BBSidebar,TOP)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,592" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM) | Skin.HasSetting(ForceOSDBottom)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="132,0" time="0" condition="Skin.String(HOM.View1.BBSidebar,LEFT) + !Skin.HasSetting(ForceOSDBottom)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1152,0" time="0" condition="Skin.String(HOM.View1.BBSidebar,RIGHT) + !Skin.HasSetting(ForceOSDBottom)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,132" time="0" condition="Skin.String(HOM.View1.BBSidebar,TOP) + !Skin.HasSetting(ForceOSDBottom)">Conditional</animation>
 				
 				<!-- Progress -->
 				<control type="group">
-					<animation effect="slide" start="0,0" end="0,238" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="0,238" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM) | Skin.HasSetting(ForceOSDBottom)">Conditional</animation>
 					<visible>!Window.IsVisible(10153) + !Window.IsVisible(10124) + !Window.IsVisible(10123) + !Window.IsVisible(10125) + !Window.IsVisible(fullscreeninfo)</visible>
 					<control type="image">
 						<left>0</left>
@@ -62,13 +58,25 @@
 						<textcolor>$INFO[Skin.String(Color.B1Txt1NF)]</textcolor>
 						<label>$INFO[Player.Time] / $INFO[Player.Duration]</label>
 					</control>
+					<control type="progress">
+						<left>142</left>
+						<top>80</top>
+						<width>458</width>
+						<height>10</height>
+						<info>Player.ProgressCache</info>
+						<texturebg colordiffuse="$INFO[Skin.String(Color.B1Txt2NF)]">common/white.png</texturebg>
+						<lefttexture>-</lefttexture>
+						<midtexture colordiffuse="$INFO[Skin.String(Color.B1Txt1NF)]">common/white.png</midtexture>
+						<righttexture>-</righttexture>
+						<overlaytexture>-</overlaytexture>
+					</control>		
 					<control type="progress" id="1">
 						<left>142</left>
 						<top>80</top>
 						<width>458</width>
 						<height>10</height>
 						<info>Player.Progress</info>
-						<texturebg colordiffuse="$INFO[Skin.String(Color.B1Txt2NF)]">common/white.png</texturebg>
+						<texturebg colordiffuse="00ffffff">common/white.png</texturebg>
 						<lefttexture>-</lefttexture>
 						<midtexture colordiffuse="$VAR[CategoryColor]">common/white.png</midtexture>
 						<righttexture>-</righttexture>
@@ -78,17 +86,20 @@
 			</control>
 
 			<!-- Dialogs Background -->
-			<include name="DialogBgDef">
+			<include name="DialogBgDef" condition="!Skin.HasSetting(ForceOSDBottom)">
 				<param name="CompPrefix" value="HOM.View1" />
-			</include>					
+			</include>
+			<include name="DialogBgDef" condition="Skin.HasSetting(ForceOSDBottom)">
+				<param name="CompPrefix" value="DIA.View1" />
+			</include>			
 			
 			<!-- Sidebar Position-->	
 			<control type="group">	
 				<!--visible>!StringCompare(Window(Home).Property(DialogVisibility),VISIBLE)</visible-->
 
 				<control type="group">		
-					<visible>Skin.String(HOM.View1.BBSidebar,LEFT) | Skin.String(HOM.View1.BBSidebar,RIGHT)</visible>
-					<include condition="Skin.String(HOM.View1.BBSidebar,LEFT) | Skin.String(HOM.View1.BBSidebar,RIGHT)">BarVPreview</include>
+					<visible>[Skin.String(HOM.View1.BBSidebar,LEFT) | Skin.String(HOM.View1.BBSidebar,RIGHT)] + !Skin.HasSetting(ForceOSDBottom)</visible>
+					<include condition="[Skin.String(HOM.View1.BBSidebar,LEFT) | Skin.String(HOM.View1.BBSidebar,RIGHT)] + !Skin.HasSetting(ForceOSDBottom)">BarVPreview</include>
 					<animation effect="slide" start="0,0" end="1800,0" time="0" condition="Skin.String(HOM.View1.BBSidebar,RIGHT)">Conditional</animation>
 					<control type="label">
 						<top>0</top>
@@ -121,9 +132,9 @@
 				</control>
 				
 				<control type="group">		
-					<visible>Skin.String(HOM.View1.BBSidebar,TOP) | Skin.String(HOM.View1.BBSidebar,BOTTOM)</visible>
-					<include condition="Skin.String(HOM.View1.BBSidebar,TOP) | Skin.String(HOM.View1.BBSidebar,BOTTOM)">BarHPreview</include>
-					<animation effect="slide" start="0,0" end="0,960" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM)">Conditional</animation>		
+					<visible>Skin.String(HOM.View1.BBSidebar,TOP) | Skin.String(HOM.View1.BBSidebar,BOTTOM) | Skin.HasSetting(ForceOSDBottom)</visible>
+					<include condition="Skin.String(HOM.View1.BBSidebar,TOP) | Skin.String(HOM.View1.BBSidebar,BOTTOM) | Skin.HasSetting(ForceOSDBottom)">BarHPreview</include>
+					<animation effect="slide" start="0,0" end="0,960" time="0" condition="Skin.String(HOM.View1.BBSidebar,BOTTOM) | Skin.HasSetting(ForceOSDBottom)">Conditional</animation>		
 					<control type="label">
 						<top>0</top>
 						<left>144</left>

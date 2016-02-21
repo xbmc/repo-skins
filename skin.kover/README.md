@@ -47,6 +47,8 @@ However, because spending time into making it to look how you want is not the ta
 	  * [Export color scheme](#export-color-scheme)
 	  * [Export viewtypes](#export-viewtypes)
 * [Expert Feature : custom lists](#expert-feature--custom-lists)
+  * [Using custom lists](#using-custom-lists)
+  * [Creating custom lists](#creating-custom-lists)
   * [Example for Designer_CustomList1.xml](#example-for-designer_customlist1xml)
  
 
@@ -211,11 +213,8 @@ Each bloc has a certain amount of settings you can give different values. Some a
 
 | Name | Description |
 | :-----------: | ----------- |
-| **Visibility** | You can choose between `VISIBLE` `HIDDEN` `IDLEFADE` `ONFOCUS`. ONFOCUS is available in bloc 5 only. [See idlefade here](#idlefade). |
-| **Horizontal position (column)** | Set the element's start position on the grid (horizontal). You can choose between `A` `B` `C`. |
-| **Vertical position (row)** | Set the element's start position on the grid (vertical). You can choose between `A` `B` `C`. |
-| **Width** | Set the element's amount of columns on the grid. You can choose between `1COLUMN` `2COLUMN` `3COLUMN`. |
-| **Hight** | Set the element's amount of rows on the grid. You can choose between `1ROW` `2ROW` `3ROW`. |
+| **Visibility** | You can choose between `VISIBLE` `HIDDEN` `IDLEFADE`. More options are available for Bloc 4 and 5. |
+| **Move & Resize** | Set the element's position and SIZE. You can place and size blocs within X and Y coordinates `A` `B` `C`. |
 | **Background style** | You can choose between `FANART` `COLOR` `IMAGE` . `FANART` is selectable for [Wallpaper](#wallpaper) only. |
 | **Background image** | You can browse for your own picture / pictures set. |
 
@@ -246,7 +245,7 @@ Specifics :
 | :-----------: | ----------- |
 | **Layout Orientation** | Set the whole layout orientation. You can choose between `HORIZONTAL` `VERTICAL`. Mostly used for sidebar position. |
 | **Sidebar Position** | Set the sidebar position (sticks to borders). You can choose between `LEFT` `RIGHT` `TOP` `BOTTOM`. |
-| **Sidebar Autohide** | Set the sidebar to autohide. You can choose between `DISABLED` `ENABLED` `IDLEFADE`. When blocs background is not 3X3, ENABLED is not available. [See idlefade here](#idlefade). |
+| **Sidebar Autohide** | Set the sidebar to autohide. You can choose between `DISABLED` `ENABLED` `IDLEFADE` `HIDDEN`. When blocs background is not 3X3, `ENABLED` and `HIDDEN` are not available. [See idlefade here](#idlefade). |
 | **Dialog panel Position** | Set the Dialog panel position. You can choose between `LEFT` `RIGHT` `TOP` `BOTTOM`. |
 | **Dialog slide Type** | Set the way the dialog panel opens. You can choose between `PUSH` `OVER`. PUSH slides all blocs when the panel's edge reaches one of them. OVER just slide over everything. [View Dialog slide Type in video](https://plus.google.com/102331461184341553815/posts/AbV9pR8vYBN). |
 | **Horizontal Separator** | Add a 12 pixels gap between blocs (vertically). You can choose between `AB` `BC` `NONE`. |
@@ -264,7 +263,7 @@ Specifics :
 
 | Name | Description |
 | :-----------: | ----------- |
-| **List Type** | Set the look of the list. You can choose between `FIXEDLIST` `WIDELIST` `POSTER` `BANNER` `FANART` `TILES` `CARD` `CUSTOM1` `CUSTOM2` `CUSTOM3`. |
+| **List Type** | Set the look of the list. You can choose between `FIXEDLIST` `WIDELIST` `POSTER` `BANNER` `FANART` `TILES` `CARD` `CUSTOM1` `CUSTOM2` `CUSTOM3` `CUSTOM4` `CUSTOM5` `CUSTOM6`. For `CUSTOM1` to `CUSTOM6` see [Expert Feature : custom lists](#expert-feature--custom-lists)|
 | **List Orientation** | Set the list's scrolling orientation. You can choose between `HORIZONTAL` `VERTICAL`. |
 | **Go Submenu** | Set the position for submenu to open when you reach the end of the list. You can choose between `LEFT` `RIGHT` `UP` `DOWN`. |
 | **Scroll Indicator** | Show scroll indicators over the list. You can choose between `VISIBLE` `HIDDEN`. Matches the List Orientation. |
@@ -279,12 +278,17 @@ Specifics :
 
 | Name | Description |
 | :-----------: | ----------- |
-| **Art Type** | Set art to show in the bloc. You can choose between `FANART` `POSTER` `THUMB`. When ExtraFanart is enabled, you can also choose `CLEARART` `CLEARLOGO` `DISCART`. |
+| **Art Type** | Set art to show in the bloc. You can choose between `FANART` `POSTER` `THUMB` `BANNER`. When ExtraFanart is enabled, you can also choose `CLEARART` `CLEARLOGO` `DISCART`. |
 | **Scroll Indicator** | Show scroll indicators over the arts. You can choose between `VISIBLE` `HIDDEN`. Matches the Bloc1 : List Orientation. |
 
 ##### Bloc4 : Video / Home art
 
-No specifics
+Specifics :
+
+| Name | Description |
+| :-----------: | ----------- |
+| **Visibility** | You can also choose for bloc 4 `ISPLAYING` `TVTUNES` `FALLBACK`. `ISPLAYING` makes bloac 4 visible only when a media is playing. TVTUNES` (available when TvTunes addon is enabled) only show the addon Video theme if found. `FALLBACK` Shows only fallback art set. |
+| **Fallback picture** | Set art to show in the bloc (when no media is playing or visibility set to `FALLBACK`). You can choose between `FANART` `POSTER` `THUMB` `BANNER`. When ExtraFanart is enabled, you can also choose `CLEARART` `CLEARLOGO` `DISCART`. |
 
 ##### Bloc5 : Submenu
 
@@ -381,23 +385,43 @@ This will generate a zip containing the current [Color scheme](#kover-color-tool
 
 ## Expert feature : custom lists
 
+### Using custom lists
+
+KOver is not provided with custom lists by default. 
+To enable custom lists, you will have to download user made files.
+
+You can find custom lists here : [Download page](http://forum.kodi.tv/showthread.php?tid=252432)
+
+Instructions :
+
+* Download a file from the above link
+* Paste the file in the skin */16x9/ folder
+* Open the Designer
+* Click the button "Update custom lists" at bottom left of the window
+* Set the list type in bloc 1
+
+### Creating custom lists
+
 **This feature is reserved for users with some coding skills**
 
 Custom lists is a feature that allows you to code your own list types in [Bloc 1](#bloc1--list) with the benefits of the built-in layout management.
 That means coding those lists following the explainations will make them to adapt themselves in size, position and colors to the [Kover Designer's](#kover-designer) settings.
 
-In the [Designer](#kover-designer), under [Bloc 1](#bloc1--list) the List Type settings contains 3 values called `CUSTOM1` `CUSTOM2` `CUSTOM3`.
+In the [Designer](#kover-designer), under [Bloc 1](#bloc1--list) the List Type settings contains 6 values called `CUSTOM1` `CUSTOM2` `CUSTOM3` `CUSTOM4` `CUSTOM5` `CUSTOM6`.
 Those are linked as follow :
 
-| List Type | File linked to |
-| :-----------: | ----------- |
-| **CUSTOM1** | [Designer_CustomList1.xml](./16x9/Designer_CustomList1.xml) |
-| **CUSTOM2** | [Designer_CustomList2.xml](./16x9/Designer_CustomList2.xml) |
-| **CUSTOM3** | [Designer_CustomList3.xml](./16x9/Designer_CustomList3.xml) |
+| List Type | File linked to | Include name |
+| :-----------: | ----------- | ----------- |
+| **CUSTOM1** | [Designer_CustomList1.xml](https://drive.google.com/open?id=0B0PL_QSOtQ-ZeFRUMVhfRzREdm8) | include name="Custom1" |
+| **CUSTOM2** | [Designer_CustomList2.xml](https://drive.google.com/file/d/0B0PL_QSOtQ-ZbUEwX1BPM3BuMTA/view?usp=sharing) | include name="Custom2" |
+| **CUSTOM3** | [Designer_CustomList3.xml](https://drive.google.com/file/d/0B0PL_QSOtQ-ZaER5Mk1WZ1BTQjQ/view?usp=sharing) | include name="Custom3" |
+| **CUSTOM4** | [Designer_CustomList4.xml]() | include name="Custom4" |
+| **CUSTOM5** | [Designer_CustomList5.xml]() | include name="Custom5" |
+| **CUSTOM6** | [Designer_CustomList6.xml]() | include name="Custom6" |
 
-> You can find those files in the skin's folder ./skin.KOver/16x9/
+> You have to create a new file using xml editor and paste the code below. When done, save it with the exact name as above. The number in the filename MUST match the custom include name numnber (ex : Designer_CustomList1.xml must have include name="Custom1"). Be warned that the filename is case sensitive !!!
 
-Explanations are included directly in the files :
+Explanations in the code below :
 
 ### Example for Designer_CustomList1.xml
 
@@ -450,9 +474,8 @@ Explanations are included directly in the files :
 
 	<!-- Custom List 1 -->
 
-	<!-- DO NOT MODIFY FROM HERE -->
+	<!-- GIVE THE NAME BELOW THE SAME NUMBER AS XML FILE -->
 	<include name="Custom1">
-	<!-- TO HERE -->
 
 		<itemlayout width="$PARAM[width]" height="71">
 			<control type="image">
