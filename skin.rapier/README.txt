@@ -19,7 +19,7 @@ Can be installed through the official Kodi repository.
 
 DEVELOPMENT:
 
-https://github.com/gade01/Rapier
+https://github.com/gade01/Rapier/tree/Jarvis
 
 
 SUPPORT: 
@@ -48,7 +48,7 @@ script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
 script.skin.helper.service v1.0.11
 script.globalsearch v2.0.8
-script.image.resource.select 0.0.5
+script.image.resource.select 0.0.9
 resource.uisounds.rapier 1.0.1
 resource.images.studios.white 0.0.2
 
