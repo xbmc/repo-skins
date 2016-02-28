@@ -33,42 +33,35 @@
 	<include name="background">
 		<control type="group">
 			<visible>!Window.IsVisible(fullscreenvideo)</visible><!-- Don't try to show background if Video screen is showing -->
-			<control type="image"><!-- Use a black base layer for backdrops -->
+			<control type="image"><!-- Use skin default background as base layer for backdrops -->
 				<include>fullscreenimage</include>
-				<texture>colours/black.png</texture>
-				<aspectratio>scale</aspectratio>
+				<texture>background.png</texture>
+				<aspectratio>stretch</aspectratio>
 			</control>
-			<control type="group">
-				<visible>!Container().Scrolling + ![Skin.HasSetting(background-playingmedia) + Player.HasVideo]</visible>
-				<animation effect="fade" start="0" end="100" time="400" delay="2600" tween="quadratic" easing="out">Visible</animation>
-				<control type="multiimage">
-					<include>fullscreenimage</include>
-					<randomize>true</randomize>
-					<timeperimage>6000</timeperimage>
-					<fadetime>200</fadetime>
-					<imagepath background="false">$VAR[BackgndImage]</imagepath>
-					<aspectratio>stretch</aspectratio>
-				</control>
+			<control type="multiimage">
+				<include>fullscreenimage</include>
+				<randomize>true</randomize>
+				<timeperimage>6000</timeperimage>
+				<fadetime>200</fadetime>
+				<imagepath background="false">$VAR[BackgndImage]</imagepath>
+				<aspectratio>stretch</aspectratio>
+				<colordiffuse>$VAR[BackgndImageVisibity]</colordiffuse>
+				<animation effect="fade" start="0" end="100" time="200" delay="2800">Visible</animation>
+				<visible>!Container().Scrolling + !System.ScreenSaverActive + ![Skin.HasSetting(background-playingmedia) + Player.HasVideo]</visible>
 			</control>
 			<control type="group">
 				<visible>Skin.HasSetting(background-playingmedia) + [[Skin.HasSetting(homemenu-vertical) + Window.IsVisible(home)] | !Window.IsVisible(home)]</visible>
 				<control type="videowindow">
 					<include>fullscreenimage</include>
+					<colordiffuse>$VAR[BackgndImageVisibity]</colordiffuse>
 					<visible>Player.HasVideo</visible>
 				</control>
 				<control type="visualisation">
 					<include>fullscreenimage</include>
+					<colordiffuse>$VAR[BackgndImageVisibity]</colordiffuse>
 					<animation effect="fade" time="200">VisibleChange</animation>
 					<visible>Player.HasAudio + IsEmpty(Window(VideoLibrary).Property(PlayingBackgroundMedia))</visible>
 				</control>
-			</control>
-			<control type="image"><!-- mask to fade backgrounds -->
-				<include>fullscreenimage</include>
-				<texture>background-mask.png</texture>
-				<colordiffuse>mask-background</colordiffuse>
-				<include>background-fade</include>
-				<aspectratio>stretch</aspectratio>
-				<visible>Skin.HasSetting(background-fanart) | Skin.HasSetting(background-playingmedia) | Skin.HasSetting(background-slideshow)</visible>
 			</control>
 		</control>
 	</include>
@@ -200,6 +193,17 @@
 					<label>$INFO[VideoPlayer.Title]</label>
 					<font>font12</font>
 					<include condition="Skin.HasSetting(text-autoscroll)">scrolltext</include>
+					<visible>!Pvr.IsPlayingTv</visible>
+				</control>
+				<control type="label">
+					<left>212</left>
+					<top>39</top>
+					<width>430</width>
+					<height>25</height>
+					<label>$INFO[VideoPlayer.ChannelNumberLabel] - $INFO[VideoPlayer.ChannelName]</label>
+					<font>font12</font>
+					<include condition="Skin.HasSetting(text-autoscroll)">scrolltext</include>
+					<visible>Pvr.IsPlayingTv</visible>
 				</control>
 				<control type="label"><!-- Time and duration -->
 					<left>212</left>
@@ -234,16 +238,25 @@
 					<top>27</top>
 					<width>475</width>
 					<height>25</height>
-					<label>$INFO[MusicPlayer.Album]</label>
+					<label>$INFO[MusicPlayer.Title]</label>
 					<font>font11</font>
 					<include condition="Skin.HasSetting(text-autoscroll)">scrolltext</include>
+				</control>
+				<control type="label"><!-- Radio channel name -->
+					<left>145</left>
+					<top>15</top>
+					<width>475</width>
+					<height>25</height>
+					<label>$LOCALIZE[19021] - $INFO[MusicPlayer.ChannelName]</label>
+					<font>font13</font>
+					<visible>Pvr.IsPlayingRadio</visible>
 				</control>
 				<control type="label">
 					<left>145</left>
 					<top>52</top>
 					<width>475</width>
 					<height>25</height>
-					<label>$INFO[MusicPlayer.Title]</label>
+					<label>$INFO[MusicPlayer.Album]</label>
 					<font>font11</font>
 					<include condition="Skin.HasSetting(text-autoscroll)">scrolltext</include>
 				</control>
@@ -254,6 +267,7 @@
 					<height>25</height>
 					<label>$INFO[MusicPlayer.Time]$INFO[MusicPlayer.Duration, / ]</label>
 					<font>font12</font>
+					<visible>!Pvr.IsPlayingRadio</visible>
 				</control>
 			</control>
 		</control>
@@ -343,7 +357,7 @@
 			<itemgap>0</itemgap>
 			<aligny>center</aligny>
 			<align>center</align>
-			<visible>[Control.IsVisible(2) | Control.IsVisible(11) | Control.IsVisible(12) | Control.IsVisible(13) | Control.IsVisible(14) | Control.IsVisible(17) | Control.IsVisible(50) | Control.IsVisible(52) | Control.IsVisible(53) | Control.IsVisible(58) | Control.IsVisible(570)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
+			<visible>[[Window.IsVisible(MyPVRChannels.xml) + [Control.IsVisible(11) | Control.IsVisible(12) | Control.IsVisible(12)]] | Window.IsVisible(MyPVRChannels.xml) | Window.IsVisible(MyPVRTimers.xml) | Window.IsVisible(MyPVRSearch.xml) | SubString(Control.GetLabel(2),$LOCALIZE[31941],Right) | SubString(Control.GetLabel(2),$LOCALIZE[31943],Right) | SubString(Control.GetLabel(2),$LOCALIZE[31944],Right) | SubString(Control.GetLabel(2),$LOCALIZE[31946],Right) | Control.IsVisible(560)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
 			<control type="image">
 				<width>32</width>
 				<height>32</height>
@@ -386,13 +400,13 @@
 	<include name="group-focushorz">
 		<control type="grouplist">
 			<left>0</left>
-			<top>90</top>
+			<top>100</top>
 			<width>32</width>
 			<height>96</height>
 			<itemgap>0</itemgap>
 			<aligny>center</aligny>
 			<align>center</align>
-			<visible>[Control.IsVisible(54) | Control.IsVisible(57)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
+			<visible>[SubString(Control.GetLabel(2),$LOCALIZE[31942],Right) | SubString(Control.GetLabel(2),$LOCALIZE[31945],Right)] + [!Skin.HasSetting(lock-screensettings) | [!StringCompare(Skin.String(show-scrollbar),$LOCALIZE[31877]) + IntegerGreaterThan(Container().NumPages,1)]]</visible>
 			<control type="image">
 				<width>32</width>
 				<height>32</height>
@@ -435,7 +449,7 @@
 	<include name="settings-submenu-common">
 		<width>885</width>
 		<height>56</height>
-		<font>font12</font>
+		<font>font11</font>
 	</include>
 
 	<include name="videoinfo-options-common">
@@ -471,11 +485,6 @@
 	<include name="scrolltext">
 		<scroll>true</scroll>
 		<visible>![System.ScreenSaverActive]</visible>
-	</include>
-
-	<include name="background-fade">
-		<animation effect="fade" start="100" end="60" condition="Skin.HasSetting(background-visibiltymed)">Conditional</animation>
-		<animation effect="fade" start="100" end="10" condition="Skin.HasSetting(background-visibiltyhigh)">Conditional</animation>
 	</include>
 
 	<include name="settingbutton-fade">
