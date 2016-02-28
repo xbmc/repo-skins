@@ -2,10 +2,13 @@
 <!--Titan-->
 <window>
     
-    <defaultcontrol always="true">9000</defaultcontrol>
+    <onload>AlarmClock(setfocus,SetFocus(9005),00:01,silent)</onload>
+	<onunload condition="!IsEmpty(Window(Home).Property(TrailerPlaying))">PlayerControl(Stop)</onunload>
 	<onunload>ClearProperty(AdditionalInfo)</onunload>
+	<onunload>ClearProperty(TrailerPlaying,Home)</onunload>
+    <onunload>ClearProperty(filename_formatted,Home)</onunload>
     <controls>
-         <!--fake list used as container -->
+        <!--fake list used as container -->
 		<!-- use Container(999).ListItem to get all info -->
 		<!-- all normal listitem properties will be available -->
 		<control type="list" id="999">
@@ -14,11 +17,21 @@
             <itemlayout />
             <focusedlayout />
 		</control>
+        
+        <!-- fake button with actions -->
+        <control type="button" id="9005">
+            <visible allowhiddenfocus="true">false</visible>
+            <onfocus>RunScript(script.skin.helper.service,action=GETFILENAME,output=filename_formatted)</onfocus>
+            <onfocus condition="SubString(Skin.String(videoinfo_traileraction),auto) + !IsEmpty(Container(999).ListItem.Trailer) + !Player.HasMedia">PlayMedia($ESCINFO[Container(999).ListItem.Trailer],1)</onfocus>
+            <onfocus condition="SubString(Skin.String(videoinfo_traileraction),auto) + IsEmpty(Container(999).ListItem.Trailer) + !Player.HasMedia + [StringCompare(Container(999).ListItem.Property(type),movie) | StringCompare(Container(999).ListItem.Property(type),tvshow)]">RunScript(script.skin.helper.service,action=searchyoutube,windowed=true,autoplay=true,title=$INFO[Container(999).ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onfocus>
+            <onfocus condition="SubString(Skin.String(videoinfo_traileraction),auto) + !IsEmpty(Container(999).ListItem.Trailer) + !Player.HasMedia">SetProperty(TrailerPlaying,Playing,Home)</onfocus>
+            <onfocus>SetFocus(9000)</onfocus>
+        </control>
     
 		<control type="group">
 	
             <include>GlobalBackground</include>
-			<include>nowplayingbackground</include>
+			<include>NowPlayingBackground</include>
 				
 			<control type="group">
 				<include>animation_window_open_close</include>
@@ -33,7 +46,7 @@
                     <visible>!Skin.HasSetting(DialogVideoInfoHidePanel)</visible>
 					<colordiffuse>$VAR[ViewDetailsPanelColor]</colordiffuse>
 				</control>
-                         <!-- Header -->
+                <!-- Header -->
                 <control type="group">
                 <visible>!Window.IsActive(DialogKaiToast.xml) + !Window.IsActive(DialogExtendedProgressBar.xml) + !Control.IsVisible(88888)</visible>
                     <control type="label">
@@ -133,6 +146,21 @@
 							<height>60</height>
 							<align>center</align>
 							<textoffsetx>0</textoffsetx>
+                            <visible>Skin.HasSetting(videoinfo_button_play)</visible>
+						</control>
+                        
+                        <control type="button" id="244">
+							<!--Go Fullscreen-->
+							<label>244</label>
+							<width>285</width>
+							<height>60</height>
+							<align>center</align>
+							<textoffsetx>0</textoffsetx>
+							<visible>Player.HasVideo</visible>
+                            <onclick>Close</onclick>
+                            <onclick>Close</onclick>
+                            <onclick>ClearProperty(TrailerPlaying,Home)</onclick>
+                            <onclick>FullScreen</onclick>
 						</control>
 						
 						<control type="button" id="6">
@@ -142,21 +170,29 @@
 							<align>center</align>
 							<textoffsetx>0</textoffsetx>
 							<label>20410</label>
-							<onclick>PlayMedia($ESCINFO[Container(999).ListItem.Trailer],1)</onclick>
-                            <visible>!IsEmpty(Container(999).ListItem.Trailer)</visible>
+                            <onclick condition="Skin.String(videoinfo_traileraction,fullscreen)">Close</onclick>
+                            <onclick condition="Skin.String(videoinfo_traileraction,fullscreen)">Close</onclick>
+                            <onclick condition="Skin.String(videoinfo_traileraction,fullscreen)">PlayMedia($ESCINFO[Container(999).ListItem.Trailer])</onclick>
+                            <onclick condition="!Skin.String(videoinfo_traileraction,fullscreen)">PlayMedia($ESCINFO[Container(999).ListItem.Trailer],1)</onclick>
+                            <onclick condition="!Skin.String(videoinfo_traileraction,fullscreen)">SetProperty(TrailerPlaying,Playing,Home)</onclick>
+							<visible>Skin.HasSetting(videoinfo_button_trailer)</visible>
+                            <visible>!IsEmpty(Container(999).ListItem.Trailer) + Container.Content(movies) + IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
 						</control>
-                 						<control type="button" id="100">
+                        
+                        <control type="button" id="100">
 							<!--Search Trailer on Youtube-->
 							<width>285</width>
 							<height>60</height>
 							<align>center</align>
 							<textoffsetx>0</textoffsetx>
 							<label>YouTube $LOCALIZE[20410]</label>
-							<onclick condition="System.HasAddon(plugin.video.youtube)">RunScript(script.skin.helper.service,action=searchyoutube,title=$INFO[Container(999).ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onclick>
-							<onclick condition="!System.HasAddon(plugin.video.youtube)">ActivateWindow(Videos,plugin://plugin.video.youtube)</onclick>
+							<onclick condition="System.HasAddon(plugin.video.youtube) + Skin.String(videoinfo_traileraction,fullscreen)">RunScript(script.skin.helper.service,action=searchyoutube,title=$INFO[Container(999).ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onclick>
+                            <onclick condition="System.HasAddon(plugin.video.youtube) + !Skin.String(videoinfo_traileraction,fullscreen)">RunScript(script.skin.helper.service,action=searchyoutube,windowed=true,title=$INFO[Container(999).ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onclick>
+                            <onclick condition="!System.HasAddon(plugin.video.youtube)">ActivateWindow(Videos,plugin://plugin.video.youtube)</onclick>
+							<visible>IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
 							<visible>StringCompare(Container(999).ListItem.Property(type),movie) | stringcompare(Container(999).ListItem.Property(ItemType),Movie)</visible>
 						</control>
-                 						<control type="button" id="114">
+                        <control type="button" id="114">
 							<!--Cast Button-->
 							<label>206</label>
 							<width>285</width>
@@ -168,6 +204,7 @@
 							<onclick>SetFocus(9001)</onclick>
                             <visible>IntegerGreaterThan(Container(998).NumItems,0)</visible>
 							<visible>!StringCompare(Window.Property(AdditionalInfo),cast)</visible>
+                            <visible>Skin.HasSetting(videoinfo_button_youtubetrailer)</visible>
 						</control>
                         <control type="button" id="31622">
 							<!--Similar Button-->
@@ -181,6 +218,7 @@
 							<onclick>SetFocus(9001)</onclick>
                             <visible>IntegerGreaterThan(Container(997).NumItems,0)</visible>
 							<visible>!StringCompare(Window.Property(AdditionalInfo),similar)</visible>
+                            <visible>Skin.HasSetting(videoinfo_button_similar)</visible>
 						</control>
 						<control type="button" id="116">
 							<!--Info Button-->
@@ -203,8 +241,9 @@
 							<onclick condition="StringCompare(Container(999).ListItem.Property(type),movie)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[Container(999).ListItem.Property(DBID)],name=$INFO[Container(999).ListItem.Title])</onclick>
 							<onclick condition="StringCompare(Container(999).ListItem.Property(type),tvshow)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[Container(999).ListItem..Property(DBID)],name=$INFO[Container(999).ListItem.TvShowTitle])</onclick>
 							<onclick condition="StringCompare(Container(999).ListItem.Property(type),episode)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[Container(999).ListItem.TvShowTitle],season=$INFO[Container(999).ListItem.Season],silent=True)</onclick>
-						</control>
-                 						<control type="radiobutton" id="9300">
+                            <visible>Skin.HasSetting(videoinfo_button_extendedinfo)</visible>
+                        </control>
+                        <control type="radiobutton" id="9300">
 							<!--discart-->
 							<width>340</width>
 							<height>60</height>
@@ -213,7 +252,19 @@
 							<textoffsetx>20</textoffsetx>
 							<onclick>Skin.ToggleSetting(VideoInfo_ShowCDart)</onclick>
 							<selected>Skin.HasSetting(VideoInfo_ShowCDart)</selected>
+                            <visible>Skin.HasSetting(videoinfo_button_discart)</visible>
 						</control>
+                        <control type="radiobutton" id="3052">
+                            <!--Hide panel behind moviedetails-->
+                            <label>31155</label>
+                            <width>530</width>
+                            <textoffsetx>20</textoffsetx>
+                            <align>left</align>
+                            <onclick>Skin.ToggleSetting(DialogVideoInfoHidePanel)</onclick>
+                            <selected>Skin.HasSetting(DialogVideoInfoHidePanel)</selected>
+                            <visible>!Skin.HasSetting(KioskMode.Enabled)</visible>
+                            <visible>Skin.HasSetting(videoinfo_button_panel)</visible>
+                        </control>
 					</control>
 									
 					<!--Arrow-->
@@ -253,7 +304,7 @@
 						<control type="grouplist">
 							<posx>65</posx>
 							<posy>230</posy>
-							<width>1200</width>
+							<width>1800</width>
 							<height>700</height>
 							<orientation>vertical</orientation>
 							
@@ -267,6 +318,19 @@
 								<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
 								<align>justify</align>
 								<font>Reg26</font>
+                                <visible>![!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)]</visible>
+							</control>
+                            <control type="textbox">
+								<posx>0</posx>
+								<posy>0</posy>
+								<width>1790</width>
+								<height>215</height>
+								<label>$INFO[Container(999).ListItem.Plot]</label>
+								<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
+								<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+								<align>justify</align>
+								<font>Reg26</font>
+                                <visible>!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)</visible>
 							</control>
 							<control type="image">
 								<width>1120</width>
@@ -482,7 +546,7 @@
 									<scroll>false</scroll>
 								</control>
 							</control>
-                                                 <control type="group">
+                            <control type="group">
 								<!--MPAA RATING and SUBTITLES-->
 								<width>1150</width>
 								<height>40</height>
@@ -507,7 +571,7 @@
 									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
 									<scroll>false</scroll>
 								</control>
-                         								<control type="image">
+                                <control type="image">
 									<posx>560</posx>
 									<posy>15</posy>
 									<width>30</width>
@@ -575,8 +639,9 @@
 									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
 									<scroll>false</scroll>
                                     <visible>!IsEmpty(Window(Home).Property(SkinHelper.RottenTomatoesRating))</visible>
-								</control>                       							</control>
-                                                 <control type="image">
+								</control>                       							
+                            </control>
+                            <control type="image">
 								<width>1150</width>
 								<height>10</height>
 								<posy>10</posy>
@@ -595,9 +660,9 @@
 								<posy>10</posy>
 								<texture>colors/color_transparent.png</texture>
 							</control>
-                                                 <control type="group">
+                            <control type="group">
 								<!--Rotten Tomatoes details-->
-								<width>1150</width>
+								<width>1800</width>
 								<height>110</height>
                                 <visible>!IsEmpty(Window(Home).Property(SkinHelper.RottenTomatoesConsensus))</visible>
 								<control type="textbox">
@@ -610,8 +675,22 @@
 									<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
 									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
 									<scroll>false</scroll>
-								</control>                     							</control>
-							                                                 <control type="image">
+                                    <visible>![!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)]</visible>
+								</control>
+                                <control type="textbox">
+									<posx>0</posx>
+									<posy>15</posy>
+									<width>1790</width>
+									<font>Light26</font>
+									<align>left</align>
+									<label>[B]$LOCALIZE[31610]: [/B]$INFO[Window(Home).Property(SkinHelper.RottenTomatoesAwards)] [B]$LOCALIZE[31611]: [/B]$INFO[Window(Home).Property(SkinHelper.RottenTomatoesConsensus)]</label>
+									<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
+									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+									<scroll>false</scroll>
+                                    <visible>!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)</visible>
+								</control>                                
+                            </control>
+                            <control type="image">
 								<width>1150</width>
 								<height>15</height>
 								<texture>colors/color_transparent.png</texture>
@@ -666,28 +745,49 @@
 							</control>
 
 						</control>
-                                         <control type="image">
-							<!--cdart image-->
-							<right>240</right>
-							<posy>310</posy>
-							<width>500</width>
-							<height>500</height>
-							<texture background="true" diffuse="diffuse/cdmask_big.png" fallback="defaultcovers/cd_big.png">$INFO[Container(999).ListItem.Art(discart)]</texture>
-							<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
-							<animation effect="fade" start="100" end="0" delay="0" time="150" pulse="false" condition="!Skin.HasSetting(VideoInfo_ShowCDart)">Conditional</animation>
-							<animation effect="rotate" end="-90" center="auto" time="600" loop="false" reversible="false" condition="!Skin.HasSetting(AnimateDiscArt)">Conditional</animation>
-							<animation effect="rotate" end="-360" center="auto" time="20000" delay="0" loop="true" reversible="false" condition="Skin.HasSetting(AnimateDiscArt)">Conditional</animation>
-							<visible>!IsEmpty(Container(999).ListItem.Art(poster)) | !IsEmpty(Container(999).ListItem.Art(tvshow.poster)) | !IsEmpty(Container(999).ListItem.Property(TVShowThumb))</visible>
-						</control>
-						<control type="image">
-							<!--poster-->
-							<right>50</right>
-							<posy>210</posy>
-							<width>530</width>
-							<height>67%</height>
-							<aspectratio align="right" aligny="top" scalediffuse="true">keep</aspectratio>
-							<texture background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png" border="5">$INFO[Container(999).ListItem.Art(poster)]</texture>
-						</control>
+                        
+                        <!-- poster image -->
+                        <control type="group">
+                            <visible>![Player.HasVideo + !IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)]</visible>
+                            <control type="image">
+                                <!--cdart image-->
+                                <right>240</right>
+                                <posy>310</posy>
+                                <width>500</width>
+                                <height>500</height>
+                                <texture background="true" diffuse="diffuse/cdmask_big.png" fallback="defaultcovers/cd_big.png">$INFO[Container(999).ListItem.Art(discart)]</texture>
+                                <aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+                                <animation effect="fade" start="100" end="0" delay="0" time="150" pulse="false" condition="!Skin.HasSetting(VideoInfo_ShowCDart)">Conditional</animation>
+                                <animation effect="rotate" end="-90" center="auto" time="600" loop="false" reversible="false" condition="!Skin.HasSetting(AnimateDiscArt)">Conditional</animation>
+                                <animation effect="rotate" end="-360" center="auto" time="20000" delay="0" loop="true" reversible="false" condition="Skin.HasSetting(AnimateDiscArt)">Conditional</animation>
+                                <visible>!IsEmpty(Container(999).ListItem.Art(poster)) | !IsEmpty(Container(999).ListItem.Art(tvshow.poster)) | !IsEmpty(Container(999).ListItem.Property(TVShowThumb))</visible>
+                            </control>
+                            <control type="image">
+                                <!--poster-->
+                                <right>50</right>
+                                <posy>210</posy>
+                                <width>530</width>
+                                <height>67%</height>
+                                <aspectratio align="right" aligny="top" scalediffuse="true">keep</aspectratio>
+                                <texture background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png" border="5">$INFO[Container(999).ListItem.Art(poster)]</texture>
+                            </control>
+                        </control>
+                        
+                        <!-- trailers video preview -->
+                        <control type="group">
+                            <right>60</right>
+                            <posy>415</posy>
+                            <width>661</width>
+                            <height>371</height>
+                            <visible>Player.HasVideo + !IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)</visible>
+                            <control type="image">
+                                <texture border="15">diffuse/bgpanel.png</texture>
+                                <colordiffuse>black</colordiffuse>
+                            </control>
+                            <control type="videowindow">
+                            </control>
+                        </control>
+                        
 					</control>
 
 					<!--filename-->
@@ -698,10 +798,11 @@
                         <font>Reg20</font>
                         <align>left</align>
                         <scroll>false</scroll>
-                        <label>$INFO[Container(999).ListItem.FileNameAndPath,[B]$LOCALIZE[21800]: [/B]]</label>
+                        <label>$INFO[Window(Home).Property(filename_formatted),[B]$LOCALIZE[21800]: [/B]]</label>
                         <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
                         <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
                         <visible>!IsEmpty(Container(999).ListItem.FileNameAndPath)</visible>
+                        <visible>!Skin.HasSetting(DialogVideoInfo_HideFileName)</visible>
                         <visible>IsEmpty(Window.Property(AdditionalInfo))</visible>
                     </control>
                                  <control type="button" id="9001">
