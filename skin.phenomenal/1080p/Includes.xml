@@ -891,7 +891,7 @@
 			<align>center</align>
 		</control>
 	</include>
-		<variable name="osd_bitspersample_label_color">
+	<variable name="osd_bitspersample_label_color">
 		<value condition="StringCompare(MusicPlayer.BitsPerSample,24)">[B][COLOR=gold]$LOCALIZE[31107][/COLOR][/B]</value>
 		<value>$LOCALIZE[31107]</value>
 	</variable>
@@ -1932,7 +1932,7 @@
 		<height>1052</height>
 	</include>
 
-	<include name="fanart_scroll">
+	<include name="vertical_scroll">
 		<control type="scrollbar" id="$PARAM[id]">
 			<posx>1930</posx>
 			<posy>$PARAM[posy]</posy>
@@ -1942,10 +1942,27 @@
 			<onright condition="!Player.HasVideo + !Player.HasAudio">555</onright>
 			<onright condition="Player.HasMedia">FullScreen</onright>
 			<include>scroll_bar</include>
-			<animation effect="slide" start="0,0" end="-20,0" time="200" condition="Container.Scrolling | Control.HasFocus($PARAM[id])">Conditional</animation>
+			<animation effect="slide" start="0,0" end="-20,0" time="200" condition="[Container.Scrolling | Control.HasFocus($PARAM[id])] + !Skin.HasSetting(Show_Scrollbar)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="-20,0" time="200" condition="Skin.HasSetting(Show_Scrollbar)">Conditional</animation>
 			<visible>Control.IsVisible($PARAM[listid])</visible>
 		</control>
 	</include>
+	<include name="horizontal_scroll">
+		<control type="scrollbar" id="$PARAM[id]">
+			<posx>0</posx>
+			<posy>$PARAM[posy]</posy>
+			<width>1920</width>
+			<height>$PARAM[height]</height>
+			<onup>$PARAM[listid]</onup>
+			<ondown condition="Player.HasMedia">FullScreen</ondown>
+			<orientation>horizontal</orientation>
+			<include>scroll_bar</include>
+			<animation effect="slide" start="0,0" end="0,-20" time="200" condition="[Container.Scrolling | Control.HasFocus($PARAM[id])] + !Skin.HasSetting(Show_Scrollbar)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,-20" time="200" condition="Skin.HasSetting(Show_Scrollbar)">Conditional</animation>
+			<visible>Control.IsVisible($PARAM[listid])</visible>
+		</control>
+	</include>
+	
 	<include name="flag_audiocodec">
 		<control type="image">						
 			<description>flags image</description>
@@ -2019,6 +2036,7 @@
 				<align>right</align>
 				<textcolor>$PARAM[color]</textcolor>
 				<label>$PARAM[label]</label>
+				<scroll>true</scroll>
 			</control>
 		</definition>
 	</include>
@@ -2536,6 +2554,13 @@
 			<include>view_settings_radiobutton</include>
 			<visible>Control.IsVisible(56)</visible>
 		</control>
+		<control type="radiobutton" id="539">
+			<description>Always Show Scroll bars</description>
+			<label>31131</label>
+			<onclick>Skin.ToggleSetting(Show_Scrollbar)</onclick>
+			<selected>Skin.HasSetting(Show_Scrollbar)</selected>
+			<include>view_settings_radiobutton</include>
+		</control>
 	</include>
 
 	<include name="views_animation">
@@ -2611,10 +2636,43 @@
 			<width>300</width>
 			<height>30</height>
 			<align>center</align>
-			<label>$INFO[Window(Home).Property(SkinHelper.skinTitle)]</label>
+			<label>$INFO[System.AddonVersion(skin.phenomenal),$LOCALIZE[31002] - ]</label>
 			<textcolor>grey</textcolor>
 			<font>font-14</font>
 		</control>
 	</include>
-
+	<include name="import_addon_enabled">
+		<control type="button" id="$PARAM[id]">
+			<width>800</width>
+			<height>35</height>
+			<posx>430</posx>
+			<posy>0</posy>
+			<label>$INFO[System.AddonVersion($PARAM[addon])]</label>
+			<label2>$INFO[System.AddonTitle($PARAM[addon])]</label2>
+			<onclick>Addon.OpenSettings($PARAM[addon])</onclick>
+			<texturenofocus colordiffuse="grey_b">white.png</texturenofocus>
+			<font>font-20</font>
+			<include>button_settings_2</include>
+		</control>
+	</include>
+	<include name="import_addon_disabled">
+		<control type="button" id="$PARAM[id]">
+			<width>800</width>
+			<height>35</height>
+			<posx>430</posx>
+			<posy>0</posy>
+			<label>24038</label>
+			<label2>$PARAM[addon]</label2>
+			<onclick condition="!System.HasAddon($PARAM[addon])">RunPlugin(plugin://$PARAM[addon])</onclick>
+			<onclick condition="System.HasAddon($PARAM[addon])">Skin.SetString(AfterReload,$PARAM[id])</onclick>
+			<onclick condition="System.HasAddon($PARAM[addon])">Skin.SetString(AfterReload_Category,94)</onclick>
+			<onclick condition="System.HasAddon($PARAM[addon])">AlarmClock(name,Skin.Reset(AfterReload),00:01,silent)</onclick>	
+			<onclick condition="System.HasAddon($PARAM[addon])">AlarmClock(name2,Skin.Reset(AfterReload_Category),00:01,silent)</onclick>	
+			<onclick condition="System.HasAddon($PARAM[addon])">ReloadSkin()</onclick>
+			<texturenofocus colordiffuse="grey_b">white.png</texturenofocus>
+			<textcolor>red</textcolor>
+			<font>font-20</font>
+			<include>button_settings_2</include>
+		</control>
+	</include>
 </includes>
