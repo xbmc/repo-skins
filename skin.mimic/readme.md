@@ -2,14 +2,45 @@
 <code>1. To imitate</code><br />
 <code>Synonyms: resemble, look like, have the appearance of</code>
 
-Mimic is a Kodi skin that combines features from reFocus and Aeon Nox. Based on Aeon Nox 5. Many thanks to BigNoid and Jeroen for creating the skins that are the inspiration for this release.
+As its name implies, this skin owes much to the Kodi community. In no particular order, I'd like to thank the following individuals:
+
+- BigNoid, for developing Aeon Nox, on which this skin is based.
+- Jeroen, for creating reFocus and some of the views included here.
+- BobCratchett, for creating the skinshortcuts script and updating Mimic to use its latest features.
+- Phil65, for the ExtendedInfo script and the selected item animation that is used throughout Mimic.
+- Marcelveldt, for the skin helper service that makes the colour picker and so many other things possible.
+- JurialMunkey, for Arctic Zephyr, which was the inspiration for the header and several other features.
+
+And finally, all of the users, translators, testers, and fans of Mimic.
+
+Support Kodi by donating @ http://kodi.tv/contribute/donate/
 
 ![Home Default] (http://i.imgur.com/5439sGH.jpg)
 
-![Home TopMenu] (http://i.imgur.com/azNqXg8.jpg)
+![Home Vertical] (http://i.imgur.com/LBLDthv.jpg)
 
 More screenshots available here: http://imgur.com/a/LLSMM
 
+
+***
+**3.4.0**
+- Added more art options for Thumbnail view.
+- Redesigned vertical menu.
+- Added alternative weather/time/date display on home screen.
+- Added user ratings for music/videos.
+- Redesigned information dialogs.
+- Added option for centered menus on default home layout.
+- Converted widgets to use templates so they don't have to reload.
+- Added about/credits screen in skin settings.
+- Redesigned the select dialog.
+- Added an option for wider main menu items.
+- Replaced Thai font with Sawasdee.
+- Added a new dialog for supported addons.
+- Added a select dialog for actor info (credit to BigNoid).
+- Added a header for the home screen.
+- Redesigned widgets on the vertical layout.
+- Added an option to separate the main menu and submenu on the vertical layout.
+- Added an option for panel style widgets.
 
 ***
 **3.3.1**
