@@ -17,9 +17,6 @@
     <include file="Includes_Home_Common.xml"/>
     <include file="Includes_Home_Common_Plexbmc.xml"/>
     <include file="Includes_Horizontal_Home.xml"/>
-    <include file="Includes_Shelf.xml"/>
-    <include file="Includes_Shelf_Contents.xml"/>
-    <include file="Includes_Shelf_Plexbmc.xml"/>
     <include file="Includes_Shelf_Plexbmc_Contents.xml"/>
     <include file="Includes_PVR.xml"/>
     <include file="Includes_Weather.xml"/>
@@ -91,11 +88,12 @@
     </include>
     <include name="DimBG">
         <control type="image">
+            <animation effect="fade" start="70" end="70" time="0" reversible="false" condition="true">Conditional</animation>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <posx>-1920</posx>
             <posy>-1080</posy>
             <width>5760</width>
             <height>3240</height>
-            <colordiffuse>b0ffffff</colordiffuse>
             <texture>special://skin/backgrounds/default/$VAR[Theme.Color].png</texture>
         </control>
     </include>
@@ -105,7 +103,7 @@
         <width>1920</width>
         <height>1080</height>
     </include>
-    <include name="FakeTopbarButton">
+    <include name="FakeTopBarButton">
         <width>10</width>
         <height>50</height>
         <texturenofocus>-</texturenofocus>
@@ -131,6 +129,7 @@
             <posy>0</posy>
             <width>2320</width>
             <height>183</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="150,40,150,40">$VAR[Theme.Color]/common/bg_dialog.png</texture>
         </control>
         <control type="button" id="8998">
@@ -192,6 +191,7 @@
                 <include>TopBarButton</include>
                 <texturefocus>white/topbar/large_topbar_home_focus.png</texturefocus>
                 <texturenofocus>white/topbar/large_topbar_home_nofocus.png</texturenofocus>
+                <onclick>Dialog.Close(all,true)</onclick>
                 <onclick>ActivateWindow(home)</onclick>
             </control>
             <control type="button" id="1604">
@@ -315,6 +315,7 @@
                 <include>TopBarButton</include>
                 <texturefocus>black/topbar/large_topbar_home_focus.png</texturefocus>
                 <texturenofocus>black/topbar/large_topbar_home_nofocus.png</texturenofocus>
+                <onclick>Dialog.Close(all,true)</onclick>
                 <onclick>ActivateWindow(home)</onclick>
             </control>
             <control type="button" id="1604">
@@ -424,6 +425,7 @@
             <visible>![Control.HasFocus(505050)]</visible>
             <include>Overlay_Fade</include>
             <control type="image">
+                <include>OverlayTransparency</include>
                 <visible>![
                     [Window.isVisible(MyWeather.xml)+Skin.String(WeatherView,fanart)]|
                     [!Window.isVisible(MyWeather.xml)+control.isvisible(54)]
@@ -433,17 +435,18 @@
                 <posy>0</posy>
                 <width>1920</width>
                 <height>1080</height>
-                <colordiffuse>$VAR[OverlayTransparency]</colordiffuse>
+                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                 <texture>special://skin/backgrounds/default/$VAR[Theme.Color].png</texture>
             </control>
             <control type="image">
+                <include>OverlayTransparency</include>
                 <visible>[Window.Isvisible(MusicVisualisation.xml)+!Window.Isvisible(script-cu-lrclyrics-main.xml)+!Skin.HasSetting(DisableOverlayMusicPlaying)]|Window.Isvisible(script-cu-lrclyrics-main.xml)</visible>
                 <include>Overlay_Fade</include>
                 <posx>0</posx>
                 <posy>0</posy>
                 <width>1920</width>
                 <height>1080</height>
-                <colordiffuse>$VAR[OverlayTransparency]</colordiffuse>
+                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                 <texture>special://skin/backgrounds/default/$VAR[Theme.Color].png</texture>
             </control>
             <control type="group">
@@ -453,11 +456,12 @@
                 <!--<animation effect="fade" time="250" start="100" end="0">Hidden</animation>-->
                 <animation effect="slide" tween="circle" easing="out" time="250" start="0,0" end="660,0" condition="control.isvisible(9000)+[ControlGroup(9000).HasFocus()|Control.HasFocus(8999)|Control.HasFocus(9060)]">Conditional</animation>
                 <control type="image">
+                    <include>OverlayTransparency</include>
                     <posx>-1920</posx>
                     <posy>0</posy>
                     <width>1920</width>
                     <height>1080</height>
-                    <colordiffuse>$VAR[OverlayTransparency]</colordiffuse>
+                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                     <texture>special://skin/backgrounds/default/$VAR[Theme.Color].png</texture>
                 </control>
                 <control type="image">
@@ -468,6 +472,7 @@
                     <posy>-35</posy>
                     <width>1990</width>
                     <height>1150</height>
+                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                     <texture border="35">$VAR[Theme.Color]/common/JewelCase2.png</texture>
                 </control>
             </control>
@@ -515,6 +520,7 @@
                 Window.IsVisible(FileBrowser.xml)|
                 Window.IsVisible(RecordPrefs.xml)|
                 Window.IsVisible(ProfileSettings.xml)|
+                Window.IsVisible(script-skin_helper_service-ColorPicker.xml)|
                 Window.IsVisible(script-ExtendedInfo Script-DialogInfo.xml)|
                 Window.IsVisible(script-ExtendedInfo Script-DialogVideoInfo.xml)|
                 Window.IsVisible(script-ExtendedInfo Script-SlideShow.xml)|
@@ -620,32 +626,19 @@
             <control type="group">
                 <include condition="Skin.HasSetting(plexbmc)">PlexbmcFixTrick</include>
                 <control type="group">
-                    <control type="progress">
-                        <visible>[[Player.HasAudio + IsEmpty(Window(videolibrary).Property(PlayingBackgroundMedia))]|Player.HasVideo]</visible>
-                        <include>ConditionWhite</include>
-                        <posx>0</posx>
-                        <posy>0</posy>
-                        <width>1920</width>
-                        <height>14</height>
-                        <texturebg border="1,1,1,1">white/OSD/osd_progress_background.png</texturebg>
-                        <midtexture border="1,1,5,1">white/OSD/osd_progress_mid.png</midtexture>
-                        <righttexture>-</righttexture>
-                        <lefttexture>-</lefttexture>
-                        <info>Player.Progress</info>
-                    </control>
-                    <control type="progress">
-                        <visible>[[Player.HasAudio + IsEmpty(Window(videolibrary).Property(PlayingBackgroundMedia))]|Player.HasVideo]</visible>
-                        <include>ConditionBlack</include>
-                        <posx>0</posx>
-                        <posy>0</posy>
-                        <width>1920</width>
-                        <height>14</height>
-                        <texturebg border="1,1,1,1">black/OSD/osd_progress_background.png</texturebg>
-                        <midtexture border="1,1,5,1">black/OSD/osd_progress_mid.png</midtexture>
-                        <righttexture>-</righttexture>
-                        <lefttexture>-</lefttexture>
-                        <info>Player.Progress</info>
-                    </control>
+                    <include name="ProgressBar">
+                        <param name="id" value="0"/>
+                        <param name="visible" value="[[Player.HasAudio + IsEmpty(Window(videolibrary).Property(PlayingBackgroundMedia))]|Player.HasVideo]"/>
+                        <param name="x" value="0"/>
+                        <param name="y" value="0"/>
+                        <param name="width" value="1920"/>
+                        <param name="height" value="14"/>
+                        <param name="texturebg" value="OSD/osd_progress_background.png"/>
+                        <param name="gfx" value="OSD/osd_progress_mid.png"/>
+                        <param name="border" value="1,1,5,1"/>
+                        <param name="borderbg" value="1,1,1,1"/>
+                        <param name="info" value="Player.Progress"/>
+                    </include>
                     <control type="image" id="495678">
                         <visible>[[Player.HasAudio + IsEmpty(Window(videolibrary).Property(PlayingBackgroundMedia))]|Player.HasVideo]</visible>
                         <include>NowPlayingVisibleFadeEffect</include>
@@ -653,6 +646,7 @@
                         <posy>0</posy>
                         <width>2320</width>
                         <height>183</height>
+                        <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                         <texture border="150,40,150,40">$VAR[Theme.Color]/common/bg_dialog.png</texture>
                     </control>
                     <control type="group">
@@ -791,6 +785,7 @@
             <posy>91</posy>
             <width>50</width>
             <height>50</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture>$VAR[Theme.Color]/topbar/topbar_rewind_nofocus.png</texture>
         </control>
         <control type="image">
@@ -799,6 +794,7 @@
             <posy>91</posy>
             <width>50</width>
             <height>50</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture>$VAR[Theme.Color]/topbar/topbar_fastforward_nofocus.png</texture>
         </control>
     </include>
@@ -915,6 +911,7 @@
                     <posy>0</posy>
                     <height>78</height>
                     <width>1420</width>
+                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                     <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
                 </control>
                 <control type="label">
@@ -960,6 +957,7 @@
             <posy>0</posy>
             <width>1920</width>
             <height>1080</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture>$VAR[Theme.Color]/common/WhiteDot.png</texture>
         </control> -->
         <control type="multiimage">
@@ -1006,7 +1004,16 @@
             <posy>142</posy>
             <width>660</width>
             <height>892</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
+        </control>
+        <control type="image">
+            <posx>-41</posx>
+            <posy>183</posy>
+            <width>41</width>
+            <height>810</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+            <texture border="0,100,0,100">$VAR[Theme.Color]/common/vertical_separator.png</texture>
         </control>
         <control type="button" id="8999">
             <description>Fake button for mouse control</description>
@@ -1198,6 +1205,7 @@
                     <posy>0</posy>
                     <height>78</height>
                     <width>1920</width>
+                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                     <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
                 </control>
                 <control type="label">
@@ -1249,6 +1257,7 @@
             <posy>142</posy>
             <width>1370</width>
             <height>3892</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
         </control>
         <control type="image">
@@ -1256,6 +1265,7 @@
             <posy>-858</posy>
             <width>1920</width>
             <height>1892</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
         </control>
     </include>
@@ -1265,6 +1275,7 @@
             <posy>142</posy>
             <width>1370</width>
             <height>892</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
         </control>
     </include>
@@ -1294,6 +1305,7 @@
                     <width>970</width>
                     <height>66</height>
                     <bordersize>0</bordersize>
+                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                     <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
                 </control>
                 <control type="label">
@@ -1393,20 +1405,20 @@
                 </control>
                 <control type="group">
                     <posy>642</posy>
-                    <control type="group">
-                        <!-- CDART -->
-                        <visible>!Skin.HasSetting(plexbmc)</visible>
-                        <visible>Skin.HasSetting(EnableCdArt)+!IsEmpty(VideoPlayer.Cover)</visible>
-                        <control type="image">
-                            <posx>122</posx>
-                            <posy>-70</posy>
-                            <width>211</width>
-                            <height>211</height>
-                            <texture background="true" diffuse="white/common/cdart_diffuse.png">$INFO[Player.Art(discart)]</texture>
-                            <aspectratio align="center" aligny="center">keep</aspectratio>
-                            <include>Animation_ViewsCDart</include>
-                        </control>
-                    </control>
+                    <!-- CDART VIDEO -->
+                    <include name="DiscArt">
+                        <param name="visible" value="!IsEmpty(VideoPlayer.Cover)+!VideoPlayer.Content(LiveTV)+!VideoPlayer.Content(episodes)"/>
+                        <param name="x" value="122"/>
+                        <param name="y" value="-70"/>
+                        <param name="width" value="211"/>
+                        <param name="height" value="211"/>
+                        <param name="texture" value="$VAR[VideoPlayerCdArt]"/>
+                        <param name="xShadow" value="107"/>
+                        <param name="yShadow" value="-85"/>
+                        <param name="widthShadow" value="241"/>
+                        <param name="heightShadow" value="241"/>
+                        <param name="pulse" value="false"/>
+                    </include>
                     <control type="group">
                         <control type="image">
                             <include>ConditionWhite</include>
@@ -1468,6 +1480,7 @@
                                 <height>37</height>
                                 <width>185</width>
                                 <aspectratio align="left">keep</aspectratio>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
                                 <texture>$VAR[Theme.Color]/badges/rating.png</texture>
                             </control>
                             <control type="label">
@@ -1485,7 +1498,7 @@
                             <visible>VideoPlayer.Content(LiveTV)+VideoPlayer.HasEpg</visible>
                             <posx>TextMargin</posx>
                             <posy>65</posy>
-                            <width>672</width>
+                            <width>670</width>
                             <height>71</height>
                             <font>InfoDetailsFont</font>
                             <include>TextColor_MainColor</include>
@@ -1496,7 +1509,7 @@
                             <visible>![VideoPlayer.Content(LiveTV)+!VideoPlayer.HasEpg]</visible>
                             <posx>TextMargin</posx>
                             <posy>135</posy>
-                            <width>672</width>
+                            <width>670</width>
                             <height>71</height>
                             <font>InfoDetailsFont</font>
                             <include>TextColor_MainColor</include>
@@ -1506,7 +1519,7 @@
                         <control type="label">
                             <posx>TextMargin</posx>
                             <posy>205</posy>
-                            <width>672</width>
+                            <width>670</width>
                             <height>71</height>
                             <font>InfoDetailsFont</font>
                             <include>TextColor_MainColor</include>
@@ -1518,7 +1531,6 @@
                         |[!IsEmpty(VideoPlayer.SubtitlesLanguage)+!StringCompare(VideoPlayer.SubtitlesLanguage,und)]">
                                 <include>PulseBasicVisible</include>
                             </animation>
-                            <visible>!IsEmpty(VideoPlayer.VideoResolution)</visible>
                             <posx>40</posx>
                             <posy>285</posy>
                             <width>1006</width>
@@ -1545,9 +1557,9 @@
                             <include>CodecsVideoOSD2</include>
                         </control>
                         <control type="textbox">
-                            <posx>772</posx>
+                            <posx>840</posx>
                             <posy>80</posy>
-                            <width>672</width>
+                            <width>625</width>
                             <height>250</height>
                             <font>InfoPlotFont</font>
                             <include>TextColor_MainColor</include>
@@ -1560,7 +1572,8 @@
         </control>
     </include>
     <include name="DialogTransparency">
-        <colordiffuse>ddffffff</colordiffuse>
+        <animation effect="fade" start="85" end="85" time="0" reversible="false" condition="true">Conditional</animation>
+        <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
     </include>
     <include name="ScrollOffsetLabel">
         <!--<visible>Container.Scrolling</visible>-->
@@ -1572,6 +1585,7 @@
             <posy>10</posy>
             <width>300</width>
             <height>163</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
         </control>
         <control type="image">
@@ -1579,6 +1593,7 @@
             <posy>10</posy>
             <width>300</width>
             <height>163</height>
+            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
             <texture border="100">$VAR[Theme.Color]/common/bg_list.png</texture>
         </control>
         <control type="label">
@@ -1595,5 +1610,60 @@
     </include>
     <include name="TextboxAlignment">
         <align>justify</align>
+    </include>
+    <include name="DiscArt">
+        <control type="group">
+            <visible>!Skin.HasSetting(plexbmc)+Skin.HasSetting(EnableCdArt)</visible>
+            <visible>$PARAM[visible]</visible>
+            <include condition="$PARAM[pulse]">PulseCdArt</include>
+            <include>VisibleFadeEffectDelay</include>
+            <control type="image">
+                <posx>$PARAM[xShadow]</posx>
+                <posy>$PARAM[yShadow]</posy>
+                <width>$PARAM[widthShadow]</width>
+                <height>$PARAM[heightShadow]</height>
+                <texture>white/common/cdart_shadow.png</texture>
+                <aspectratio align="center" aligny="center">stretch</aspectratio>
+            </control>
+            <control type="image">
+                <posx>$PARAM[x]</posx>
+                <posy>$PARAM[y]</posy>
+                <width>$PARAM[width]</width>
+                <height>$PARAM[height]</height>
+                <texture background="true" diffuse="white/common/cdart_diffuse.png">$PARAM[texture]</texture>
+                <aspectratio align="center" aligny="center">stretch</aspectratio>
+                <include>Animation_ViewsCDart</include>
+            </control>
+        </control>
+    </include>
+    <include name="ProgressBar">
+        <control type="progress" id="$PARAM[id]">
+            <include>ConditionWhite</include>
+            <visible>$PARAM[visible]</visible>
+            <posx>$PARAM[x]</posx>
+            <posy>$PARAM[y]</posy>
+            <height>$PARAM[height]</height>
+            <width>$PARAM[width]</width>
+            <texturebg border="$PARAM[borderbg]">white/$PARAM[texturebg]</texturebg>
+            <lefttexture>-</lefttexture>
+            <midtexture border="$PARAM[border]">white/$PARAM[gfx]</midtexture>
+            <righttexture>-</righttexture>
+            <overlaytexture>-</overlaytexture>
+            <info>$PARAM[info]</info>
+        </control>
+        <control type="progress" id="$PARAM[id]">
+            <include>ConditionBlack</include>
+            <visible>$PARAM[visible]</visible>
+            <posx>$PARAM[x]</posx>
+            <posy>$PARAM[y]</posy>
+            <height>$PARAM[height]</height>
+            <width>$PARAM[width]</width>
+            <texturebg border="$PARAM[borderbg]">black/$PARAM[texturebg]</texturebg>
+            <lefttexture>-</lefttexture>
+            <midtexture border="$PARAM[border]">black/$PARAM[gfx]</midtexture>
+            <righttexture>-</righttexture>
+            <overlaytexture>-</overlaytexture>
+            <info>$PARAM[info]</info>
+        </control>
     </include>
 </includes>

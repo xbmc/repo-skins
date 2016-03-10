@@ -67,37 +67,40 @@
     <include name="CoverWrapFocusAnimationSquare">
         <effect type="zoom" start="100" end="106" time="100" center="auto"/>
         <effect type="zoom" start="100" end="94.339622641509" time="50" delay="100" center="auto"/>
-        <effect type="fade" start="40" end="100" time="100"/>
+        <!--<effect type="fade" start="40" end="100" time="100"/>-->
     </include>
     <include name="CoverWrapFocusAnimationPoster">
         <effect type="zoom" start="100" end="106" time="100" center="auto"/>
         <effect type="zoom" start="100" end="94.339622641509" time="50" delay="100" center="auto"/>
-        <effect type="fade" start="40" end="100" time="100"/>
+        <!--<effect type="fade" start="40" end="100" time="100"/>-->
     </include>
     <include name="CoverWrapFocusAnimationEpisode">
         <effect type="zoom" start="100" end="106" time="100" center="auto"/>
         <effect type="zoom" start="100" end="94.339622641509" time="50" delay="100" center="auto"/>
-        <effect type="fade" start="40" end="100" time="100"/>
+        <!--<effect type="fade" start="40" end="100" time="100"/>-->
+    </include>
+    <include name="WidgetFocusAnimationFade">
+        <effect type="fade" start="0" end="0" time="250"/>
     </include>
     <include name="ButtonFocusAnimation">
         <animation type="Focus" reversible="false">
             <effect type="zoom" start="100" end="108" time="100" center="auto"/>
             <effect type="zoom" start="100" end="92.592592592593" time="50" delay="100" center="auto"/>
-            <effect type="fade" start="10" end="100" time="100"/>
+            <!--<effect type="fade" start="10" end="100" time="100"/>-->
         </animation>
     </include>
     <include name="ButtonWideFocusAnimation">
         <animation type="Focus" reversible="false">
             <effect type="zoom" start="100,100" end="103,108" time="100" center="auto"/>
             <effect type="zoom" start="100,100" end="97.087378640777,92.592592592593" time="50" delay="100" center="auto"/>
-            <effect type="fade" start="10" end="100" time="100"/>
+            <!--<effect type="fade" start="10" end="100" time="100"/>-->
         </animation>
     </include>
     <include name="ListFocusAnimation">
         <animation type="Focus" reversible="false">
             <effect type="zoom" start="100,100" end="100,103" time="100" center="auto"/>
             <effect type="zoom" start="100,100" end="100,97.087378640777" time="50" delay="100" center="auto"/>
-            <effect type="fade" start="10" end="100" time="100"/>
+            <!--<effect type="fade" start="10" end="100" time="100"/>-->
         </animation>
     </include>
     <include name="NowPlayingVisibleFadeEffect">
@@ -232,30 +235,30 @@
         <effect type="fade" start="100" end="0" time="500" delay="3000"/>
     </include>
     <include name="PulseThumb">
-        <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableCdArt)
-                                +!IsEmpty(ListItem.Art(discart))
-                                +!Skin.HasSetting(plexbmc)">
-            <include>PulseBasicVisible</include>
-        </animation>
-        <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableCdArt)
+        <animation type="Conditional" pulse="true" reversible="false"
+                   condition="Skin.HasSetting(EnableCdArt)
                                 +!IsEmpty(ListItem.Thumb)
-                                +[[Container.content(songs)+Window.IsActive(MyMusicNav.xml)]|Window.IsActive(MyMusicSongs.xml)]
-                                +!Skin.HasSetting(plexbmc)">
+                                +!StringCompare(ListItem.Label,..)
+                                +!Skin.HasSetting(plexbmc)
+                                +[
+                                    [[!IsEmpty(ListItem.Art(poster))|!IsEmpty(ListItem.Art(discart))]+[Container.content(movies)|Container.content(musicvideos)]]
+                                    |Window.IsActive(script-ExtendedInfo Script-DialogVideoInfo.xml)
+                                    |[[[Container.content(songs)|Container.content(albums)]+Window.IsActive(MyMusicNav.xml)]|Window.IsActive(MyMusicSongs.xml)]
+                                ]">
             <include>PulseBasicVisible</include>
         </animation>
     </include>
-    <include name="PulseCdArtAudio">
-        <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableCdArt)
+    <include name="PulseCdArt">
+        <animation type="Conditional" pulse="true" reversible="false"
+                   condition="Skin.HasSetting(EnableCdArt)
                                 +!IsEmpty(ListItem.Thumb)
-                                +[[Container.content(songs)+Window.IsActive(MyMusicNav.xml)]|Window.IsActive(MyMusicSongs.xml)]
-                                +!Skin.HasSetting(plexbmc)">
-            <include>PulseBasicHidden</include>
-        </animation>
-    </include>
-    <include name="PulseCdArtVideo">
-        <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableCdArt)
-                            +!IsEmpty(ListItem.Art(discart))
-                            +!Skin.HasSetting(plexbmc)">
+                                +!StringCompare(ListItem.Label,..)
+                                +!Skin.HasSetting(plexbmc)
+                                +[
+                                    [[!IsEmpty(ListItem.Art(poster))|!IsEmpty(ListItem.Art(discart))]+[Container.content(movies)|Container.content(musicvideos)]]
+                                    |Window.IsActive(script-ExtendedInfo Script-DialogVideoInfo.xml)
+                                    |[[[Container.content(songs)|Container.content(albums)]+Window.IsActive(MyMusicNav.xml)]|Window.IsActive(MyMusicSongs.xml)]
+                                ]">
             <include>PulseBasicHidden</include>
         </animation>
     </include>
@@ -269,8 +272,17 @@
     <include name="PulseClearArt">
         <visible>Skin.HasSetting(EnableClearArt)</visible>
         <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableClearLogo)+
-                    [!IsEmpty(ListItem.Art(clearlogo))|!IsEmpty(ListItem.Art(tvshow.clearlogo))]+
-                    [!IsEmpty(ListItem.Art(clearart))|!IsEmpty(ListItem.Art(tvshow.clearart))]">
+                    [
+                    [!IsEmpty(ListItem.Art(clearlogo)) + ![Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    |
+                    [!IsEmpty(ListItem.Art(tvshow.clearlogo)) + [Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    ]+[
+                    [!IsEmpty(ListItem.Art(clearart)) + ![Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]] + ![Window.IsActive(MyMusicSongs.xml)|Window.IsActive(MyMusicNav.xml)]]
+                    |
+                    [!IsEmpty(ListItem.Art(tvshow.clearart)) + [Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    |
+                    [!IsEmpty(Window(Home).Property(SkinHelper.Music.ClearLogo)) + [Window.IsActive(MyMusicSongs.xml)|Window.IsActive(MyMusicNav.xml)]]
+                    ]">
             <effect type="slide" start="0,0" end="0,0" time="1500" delay="3500"/>
             <effect type="fade" start="100" end="0" time="500" delay="3000"/>
         </animation>
@@ -278,10 +290,43 @@
     <include name="PulseClearLogo">
         <visible>Skin.HasSetting(EnableClearLogo)</visible>
         <animation type="Conditional" pulse="true" reversible="false" condition="Skin.HasSetting(EnableClearArt)+
-                    [!IsEmpty(ListItem.Art(clearlogo))|!IsEmpty(ListItem.Art(tvshow.clearlogo))]+
-                    [!IsEmpty(ListItem.Art(clearart))|!IsEmpty(ListItem.Art(tvshow.clearart))]">
+                    [
+                    [!IsEmpty(ListItem.Art(clearlogo)) + ![Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    |
+                    [!IsEmpty(ListItem.Art(tvshow.clearlogo)) + [Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    ]+[
+                    [!IsEmpty(ListItem.Art(clearart)) + ![Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]] + ![Window.IsActive(MyMusicSongs.xml)|Window.IsActive(MyMusicNav.xml)]]
+                    |
+                    [!IsEmpty(ListItem.Art(tvshow.clearart)) + [Window.IsActive(MyVideoNav.xml)+[Container.Content(episodes)|Container.Content(seasons)]]]
+                    |
+                    [!IsEmpty(Window(Home).Property(SkinHelper.Music.ClearLogo)) + [Window.IsActive(MyMusicSongs.xml)|Window.IsActive(MyMusicNav.xml)]]
+                    ]">
             <effect type="slide" start="0,0" end="0,0" time="1500" delay="3500"/>
             <effect type="fade" start="0" end="100" time="500" delay="3000"/>
         </animation>
+    </include>
+    <include name="OverlayTransparency">
+        <animation effect="fade" start="90" end="90" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency90)">Conditional</animation>
+        <animation effect="fade" start="80" end="80" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency80)">Conditional</animation>
+        <animation effect="fade" start="70" end="70" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency70)">Conditional</animation>
+        <animation effect="fade" start="60" end="60" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency60)">Conditional</animation>
+        <animation effect="fade" start="50" end="50" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency50)">Conditional</animation>
+        <animation effect="fade" start="40" end="40" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency40)">Conditional</animation>
+        <animation effect="fade" start="30" end="30" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency30)">Conditional</animation>
+        <animation effect="fade" start="20" end="20" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency20)">Conditional</animation>
+        <animation effect="fade" start="10" end="10" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency10)">Conditional</animation>
+        <animation effect="fade" start="0" end="0" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency00)">Conditional</animation>
+    </include>
+    <include name="OverlayStripTransparency">
+        <animation effect="fade" start="85" end="85" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency90)">Conditional</animation>
+        <animation effect="fade" start="75" end="75" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency80)">Conditional</animation>
+        <animation effect="fade" start="65" end="65" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency70)">Conditional</animation>
+        <animation effect="fade" start="55" end="55" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency60)">Conditional</animation>
+        <animation effect="fade" start="45" end="45" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency50)">Conditional</animation>
+        <animation effect="fade" start="35" end="35" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency40)">Conditional</animation>
+        <animation effect="fade" start="25" end="25" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency30)">Conditional</animation>
+        <animation effect="fade" start="15" end="15" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency20)">Conditional</animation>
+        <animation effect="fade" start="5" end="5" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency10)">Conditional</animation>
+        <animation effect="fade" start="0" end="0" time="0" reversible="false" condition="skin.hassetting(OverlayTransparency00)">Conditional</animation>
     </include>
 </includes>
