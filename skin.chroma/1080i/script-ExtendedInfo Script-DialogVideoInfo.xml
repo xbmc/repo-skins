@@ -12,7 +12,8 @@
                 <width>1920</width>
                 <height>1080</height>
                 <!--<include>DialogTransparency</include>-->
-                <texture border="50">$VAR[Theme.Color]/common/background_menu.png</texture>
+                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                <texture border="50">common/background_menu.png</texture>
             </control>
             <include name="WindowClosingButton">
                 <param name="id" value="99010"/>
@@ -72,6 +73,16 @@
                         <onclick>Playlist.Clear</onclick>
                         <onclick>Dialog.Close(MovieInformation)</onclick>
                         <onclick>RunScript(script.cinema.experience)</onclick>
+                        <onright>9009</onright>
+                    </control>
+                    <control type="button" id="21">
+                        <visible>System.HasAddon(script.cinemavision) + !SubString(Container.FolderPath,plugin)</visible>
+                        <visible>!IsEmpty(Window.Property(movie.DBID))</visible>
+                        <description>Cinema Vision</description>
+                        <include>DialogMenuButton</include>
+                        <label>CinemaVision</label>
+                        <onclick>Dialog.Close(MovieInformation)</onclick>
+                        <onclick>RunScript(script.cinemavision,experience)</onclick>
                         <onright>9009</onright>
                     </control>
                     <control type="togglebutton" id="6061">
@@ -210,14 +221,6 @@
                         <include>DialogMenuButton</include>
                         <label>$LOCALIZE[31509]</label>
                         <onclick>XBMC.RunScript(script.videoextras,display,"$INFO[Window.Property(movie.FilenameAndPath)]")</onclick>
-                        <onright>9009</onright>
-                    </control>
-                    <control type="togglebutton" id="101">
-                        <visible>System.HasAddon(script.tvtunes)</visible>
-                        <description>Tv Tunes</description>
-                        <include>DialogMenuButton</include>
-                        <label>$LOCALIZE[31956]</label>
-                        <onclick>XBMC.RunScript(script.tvtunes,mode=solo)</onclick>
                         <onright>9009</onright>
                     </control>
                 </control>
@@ -432,14 +435,6 @@
                                 <visible>!Skin.HasSetting(plexbmc)</visible>
                             </item>
                             <item>
-                                <label>$LOCALIZE[573]:</label>
-                                <label2>$INFO[Window.Property(movie.Path)]</label2>
-                                <onclick>Dialog.Close(movieinformation)</onclick>
-                                <onclick>ActivateWindow(Videos,$INFO[Window.Property(movie.Path)],return)</onclick>
-                                <visible>!IsEmpty(Window.Property(movie.Path))</visible>
-                                <visible>!Skin.HasSetting(plexbmc)</visible>
-                            </item>
-                            <item>
                                 <label>$LOCALIZE[21800]:</label>
                                 <label2>$INFO[Window.Property(movie.Filename)]</label2>
                                 <onclick>noop</onclick>
@@ -505,13 +500,6 @@
                                     <label2>$INFO[Window.Property(movie.Rating)]$INFO[Window.Property(movie.Votes), (, $LOCALIZE[205])]</label2>
                                     <onclick>noop</onclick>
                                     <visible>!IsEmpty(Window.Property(movie.Rating))</visible>
-                                </item>
-                                <item>
-                                    <label>$LOCALIZE[573]:</label>
-                                    <label2>$INFO[Window.Property(movie.Path)]</label2>
-                                    <onclick>Dialog.Close(movieinformation)</onclick>
-                                    <onclick>ActivateWindow(Videos,$INFO[Window.Property(movie.Path)],return)</onclick>
-                                    <visible>!Skin.HasSetting(plexbmc)</visible>
                                 </item>
                                 <item>
                                     <label>$LOCALIZE[21800]:</label>
@@ -668,13 +656,6 @@
                                     <visible>!Skin.HasSetting(plexbmc)</visible>
                                 </item>
                                 <item>
-                                    <label>$LOCALIZE[573]:</label>
-                                    <label2>$INFO[Window.Property(movie.Path)]</label2>
-                                    <onclick>Dialog.Close(movieinformation)</onclick>
-                                    <onclick>ActivateWindow(Videos,$INFO[Window.Property(movie.Path)],return)</onclick>
-                                    <visible>!Skin.HasSetting(plexbmc)</visible>
-                                </item>
-                                <item>
                                     <label>$LOCALIZE[21800]:</label>
                                     <label2>$INFO[Window.Property(movie.Filename)]</label2>
                                     <onclick>noop</onclick>
@@ -799,12 +780,6 @@
                                     <visible>!IsEmpty(LiWindow.Property(moviestItem.StereoscopicMode))</visible>
                                 </item>
                                 <item>
-                                    <label>$LOCALIZE[573]:</label>
-                                    <label2>$INFO[Window.Property(movie.Path)]</label2>
-                                    <onclick>Dialog.Close(movieinformation)</onclick>
-                                    <onclick>ActivateWindow(Videos,$INFO[Window.Property(movie.Path)],return)</onclick>
-                                </item>
-                                <item>
                                     <label>$LOCALIZE[21800]:</label>
                                     <label2>$INFO[Window.Property(movie.Filename)]</label2>
                                     <onclick>noop</onclick>
@@ -822,7 +797,6 @@
                         <onright>60</onright>
                     </control>
                     <control type="grouplist">
-                        <visible>!IsEmpty(Window.Property(movie.VideoResolution))</visible>
                         <posx>TextMargin</posx>
                         <posy>750</posy>
                         <width min="90" max="967">auto</width>
@@ -836,35 +810,27 @@
                     <control type="group">
                         <posx>910</posx>
                         <posy>0</posy>
-                        <control type="group">
-                            <!-- CDART -->
-                            <visible>!Skin.HasSetting(plexbmc)</visible>
-                            <visible>Skin.HasSetting(EnableCdArt)+!IsEmpty(Window.Property(movie.Poster))</visible>
-                            <include>VisibleFadeEffect</include>
-                            <control type="image">
-                                <posx>10</posx>
-                                <posy>-180</posy>
-                                <width>360</width>
-                                <height>360</height>
-                                <texture background="true" diffuse="common/cdart_diffuse.png">$INFO[Window.Property(movie.DiscArt)]</texture>
-                                <aspectratio align="center" aligny="center">keep</aspectratio>
-                                <include>Animation_ViewsCDart</include>
-                            </control>
-                            <control type="image">
-                                <posx>0</posx>
-                                <posy>-25</posy>
-                                <width>380</width>
-                                <height>25</height>
-                                <texture border="25,0,25,0">common/cover_shadow.png</texture>
-                            </control>
-                        </control>
+                        <include name="DiscArt">
+                            <param name="visible" value="!IsEmpty(Window.Property(movie.Poster))"/>
+                            <param name="x" value="10"/>
+                            <param name="y" value="-180"/>
+                            <param name="width" value="360"/>
+                            <param name="height" value="360"/>
+                            <param name="texture" value="$VAR[VideoCdArt]"/>
+                            <param name="visibleShadow" value="true"/>
+                            <param name="xShadow" value="0"/>
+                            <param name="yShadow" value="-25"/>
+                            <param name="widthShadow" value="380"/>
+                            <param name="flipyShadow" value="false"/>
+                        </include>
                         <control type="image">
                             <visible>IsEmpty(Window.Property(movie.Poster))</visible>
                             <posx>0</posx>
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -903,7 +869,7 @@
                         <width>760</width>
                         <height>680</height>
                         <font>InfoDetailsFontBig</font>
-                        <include>TextColor_AlternateColor</include>
+                        <textcolor>AlternateColor</textcolor>
                         <label fallback="416">$INFO[Window.Property(movie.plot)]</label>
                         <pagecontrol>6060</pagecontrol>
                     </control>
@@ -919,35 +885,27 @@
                     <control type="group">
                         <posx>910</posx>
                         <posy>0</posy>
-                        <control type="group">
-                            <!-- CDART -->
-                            <visible>!Skin.HasSetting(plexbmc)</visible>
-                            <visible>Skin.HasSetting(EnableCdArt)+!IsEmpty(Window.Property(movie.Poster))</visible>
-                            <include>VisibleFadeEffect</include>
-                            <control type="image">
-                                <posx>10</posx>
-                                <posy>-180</posy>
-                                <width>360</width>
-                                <height>360</height>
-                                <texture background="true" diffuse="common/cdart_diffuse.png">$INFO[Window.Property(movie.DiscArt)]</texture>
-                                <aspectratio align="center" aligny="center">keep</aspectratio>
-                                <include>Animation_ViewsCDart</include>
-                            </control>
-                            <control type="image">
-                                <posx>0</posx>
-                                <posy>-25</posy>
-                                <width>380</width>
-                                <height>25</height>
-                                <texture border="25,0,25,0">common/cover_shadow.png</texture>
-                            </control>
-                        </control>
+                        <include name="DiscArt">
+                            <param name="visible" value="!IsEmpty(Window.Property(movie.Poster))"/>
+                            <param name="x" value="10"/>
+                            <param name="y" value="-180"/>
+                            <param name="width" value="360"/>
+                            <param name="height" value="360"/>
+                            <param name="texture" value="$VAR[VideoCdArt]"/>
+                            <param name="visibleShadow" value="true"/>
+                            <param name="xShadow" value="0"/>
+                            <param name="yShadow" value="-25"/>
+                            <param name="widthShadow" value="380"/>
+                            <param name="flipyShadow" value="false"/>
+                        </include>
                         <control type="image">
                             <visible>IsEmpty(Window.Property(movie.Poster))</visible>
                             <posx>0</posx>
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1019,7 +977,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1038,7 +997,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Property(Character),$LOCALIZE[20347] ]</label>
                                 </control>
                             </control>
@@ -1061,7 +1020,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultArtistBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultArtistBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1133,7 +1093,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1152,7 +1113,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Property(department)]$INFO[ListItem.Property(Job), - ]</label>
                                 </control>
                             </control>
@@ -1175,7 +1136,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultArtistBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultArtistBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1243,8 +1205,9 @@
                                 <posy>7</posy>
                                 <width>50</width>
                                 <height>50</height>
-                                <colordiffuse>NoFocusedColor</colordiffuse>
-                                <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                <include>NoFocusedIcon</include>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                <texture>OverlayWatched.png</texture>
                                 <aspectratio aligny="center">keep</aspectratio>
                                 <visible>!IsEmpty(ListItem.Property(DBID))</visible>
                             </control>
@@ -1257,7 +1220,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1276,7 +1240,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Year]</label>
                                 </control>
                                 <control type="image">
@@ -1284,7 +1248,8 @@
                                     <posy>7</posy>
                                     <width>50</width>
                                     <height>50</height>
-                                    <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture>OverlayWatched.png</texture>
                                     <aspectratio aligny="center">keep</aspectratio>
                                     <visible>!IsEmpty(ListItem.Property(DBID))</visible>
                                 </control>
@@ -1308,7 +1273,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1387,8 +1353,9 @@
                                 <posy>7</posy>
                                 <width>50</width>
                                 <height>50</height>
-                                <colordiffuse>NoFocusedColor</colordiffuse>
-                                <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                <include>NoFocusedIcon</include>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                <texture>OverlayWatched.png</texture>
                                 <aspectratio aligny="center">keep</aspectratio>
                                 <visible>!IsEmpty(ListItem.Property(DBID))</visible>
                             </control>
@@ -1401,7 +1368,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1420,7 +1388,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Year]</label>
                                 </control>
                                 <control type="image">
@@ -1428,7 +1396,8 @@
                                     <posy>7</posy>
                                     <width>50</width>
                                     <height>50</height>
-                                    <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture>OverlayWatched.png</texture>
                                     <aspectratio aligny="center">keep</aspectratio>
                                     <visible>!IsEmpty(ListItem.Property(DBID))</visible>
                                 </control>
@@ -1436,9 +1405,9 @@
                         </focusedlayout>
                     </control>
                     <control type="scrollbar" id="256">
-                        <posx>1886</posx>
-                        <posy>318</posy>
-                        <height>675</height>
+                        <posx>810</posx>
+                        <posy>100</posy>
+                        <height>700</height>
                         <include>VerticalScroller</include>
                         <onleft>250</onleft>
                         <onright>256</onright>
@@ -1452,7 +1421,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1524,7 +1494,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1543,7 +1514,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Property(Type)]</label>
                                 </control>
                             </control>
@@ -1566,7 +1537,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1629,7 +1601,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1661,7 +1634,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1724,7 +1698,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1756,7 +1731,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultIconBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultIconBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1819,7 +1795,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -1851,7 +1828,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultIconBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultIconBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -1901,7 +1879,7 @@
                                 <posy>0</posy>
                                 <width>50</width>
                                 <height>50</height>
-                                <colordiffuse>NoFocusedColor</colordiffuse>
+                                <include>NoFocusedIcon</include>
                                 <texture>$INFO[ListItem.Property(iso_3166_1),flags/,.png]</texture>
                                 <aspectratio>keep</aspectratio>
                             </control>
@@ -1923,7 +1901,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="image">
                                     <posx>TextMargin</posx>
@@ -2005,7 +1984,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -2037,7 +2017,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultGenreBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultGenreBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -2100,7 +2081,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -2134,7 +2116,7 @@
                             <width>760</width>
                             <height>310</height>
                             <font>InfoPlotFont</font>
-                            <include>TextColor_AlternateColor</include>
+                            <textcolor>AlternateColor</textcolor>
                             <label>$INFO[Container(1050).ListItem.Property(Content)]</label>
                             <pagecontrol>6062</pagecontrol>
                         </control>
@@ -2214,7 +2196,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -2276,9 +2259,16 @@
                                 <posy>0</posy>
                                 <width>155</width>
                                 <height>233</height>
-                                <colordiffuse>bbffffff</colordiffuse>
                                 <texture background="true">$INFO[ListItem.Thumb]</texture>
                                 <aspectratio>scale</aspectratio>
+                            </control>
+                            <control type="image">
+                                <posx>0</posx>
+                                <posy>0</posy>
+                                <width>155</width>
+                                <height>233</height>
+                                <include>NoFocusedThumb</include>
+                                <texture>common/BlackDot.png</texture>
                             </control>
                         </itemlayout>
                         <focusedlayout height="233" width="155">
@@ -2295,7 +2285,8 @@
                                 <posy>0</posy>
                                 <width>155</width>
                                 <height>233</height>
-                                <texture border="1,50,1,50">$VAR[Theme.Color]/common/frame_focus.png</texture>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                <texture border="1,50,1,50">common/frame_focus.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                         </focusedlayout>
@@ -2317,7 +2308,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultPictureBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultPictureBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -2367,9 +2359,16 @@
                                 <posy>0</posy>
                                 <width>258</width>
                                 <height>145</height>
-                                <colordiffuse>bbffffff</colordiffuse>
                                 <texture background="true">$INFO[ListItem.Thumb]</texture>
                                 <aspectratio>scale</aspectratio>
+                            </control>
+                            <control type="image">
+                                <posx>0</posx>
+                                <posy>0</posy>
+                                <width>258</width>
+                                <height>145</height>
+                                <include>NoFocusedThumb</include>
+                                <texture>common/BlackDot.png</texture>
                             </control>
                         </itemlayout>
                         <focusedlayout height="145" width="258">
@@ -2386,7 +2385,8 @@
                                 <posy>0</posy>
                                 <width>258</width>
                                 <height>145</height>
-                                <texture border="1,50,1,50">$VAR[Theme.Color]/common/frame_focus.png</texture>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                <texture border="1,50,1,50">common/frame_focus.png</texture>
                                 <aspectratio>stretch</aspectratio>
                             </control>
                         </focusedlayout>
@@ -2408,7 +2408,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultPictureBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultPictureBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -2476,8 +2477,9 @@
                                 <posy>7</posy>
                                 <width>50</width>
                                 <height>50</height>
-                                <colordiffuse>NoFocusedColor</colordiffuse>
-                                <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                <include>NoFocusedIcon</include>
+                                <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                <texture>OverlayWatched.png</texture>
                                 <aspectratio aligny="center">keep</aspectratio>
                                 <visible>!IsEmpty(ListItem.Property(account))</visible>
                             </control>
@@ -2490,7 +2492,8 @@
                                     <posy>0</posy>
                                     <height>100</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus_2.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus_2.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -2509,7 +2512,7 @@
                                     <width>760</width>
                                     <font>FacadeListSubFont</font>
                                     <scroll>true</scroll>
-                                    <include>TextColor_AlternateColor</include>
+                                    <textcolor>AlternateColor</textcolor>
                                     <label>$INFO[ListItem.Property(Description)]</label>
                                 </control>
                                 <control type="image">
@@ -2517,7 +2520,8 @@
                                     <posy>7</posy>
                                     <width>50</width>
                                     <height>50</height>
-                                    <texture>$VAR[Theme.Color]/OverlayWatched.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture>OverlayWatched.png</texture>
                                     <aspectratio aligny="center">keep</aspectratio>
                                     <visible>!IsEmpty(ListItem.Property(account))</visible>
                                 </control>
@@ -2541,7 +2545,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
@@ -2604,7 +2609,8 @@
                                     <posy>0</posy>
                                     <height>50</height>
                                     <width>860</width>
-                                    <texture border="1">$VAR[Theme.Color]/list/bg_facade_focus.png</texture>
+                                    <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                                    <texture border="1">list/bg_facade_focus.png</texture>
                                 </control>
                                 <control type="label">
                                     <posx>TextMargin</posx>
@@ -2636,7 +2642,8 @@
                             <posy>0</posy>
                             <width>380</width>
                             <height>570</height>
-                            <texture>$VAR[Theme.Color]/defaultVideoBig.png</texture>
+                            <colordiffuse>$VAR[Picked.Theme.Color]</colordiffuse>
+                            <texture>defaultVideoBig.png</texture>
                             <aspectratio aligny="top">keep</aspectratio>
                         </control>
                         <control type="image">
