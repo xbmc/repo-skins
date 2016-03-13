@@ -14,7 +14,7 @@
 	<include file="Viewtype_Episodes_Wide.xml" />
     <include file="Viewtype_MusicVideos.xml" />
     <include file="Viewtype_MusicVideos_List.xml" />
-	 <include file="Viewtype_MusicVideos_List2.xml" />
+	<include file="Viewtype_MusicVideos_List2.xml" />
 	<include file="Viewtype_MusicVideosThumbs.xml" />
 	<include file="Viewtype_MusicVideosThumbs2.xml" />
 	<include file="Viewtype_Artist_Albums.xml" />
@@ -45,6 +45,79 @@
 	<include file="VariablesHomeMenu10.xml" />
 	<include file="VariablesHomeSideMenu.xml" />
 	<include file="IncludesHome.xml" />
+	<include name="MusicVideosVisibility">
+		<visible>[Container.Content(musicvideos)]
+		</visible>
+	</include>
+	<include name="AlbumsVisibility">
+		<visible>Container.Content(Albums) | 
+				SubString(Container.FolderPath,musicdb://recentlyaddedalbums)  | 
+				SubString(Container.FolderPath,musicdb://recentlyplayedalbums) |
+				SubString(Container.FolderPath,musicdb://compilations)
+		</visible>
+	</include>
+	<include name="SongsVisibility">
+		<visible>Container.Content(Songs) | SubString(Container.FolderPath,musicdb://singles) | Window.IsActive(musicplaylist)</visible>
+	</include>
+	<include name="ListVisibility">
+		 <visible>[
+				!SubString(Container.FolderPath,videodb://) + 
+				!SubString(Container.FolderPath,musicdb://) + 
+				!SubString(Container.FolderPath,library://) + 
+				!IsEmpty(Container.FolderName)
+				] | Container.Content(directors) | 
+					Container.Content(actors)| 
+					Container.Content(studios) | 
+					Container.Content(countries) | 
+					Container.Content(tags) | 
+					Window.IsActive(Pictures) | 
+					Window.IsActive(musicfiles) | 
+					Window.IsActive(programs) |
+					SubString(Container.FolderPath,playlistvideo://) |
+					SubString(Container.FolderPath,library://music/top100)
+				
+		</visible>
+	</include>
+	
+	<include name="ThumbsVisibility">
+		<visible>	[SubString(Container.FolderPath,plugin://) | 
+					SubString(Container.FolderPath,playlistvideo://)| 
+						[Container.Content(files) + 
+						!StringCompare(Container.FolderPath,videodb://movies/) + 
+						!StringCompare(Container.FolderPath,library://video/movies/) + 
+						!StringCompare(Container.FolderPath,videodb://tvshows/) + 
+						!StringCompare(Container.FolderPath,library://video/tvshows/) + 
+						!StringCompare(Container.FolderPath,videodb://musicvideos/) 
+						] 
+					] + 
+					!Container.Content(movies) +
+					!Container.Content(tvshows) + 
+					!Container.Content(songs) + 
+					!Container.Content(musicvideos)
+		</visible>
+				
+	</include>
+	
+	<include name="PanelsVisibility">
+		<visible>	
+				[Window.IsVisible(videolibrary) | 
+				Window.IsVisible(musiclibrary) | 
+				Window.IsVisible(addonbrowser)] + 
+				[IsEmpty(Container.FolderName) | 
+				StringCompare(Container.FolderPath,addons://all/)  | 
+				StringCompare(Container.FolderPath,videodb://movies/) | 
+				StringCompare(Container.FolderPath,library://video/movies/) | 
+				StringCompare(Container.FolderPath,videodb://tvshows/) | 
+				StringCompare(Container.FolderPath,library://video/tvshows/) | 
+				StringCompare(Container.FolderPath,videodb://musicvideos/) | 
+				StringCompare(Container.FolderPath,library://video/musicvideos/) | 
+				StringCompare(Container.FolderPath,library://music/musicvideos/)] 
+			</visible>
+    </include>          
+	
+	
+	
+	
 	<include name="PVRSideMenu">
 		<control type="image">
 				<visible>Skin.HasSetting(showViewOptions)</visible>
@@ -1334,7 +1407,7 @@
 			<align>right</align>
 			<font>Panel_Description_Title</font>
 			<label>$INFO[ListItem.Year]</label>
-			<visible>Container.Content(Albums)</visible>
+			<include>AlbumsVisibility</include>
 		</control>
 		<control type="label">
 			<left>795</left>
@@ -1365,7 +1438,8 @@
 			<align>left</align>
 			<font>Panel_Description_Title</font>
 			<label>182</label>
-			<visible>Container.Content(albums) + IsEmpty(ListItem.Property(Album_Description)) + !StringCompare(ListItem.Label,..) + !SubString(ListItem.Label,all albums)  + SubString(Container.FolderPath,musicdb://)</visible>
+			<include>AlbumsVisibility</include>
+			<visible>IsEmpty(ListItem.Property(Album_Description)) + !StringCompare(ListItem.Label,..) + !SubString(ListItem.Label,all albums)  + SubString(Container.FolderPath,musicdb://)</visible>
 		</control>
 		 <!-- This Control displays the Description of the Album and Year on the description field-->
 		<control type="textbox">
@@ -1377,7 +1451,7 @@
 			<align>justify</align>
 			<autoscroll time="3000" delay="6000" repeat="8000"></autoscroll>
 			<font>Panel_Description</font>
-			<visible>Container.Content(albums)</visible>
+			<include>AlbumsVisibility</include>
 		</control>
 		<control type="textbox">
 			<left>795</left>
@@ -1395,7 +1469,8 @@
 			<top>345</top>
 			<width>450</width>
 			<height>210</height>
-			<visible>IsEmpty(ListItem.Property(Album_Description)) + Container.Content(albums) + SubString(Container.FolderPath,musicdb://)</visible>
+			<include>AlbumsVisibility</include>
+			<visible>IsEmpty(ListItem.Property(Album_Description)) + SubString(Container.FolderPath,musicdb://)</visible>
 			<itemlayout height="30" width="450">
 					<control type="label">
 					<left>15</left>
@@ -1426,7 +1501,7 @@
 					<left>45</left>
 					<width>400</width>
 					<height>30</height>
-					<label>$INFO[ListItem.Label] $INFO[ListItem.DBID]</label>
+					<label>$INFO[ListItem.Label]</label>
 					<font>List_Unfocused</font>
 				</control>
 			</focusedlayout>
