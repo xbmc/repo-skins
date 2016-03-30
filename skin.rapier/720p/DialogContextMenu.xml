@@ -63,37 +63,48 @@
 					<onclick condition="IsEmpty(ListItem.Trailer) + !Container.Content(Episodes)">ActivateWindow(videos,$INFO[ListItem.Label,plugin://plugin.video.youtube/kodion/search/query/?q=, trailer],return)</onclick>
 					<onclick condition="IsEmpty(ListItem.Trailer) + Container.Content(Episodes)">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer],return)</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>Container.Content(Movies) | Container.Content(TVShows)</visible>
+					<visible>[Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes)] + !Skin.HasSetting(ContextMenuTrailer)</visible>
 				</control>
 				<control type="button" id="1000">
 					<description>Button Template</description>
 					<left>32</left>
 					<include>ContextMenuBtn</include>
 				</control>
+				<control type="button" id="2068">
+					<description>Set My Rating</description>
+					<label>$LOCALIZE[38023]</label>
+					<onclick condition="System.HasAddon(script.user.rating)">RunScript(script.user.rating)</onclick>
+					<onclick condition="!System.HasAddon(script.user.rating)">InstallAddon(script.user.rating)</onclick>
+					<include>ContextMenuBtn</include>
+					<visible>!IsEmpty(ListItem.DBID) + !ListItem.IsCollection + Skin.HasSetting(ContextMenuSetMyRating) + [Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Episodes)]</visible>
+				</control>
 				<control type="button" id="2001">
 					<description>ExtendedInfo</description>
 					<label>$VAR[ContextMenuLabel2001]</label>
-					<onclick condition="Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
-					<onclick condition="Container.Content(Movies)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
-					<onclick condition="Container.Content(TVShows)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(Movies)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(TVShows)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
 					<!--<onclick condition="Container.Content(Episodes)">RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=$INFO[ListItem.TVShowTitle],episode=$INFO[ListItem.Episode],season=$INFO[ListItem.Season],dbid=$INFO[ListItem.DBID])</onclick>-->
 					<include>ContextMenuBtn</include>
-					<visible>[Container.Content(Artists) | [[Container.Content(Actors) | Container.Content(Directors) | [Container.Content(Movies) + !ListItem.IsCollection] | Container.Content(TVShows)] + !System.HasAddon(context.extendedinfo.dialog)]] + System.HasAddon(script.extendedinfo)</visible>
+					<visible>[Container.Content(Artists) | [[Container.Content(Actors) | Container.Content(Directors) | [Container.Content(Movies) + !ListItem.IsCollection] | Container.Content(TVShows)] + !System.HasAddon(context.extendedinfo.dialog)]] + !Skin.HasSetting(ContextMenuExtendedInformation)</visible>
 					<!--<visible>[Container.Content(Artists) | Container.Content(Episodes) | [[Container.Content(Actors) | Container.Content(Directors) | [Container.Content(Movies) + !ListItem.IsCollection] | Container.Content(TVShows)] + !System.HasAddon(context.extendedinfo.dialog)]] + System.HasAddon(script.extendedinfo)</visible>-->
 				</control>
 				<control type="button" id="2064">
 					<description>Movie Set Information</description>
 					<label>$LOCALIZE[31040]</label>
-					<onclick>ActivateWindow(3008)</onclick>
+					<onclick condition="System.HasAddon(script.skin.helper.service)">ActivateWindow(3008)</onclick>
+					<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>System.HasAddon(script.skin.helper.service) + !IsEmpty(ListItem.DBID) + ListItem.IsCollection</visible>
+					<visible>!IsEmpty(ListItem.DBID) + ListItem.IsCollection + !Skin.HasSetting(ContextMenuMovieSetInformation)</visible>
 				</control>
 				<control type="button" id="2067">
 					<description>Season Info</description>
 					<label>$LOCALIZE[31045]</label>
-					<onclick>RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
+					<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>System.HasAddon(script.extendedinfo) + !System.HasAddon(context.extendedinfo.dialog) + Container.Content(Seasons) + !IsEmpty(ListItem.Season)</visible>
+					<visible>!System.HasAddon(context.extendedinfo.dialog) + Container.Content(Seasons) + !IsEmpty(ListItem.Season) + !Skin.HasSetting(ContextMenuExtendedInformation)</visible>
 				</control>
 				<control type="button" id="2065">
 					<description>Cinema Experience / CinemaVision</description>
@@ -101,14 +112,14 @@
 					<onclick condition="!System.HasAddon(script.cinemavision)">RunScript(script.cinema.experience,movieid=$INFO[ListItem.DBID])</onclick>
 					<onclick condition="System.HasAddon(script.cinemavision)">RunScript(script.cinemavision,experience)</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>[[System.HasAddon(script.cinema.experience) + Container.Content(Movies)] | [System.HasAddon(script.cinemavision) + [Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes)]]] + !IsEmpty(ListItem.DBID)</visible>
+					<visible>[[System.HasAddon(script.cinema.experience) + Container.Content(Movies)] | [System.HasAddon(script.cinemavision) + [Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes)]]] + !IsEmpty(ListItem.DBID) + !Skin.HasSetting(ContextMenuCinema)</visible>
 				</control>
 				<control type="button" id="2066">
 					<description>Change Info Labels</description>
 					<label>$LOCALIZE[31034]</label>
 					<onclick>RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID])</onclick>
 					<include>ContextMenuBtn</include>
-					<visible>System.HasAddon(script.libraryeditor) + !IsEmpty(ListItem.DBID) + !ListItem.IsCollection + !Skin.HasSetting(EnableKioskMode)</visible>
+					<visible>System.HasAddon(script.libraryeditor) + !IsEmpty(ListItem.DBID) + !ListItem.IsCollection + !Skin.HasSetting(EnableKioskMode) + !Skin.HasSetting(ContextMenuLibraryEditor)</visible>
 					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(episodes) | Container.Content(musicvideos) | Container.Content(artists) | Container.Content(albums) | Container.Content(songs)</visible>
 				</control>
 			</control>
