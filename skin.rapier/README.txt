@@ -46,7 +46,7 @@ script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0
 script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
-script.skin.helper.service v1.0.11
+script.skin.helper.service v1.0.43
 script.globalsearch v2.0.8
 service.skin.widgets v0.0.29
 
