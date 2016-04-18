@@ -4,17 +4,13 @@
     <defaultcontrol always="true">1000</defaultcontrol>
     <include>DefaultSkinSettings</include>
     <onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu|netflixmenu)</onload>
-	<onunload condition="System.HasAlarm(SpotlightWidgetRotate)">CancelAlarm(SpotlightWidgetRotate,true)</onunload>
-    <onunload condition="Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510)">CancelAlarm(WidgetRotate1,true)</onunload>
-    <onunload condition="Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520)">CancelAlarm(WidgetRotate2,true)</onunload>
-    <onunload condition="Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530)">CancelAlarm(WidgetRotate3,true)</onunload>
-    <onunload condition="Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540)">CancelAlarm(WidgetRotate4,true)</onunload>
-    <onunload>SetProperty(SectionBackground,$INFO[Control.GetLabel(99004)])</onunload>
+	<include condition="Skin.String(widgets_rotate) + !Skin.String(widgets_rotate,disabled)">WidgetsAutoRotateUnload</include>
+    <onunload condition="!Skin.HasSetting(SectionBackgroundHomeOnly)">SetProperty(SectionBackground,$INFO[Control.GetLabel(99004)])</onunload>
     <!-- auto close homemenu and focus mainmenu when home is unloaded -->
-    <onunload>ClearProperty(submenu)</onunload>
-    <onunload>ClearProperty(ShowWidget)</onunload>
-    <onunload>ClearProperty(ShowViewSubMenu)</onunload>
-    <onunload>ClearProperty(SkinHelper.WidgetContainer)</onunload>
+    <onunload>ClearProperty(submenu,Home)</onunload>
+    <onunload>ClearProperty(ShowWidget,Home)</onunload>
+    <onunload>ClearProperty(ShowViewSubMenu,Home)</onunload>
+    <onunload>ClearProperty(SkinHelper.WidgetContainer,Home)</onunload>
     <menucontrol>300</menucontrol>
 	<controls>
 	
@@ -23,11 +19,9 @@
     
         <control type="button" id="1000">
 			<description>hidden button for onload actions as placing them in onload causes strange behaviour</description>
-            <include name="WidgetsAutoRotate" condition="Skin.String(widgets_rotate) + !Skin.String(widgets_rotate,disabled)">
-                <param name="interval" value="$INFO[Skin.String(widgets_rotate_delay)]" />
-            </include>
-            <onfocus condition="SubString(Skin.String(HomeLayout), netflix) | Skin.String(HomeLayout, win10)">SetFocus(9000)</onfocus>
-            <onfocus condition="!SubString(Skin.String(HomeLayout), netflix) + !Skin.String(HomeLayout, win10)">SetFocus(300)</onfocus>
+            <onfocus condition="[SubString(Skin.String(HomeLayout), netflix) | Skin.String(HomeLayout, win10)] + !Skin.HasSetting(AutoFocusHome)">SetFocus(9000)</onfocus>
+            <onfocus condition="[[!SubString(Skin.String(HomeLayout), netflix) + !Skin.String(HomeLayout, win10)] | Skin.HasSetting(AutoFocusHome)] + !Skin.String(home.defaultfocus)">SetFocus(300)</onfocus>
+            <onfocus condition="[[!SubString(Skin.String(HomeLayout), netflix) + !Skin.String(HomeLayout, win10)] | Skin.HasSetting(AutoFocusHome)] + Skin.String(home.defaultfocus)">SetFocus(300,$INFO[Skin.String(home.defaultfocus)])</onfocus>
             <onfocus condition="Control.IsVisible(510)">SetProperty(SkinHelper.WidgetContainer,510)</onfocus>
             <onfocus>SetProperty(HomeFirstLoadDone,done)</onfocus>
 			<texturenofocus>-</texturenofocus>
@@ -37,6 +31,7 @@
             <onup>300</onup>
             <ondown>300</ondown>
             <onback>300</onback>
+            <label>hiddenbuttonhiddenbuttonhiddenbutton</label>
             <visible allowhiddenfocus="true">false</visible>
 		</control>
 		
@@ -73,6 +68,16 @@
 		<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
 		<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
 		<include condition="!Skin.HasTheme(classic)">NowPlayingInfoBar</include>
+        
+        <!-- PVR recording icon -->
+		<control type="image">
+			<posx>887</posx>
+			<posy>0</posy>
+			<width>146</width>
+			<height>37</height>
+			<texture>home/basichome_isrecording_bg.png</texture>
+			<visible>Pvr.IsRecording + Skin.HasSetting(Home_RecordingIndicator)</visible>
+		</control>
 
 	</controls>
 </window>

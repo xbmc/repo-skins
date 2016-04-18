@@ -20,6 +20,27 @@
                 <effect type="slide" start="0,0" end="0,620" time="100" tween="cubic" easing="inout" delay="0" />
             </animation>
 		</control>
+        
+        <control type="group">
+			<!--Panel classic-->
+            <visible>skin.hastheme(classic)</visible>
+			<visible>!Skin.HasSetting(HideWidgetPanelBackground)</visible>
+            <control type="image">
+                <posx>50</posx>
+                <bottom>60</bottom>
+                <width>1820</width>
+                <height>870</height>
+                <texture border="15">diffuse/bgpanel.png</texture>
+                <colordiffuse>$INFO[Skin.String(GeneralPanelsColor)]</colordiffuse>
+            </control>
+            <control type="image">	
+                <posx>50</posx>
+                <bottom>7</bottom>
+                <width>1820</width>
+                <height>84</height>
+                <texture colordiffuse="$INFO[Skin.String(FooterPanelColor)]">special://skin/extras/icons/footer_classic.png</texture>
+            </control>
+        </control>
 				
 		<!-- touchscreen support -->
 		<include condition="Skin.HasSetting(EnableTouchSupport)">TouchControlsHome</include>
@@ -70,13 +91,7 @@
                         <include>ThumbsLabelOverlay</include>
                         <include>LandscapeLabelOverlayVisibility</include>
                     </control>
-                    <control type="button">
-                        <visible>false</visible>
-                        <onfocus condition="Control.IsVisible(510)">Setproperty(SkinHelper.WidgetContainer,510)</onfocus>
-                        <onfocus condition="Control.IsVisible(520)">Setproperty(SkinHelper.WidgetContainer,520)</onfocus>
-                        <onfocus condition="Control.IsVisible(530)">Setproperty(SkinHelper.WidgetContainer,530)</onfocus>
-                        <onfocus condition="Control.IsVisible(540)">Setproperty(SkinHelper.WidgetContainer,540)</onfocus>
-                    </control>
+                    <include>HiddenHomeMenuButton</include>
                 </control>
             </focusedlayout>
             <content><include>skinshortcuts-mainmenu</include></content>
@@ -136,7 +151,12 @@
                 <colordiffuse>$INFO[Skin.String(SpinnerTextureColor)]</colordiffuse>
                 <fadetime>0</fadetime>
 				<visible>!Skin.String(SkinHelper.SpinnerTexturePath,None)</visible>
-                <visible>[Control.IsVisible(510) + Container(510).IsUpdating]</visible>
+                <visible>
+                [Control.IsVisible(510) + Container(510).IsUpdating] | 
+                [Control.IsVisible(520) + Container(520).IsUpdating] | 
+                [Control.IsVisible(530) + Container(530).IsUpdating] | 
+                [Control.IsVisible(540) + Container(540).IsUpdating]
+                </visible>
             </control>
             <!-- busy image while widget loading -->
             <control type="multiimage">
@@ -150,7 +170,7 @@
                 <colordiffuse>$INFO[Skin.String(SpinnerTextureColor)]</colordiffuse>
                 <fadetime>0</fadetime>
 				<visible>!Skin.String(SkinHelper.SpinnerTexturePath,None)</visible>
-                <visible>Container(1508).IsUpdating</visible>
+                <visible>Control.IsVisible(1508) + Container(1508).IsUpdating</visible>
             </control>
             <!-- alt spotlight no submenu+widget present-->
 			<control type="group">
@@ -199,7 +219,7 @@
 				<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
 				<texturenofocus>-</texturenofocus>
 				<label>$VAR[changeWidgetLabel]</label>
-                <onclick>$VAR[changeWidgetClickActions]</onclick>
+                <onclick>$VAR[toggleNextWidget]</onclick>
 				<onleft condition="!IntegerGreaterThan(Container(1508).NumItems,0)">4444</onleft>
 				<onleft condition="IntegerGreaterThan(Container(1508).NumItems,0)">1508</onleft>
                 <ondown>$VAR[focusWidget]</ondown>
@@ -483,7 +503,7 @@
                     <description>widget label overlay</description>
                     <include condition="!Skin.String(Widgets_DisplayTags,disable)">ThumbsLabelOverlay</include>
                     <include condition="Skin.String(Widgets_DisplayTags,auto)">LandscapeLabelOverlayVisibility</include>
-                    <include name="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
+                    <include name="$PARAM[widgetLabelVisibility]" content="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
                         <param name="prefix" value="Landscape" />
                     </include>
                 </control>
@@ -498,7 +518,7 @@
                     <description>widget label overlay</description>
                     <include condition="!Skin.String(Widgets_DisplayTags,disable)">ThumbsLabelOverlay</include>
                     <include condition="Skin.String(Widgets_DisplayTags,auto)">LandscapeLabelOverlayVisibility</include>
-                    <include name="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
+                    <include name="$PARAM[widgetLabelVisibility]" content="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
                         <param name="prefix" value="Landscape" />
                     </include>
                 </control>
@@ -517,7 +537,7 @@
                     <description>widget label overlay</description>
                     <include condition="!Skin.String(Widgets_DisplayTags,disable)">ThumbsLabelOverlay</include>
                     <include condition="Skin.String(Widgets_DisplayTags,auto)">LandscapeLabelOverlayVisibility</include>
-                    <include name="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
+                    <include name="$PARAM[widgetLabelVisibility]" content="$PARAM[widgetLabelVisibility]" condition="Skin.String(Widgets_DisplayTags,override)">
                         <param name="prefix" value="Landscape" />
                     </include>
                 </control>
@@ -662,6 +682,13 @@
 			<aspectratio align="right" aligny="center">keep</aspectratio>
 			<texture background="true">$VAR[SpotLightWidgetInfoThumb]</texture>
 		</control>
+        <!--hidden button -->
+        <control type="button">
+            <visible>false</visible>
+            <onfocus>SetProperty(SkinHelper.WidgetContainer,1508,home)</onfocus>
+            <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate1508))">CancelAlarm(WidgetRotate1508,true)</onfocus>
+            <onfocus>ClearProperty(WidgetRotate1508,Home)</onfocus>
+        </control>
 	</include>
 	<include name="EnhancedHomeSpotLightWidgetLayoutAlt">
 		<control type="image">
@@ -768,7 +795,7 @@
 		<value condition="Control.IsVisible(4445)">SetFocus(4445)</value>
         <value condition="!IntegerGreaterThan(Container(4444).NumItems,0) + !IsEmpty(Container(300).ListItem.Property(widget.99))">SetFocus(1508)</value>
 		<value condition="!IntegerGreaterThan(Container(4444).NumItems,0) + !IsEmpty(Container(300).ListItem.Property(widget))">$VAR[focusWidget]</value>
-		<value>SetFocus(4444)</value>
+		<value>SetFocus(4444,0)</value>
    </variable>
 	
     
