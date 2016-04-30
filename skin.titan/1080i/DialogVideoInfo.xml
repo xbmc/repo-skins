@@ -20,7 +20,7 @@
             <onfocus condition="System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog) + StringCompare(Window(Home).Property(contenttype),seasons)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TvShowTitle],season=$INFO[ListItem.Season],silent=True)</onfocus>
             <onfocus condition="System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog) + StringCompare(Window(Home).Property(contenttype),episodes)">RunScript(script.extendedinfo,info=extendedepisodeinfo,tvshow=$INFO[ListItem.TvShowTitle],season=$INFO[ListItem.Season],episode=$INFO[ListItem.Episode],silent=True)</onfocus>
             <onfocus condition="![System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)] + SubString(Skin.String(videoinfo_traileraction),auto) + !IsEmpty(ListItem.Trailer) + !Player.HasMedia">PlayMedia($ESCINFO[ListItem.Trailer],1)</onfocus>
-            <onfocus condition="![System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)] + SubString(Skin.String(videoinfo_traileraction),auto) + IsEmpty(ListItem.Trailer) + !Player.HasMedia + [Container.Content(movies) | Container.Content(tvshows)]">RunScript(script.skin.helper.service,action=searchyoutube,windowed=true,autoplay=true,title=$INFO[ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onfocus>
+            <onfocus condition="![System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)] + SubString(Skin.String(videoinfo_traileraction),auto) + IsEmpty(ListItem.Trailer) + !Player.HasMedia + [StringCompare(ListItem.DBTYPE,movie) | StringCompare(ListItem.Property(DBTYPE),movie) | StringCompare(ListItem.DBTYPE,tvshow) | StringCompare(ListItem.Property(DBTYPE),tvshow)]">RunScript(script.skin.helper.service,action=searchyoutube,windowed=true,autoplay=true,title=$INFO[ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onfocus>
             <onfocus condition="![System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)] + SubString(Skin.String(videoinfo_traileraction),auto) + !IsEmpty(ListItem.Trailer) + !Player.HasMedia">SetProperty(TrailerPlaying,Playing,Home)</onfocus>
             <onfocus condition="System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)">close</onfocus>
             <onfocus condition="![System.HasAddon(script.extendedinfo) + Skin.HasSetting(UseExtendedInfoDialog)]">SetFocus(8000)</onfocus>
@@ -201,7 +201,7 @@
                             <onclick condition="!Skin.String(videoinfo_traileraction,fullscreen)">PlayMedia($ESCINFO[ListItem.Trailer],1)</onclick>
                             <onclick>SetProperty(TrailerPlaying,Playing,Home)</onclick>
                             <visible>Skin.HasSetting(videoinfo_button_trailer)</visible>
-							<visible>!IsEmpty(ListItem.Trailer) + Container.Content(movies) + IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
+							<visible>!IsEmpty(ListItem.Trailer) + [StringCompare(ListItem.DBTYPE,movie) | StringCompare(ListItem.Property(DBTYPE),movie)] + IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
 						</control>
 						<control type="button" id="100">
 							<!--Search Trailer on Youtube-->
@@ -214,7 +214,7 @@
                             <onclick condition="System.HasAddon(plugin.video.youtube) + !Skin.String(videoinfo_traileraction,fullscreen)">RunScript(script.skin.helper.service,action=searchyoutube,windowed=true,title=$INFO[ListItem.Title] Trailer,header=YouTube $LOCALIZE[20410])</onclick>
                             <onclick condition="!System.HasAddon(plugin.video.youtube)">ActivateWindow(Videos,plugin://plugin.video.youtube)</onclick>
 							<visible>Skin.HasSetting(videoinfo_button_youtubetrailer)</visible>
-                            <visible>[Container.Content(movies) | Container.Content(tvshows) | stringcompare(ListItem.Property(ItemType),Movie)] + IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
+                            <visible>[StringCompare(ListItem.DBTYPE,movie) | StringCompare(ListItem.Property(DBTYPE),movie) | StringCompare(ListItem.DBTYPE,tvshow) | StringCompare(ListItem.Property(DBTYPE),tvshow)] + IsEmpty(Window(Home).Property(TrailerPlaying))</visible>
 						</control>
                         
 						<control type="button" id="114">
@@ -289,7 +289,7 @@
                              <onclick>Dialog.Close(MovieInformation)</onclick>
                              <onclick>RunScript(script.cinemavision,experience)</onclick>
                              <visible>Skin.HasSetting(videoinfo_button_cinemavision)</visible>
-                             <visible>System.HasAddon(script.cinemavision) + [Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)]</visible>
+                             <visible>System.HasAddon(script.cinemavision)</visible>
 						</control>
 						<control type="button" id="113">
 							<width>285</width>
@@ -299,7 +299,7 @@
 							<onclick>Dialog.Close(MovieInformation)</onclick>
 							<onclick>RunScript(script.cinema.experience,movieid=$INFO[ListItem.DBID])</onclick>
                             <visible>Skin.HasSetting(videoinfo_button_cinemaexperience)</visible>
-							<visible>System.HasAddon(script.cinema.experience) + Container.Content(movies) + !SubString(Container.FolderPath,plugin)</visible>
+							<visible>System.HasAddon(script.cinema.experience) + StringCompare(ListItem.DBTYPE,movie) + !SubString(Container.FolderPath,plugin)</visible>
 						</control>
 						<control type="button" id="102">
 							<!--Get video extras-->
@@ -309,11 +309,8 @@
 							<textoffsetx>0</textoffsetx>
 							<label>$INFO[System.AddonTitle(script.videoextras)]</label>
 							<onclick>XBMC.RunScript(script.videoextras,display,"$INFO[ListItem.FilenameAndPath]")</onclick>
-							<visible>System.HasAddon(script.videoextras)
-							 + [Container.Content(movies) | Container.Content(episodes) | Container.Content(TVShows)
-							 | Container.Content(musicvideos)]
-							 + IsEmpty(Window(movieinformation).Property("HideVideoExtrasButton"))</visible>
-                             <visible>Skin.HasSetting(videoinfo_button_videoextras)</visible>
+							<visible>System.HasAddon(script.videoextras) + IsEmpty(Window(movieinformation).Property(HideVideoExtrasButton))</visible>
+                            <visible>Skin.HasSetting(videoinfo_button_videoextras)</visible>
 						</control>
 						<control type="button" id="211">
 							<description>Fetch TvTunes stuff</description>
@@ -324,7 +321,7 @@
 							<label>31300</label>
 							<onclick>RunScript(script.tvtunes,mode=solo)</onclick>
                             <visible>Skin.HasSetting(videoinfo_button_tvtunes)</visible>
-							<visible>System.HasAddon(script.tvtunes) + [Container.Content(TVShows) | Container.Content(movies) | Container.Content(musicvideos)] + IsEmpty(Window(movieinformation).Property("TvTunes_HideVideoInfoButton"))</visible>
+							<visible>System.HasAddon(script.tvtunes) + [StringCompare(ListItem.DBTYPE,movie) | StringCompare(ListItem.DBTYPE,tvshow) | StringCompare(ListItem.DBTYPE,musicvideo)] + IsEmpty(Window(movieinformation).Property(TvTunes_HideVideoInfoButton))</visible>
 						</control>
 						
 						<control type="button" id="101">
@@ -812,19 +809,6 @@
 									<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
 									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
 									<scroll>false</scroll>
-                                    <visible>![!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)]</visible>
-								</control>
-                                <control type="textbox">
-									<posx>0</posx>
-									<posy>15</posy>
-									<width>1790</width>
-									<font>Light26</font>
-									<align>left</align>
-									<label>[B]$LOCALIZE[31610]: [/B]$INFO[Window(Home).Property(SkinHelper.RottenTomatoesAwards)] [B]$LOCALIZE[31611]: [/B]$INFO[Window(Home).Property(SkinHelper.RottenTomatoesConsensus)]</label>
-									<textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-									<shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
-									<scroll>false</scroll>
-                                    <visible>!IsEmpty(Window(Home).Property(TrailerPlaying)) + SubString(Skin.String(videoinfo_traileraction),windowed)</visible>
 								</control>
                             </control>
 							
@@ -1125,7 +1109,7 @@
                                 <height>120</height>
                                 <bordersize>0</bordersize>
                                 <texture diffuse="diffuse/poster.png">colors/color_white.png</texture>
-                                <colordiffuse>$INFO[Skin.String(LabelOverlaysPanelColor)]</colordiffuse>
+                                <colordiffuse>$INFO[Skin.String(TagOverlaysPanelColor)]</colordiffuse>
                             </control>
                             <control type="label">
                                 <left>10</left>
@@ -1135,7 +1119,7 @@
                                 <align>left</align>
                                 <label>$INFO[Container(50).ListItem.Label2,[B],[/B][CR]]$INFO[Container(50).ListItem.Label]</label>
                                 <font>Reg32</font>
-                                <textcolor>$INFO[Skin.String(LabelOverlaysTextColor)]</textcolor>
+                                <textcolor>$INFO[Skin.String(TagOverlaysTextColor)]</textcolor>
                                 <visible>Skin.String(videoinfo_castaction,library)</visible>
                             </control>
                             <control type="label">
@@ -1146,7 +1130,7 @@
                                 <align>left</align>
                                 <label>$INFO[Container(51).ListItem.Label2,[B],[/B][CR]]$INFO[Container(51).ListItem.Label]</label>
                                 <font>Reg32</font>
-                                <textcolor>$INFO[Skin.String(LabelOverlaysTextColor)]</textcolor>
+                                <textcolor>$INFO[Skin.String(TagOverlaysTextColor)]</textcolor>
                                 <visible>Skin.String(videoinfo_castaction,extendedinfo)</visible>
                             </control>
                         </control>
@@ -1204,7 +1188,7 @@
                                 <height>120</height>
                                 <bordersize>0</bordersize>
                                 <texture diffuse="diffuse/poster.png">colors/color_white.png</texture>
-                                <colordiffuse>$INFO[Skin.String(LabelOverlaysPanelColor)]</colordiffuse>
+                                <colordiffuse>$INFO[Skin.String(TagOverlaysPanelColor)]</colordiffuse>
                             </control>
                             <control type="label">
                                 <left>10</left>
@@ -1214,7 +1198,7 @@
                                 <align>left</align>
                                 <label>$INFO[Container(52).ListItem.Label2,[B],[/B][CR]]$INFO[Container(52).ListItem.Label]</label>
                                 <font>Reg32</font>
-                                <textcolor>$INFO[Skin.String(LabelOverlaysTextColor)]</textcolor>
+                                <textcolor>$INFO[Skin.String(TagOverlaysTextColor)]</textcolor>
                             </control>
                         </control>
                     </control>

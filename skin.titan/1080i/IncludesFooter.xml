@@ -28,11 +28,8 @@
 					<animation type="Conditional" condition="window.isactive(settings) | window.isactive(SettingsCategory.xml) | window.isactive(skinsettings) | window.isactive(systeminfo) | window.isactive(profiles)">
 						<effect type="slide" start="0,0" end="0,-30" time="0" tween="cubic" easing="inout" delay="0" />
 					</animation>
-                    <animation type="Conditional" condition="window.isactive(home)">
-						<effect type="slide" start="0,0" end="0,15" time="0" tween="cubic" easing="inout" delay="0" />
-					</animation>
 					<texture colordiffuse="$INFO[Skin.String(FooterPanelColor)]">special://skin/extras/icons/footer_classic.png</texture>
-					<visible>[!Skin.HasSetting(NoFooterBar) + skin.hastheme(classic)]</visible>
+					<visible>!Skin.HasSetting(NoFooterBar) + skin.hastheme(classic)</visible>
 					<visible>![window.isactive(home) + Skin.HasSetting(NoFooterBarOnHome)]</visible>
 					<visible>![[Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)] + Control.IsVisible(4444) + [Skin.String(SubmenuLayout, horizontal) | Skin.String(SubmenuLayout, tiles)]]</visible>
 				</control>
@@ -135,7 +132,7 @@
     <include name="AltRatingFooter">
         <!--Rating + Studio-->
 			<control type="group">
-				<visible>[Skin.HasSetting(StudioInFooter) | Skin.HasSetting(IMDBRatingInFooter)]</visible>
+				<visible>[Skin.HasSetting(StudioInFooter) | Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]</visible>
                 <!-- IMDB Top 250 -->
                 <control type="group">
                     <height>70</height>
@@ -143,7 +140,7 @@
                     <bottom>15</bottom>
                     <right>50</right>
                     <include>ImdbTop250</include>
-                    <visible>!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + Skin.HasSetting(IMDBRatingInFooter)</visible>
+                    <visible>!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + [Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]</visible>
                 </control>
 				<control type="image">
 					<!--studio logo -->
@@ -156,14 +153,14 @@
 					<include condition="!Skin.HasSetting(PreferColorStudioLogos) + !Skin.String(SkinHelper.StudioImagesPath)">footerColorDiffuse</include>
 					<bordersize>2</bordersize>
 					<texture>$INFO[Window(home).Property(SkinHelper.ListItemStudioLogo)]</texture>
-                    <visible>Skin.HasSetting(StudioInFooter)</visible>
-                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(ListItem.Rating) + Skin.HasSetting(IMDBRatingInFooter)">Conditional</animation>
-                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + Skin.HasSetting(IMDBRatingInFooter)">Conditional</animation>
+                    <visible>Skin.HasSetting(StudioInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))</visible>
+                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(Control.GetLabel(414783)) + [Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]">Conditional</animation>
+                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + [Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]">Conditional</animation>
 				</control>
                 <!-- IMDB rating -->
                 <control type="group">
-                    <visible>!IsEmpty(ListItem.Rating) + Skin.HasSetting(IMDBRatingInFooter)</visible>
-                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + Skin.HasSetting(IMDBRatingInFooter)">Conditional</animation>
+                    <visible>!IsEmpty(Control.GetLabel(414783)) + [Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]</visible>
+                    <animation effect="slide" end="-100" time="0" condition="!IsEmpty(Window(Home).Property(SkinHelper.IMDB.Top250)) + [Skin.HasSetting(IMDBRatingInFooter) | Control.IsVisible(523) | !IsEmpty(Window(Home).Property(netflixview))]">Conditional</animation>
                     <control type="image">
                         <right>50</right>
                         <height>70</height>
@@ -192,7 +189,7 @@
                         <bordersize>2</bordersize>
                         <texture>flags/imdb_logo.png</texture>
                     </control>
-                    <control type="label">
+                    <control type="label" id="414783">
                         <!--Rating modern-->
                         <right>50</right>
                         <bottom>17</bottom>
@@ -202,13 +199,29 @@
                         <aligny>center</aligny>
                         <font>flags</font>
                         <textcolor>white</textcolor>
-                        <label fallback="0.0">$INFO[ListItem.Rating]</label>
+                        <label>$VAR[FooterRatingLabel]</label>
                     </control>
                 </control>
-
 			</control>	
-
     </include>
+    
+    <variable name="FooterRatingLabel">
+        <value condition="IsEmpty(Window(Home).Property(SkinHelper.WidgetContainer))">$INFO[ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),510)">$INFO[Container(510).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),520)">$INFO[Container(520).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),530)">$INFO[Container(530).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),540)">$INFO[Container(540).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),550)">$INFO[Container(550).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),560)">$INFO[Container(560).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),570)">$INFO[Container(570).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),580)">$INFO[Container(580).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),590)">$INFO[Container(590).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),600)">$INFO[Container(600).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),601)">$INFO[Container(601).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),602)">$INFO[Container(602).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),603)">$INFO[Container(603).ListItem.Rating]</value>
+        <value condition="StringCompare(Window(Home).Property(SkinHelper.WidgetContainer),604)">$INFO[Container(604).ListItem.Rating]</value>
+    </variable>
     
     <include name="FooterContentPVR">
         <!--Progress (PVR)-->
@@ -401,7 +414,7 @@
             <visible>system.getbool(lookandfeel.enablerssfeeds)</visible>
             <visible>!Skin.HasTheme(classic) + ![Control.IsVisible(99123) + !Skin.HasSetting(HideBatteryStatus)]</visible>
             <visible>![[Control.IsVisible(4444) + IntegerGreaterThan(Container(4444).NumItems,0)] + [Skin.String(SubmenuLayout, horizontal) | Skin.String(SubmenuLayout, tiles)]] | Skin.String(HomeLayout, simplehor)</visible>
-            <visible>!Window.IsVisible(shutdownmenu) + IsEmpty(Container(300).ListItem.Property(infoline))</visible>
+            <visible>!Window.IsVisible(shutdownmenu) + [IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
             <animation effect="slide" start="0,0" end="-15,-2" time="0" condition="skin.hastheme(classic)">Conditional</animation>
             <animation effect="slide" start="0" end="400" time="0" condition="Control.IsVisible(99123)">Conditional</animation>
         </control>
@@ -420,7 +433,7 @@
             <visible>system.getbool(lookandfeel.enablerssfeeds)</visible>
             <visible>Control.IsVisible(99123) + !Skin.HasSetting(HideBatteryStatus)</visible>
             <visible>![[Control.IsVisible(4444) + IntegerGreaterThan(Container(4444).NumItems,0)] + [Skin.String(SubmenuLayout, horizontal) | Skin.String(SubmenuLayout, tiles)]] | Skin.String(HomeLayout, simplehor)</visible>
-            <visible>!Window.IsVisible(shutdownmenu) + IsEmpty(Container(300).ListItem.Property(infoline))</visible>
+            <visible>!Window.IsVisible(shutdownmenu) + [IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
             <animation effect="slide" start="0,0" end="-15,-2" time="0" condition="skin.hastheme(classic)">Conditional</animation>
         </control>
         <control type="rss">	
@@ -438,7 +451,7 @@
             <visible>system.getbool(lookandfeel.enablerssfeeds)</visible>
             <visible>Skin.HasTheme(classic) + !Control.IsVisible(99123)</visible>
             <visible>![[Control.IsVisible(4444) + IntegerGreaterThan(Container(4444).NumItems,0)] + [Skin.String(SubmenuLayout, horizontal) | Skin.String(SubmenuLayout, tiles)]] | Skin.String(HomeLayout, simplehor)</visible>
-            <visible>IsEmpty(Container(300).ListItem.Property(infoline))</visible>
+            <visible>[IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
         </control>
             
         <!--infoline-->
@@ -475,7 +488,7 @@
 			<onclick>ActivateWindow(111)</onclick>
 			<onfocus>ActivateWindow(111)</onfocus>
 			<include>animation_fade_visible_hidden</include>
-			<visible allowhiddenfocus="true">![[Control.IsVisible(77551) | StringCompare(Window(Home).Property(ShowWidget),show) | [!IsEmpty(Container(300).ListItem.Property(infoline)) + !StringCompare(Container(300).ListItem.Property(infoline),disabled)]] + [Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, simplehor) | Skin.String(HomeLayout, enhanced)]] + !Control.IsVisible(4446) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(HidePowerMenu)</visible>
+			<visible allowhiddenfocus="true">![[Control.IsVisible(77551) | StringCompare(Window(Home).Property(ShowWidget),show) | [!IsEmpty(Container(300).ListItem.Property(infoline)) + !StringCompare(Container(300).ListItem.Property(infoline),none)]] + [Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, simplehor) | Skin.String(HomeLayout, enhanced)]] + !Control.IsVisible(4446) + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(HidePowerMenu)</visible>
 
 			<animation effect="slide" end="0,-33" time="0" condition="skin.hastheme(classic) + ![Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)]">Conditional</animation>
 			<animation effect="slide" end="-610" time="0" condition="[Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)]">Conditional</animation>
@@ -483,5 +496,86 @@
 			<!-- <visible allowhiddenfocus="true">[Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)] + Skin.HasSetting(VerticalHomeInlineSubmenu)</visible> -->
 		</control>
 	</include>
+    
+    <include name="StarRatingFooter">
+        <control type="group">
+            <visible>!Window.IsActive(movieinformation)</visible>
+            <visible>![!Skin.hastheme(classic) + Skin.HasSetting(StudioInFooter)]</visible>
+            <visible>!IsEmpty(ListItem.Rating) + window.isactive(videolibrary)</visible>
+            <bottom>20</bottom>
+            <height>80</height>
+            <posx>1450</posx>
+            <control type="image">
+                <!--Stars classic-->
+                <visible>!IsEmpty(ListItem.Rating) + skin.hastheme(classic)</visible>
+                <posx>60</posx>
+                <posy>18</posy>
+                <width>270</width>
+                <height>25</height>
+                <texture>$INFO[ListItem.Rating,rating/10stars_black/,.png]</texture>
+            </control>
+            <control type="image">
+                <!--Stars modern-->
+                <visible>!IsEmpty(ListItem.Rating) + !skin.hastheme(classic)</visible>
+                <posx>130</posx>
+                <posy>24</posy>
+                <width>220</width>
+                <height>45</height>
+                <colordiffuse>$INFO[Skin.String(FooterTextColor)]</colordiffuse>
+                <texture fallback="rating/0.0.png">$INFO[ListItem.Rating,rating/,.png]</texture>
+            </control>
+            <control type="label">
+                <!--Rating classic-->
+                <visible>!IsEmpty(ListItem.Rating) + skin.hastheme(classic)</visible>
+                <posx>340</posx>
+                <posy>0</posy>
+                <width>100</width>
+                <font>Bold30</font>
+                <textcolor>$INFO[Skin.String(FooterTextColor)]</textcolor>
+                <label>$INFO[ListItem.Rating]</label>
+            </control>
+            <control type="label">
+                <!--Rating modern-->
+                <visible>!IsEmpty(ListItem.Rating) + !skin.hastheme(classic)</visible>
+                <posx>360</posx>
+                <posy>15</posy>
+                <width>100</width>
+                <font>Reg36</font>
+                <textcolor>$INFO[Skin.String(FooterTextColor)]</textcolor>
+                <label>$INFO[ListItem.Rating]</label>
+            </control>
+        </control>
+    </include>
+    
+    <include name="StarRatingMusicFooter">
+        <control type="group">
+            <bottom>20</bottom>
+            <height>80</height>
+            <right>60</right>
+            <control type="image">
+                <!--Stars classic-->
+                <visible>!IsEmpty(ListItem.Rating) + skin.hastheme(classic)</visible>
+                <right>0</right>
+                <posy>18</posy>
+                <width>270</width>
+                <height>25</height>
+                <texture fallback="leftrating/rating0.png">$INFO[ListItem.StarRating,leftrating/]</texture>
+                <aspectratio>keep</aspectratio>
+            </control>
+            <control type="image">
+                <!--Stars modern-->
+                <visible>!IsEmpty(ListItem.Rating) + !skin.hastheme(classic)</visible>
+                <right>0</right>
+                <posy>20</posy>
+                <width>220</width>
+                <height>55</height>
+                <colordiffuse>$INFO[Skin.String(FooterTextColor)]</colordiffuse>
+                <texture fallback="leftrating/rating0.png">$INFO[ListItem.StarRating,leftrating/]</texture>
+                <aspectratio>keep</aspectratio>
+            </control>
+        </control>
+    </include>
+    
+    
     
 </includes>
