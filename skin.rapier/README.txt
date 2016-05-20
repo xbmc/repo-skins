@@ -22,6 +22,11 @@ DEVELOPMENT:
 https://github.com/gade01/Rapier/tree/Isengard
 
 
+DEVELOPMENT REPOSITORY:
+
+https://github.com/gade01/repository.gade/blob/master/repository.gade-1.0.4.zip?raw=true
+
+
 SUPPORT: 
 
 http://forum.kodi.tv/forumdisplay.php?fid=120
