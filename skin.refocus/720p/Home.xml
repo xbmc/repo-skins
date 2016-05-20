@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<onload>ClearProperty(WidgetState)</onload>
+	<onload>ClearProperty(Extinfo)</onload>
+	<onload condition="Window.Previous(startup)">Skin.SetString(HomeLoaded,True)</onload>
+	<onload condition="Window.Previous(startup)">RunScript(script.skinshortcuts,type=buildxml&amp;mode=single&amp;options=clonewidgets|clonebackgrounds&amp;mainmenuID=9000)</onload>
+	<onload condition="!StringCompare(Skin.String(homemenu.type),vertical) + !StringCompare(Skin.String(homemenu.type),horizontal)">Skin.SetString(homemenu.type,vertical)</onload>
+	<onunload condition="Skin.HasSetting(homemenu.collapse) + StringCompare(Skin.String(homemenu.type),vertical)">RunScript(script.skinshortcuts,type=hidesubmenu&amp;mainmenuID=9000)</onunload>
+
+	<controls>
+		<control type="group">
+			<include>transition_Home</include>
+
+			<!--load backgrounds-->
+			<include>home_Background</include>
+
+			<!--call home menu-->
+			<include condition="StringCompare(Skin.String(homemenu.type),vertical) | !StringCompare(Skin.String(homemenu.type),horizontal) + !StringCompare(Skin.String(homemenu.type),vertical)">home_Menu-vertical</include>
+			<include condition="StringCompare(Skin.String(homemenu.type),horizontal)">home_Menu-horizontal</include>
+
+			<!--now playing (widgets disabled)-->
+			<control type="group">
+				<left>25</left>
+				<top>15</top>
+				<animation effect="slide" start="0" end="320" time="0" condition="StringCompare(Skin.String(homemenu.type),vertical)">Conditional</animation>
+				<include>fadeinout</include>
+				<visible>Skin.HasSetting(widgets.disable) + Player.HasAudio + Skin.HasSetting(home.nowplaying)</visible>
+				<control type="image">
+					<width>48</width>
+					<height>48</height>
+					<texture>DefaultIconPlay.png</texture>
+					<aspectratio align="center" aligny="center">keep</aspectratio>
+				</control>
+				<control type="group">
+					<left>55</left>
+					<control type="label">
+						<width>550</width>
+						<label>$INFO[MusicPlayer.Title]</label>
+						<font>semibold-U</font>
+						<textcolor>Color1</textcolor>
+					</control>
+					<control type="label">
+						<top>21</top>
+						<width>550</width>
+						<label>$INFO[MusicPlayer.Artist]</label>
+						<font>regular_Small-U</font>
+						<textcolor>Color1</textcolor>
+						<include>fadeinout</include>
+					</control>
+				</control>
+			</control>
+
+			<!--clock-->
+			<control type="group">
+				<visible>[Skin.HasSetting(home.time) + ![Window.IsActive(infodialog) | Window.IsActive(extendedprogressdialog)]] | [Skin.HasSetting(overlay.pvr) + PVR.HasNonRecordingTimer]</visible>
+				<include>clock</include>
+			</control>
+
+			<!--widgets pagecontrol-->
+			<control type="scrollbar" id="70">
+				<left>1272</left>
+				<height>screen_Height</height>
+				<onleft>50</onleft>
+				<texturesliderbar>views/pagecontrol/grip-fo.png</texturesliderbar>
+				<visible allowhiddenfocus="true">StringCompare(Skin.String(homemenu.type),vertical) + Control.HasFocus(9200) + !Window.IsActive(script-ExtendedInfo Script-DialogVideoInfo.xml)</visible>
+			</control>
+			<control type="scrollbar" id="71">
+				<top>712</top>
+				<width>screen_Width</width>
+				<orientation>horizontal</orientation>
+				<onup>50</onup>
+				<texturesliderbar border="0">views/pagecontrol/grip-fo.png</texturesliderbar>
+				<visible allowhiddenfocus="true">StringCompare(Skin.String(homemenu.type),horizontal) + Control.HasFocus(9200)</visible>
+			</control>
+
+			<!--RSS-->
+			<control type="group">
+				<visible>System.GetBool(lookandfeel.enablerssfeeds)</visible>
+				<control type="group">
+					<left>320</left>
+					<top>690</top>
+					<include>toggle_RSS</include>
+					<visible>StringCompare(Skin.String(homemenu.type),vertical) + Control.HasFocus(9000) + !Skin.HasSetting(homemenu.compact)</visible>
+					<control type="image">
+						<width>screen_Width</width>
+						<height>30</height>
+						<texture colordiffuse="Color4">colorize/40.png</texture>
+					</control>
+					<control type="rss">
+						<width>screen_Width</width>
+						<font>condensed-U</font>
+						<urlset>1</urlset>
+						<height>30</height>
+						<textcolor>Color1</textcolor>
+						<titlecolor>Color2</titlecolor>
+						<headlinecolor>Color1</headlinecolor>
+						<highlightcolor>Focused</highlightcolor>
+						<include>fadeinout</include>
+					</control>
+				</control>			
+				<control type="group">
+					<top>690</top>
+					<include>toggle_RSS</include>
+					<visible>[StringCompare(Skin.String(homemenu.type),horizontal) + [Control.HasFocus(9000) | Control.HasFocus(9100)]] | [StringCompare(Skin.String(homemenu.type),vertical) + Skin.HasSetting(homemenu.compact)]</visible>
+					<control type="image">
+						<width>screen_Width</width>
+						<height>30</height>
+						<texture colordiffuse="Color4">colorize/40.png</texture>
+					</control>
+					<control type="rss">
+						<width>screen_Width</width>
+						<font>condensed-U</font>
+						<urlset>1</urlset>
+						<height>30</height>
+						<textcolor>Color1</textcolor>
+						<titlecolor>Color2</titlecolor>
+						<headlinecolor>Color1</headlinecolor>
+						<highlightcolor>Focused</highlightcolor>
+						<include>fadeinout</include>
+					</control>
+				</control>
+			</control>
+		</control>
+
+		<!--post startup-->
+		<control type="group">
+			<include>screen_Dimensions</include>
+			<animation type="Conditional" condition="Skin.String(HomeLoaded,True)">
+				<effect type="fade" start="0" end="100" time="0" delay="0"/>
+				<effect type="slide" start="0,0" end="0,720" time="500" easing="InOut" tween="Cubic" delay="5000"/>
+			</animation>
+			<control type="image">
+				<include>screen_Dimensions</include>
+				<texture>black.png</texture>
+			</control>
+			<control type="image">
+				<include>screen_Dimensions</include>
+				<include>fadeinout</include>
+				<texture>special://skin/fanart.jpg</texture>
+			</control>
+			<!--status-->
+			<control type="label">
+				<top>500</top>
+				<width>screen_Width</width>
+				<height>20</height>
+				<label>$VAR[login:Hello]</label>
+				<font>regular_Small</font>
+				<align>center</align>
+				<textcolor>Color1</textcolor>
+			</control>
+		</control>
+	</controls>
+</window>
