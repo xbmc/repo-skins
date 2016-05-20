@@ -404,61 +404,33 @@
 				<include>MenuBarSeparator</include>
 			</control>
 			<control type="button" id="402">
-				<description>Video Library</description>
+				<description>Video / Music Library</description>
 				<include>MenuBarArrowBtn</include>
 				<label>[UPPERCASE]$LOCALIZE[14022][/UPPERCASE]</label>
 				<onclick>ActivateWindow(3004)</onclick>
 				<onclick>Control.SetFocus(500)</onclick>
-				<enable>Substring(Container.FolderPath,videodb)</enable>
-				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files)</visible>
+				<enable>[[Window.IsVisible(Videos) | Window.IsVisible(Videos,Files)] + Substring(Container.FolderPath,videodb)]
+				| [Window.IsVisible(MusicLibrary) + [Substring(Container.FolderPath,musicdb) | Substring(Container.FolderPath,videodb://musicvideos/)]]</enable>
+				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files) | Window.IsVisible(MusicLibrary)</visible>
 			</control>
 			<control type="image" id="353">
 				<include>MenuBarSeparator</include>
-				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files)</visible>
-			</control>
-			<control type="button" id="436">
-				<description>Music Library</description>
-				<include>MenuBarArrowBtn</include>
-				<label>[UPPERCASE]$LOCALIZE[14022][/UPPERCASE]</label>
-				<onclick>ActivateWindow(3004)</onclick>
-				<onclick>Control.SetFocus(500)</onclick>
-				<enable>Substring(Container.FolderPath,musicdb) | Substring(Container.FolderPath,videodb://musicvideos/)</enable>
-				<visible>Window.IsVisible(MusicLibrary)</visible>
-			</control>
-			<control type="image" id="369">
-				<include>MenuBarSeparator</include>
-				<visible>Window.IsVisible(MusicLibrary)</visible>
+				<visible>Control.IsVisible(402)</visible>
 			</control>
 			<control type="button" id="405">			
-				<description>Video Settings</description>
+				<description>Video / Music / Picture Settings</description>
 				<include>MenuBarBtn</include>
 				<align>center</align>
 				<label>[UPPERCASE]$LOCALIZE[10004][/UPPERCASE]</label>
-				<onclick>ActivateWindow(VideosSettings)</onclick>
+				<onclick condition="Window.IsVisible(Videos) | Window.IsVisible(Videos,Files)">ActivateWindow(VideosSettings)</onclick>
+				<onclick condition="Window.IsVisible(MusicLibrary)">ActivateWindow(MusicSettings)</onclick>
+				<onclick condition="Window.IsVisible(Pictures)">ActivateWindow(PicturesSettings)</onclick>
 				<enable>!Skin.HasSetting(EnableKioskMode)</enable>
-				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files)</visible>
-			</control>
-			<control type="button" id="406">			
-				<description>Music Settings</description>
-				<include>MenuBarBtn</include>
-				<align>center</align>
-				<label>[UPPERCASE]$LOCALIZE[10004][/UPPERCASE]</label>
-				<onclick>ActivateWindow(MusicSettings)</onclick>
-				<enable>!Skin.HasSetting(EnableKioskMode)</enable>
-				<visible>Window.IsVisible(MusicLibrary)</visible>
-			</control>
-			<control type="button" id="407">			
-				<description>Picture Settings</description>
-				<include>MenuBarBtn</include>
-				<align>center</align>
-				<label>[UPPERCASE]$LOCALIZE[10004][/UPPERCASE]</label>
-				<onclick>ActivateWindow(PicturesSettings)</onclick>
-				<enable>!Skin.HasSetting(EnableKioskMode)</enable>
-				<visible>Window.IsVisible(Pictures)</visible>
+				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files) | Window.IsVisible(MusicLibrary) | Window.IsVisible(Pictures)</visible>
 			</control>
 			<control type="image" id="370">
 				<include>MenuBarSeparator</include>
-				<visible>Window.IsVisible(Videos) | Window.IsVisible(Videos,Files) | Window.IsVisible(Pictures) | Window.IsVisible(MusicLibrary)</visible>
+				<visible>Control.IsVisible(405)</visible>
 			</control>
 			<control type="button" id="411">
 				<description>Go to playlist</description>
@@ -580,7 +552,7 @@
 				<label>[UPPERCASE]$LOCALIZE[653][/UPPERCASE]</label>
 				<altlabel>[UPPERCASE]$LOCALIZE[13353][/UPPERCASE]</altlabel>
 				<alttexturenofocus>-</alttexturenofocus>
-				<usealttexture>library.isscanningvideo</usealttexture>
+				<usealttexture>library.isscanningvideo | library.isscanningmusic</usealttexture>
 				<enable>!Skin.HasSetting(EnableKioskMode)</enable>
 				<visible>Window.IsVisible(Videos) | Window.IsActive(MusicLibrary)</visible>
 			</control>
@@ -1775,10 +1747,9 @@
 				<include>MenuBarSettingsBtn</include>
 				<label>[UPPERCASE]$LOCALIZE[31092][/UPPERCASE]</label>
 				<onclick>Dialog.Close(movieinformation)</onclick>
-				<onclick condition="Container.Content(musicvideos)">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.Artist] $INFO[ListItem.Label],return)</onclick>
-				<onclick condition="Container.Content(Episodes) | [!System.HasAddon(script.extendedinfo) + Container.Content(Seasons)]">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label],return)</onclick>
-				<onclick condition="!System.HasAddon(script.extendedinfo) + ![Container.Content(Seasons) | Container.Content(Episodes) | Container.Content(musicvideos)]">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.Label],return)</onclick>
-				<visible>[System.HasAddon(script.extendedinfo) + System.HasAddon(plugin.video.youtube) + [Container.Content(Episodes) | Container.Content(musicvideos)]] | [!System.HasAddon(script.extendedinfo) + System.HasAddon(plugin.video.youtube)]</visible>
+				<onclick condition="Container.Content(musicvideos)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Artist] $INFO[ListItem.Label])</onclick>
+				<onclick condition="Container.Content(Episodes)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label])</onclick>
+				<visible>System.HasAddon(script.extendedinfo) + [Container.Content(Episodes) | Container.Content(musicvideos)]</visible>
 			</control>
 			<control type="image" id="127">
 				<include>MenuBarSeparator</include>
@@ -1814,12 +1785,13 @@
 				<include>MenuBarSettingsBtn</include>
 				<label>[UPPERCASE]$LOCALIZE[20410][/UPPERCASE]</label>
 				<onclick>Dialog.Close(movieinformation)</onclick>
-				<onclick condition="![Container.Content(Episodes) | Container.Content(Seasons)]">ActivateWindow(videos,$INFO[ListItem.Label,plugin://plugin.video.youtube/kodion/search/query/?q=, trailer],return)</onclick>
-				<onclick condition="Container.Content(Episodes) | Container.Content(Seasons)">ActivateWindow(videos,plugin://plugin.video.youtube/kodion/search/query/?q=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer],return)</onclick>
-				<visible>IsEmpty(ListItem.Trailer)</visible>
+				<onclick condition="![Container.Content(Episodes) | Container.Content(Seasons)]">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Label] trailer)</onclick>
+				<onclick condition="Container.Content(Episodes) | Container.Content(Seasons)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer)</onclick>
+				<visible>System.HasAddon(script.extendedinfo) + IsEmpty(ListItem.Trailer)</visible>
 			</control>
 			<control type="image" id="121">
 				<include>MenuBarSeparator</include>
+				<visible>Control.IsVisible(11) | Control.IsVisible(15) | Control.IsVisible(211)</visible>
 			</control>
 			<control type="button" id="213">
 				<description>TV Tunes</description>
@@ -1882,11 +1854,11 @@
 				<label>[UPPERCASE]$LOCALIZE[31038][/UPPERCASE]</label>
 				<onclick>Skin.SetString(ExtendedInfoDialog,6)</onclick>
 				<onclick>ActivateWindow(3009)</onclick>
-				<visible>System.HasAddon(script.extendedinfo) | System.HasAddon(plugin.video.youtube)</visible>
+				<visible>System.HasAddon(script.extendedinfo)</visible>
 			</control>
 			<control type="image" id="121">
 				<include>MenuBarSeparator</include>
-				<visible>System.HasAddon(script.extendedinfo) | System.HasAddon(plugin.video.youtube)</visible>
+				<visible>System.HasAddon(script.extendedinfo)</visible>
 			</control>
 			<control type="button" id="6">
 				<description>Refresh</description>

@@ -22,6 +22,11 @@ DEVELOPMENT:
 https://github.com/gade01/Rapier/tree/Jarvis
 
 
+DEVELOPMENT REPOSITORY:
+
+https://github.com/gade01/repository.gade/blob/master/repository.gade-1.0.4.zip?raw=true
+
+
 SUPPORT: 
 
 http://forum.kodi.tv/forumdisplay.php?fid=120
@@ -46,7 +51,7 @@ script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0
 script.randomandlastitems v2.2.1
 script.tv.show.next.aired v6.0.10
-script.skin.helper.service v1.0.68
+script.skin.helper.service v1.0.90
 script.globalsearch v2.0.8
 script.image.resource.select 0.0.9
 resource.uisounds.rapier 1.0.1
