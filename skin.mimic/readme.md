@@ -23,6 +23,13 @@ More screenshots available here: http://imgur.com/a/LLSMM
 
 
 ***
+**4.0.2**
+- Added a quick launch menu to side menu.
+- Redesigned player controls and video/music OSD buttons.
+- Removed Live DVD background options (not working).
+- Redesigned info dialogs.
+
+***
 **4.0.1**
 - Added new widget style for vertical home layout.
 - Redesigned extended weather window.
