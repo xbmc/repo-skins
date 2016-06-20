@@ -10,7 +10,7 @@
             <control type="image">
                 <aspectratio scalediffuse="false">scale</aspectratio>
                 <texture background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png">$VAR[PosterThumbList]</texture>
-                <bordertexture border="20" colordiffuse="black">diffuse/poster_shadow.png</bordertexture>
+                <include condition="Skin.HasSetting(EmbyCovertArtEnabled)">poster_shadow</include>
                 <bordersize>20</bordersize>
             </control>
             <!--Label overlay-->
@@ -83,18 +83,25 @@
 			<visible>Control.IsVisible(514)</visible>
 			<include>animation_view_change</include>
 			
-			<!-- movie details -->
-			<control type="group">
-				<include>MovieDetails</include>
-				<animation type="Conditional" condition="StringCompare(Window(Home).Property(showinfopanel),show)">
-					<effect type="slide" start="0,1100" end="0,-50" time="800" tween="cubic" easing="inout" />
-				</animation>
-                <animation type="Conditional" condition="!StringCompare(Window(Home).Property(showinfopanel),show)">
-					<effect type="slide" start="0,0" end="0,1100" time="800" tween="cubic" easing="inout" />
-				</animation>
+			<!-- movie details normal -->
+			<control type="group" id="88882">
+				<include>MovieDetailsTop</include>
+                <top>-140</top>
+                <visible>Control.IsVisible(514)</visible>
+                <visible>Skin.String(View514_DisplayInfo,normal) | [Skin.String(View514_DisplayInfo,normal_delayed) + System.IdleTime(3)]</visible>
+				<animation effect="slide" start="0,-1100" end="0" time="550" tween="cubic" easing="inout">Visible</animation>
 			</control>
+            
+            <!-- movie details small -->
+			<control type="group" id="88883">
+				<include>MovieDetailsTop2</include>
+                <visible>Control.IsVisible(514)</visible>
+                <visible>Skin.String(View514_DisplayInfo,small) | [Skin.String(View514_DisplayInfo,small_delayed) + System.IdleTime(3)]</visible>
+				<animation effect="slide" start="0,-350" end="0" time="350" tween="cubic" easing="inout">Visible</animation>
+			</control>
+            
 			<control type="group">
-				<animation type="Conditional" condition="StringCompare(Window(Home).Property(showinfopanel),show)">
+				<animation type="Conditional" condition="Control.IsVisible(88882)">
 					<effect type="slide" start="0,0" end="0,180" time="800" tween="cubic" easing="inout" />
 				</animation>
 				<visible>!Window.IsActive(addoninformation)</visible>
@@ -105,12 +112,12 @@
                     <height>350</height>
                     <posx>775</posx>
 					<bottom>520</bottom>
-                    <texture background="true" diffuse="diffuse/cdmask_big.png" fallback="defaultcovers/cd_big.png">$VAR[DiscArtImage]</texture>
+                    <texture background="true" diffuse="diffuse/cdmask_new.png" fallback="defaultcovers/cd_big.png">$VAR[DiscArtImage]</texture>
                     <aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
                     <animation effect="slide" start="0,200" end="0" tween="cubic" easing="inout" time="1200" delay="800">Visible</animation>
                     <animation effect="fade" start="0" end="100" delay="800" time="800" pulse="false">Visible</animation>
                     <animation effect="rotate" end="-360" center="auto" time="20000" loop="true" reversible="false" condition="Skin.HasSetting(AnimateDiscArt)">Conditional</animation>
-                    <visible>Skin.HasSetting(View514_ShowCDart) + Control.HasFocus(514) + !StringCompare(Window(Home).Property(showinfopanel),show) + ![SubString(ListItem.Thumb,Default,left) | IsEmpty(ListItem.Thumb)]  + !Container.IsScrolling + !Container.OnScrollNext + !Container.OnScrollPrevious</visible>
+                    <visible>Skin.HasSetting(View514_ShowCDart) + Control.HasFocus(514) + !Skin.HasSetting(PosterShiftViewShowInfo) + ![SubString(ListItem.Thumb,Default,left) | IsEmpty(ListItem.Thumb)]  + !Container.IsScrolling + !Container.OnScrollNext + !Container.OnScrollPrevious</visible>
                 </control>
                 
 				<control type="fixedlist" id="514">
@@ -118,15 +125,12 @@
 					<bottom>40</bottom>
 					<width>2100</width>
 					<height>750</height>
-					<onup condition="!StringCompare(Window(Home).Property(showinfopanel),show)">9000</onup>
-					<onup condition="StringCompare(Window(Home).Property(showinfopanel),show)">SetProperty(showinfopanel, hide, Home)</onup>
-					
-					<ondown condition="!StringCompare(Window(Home).Property(showinfopanel),show)">SetProperty(showinfopanel, show, Home)</ondown>
-					<ondown condition="StringCompare(Window(Home).Property(showinfopanel),show)">SetProperty(showinfopanel, hide, Home)</ondown>
-
+					<onup>9000</onup>
+					<ondown condition="Skin.HasSetting(EnableQuickJump)">7000</ondown>
+                <ondown condition="!Skin.HasSetting(EnableQuickJump)">60</ondown>
 					<orientation>horizontal</orientation>
 					<viewtype label="31441">bigwrap</viewtype>
-					<pagecontrol>61</pagecontrol>
+					<pagecontrol>60</pagecontrol>
 					<preloaditems>2</preloaditems>
 					<scrolltime tween="quadratic">200</scrolltime>
 					<focusposition>3</focusposition>
@@ -142,6 +146,21 @@
 						</control>
 					</focusedlayout>
 				</control>
+                
+                <!--horizontal Scrollbar-->
+                <control type="scrollbar" id="60">
+                    <visible>Control.IsVisible(514)</visible>
+                    <left>60</left>
+                    <bottom>11%</bottom>
+                    <width>1800</width>
+                    <height>15</height>
+                    <onup>513</onup>
+                    <onleft>60</onleft>
+                    <onright>60</onright>
+                    <orientation>horizontal</orientation>
+                    <animation effect="fade" start="0" end="100" time="400" condition="[Control.HasFocus(60) | Skin.HasSetting(EnableTouchSupport) | Container.Scrolling | Skin.HasSetting(alwaysShowScrollbars)] + !Control.IsVisible(6002)">Conditional</animation>
+                    <animation effect="fade" start="100" end="0" time="400" condition="![Control.HasFocus(60) | Skin.HasSetting(EnableTouchSupport) | Container.Scrolling | Skin.HasSetting(alwaysShowScrollbars)] | Control.IsVisible(6002)">Conditional</animation>
+                </control>
 				
 			</control>
     
