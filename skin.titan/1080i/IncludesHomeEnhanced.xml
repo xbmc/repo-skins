@@ -46,57 +46,9 @@
 		<include condition="Skin.HasSetting(EnableTouchSupport)">TouchControlsHome</include>
 		
         <!-- main menu -->
-        <control type="panel" id="300">
-            <posx>70</posx>
-            <bottom>70</bottom>
-            <width>1800</width>
-            <height>195</height>
-            <orientation>horizontal</orientation>
-            <onleft>300</onleft>
-            <onright>300</onright>
-            <pagecontrol>60</pagecontrol>
-            <onup>$VAR[EnhancedHomeButtonUpAction]</onup>
-            <ondown condition="!Skin.HasSetting(DisablePowerMenu)">2</ondown>
-            <itemlayout width="360" height="205">
-                <control type="group">
-                    <width>337</width>
-                    <height>195</height>
-                    <include>ThumbsViewLayout</include>
-                    <control type="group">
-                        <description>label overlay</description>
-                        <include>ThumbsTagOverlay</include>
-                        <include>LandscapeTagOverlayVisibility</include>
-                    </control>
-                </control>
-            </itemlayout>
-            <focusedlayout width="360" height="205" condition="!Control.HasFocus(300)">
-                <control type="group">
-                    <width>337</width>
-                    <height>195</height>
-                    <include>ThumbsViewLayout</include>
-                    <control type="group">
-                        <description>label overlay</description>
-                        <include>ThumbsTagOverlay</include>
-                        <include>LandscapeTagOverlayVisibility</include>
-                    </control>
-                </control>
-            </focusedlayout>
-            <focusedlayout width="360" height="205" condition="Control.HasFocus(300)">
-                <control type="group">
-                    <width>337</width>
-                    <height>195</height>
-                    <include>ThumbsViewLayoutFocus</include>
-                    <control type="group">
-                        <description>label overlay</description>
-                        <include>ThumbsTagOverlay</include>
-                        <include>LandscapeTagOverlayVisibility</include>
-                    </control>
-                    <include>HiddenHomeMenuButton</include>
-                </control>
-            </focusedlayout>
-            <content><include>skinshortcuts-mainmenu</include></content>
-        </control>
-		
+        <include condition="Skin.HasSetting(UseFixedHomeFocus)">EnhancedHomeMainMenuFixed</include>
+        <include condition="!Skin.HasSetting(UseFixedHomeFocus)">EnhancedHomeMainMenuNormal</include>
+        
 		<!-- widgets -->
 		<control type="group">
 			<posx>60</posx>
@@ -419,7 +371,7 @@
 			<textcolor>$INFO[Skin.String(ViewDetailsHighlightTextColor)]</textcolor>
 			<scrollspeed>40</scrollspeed>
 			<visible>!Window.IsVisible(shutdownmenu) + !Skin.HasSetting(EnableTouchSupport)</visible>
-            <visible>[IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
+            <visible>[IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(infoline),none)]</visible>
             <visible>system.getbool(lookandfeel.enablerssfeeds)</visible>
 		</control>
 		<!--RSS Text with touch-->			
@@ -436,7 +388,7 @@
 			<textcolor>$INFO[Skin.String(ViewDetailsHighlightTextColor)]</textcolor>
 			<scrollspeed>40</scrollspeed>
 			<visible>!Window.IsVisible(shutdownmenu) + Skin.HasSetting(EnableTouchSupport)</visible>
-            <visible>[IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
+            <visible>[IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(infoline),none)]</visible>
             <visible>system.getbool(lookandfeel.enablerssfeeds)</visible>
 		</control>
         <!--infoline-->
@@ -457,27 +409,84 @@
 		<!-- touchscreen support -->
 		<include condition="Skin.HasSetting(EnableTouchSupport)">TouchControlsFooter</include>
 		
-		<!-- Power button -->
-		<control type="button" id="2">
-			<description>powerbutton</description>
-			<posx>930</posx>
+        <!-- Power button -->
+        <control type="group">
+            <posx>930</posx>
 			<bottom>5</bottom>
-			<width>60</width>
-			<height>60</height>
-			<onup>300</onup>
-			<onright>300</onright>
-			<onleft>300</onleft>
-			<texturefocus colordiffuse="$INFO[Skin.String(ButtonFocusColor)]">common/shutdown2.png</texturefocus>
-			<texturenofocus colordiffuse="white">common/shutdown2.png</texturenofocus>
-			<onclick>ActivateWindow(111)</onclick>
-			<onfocus>ActivateWindow(111)</onfocus>
-			<include>animation_fade_visible_hidden</include>
-            <visible>!Skin.HasSetting(EnableTouchSupport) + !Skin.HasSetting(DisablePowerMenu)</visible>
-			<visible allowhiddenfocus="true">![!IsEmpty(Container(300).ListItem.Property(infoline)) + !StringCompare(Container(300).ListItem.Property(infoline),none)] + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(HidePowerMenu)</visible>
-		</control>
+            <width>60</width>
+            <height>60</height>
+            <include name="PowerButton" content="PowerButton" condition="!Skin.HasSetting(EnableTouchSupport) + !Skin.HasSetting(DisablePowerMenu)">
+                <param name="visibility" value="![!IsEmpty(Container(300).ListItem.Property(infoline)) + !StringCompare(Container(300).ListItem.Property(infoline),none)] + !system.getbool(lookandfeel.enablerssfeeds) + !Skin.HasSetting(HidePowerMenu)" />
+            </include>
+        </control>
 		
 	</include>
-	
+	    
+    <include name="EnhancedHomeMainMenuNormal">
+        <control type="panel" id="300">
+            <include>EnhancedHomeMainMenuLayout</include>
+        </control>
+    </include>
+    
+    <include name="EnhancedHomeMainMenuFixed">
+        <control type="fixedlist" id="300">
+            <focusposition>2</focusposition>
+            <include>EnhancedHomeMainMenuLayout</include>
+        </control>
+    </include>
+    
+    <include name="EnhancedHomeMainMenuLayout">
+        <posx>70</posx>
+        <bottom>70</bottom>
+        <width>1800</width>
+        <height>195</height>
+        <orientation>horizontal</orientation>
+        <onleft>300</onleft>
+        <onright>300</onright>
+        <pagecontrol>60</pagecontrol>
+        <onup>$VAR[EnhancedHomeButtonUpAction]</onup>
+        <ondown condition="!Skin.HasSetting(DisablePowerMenu)">2</ondown>
+        <itemlayout width="360" height="205">
+            <control type="group">
+                <width>337</width>
+                <height>195</height>
+                <include>ThumbsViewLayout</include>
+                <control type="group">
+                    <description>label overlay</description>
+                    <include>ThumbsTagOverlay</include>
+                    <include>LandscapeTagOverlayVisibility</include>
+                </control>
+            </control>
+        </itemlayout>
+        <focusedlayout width="360" height="205" condition="!Control.HasFocus(300)">
+            <control type="group">
+                <width>337</width>
+                <height>195</height>
+                <include>ThumbsViewLayout</include>
+                <control type="group">
+                    <description>label overlay</description>
+                    <include>ThumbsTagOverlay</include>
+                    <include>LandscapeTagOverlayVisibility</include>
+                </control>
+            </control>
+        </focusedlayout>
+        <focusedlayout width="360" height="205" condition="Control.HasFocus(300)">
+            <control type="group">
+                <width>337</width>
+                <height>195</height>
+                <include>ThumbsViewLayoutFocus</include>
+                <control type="group">
+                    <description>label overlay</description>
+                    <include>ThumbsTagOverlay</include>
+                    <include>LandscapeTagOverlayVisibility</include>
+                </control>
+                <include>HiddenHomeMenuButton</include>
+            </control>
+        </focusedlayout>
+        <content><include>skinshortcuts-mainmenu</include></content>
+    </include>
+    
+    
     <include name="EnhancedHomePanelLayout">
 		<posy>40</posy>
 		<posx>10</posx>
@@ -644,15 +653,6 @@
 			<bordersize>8</bordersize>
 			<texture background="true" diffuse="diffuse/wide.png">$VAR[EnhancedHomeSpotLightWidgetImage]</texture>
 			<aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
-		</control>
-        <!--pvr thumb image-->
-        <control type="image">
-			<width>100%</width>
-			<height>100%</height>
-			<bordersize>8</bordersize>
-			<texture background="true" diffuse="diffuse/wide.png">$VAR[PVRListItemThumbVar]</texture>
-			<aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
-            <visible>Skin.HasSetting(SkinHelper.EnablePVRThumbs) + SubString(ListItem.FolderPath,pvr://)</visible>
 		</control>
 		<!--info Overlay-->
 		<control type="image">

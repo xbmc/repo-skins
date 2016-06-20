@@ -13,8 +13,9 @@
             
             <!-- infopanel -->
             <control type="group" id="77551">
-                <visible>!Skin.HasSetting(HideWidgetDetailsPanel)</visible>
+                <visible>!Skin.HasSetting(HideWidgetDetailsPanel) + !Skin.HasSetting(VerticalHomeLargeWidget)</visible>
                 <visible>!Substring(Window(Home).Property(widgetstyle),box)</visible>
+                <visible>!ControlGroup(511).HasFocus + !Control.HasFocus(4446)</visible>
                 <visible>ControlGroup(77777).HasFocus() + !StringCompare(Container(300).ListItem.Property(widget),submenuaswidget)</visible>
                 <visible>!Window.IsActive(infodialog) + !Window.IsActive(extendedprogressdialog) + !Control.IsVisible(88888)</visible>
                 <control type="image">
@@ -44,7 +45,7 @@
                     <top>10</top>
                     <width>1270</width>
                     <height>145</height>
-                    <label fallback="19055">[COLOR=$INFO[Skin.String(ViewDetailsFocusColor)]]$VAR[HomeMenuWidgetInfoLabel][/COLOR]$VAR[HomeMenuWidgetInfoPlotAlt, • ]</label>
+                    <label fallback="19055">$VAR[HomeMenuWidgetInfoLabel]$VAR[HomeMenuWidgetInfoPlotAlt, • ]</label>
                     <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
                     <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
                     <align>justify</align>
@@ -52,14 +53,37 @@
                 </control>
             </control>
             
-            <!-- special submenu -->
-            <include>VerticalHomeSquareSubMenu</include>
             <!-- widgets -->
-            <control type="group">
-                <include condition="!Skin.HasSetting(DisableAllWidgets)">VerticalHomeWidgetsNormal</include>
-                <include condition="!Skin.HasSetting(DisableAllWidgets) + Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-VerticalHomeAdvancedWidgets</include>
-                <animation effect="slide" start="0" end="0,110" time="0" condition="Control.IsVisible(4446) + !Skin.HasSetting(HideWidgetDetailsPanel) + !Skin.HasSetting(VerticalHomeMultiWidget)">Conditional</animation>
-                <animation effect="slide" start="0" end="0,90" time="0" condition="Control.IsVisible(4446) + Skin.HasSetting(HideWidgetDetailsPanel) + !Skin.HasSetting(VerticalHomeMultiWidget)">Conditional</animation>
+            <include condition="!Skin.HasSetting(DisableAllWidgets) + !Skin.HasSetting(VerticalHomeLargeWidget)">skinshortcuts-template-VerticalHomeWidgets</include>
+            <include condition="!Skin.HasSetting(DisableAllWidgets) + Skin.HasSetting(VerticalHomeLargeWidget)">skinshortcuts-template-VerticalHomeWidgetsLarge</include>
+            
+            <!-- fake button for submenu at focus -->
+            <control type="button" id="4444">
+                <right>-1</right>
+                <width>1</width>
+                <height>1</height>
+                <onfocus>SetFocus(4446)</onfocus>
+                <visible>StringCompare(Container(300).Listitem.Property(squaresubmenu),enable)</visible>
+            </control>
+            
+            <!-- busy image while widget loading -->
+            <control type="multiimage">
+                <right>60</right>
+                <top>250</top>
+                <width>100</width>
+                <height>100</height>
+                <aspectratio>keep</aspectratio>
+                <imagepath>$INFO[Skin.String(SkinHelper.SpinnerTexturePath)]</imagepath>
+                <timeperimage>100</timeperimage>
+                <colordiffuse>$INFO[Skin.String(SpinnerTextureColor)]</colordiffuse>
+                <fadetime>0</fadetime>
+                <visible>!Skin.String(SkinHelper.SpinnerTexturePath,None)</visible>
+                <visible>
+                [Control.IsVisible(510) + Container(510).IsUpdating] | 
+                [Control.IsVisible(520) + Container(520).IsUpdating] | 
+                [Control.IsVisible(530) + Container(530).IsUpdating] | 
+                [Control.IsVisible(540) + Container(540).IsUpdating]
+                </visible>
             </control>
         </control>
         
@@ -68,7 +92,7 @@
             <animation type="Conditional" condition="Control.IsVisible(77551)">
                 <effect type="fade" start="100" end="80" time="150" delay="0" tween="cubic" easing="inout" />
             </animation>
-            <include condition="Skin.String(HomeLayout, simplever) | Skin.String(HomeLayout, simplever_tiles)">HomeSimpleVertical</include>
+            <include condition="!Skin.String(HomeLayout, verticalbig)">HomeSimpleVertical</include>
             <include condition="Skin.String(HomeLayout, verticalbig)">HomeBigVertical</include>
         </control>
         
@@ -78,20 +102,20 @@
             <right>60</right>
             <bottom>0</bottom>
             <width>1400</width>
-            <height>50</height>
+            <height>40</height>
             <font>Light28</font>
             <urlset>1</urlset>
             <titlecolor>$INFO[Skin.String(GeneralHighlightTextColor)]</titlecolor>
             <headlinecolor>$INFO[Skin.String(FooterTextColor)]</headlinecolor>
             <textcolor>$INFO[Skin.String(GeneralHighlightTextColor)]</textcolor>
-            <visible>system.getbool(lookandfeel.enablerssfeeds) + [IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(none))]</visible>
+            <visible>system.getbool(lookandfeel.enablerssfeeds) + [IsEmpty(Container(300).ListItem.Property(infoline)) | StringCompare(Container(300).ListItem.Property(infoline),none)]</visible>
         </control>
         <control type="label">	
             <description>InfoLine</description>
             <right>60</right>
-            <bottom>5</bottom>
+            <bottom>0</bottom>
             <width>1400</width>
-            <height>50</height>
+            <height>40</height>
             <font>Light28</font>
             <font>Reg28</font>
             <align>right</align>
@@ -126,6 +150,7 @@
             <control type="image">
                 <!-- arrow up -->
                 <animation effect="fade" start="100" end="50" tween="sine" easing="inout" time="800" pulse="true" reversible="false" condition="true">Conditional</animation>
+                <animation effect="slide" start="0" end="-325" time="0" delay="0" condition="Skin.HasSetting(SimpleVerHomeLeftAlign)">Conditional</animation>
                 <left>355</left>
                 <posy>110</posy>
                 <width>25</width>
@@ -138,8 +163,9 @@
             <control type="image">
                 <!-- arrow down -->
                 <animation effect="fade" start="100" end="50" tween="sine" easing="inout" time="800" pulse="true" reversible="false" condition="true">Conditional</animation>
+                <animation effect="slide" start="0" end="-325" time="0" delay="0" condition="Skin.HasSetting(SimpleVerHomeLeftAlign)">Conditional</animation>
                 <left>355</left>
-                <posy>990</posy>
+                <posy>970</posy>
                 <width>25</width>
                 <height>60</height>
                 <aspectratio>keep</aspectratio>
@@ -160,8 +186,8 @@
                 <ondown>300</ondown>
                 <onleft condition="!Skin.HasSetting(DisablePowerMenu)">2</onleft>
                 <onright condition="Control.IsVisible(4446)">Control.SetFocus(4446,0)</onright>
-                <onright condition="!Control.IsVisible(4446) + IntegerGreaterThan(Container(4445).NumItems,0) + ![Skin.HasSetting(VerticalHomeInlineSubmenu) + Skin.HasSetting(OpenSubMenuOnClick)]">Control.SetFocus(4444,0)</onright>
-                <onright condition="!Control.IsVisible(4446) + [[Skin.HasSetting(VerticalHomeInlineSubmenu) + Skin.HasSetting(OpenSubMenuOnClick)] | !IntegerGreaterThan(Container(4445).NumItems,0)]">77777</onright>
+                <onright condition="!Control.IsVisible(4446) + IntegerGreaterThan(Container(4445).NumItems,0) + !Skin.HasSetting(OpenSubMenuOnClick)">Control.SetFocus(4444,0)</onright>
+                <onright condition="!Control.IsVisible(4446) + [Skin.HasSetting(OpenSubMenuOnClick) | !IntegerGreaterThan(Container(4445).NumItems,0)]">$VAR[focusWidget]</onright>
                 <scrolltime tween="quadratic">200</scrolltime>
                 <movement>0</movement>
                 <preloaditems>4</preloaditems>
@@ -171,6 +197,7 @@
                         <posy>0</posy>
                         <width>350</width>
                         <height>80</height>
+                        <include condition="Skin.HasSetting(SimpleVerHomeLeftAlign)">align_left</include>
                         <align>right</align>
                         <aligny>center</aligny>
                         <textcolor>$INFO[Skin.String(MainMenuTextColor)]</textcolor>
@@ -188,6 +215,14 @@
                         <control type="image">
                             <texture background="true" diffuse="home/home_matte2.png" fallback="special://skin/extras/hometiles/addons.png">$INFO[ListItem.Icon]</texture>
                             <aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
+                            <visible>!Skin.HasSetting(ColorizeHomeVerticalTiles)</visible>
+                            <bordersize>8</bordersize>
+                        </control>
+                        <control type="image">
+                            <texture background="true" diffuse="home/home_matte2.png" fallback="special://skin/extras/hometiles/addons.png">$INFO[ListItem.Icon]</texture>
+                            <aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
+                            <colordiffuse>$INFO[Skin.String(MainMenuTextColor)]</colordiffuse>
+                            <visible>Skin.HasSetting(ColorizeHomeVerticalTiles)</visible>
                             <bordersize>8</bordersize>
                         </control>
                         <control type="group">
@@ -248,22 +283,14 @@
             <!--submenu inline-->
             <include condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.HasSetting(VerticalHomeInlineSubmenu)">HomeSimpleVerticalSubMenuInline</include>
             <!-- Power button -->
-            <control type="button" id="2">
-                <description>powerbutton</description>
+            <control type="group">
                 <posx>20</posx>
                 <bottom>5</bottom>
                 <width>60</width>
                 <height>60</height>
-                <onup>300</onup>
-                <onright>300</onright>
-                <onleft>300</onleft>
-                <texturefocus colordiffuse="$INFO[Skin.String(ButtonFocusColor)]">common/shutdown2.png</texturefocus>
-                <texturenofocus colordiffuse="white">common/shutdown2.png</texturenofocus>
-                <onclick>ActivateWindow(111)</onclick>
-                <onfocus>ActivateWindow(111)</onfocus>
-                <include>animation_fade_visible_hidden</include>
-                <visible>!Skin.HasSetting(EnableTouchSupport) + !Skin.HasSetting(DisablePowerMenu)</visible>
-                <visible allowhiddenfocus="true">!Skin.HasSetting(HidePowerMenu)</visible>
+                <include name="PowerButton" content="PowerButton" condition="!Skin.HasSetting(EnableTouchSupport) + !Skin.HasSetting(DisablePowerMenu)">
+                    <param name="visibility" value="!Skin.HasSetting(HidePowerMenu)" />
+                </include>
             </control>
             <!-- touchscreen support -->
             <include condition="Skin.HasSetting(EnableTouchSupport)">TouchControlsFooter</include>
@@ -276,6 +303,7 @@
 			<right>0</right>
 			<width>350</width>
 			<height>80</height>
+            <include condition="Skin.HasSetting(SimpleVerHomeLeftAlign)">align_left</include>
 			<align>right</align>
 			<aligny>center</aligny>
 			<textcolor>$INFO[Skin.String(MainMenuFocusTextColor)]</textcolor>
@@ -294,11 +322,20 @@
 			<control type="image">
 				<texture>home/home_matte2.png</texture>
 				<colordiffuse>$VAR[ViewDetailsFocusColor]</colordiffuse>
+                <visible>!Skin.HasSetting(ColorizeHomeVerticalTiles)</visible>
 			</control>
 			<control type="image">
 				<bordersize>8</bordersize>
 				<texture background="true" diffuse="home/home_matte2.png" fallback="special://skin/extras/hometiles/addons.png">$INFO[ListItem.Icon]</texture>
 				<aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
+                <visible>!Skin.HasSetting(ColorizeHomeVerticalTiles)</visible>
+			</control>
+            <control type="image">
+				<bordersize>8</bordersize>
+				<texture background="true" diffuse="home/home_matte2.png" fallback="special://skin/extras/hometiles/addons.png">$INFO[ListItem.Icon]</texture>
+				<aspectratio scalediffuse="false" align="center" aligny="top">scale</aspectratio>
+                <colordiffuse>$INFO[Skin.String(MainMenuFocusTextColor)]</colordiffuse>
+                <visible>Skin.HasSetting(ColorizeHomeVerticalTiles)</visible>
 			</control>
 			<control type="group">
 				<include condition="!Skin.HasSetting(NoTitleOnHomeMenuTiles)">ThumbsTagOverlay</include>
@@ -739,9 +776,9 @@
                 <onleft condition="!Skin.HasSetting(DisablePowerMenu)">ActivateWindow(ShutdownMenu)</onleft>
                 <ondown>300</ondown>
                 <onup>300</onup>
-                <onright condition="IntegerGreaterThan(Container(4445).NumItems,0) + !Control.IsVisible(4446)">SetFocus(4444,0)</onright>
-                <onright condition="IntegerGreaterThan(Container(4446).NumItems,0) + Control.IsVisible(4446)">SetFocus(4446,0)</onright>
-                <onright condition="!IntegerGreaterThan(Container(4445).NumItems,0) + !Control.IsVisible(4446)">77777</onright>
+                <onright condition="Control.IsVisible(4446)">Control.SetFocus(4446,0)</onright>
+                <onright condition="!Control.IsVisible(4446) + IntegerGreaterThan(Container(4445).NumItems,0) + !Skin.HasSetting(OpenSubMenuOnClick)">Control.SetFocus(4444,0)</onright>
+                <onright condition="!Control.IsVisible(4446) + [Skin.HasSetting(OpenSubMenuOnClick) | !IntegerGreaterThan(Container(4445).NumItems,0)]">$VAR[focusWidget]</onright>
                 <pagecontrol>-</pagecontrol>
                 <scrolltime tween="quadratic" easing="out">150</scrolltime>
                 <orientation>Vertical</orientation>
@@ -778,264 +815,211 @@
     </include>
 
     <!--  includes for widgets -->
-    <include name="VerticalHomeWidgetsNormal">
-        <!-- widgets -->   
-        <control type="group" id="77777">
-            <right>0</right>
-            <width>100%</width>
-            <height>83%</height>
-            <bottom>0</bottom>
-            <visible>!IsEmpty(Container(300).ListItem.Property(widget)) + !Skin.HasSetting(DisableAllWidgets)</visible>
-            <include>animation_window_open_close</include>
-            
-            <!-- widgets -->
-            <control type="group">
-                <include condition="!Skin.HasSetting(DisableAllWidgets) + !Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-widget</include>
-                <include condition="!Skin.HasSetting(DisableAllWidgets) + !Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-widget.1</include>
-                <include condition="!Skin.HasSetting(DisableAllWidgets) + !Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-widget.2</include>
-                <include condition="!Skin.HasSetting(DisableAllWidgets) + !Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-widget.3</include>
-                <include condition="Skin.HasSetting(VerticalHomeMultiWidget)">skinshortcuts-template-VerticalHomeAdvancedWidgetFallBack</include>
-            </control>
-            
-            <!--change widget button -->
-            <control type="group">
-                <right>50</right>
-                <posy>0</posy>
-                <width>1290</width>
-                <height>45</height>
-                <visible>![Skin.HasSetting(VerticalHomeMultiWidget) + !IsEmpty(Container(300).ListItem.Property(widget.1))]</visible>
-                <visible>!Skin.String(DisableAllWidgets)</visible>
-                <control type="image">
-                    <texture border="5">diffuse/panel.png</texture>
-                    <colordiffuse>$INFO[Skin.String(ViewDetailsPanelColor)]</colordiffuse>
-                    <visible>!Skin.HasSetting(HideWidgetPanelBackground) + ![Skin.HasSetting(LargeWidgetDetailsPanel) + Control.IsVisible(77551)]</visible>
-                </control>
-                <control type="button" id="511">
-                    <width>1290</width>
-                    <height>45</height>
-                    <align>right</align>
-                    <font>Light32</font>
-                    <onleft>300</onleft>
-                    <onright>300</onright>
-                    <onup condition="!Control.IsVisible(4446)">300</onup>
-                    <onup condition="Control.IsVisible(4446)">4446</onup>
-                    <textoffsetx>50</textoffsetx>
-                    <label></label>
-                    <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                    <onclick>$VAR[toggleNextWidget]</onclick>
-                    <ondown condition="!Skin.HasSetting(VerticalHomeMultiWidget)">$VAR[focusWidget]</ondown>
-                    <ondown condition="Skin.HasSetting(VerticalHomeMultiWidget)">510</ondown>
-                    <texturenofocus>-</texturenofocus>
-                    <visible allowhiddenfocus="true">!IsEmpty(Container(300).ListItem.Property(widget))</visible>
-                </control>
-                <control type="label">
-                    <height>40</height>
-                    <right>45</right>
-                    <width>100%</width>
-                    <font>Bold30</font>
-                    <align>right</align>
-                    <aligny>top</aligny>
-                    <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                    <label>$VAR[changeWidgetLabel]</label>
-                    <visible>!Skin.String(HomeLayout, verticalbig) + !Skin.HasSetting(AutoWidgetAlignDisabled)</visible>
-                </control>
-                <control type="label">
-                    <height>40</height>
-                    <posx>10</posx>
-                    <font>Bold30</font>
-                    <align>left</align>
-                    <aligny>top</aligny>
-                    <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                    <label>$VAR[changeWidgetLabel]</label>
-                    <visible>!Skin.String(HomeLayout, verticalbig) + Skin.HasSetting(AutoWidgetAlignDisabled)</visible>
-                </control>
-                <control type="label">
-                    <height>40</height>
-                    <right>45</right>
-                    <width>100%</width>
-                    <font>Light32</font>
-                    <align>right</align>
-                    <aligny>top</aligny>
-                    <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                    <label>[UPPERCASE]$VAR[changeWidgetLabel][/UPPERCASE]</label>
-                    <visible>Skin.String(HomeLayout, verticalbig) + !Skin.HasSetting(AutoWidgetAlignDisabled)</visible>
-                </control>
-                <control type="label">
-                    <height>40</height>
-                    <posx>10</posx>
-                    <font>Light32</font>
-                    <aligny>top</aligny>
-                    <align>left</align>
-                    <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                    <label>[UPPERCASE]$VAR[changeWidgetLabel][/UPPERCASE]</label>
-                    <visible>Skin.String(HomeLayout, verticalbig) + Skin.HasSetting(AutoWidgetAlignDisabled)</visible>
-                </control>
-                <control type="image">
-                    <right>5</right>
-                    <posy>8</posy>
-                    <width>30</width>
-                    <height>30</height>
-                    <texture colordiffuse="$INFO[Skin.String(ViewDetailsTextColor)]">home/home_arrow_up.png</texture>
-                    <visible>Control.IsVisible(511)</visible>
-                </control>
-            </control>
-            
-            
-            <!-- busy image while widget loading -->
-            <control type="multiimage">
-                <right>60</right>
-                <top>120</top>
-                <width>100</width>
-                <height>100</height>
-                <aspectratio>keep</aspectratio>
-                <imagepath>$INFO[Skin.String(SkinHelper.SpinnerTexturePath)]</imagepath>
-                <timeperimage>100</timeperimage>
-                <colordiffuse>$INFO[Skin.String(SpinnerTextureColor)]</colordiffuse>
-                <fadetime>0</fadetime>
-                <visible>!Skin.String(SkinHelper.SpinnerTexturePath,None)</visible>
-                <visible>
-                [Control.IsVisible(510) + Container(510).IsUpdating] | 
-                [Control.IsVisible(520) + Container(520).IsUpdating] | 
-                [Control.IsVisible(530) + Container(530).IsUpdating] | 
-                [Control.IsVisible(540) + Container(540).IsUpdating]
-                </visible>
-            </control>
-        </control>
-	
-    </include>
+
     <include name="VerticalHomeAdvancedWidgetHeader">
         <control type="group" id="$PARAM[id]">
-            <width>1285</width>
+            <right>55</right>
+            
+            <include name="width" content="width" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+                <param name="width" value="1435" />
+            </include>
+            
+            <width>1290</width>
             <height>45</height>
-            <right>60</right>
             <include>widgets_animation</include>
+            
             <visible>!IsEmpty(Container(300).Listitem.Property(widget$PARAM[widgetidprefix]))</visible>
+            <visible>SubString(Container(300).Listitem.Property(multiwidget),multi)</visible>
             <control type="image">
-                <right>-5</right>
-                <posy>0</posy>
-                <width>1290</width>
-                <height>45</height>
                 <texture border="5">diffuse/panel.png</texture>
                 <colordiffuse>$INFO[Skin.String(ViewDetailsPanelColor)]</colordiffuse>
                 <visible>!Skin.HasSetting(HideWidgetPanelBackground) + ![Skin.HasSetting(LargeWidgetDetailsPanel) + Control.IsVisible(77551)]</visible>
             </control>
             <control type="label">
-                <height>40</height>
-                <posx>10</posx>
-                <font>Bold30</font>
+                <height>100%</height>
+                <right>0</right>
+                <textoffsetx>10</textoffsetx>
+                <width>100%</width>
+                <font>Reg32</font>
                 <include condition="!Skin.HasSetting(AutoWidgetAlignDisabled)">align_right</include>
-                <aligny>top</aligny>
-                <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+                <aligny>center</aligny>
+                <textcolor>$VAR[VerticalHomeWidgetHeaderTextColor]</textcolor>
+                <shadowcolor>$VAR[VerticalHomeWidgetHeaderTextShadowColor]</shadowcolor>
                 <label>$INFO[Container(300).ListItem.Property(widgetName$PARAM[widgetidprefix])]</label>
                 <visible>IsEmpty(Container($PARAM[containerid]).ListItem.Property(similartitle))</visible>
                 <visible>!Skin.String(HomeLayout, verticalbig)</visible>
             </control>
             <control type="label">
-                <height>40</height>
-                <posx>10</posx>
-                <font>Bold30</font>
+                <height>100%</height>
+                <right>0</right>
+                <textoffsetx>10</textoffsetx>
+                <width>100%</width>
+                <font>Reg32</font>
                 <include condition="!Skin.HasSetting(AutoWidgetAlignDisabled)">align_right</include>
-                <aligny>top</aligny>
-                <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+                <aligny>center</aligny>
+                <textcolor>$VAR[VerticalHomeWidgetHeaderTextColor]</textcolor>
+                <shadowcolor>$VAR[VerticalHomeWidgetHeaderTextShadowColor]</shadowcolor>
                 <label>$LOCALIZE[31545] $INFO[Container($PARAM[containerid]).ListItem.Property(similartitle)]</label>
                 <visible>!IsEmpty(Container($PARAM[containerid]).ListItem.Property(similartitle))</visible>
                 <visible>!Skin.String(HomeLayout, verticalbig)</visible>
             </control>
             <control type="label">
-                <height>40</height>
-                <posx>10</posx>
+                <height>100%</height>
+                <right>0</right>
+                <textoffsetx>10</textoffsetx>
+                <width>100%</width>
                 <font>Light32</font>
                 <include condition="!Skin.HasSetting(AutoWidgetAlignDisabled)">align_right</include>
-                <aligny>top</aligny>
-                <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+                <aligny>center</aligny>
+                <textcolor>$VAR[VerticalHomeWidgetHeaderTextColor]</textcolor>
+                <shadowcolor>$VAR[VerticalHomeWidgetHeaderTextShadowColor]</shadowcolor>
                 <label>[UPPERCASE]$INFO[Container(300).ListItem.Property(widgetName$PARAM[widgetidprefix])][/UPPERCASE]</label>
                 <visible>IsEmpty(Container($PARAM[containerid]).ListItem.Property(similartitle))</visible>
                 <visible>Skin.String(HomeLayout, verticalbig)</visible>
             </control>
             <control type="label">
-                <height>40</height>
-                <posx>10</posx>
+                <height>100%</height>
+                <right>0</right>
+                <textoffsetx>10</textoffsetx>
+                <width>100%</width>
                 <font>Light32</font>
                 <include condition="!Skin.HasSetting(AutoWidgetAlignDisabled)">align_right</include>
-                <aligny>top</aligny>
-                <textcolor>$INFO[Skin.String(ViewDetailsTextColor)]</textcolor>
-                <shadowcolor>$INFO[Skin.String(ViewDetailsTextShadowColor)]</shadowcolor>
+                <aligny>center</aligny>
+                <textcolor>$VAR[VerticalHomeWidgetHeaderTextColor]</textcolor>
+                <shadowcolor>$VAR[VerticalHomeWidgetHeaderTextShadowColor]</shadowcolor>
                 <label>[UPPERCASE]$LOCALIZE[31545] $INFO[Container($PARAM[containerid]).ListItem.Property(similartitle)][/UPPERCASE]</label>
                 <visible>!IsEmpty(Container($PARAM[containerid]).ListItem.Property(similartitle))</visible>
                 <visible>Skin.String(HomeLayout, verticalbig)</visible>
             </control>
+            
         </control>
     </include>
     
-    <include name="VerticalHomeSquareSubMenu">
-        <control type="group">
-            <include>animation_window_open_close</include>
-            <animation effect="slide" start="0" end="0,-20" time="0" condition="Skin.HasSetting(HideWidgetDetailsPanel)">Conditional</animation>
-            <control type="label">
-                <right>60</right>
-                <width>1285</width>
-                <top>160</top>
-                <height>131</height>
-                <font>Light36</font>
-                <alignv>center</alignv>
-                <textcolor>$INFO[Skin.String(HeaderTextColor)]</textcolor>
-                <shadowcolor>$INFO[Skin.String(HeaderTextShadowColor)]</shadowcolor>
-                <include condition="Skin.HasSetting(AutoWidgetAlignDisabled)">align_right</include>
-                <label>$INFO[Container(4446).ListItem.Label]</label>
-                <visible>Control.HasFocus(4446) + !IntegerGreaterThan(Container(4445).NumItems,8)</visible>
-            </control>
-            <control type="button" id="4444">
-                <width>1</width>
-                <height>1</height>
-                <visible allowhiddenfocus="false">StringCompare(Container(300).ListItem.Property(squaresubmenu),enable)</visible>
-                <onfocus>SetFocus(4446,0)</onfocus>
-            </control>
-            <control type="panel" id="4446">
-                <visible>!Skin.HasSetting(DisableAllSubmenus) + IntegerGreaterThan(Container(4445).NumItems,0)</visible>
-                <visible>StringCompare(Container(300).ListItem.Property(squaresubmenu),enable)</visible>
-                <width>1296</width>
-                <right>50</right>
-                <top>180</top>
-                <height>131</height>
-                <onleft>300</onleft>
-                <onup>300</onup>
-                <ondown>77777</ondown>
-                <onback>300</onback>
-                <orientation>horizontal</orientation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,11)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,10)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,9)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,8)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,7)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,6)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,5)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,4)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,3)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,2)">Conditional</animation>
-                <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4446).NumItems,1)">Conditional</animation>
-                
-                <itemlayout height="108" width="108">
-                  <control type="group">
-                        <width>100</width>
-                        <height>100</height>
-                        <include>SquarePosterPanelLayout</include>
-                    </control>
-                </itemlayout>
-                <focusedlayout height="108" width="108">
-                  <control type="group">
-                        <width>100</width>
-                        <height>100</height>
-                        <include>SquarePosterPanelLayoutFocus</include>
-                    </control>
-                </focusedlayout>
-                <content>
-                    <include condition="!Skin.HasSetting(DisableAllSubmenus)">skinshortcuts-submenu</include>
-                </content>
-            </control>
-        </control>
+    <variable name="VerticalHomeWidgetHeaderTextColor">
+        <value condition="Control.HasFocus(513)">$INFO[Skin.String(ButtonFocusTextColor)]</value>
+        <value condition="Skin.HasSetting(HideWidgetPanelBackground)">$INFO[Skin.String(HeaderTextColor)]</value>
+        <value>$INFO[Skin.String(ViewDetailsTextColor)]</value>
+    </variable>
+    <variable name="VerticalHomeWidgetHeaderTextShadowColor">
+        <value condition="Control.HasFocus(513)">-</value>
+        <value condition="Skin.HasSetting(HideWidgetPanelBackground)">$INFO[Skin.String(HeaderTextShadowColor)]</value>
+        <value>$INFO[Skin.String(ViewDetailsTextShadowColor)]</value>
+    </variable>
+    
+    <variable name="VerticalHomeWidgetHeaderBgColor">
+        <value condition="Skin.HasSetting(HideWidgetPanelBackground)">00ffffff</value>
+        <value>$INFO[Skin.String(ViewDetailsPanelColor)]</value>
+    </variable>
+    
+    <variable name="VerticalHomeWidgetHeaderLabel">
+        <value condition="Skin.String(HomeLayout, verticalbig)">[UPPERCASE]$VAR[changeWidgetLabel][/UPPERCASE]</value>
+        <value>$VAR[changeWidgetLabel]</value>
+    </variable>
+    
+    <include name="VerticalHomeSimpleWidgetHeaderLayout">
+        <right>55</right>
+        <include name="width" content="width" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+            <param name="width" value="1435" />
+        </include>
+        <width>1290</width>
+        <height>45</height>
+        <align>right</align>
+        <label>$VAR[VerticalHomeWidgetHeaderLabel]</label>
+        <onclick>$VAR[toggleNextWidget]</onclick>
+        <font>Reg32</font>
+        <textureradiofocus colordiffuse="$INFO[Skin.String(ButtonFocusTextColor)]" flipy="true">home/home_arrow_up.png</textureradiofocus>
+        <textureradionofocus colordiffuse="$VAR[VerticalHomeWidgetHeaderTextColor]" flipy="true">home/home_arrow_up.png</textureradionofocus>
+        <texturenofocus colordiffuse="$VAR[VerticalHomeWidgetHeaderBgColor]" border="5">diffuse/panel.png</texturenofocus>
+        <radiowidth>30</radiowidth>
+        <radioheight>30</radioheight>
     </include>
+    <include name="VerticalHomeSimpleWidgetHeaderLayoutAlt">
+        <right>55</right>
+        <include name="width" content="width" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+            <param name="width" value="1435" />
+        </include>
+        <width>1290</width>
+        <height>45</height>
+        <align>left</align>
+        <label>$VAR[VerticalHomeWidgetHeaderLabel]</label>
+        <onclick>$VAR[toggleNextWidget]</onclick>
+        <font>Reg32</font>
+        <textureradiofocus colordiffuse="$INFO[Skin.String(ButtonFocusTextColor)]" flipy="true">home/home_arrow_up.png</textureradiofocus>
+        <textureradionofocus colordiffuse="$VAR[VerticalHomeWidgetHeaderTextColor]" flipy="true">home/home_arrow_up.png</textureradionofocus>
+        <texturenofocus colordiffuse="$VAR[VerticalHomeWidgetHeaderBgColor]" border="5">diffuse/panel.png</texturenofocus>
+        <radiowidth>30</radiowidth>
+        <radioheight>30</radioheight>
+        <radioposx>10</radioposx>
+    </include>
+    
+    <include name="VerticalHomeSquareSubMenuLayout">
+        <include name="width" content="width" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+            <param name="width" value="1443" />
+        </include>
+        <width>1296</width>
+        <right>50</right>
+        <posy>0</posy>
+        <height>100</height>
+        <orientation>horizontal</orientation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,11) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,10) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,9) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,8) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,7) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,6) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,5) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,4) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,3) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,2) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="108" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,1) + !Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        
+        <animation effect="slide" start="0" end="5" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,12) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,11) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,10) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,9) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,8) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,7) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,6) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,5) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,4) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,3) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,2) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        <animation effect="slide" start="0" end="111" time="0" condition="!Skin.HasSetting(AutoWidgetAlignDisabled) + !IntegerGreaterThan(Container(4445).NumItems,1) + Skin.HasSetting(VerticalHomeLargeWidget)">Conditional</animation>
+        
+        
+        <itemlayout height="100" width="108" condition="!Skin.HasSetting(VerticalHomeLargeWidget)">
+          <control type="group">
+                <width>100</width>
+                <height>100</height>
+                <include>SquarePosterPanelLayout</include>
+            </control>
+        </itemlayout>
+        <focusedlayout height="100" width="108" condition="!Skin.HasSetting(VerticalHomeLargeWidget)">
+          <control type="group">
+                <width>100</width>
+                <height>100</height>
+                <include>SquarePosterPanelLayoutFocus</include>
+            </control>
+        </focusedlayout>
+        <itemlayout height="100" width="111" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+          <control type="group">
+                <width>100</width>
+                <height>100</height>
+                <include>SquarePosterPanelLayout</include>
+            </control>
+        </itemlayout>
+        <focusedlayout height="100" width="111" condition="Skin.HasSetting(VerticalHomeLargeWidget)">
+          <control type="group">
+                <width>100</width>
+                <height>100</height>
+                <include>SquarePosterPanelLayoutFocus</include>
+            </control>
+        </focusedlayout>
+        <content>
+            <include condition="!Skin.HasSetting(DisableAllSubmenus)">skinshortcuts-submenu</include>
+        </content> 
+    </include>
+    
     
  </includes>
