@@ -69,6 +69,11 @@
 		<value>30</value>
 	</variable>
 	
+	<variable name="RadioBrightnessValueVar">
+		<value condition="!String.IsEmpty(Skin.String(RadioBrightnessValue))">$INFO[Skin.String(RadioBrightnessValue)]</value>
+		<value>30</value>
+	</variable>
+	
 	<variable name="VideosBrightnessValueVar">
 		<value condition="!String.IsEmpty(Skin.String(VideosBrightnessValue))">$INFO[Skin.String(VideosBrightnessValue)]</value>
 		<value>30</value>
@@ -147,6 +152,12 @@
 	<include name="TVBrightnessAnimations">
 		<include content="BrightnessAnimations">
 			<param name="type" value="TVBrightnessValue" />
+		</include>
+	</include>
+	
+	<include name="RadioBrightnessAnimations">
+		<include content="BrightnessAnimations">
+			<param name="type" value="RadioBrightnessValue" />
 		</include>
 	</include>
 	
@@ -434,7 +445,7 @@
 				<description>Custom Background</description>
 				<include>BackgroundSize</include>
 				<include condition="Skin.String(CustomPVRBGType,2) | Skin.String(CustomPVRBGType,3)">PVRCustomBGPath</include>
-				<include condition="Skin.String(CustomPVRBGType,4) + System.HasAddon(script.skin.helper.service)">PVRFanartBGPath</include>
+				<include condition="Skin.String(CustomPVRBGType,4)">PVRFanartBGPath</include>
 				<aspectratio>scale</aspectratio>
 				<timeperimage>10000</timeperimage>
 				<fadetime>BackgroundCrossfadeTime</fadetime>
@@ -443,6 +454,26 @@
 			</control>
 
 			<include>PVRBackgroundDim</include>
+		</control>
+	</include>
+	
+	<include name="BackgroundPVRRadio">		
+		<control type="group">
+			<include condition="![Skin.HasSetting(DisableMusicPlayingBG) | Skin.HasSetting(DisableVideoPlayingBG)]">IsMediaPlayingCondition</include>
+
+			<control type="multiimage">
+				<description>Custom Background</description>
+				<include>BackgroundSize</include>
+				<include condition="Skin.String(CustomPVRRadioBGType,2) | Skin.String(CustomPVRRadioBGType,3)">PVRRadioCustomBGPath</include>
+				<include condition="Skin.String(CustomPVRRadioBGType,4)">PVRFanartBGPath</include>
+				<aspectratio>scale</aspectratio>
+				<timeperimage>10000</timeperimage>
+				<fadetime>BackgroundCrossfadeTime</fadetime>
+				<randomize>true</randomize>
+				<include condition="Skin.HasSetting(AnimateBackground)">BackgroundAnim</include>
+			</control>
+
+			<include>PVRRadioBackgroundDim</include>
 		</control>
 	</include>
 
@@ -482,7 +513,7 @@
 				<include>BackgroundSize</include>
 			</control>
 
-			<include condition="!Window.IsActive(Home)">MediaPlayingVizDim</include>
+			<include condition="![Window.IsActive(Home) | Window.IsActive(TVGuide)]">MediaPlayingVizDim</include>
 		</control>
 	</include>
 
@@ -567,6 +598,14 @@
 					<include>FanartDim</include>		
 				</control>
 			</control>
+			
+			<control type="group">
+				<visible>Window.IsActive(TVRecordings) | Window.IsActive(RadioRecordings)</visible>
+				<visible>[Control.IsVisible(50) | Window.IsActive(DialogPVRInfo.xml)] + !Skin.HasSetting(HidePVRRecordingsFanart)</visible>
+				<include>BackgroundVisibleAnim</include>
+				<include>FanartImage</include>
+				<include>FanartDim</include>
+			</control>
 		</control>
 	</include>
 
@@ -625,6 +664,22 @@
 			| [Control.IsVisible(598) + !Skin.HasSetting(HideProgramsWrapListInfo3Fanart)]</visible>			
 			<include>BackgroundVisibleAnim</include>
 			<include>FanartImage</include>
+			<include>FanartDim</include>
+		</control>
+	</include>
+	
+	<include name="BackgroundGenreFanart">
+		<control type="group">
+			<include condition="![Skin.HasSetting(DisableMusicPlayingBG) | Skin.HasSetting(DisableVideoPlayingBG) | [System.HasAddon(script.tvtunes) + String.IsEmpty(Window(Videos).Property(PlayingBackgroundMedia))]]">IsMediaPlayingCondition</include>
+			<visible>![Control.HasFocus(151) | Control.HasFocus(584) | ListItem.IsParentFolder]</visible>			
+			<include>BackgroundVisibleAnim</include>
+			<control type="image">
+				<include>BackgroundSize</include>
+				<texture background="true">$INFO[Skin.String(MovieGenreFanartAddon.path)]$INFO[ListItem.Label,,.jpg]</texture>
+				<aspectratio>scale</aspectratio>
+				<fadetime>FanartCrossfadeTime</fadetime>
+				<include condition="Skin.HasSetting(AnimateFanart)">BackgroundAnim</include>
+			</control>
 			<include>FanartDim</include>
 		</control>
 	</include>
@@ -794,12 +849,23 @@
 		</control>
 	</include>
 	
+	<include name="PVRRadioBackgroundDim">
+		<control type="image">
+			<include>BackgroundDim</include>
+			<include>RadioBrightnessAnimations</include>
+		</control>
+	</include>
+	
 	<include name="PVRCustomBGPath">
 		<imagepath>$INFO[Skin.String(CustomPVRBGPath)]</imagepath>
 	</include>
 	
 	<include name="PVRFanartBGPath">
 		<imagepath background="true">$INFO[Window(Home).Property(SkinHelper.PvrBackground)]</imagepath>
+	</include>
+	
+	<include name="PVRRadioCustomBGPath">
+		<imagepath>$INFO[Skin.String(CustomPVRRadioBGPath)]</imagepath>
 	</include>
 	
 	<include name="WeatherCustomBGPath">

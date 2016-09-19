@@ -3,26 +3,92 @@
 	<defaultcontrol always="true">10</defaultcontrol>
 	<menucontrol>850</menucontrol>
 	<views>10,11,12,13</views>
-	<controls>	
+	<onunload>ClearProperty(TVGuideFullscreen,home)</onunload>
+	
+	<controls>
+		<control type="button" id="9200">
+			<onfocus>FullScreen</onfocus>
+			<onfocus>ClearProperty(TVGuideFullscreen,home)</onfocus>
+			<visible allowhiddenfocus="true">False</visible>
+        </control>
+		
 		<control type="group">
 			<depth>DepthBackground</depth>
 			<include>BackgroundDefault</include>
-			<include condition="[!String.IsEmpty(Skin.String(CustomPVRBGPath)) + [Skin.String(CustomPVRBGType,2) | Skin.String(CustomPVRBGType,3) | Skin.String(CustomPVRBGType,4)]]
-			+ Skin.HasSetting(ApplyAllPVRCustomBG)">BackgroundPVR</include>
-			<include>BackgroundOpenCloseAnim</include>	
+			<include condition="[[!String.IsEmpty(Skin.String(CustomPVRBGPath)) + [Skin.String(CustomPVRBGType,2) | Skin.String(CustomPVRBGType,3)]] | Skin.String(CustomPVRBGType,4)] + Skin.HasSetting(ApplyAllPVRCustomBG) + Window.IsActive(TVGuide)">BackgroundPVR</include>
+			<include condition="[[!String.IsEmpty(Skin.String(CustomPVRRadioBGPath)) + [Skin.String(CustomPVRRadioBGType,2) | Skin.String(CustomPVRRadioBGType,3)]] | Skin.String(CustomPVRRadioBGType,4)] + Skin.HasSetting(ApplyAllPVRRadioCustomBG) + Window.IsActive(RadioGuide)">BackgroundPVRRadio</include>
+			<include>BackgroundOpenCloseAnim</include>
+			<visible>String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
 		</control>
+		
+		<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">BackgroundVideoPlaying</include>
 		
 		<control type="group">
 			<depth>DepthContent</depth>
+			<visible>!Window.IsActive(DialogPVRInfo.xml)</visible>
 			
-			<include>LiveTVColumnInfoArea</include>
+			<control type="group">
+				<depth>DepthOSD</depth>
+				<visible>!String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
+				<include>DialogOpenCloseAnim</include>
+				<top>57</top>
+				<left>140</left>
+				
+				<include content="DialogWithCloseBtnLabel">
+					<param name="width" value="1000"/>
+					<param name="height" value="607" />
+					<param name="left" value="940" />
+					<param name="labelwidth" value="920" />
+					<param name="label" value="$LOCALIZE[31195]: $VAR[TVGuideFullscreenBtn9001]" />
+				</include>
+				
+				<control type="grouplist" id="9000">
+					<top>553</top>
+					<width>1000</width>
+					<align>center</align>
+					<onright condition="Control.IsVisible(904)">904</onright>
+					<onright condition="!Control.IsVisible(904)">500</onright>
+					<onleft>500</onleft>
+					<onup>500</onup>
+					<onback>9200</onback>
+					<itemgap>0</itemgap>
+					<orientation>horizontal</orientation>
+					<control type="button" id="9001">
+						<description>View Mode</description>
+						<include>DialogMenuBarBtn</include>
+						<label>$LOCALIZE[24140]: $VAR[TVGuideFullscreenBtn9001]</label>
+						<onclick>SendClick(2)</onclick>
+					</control>
+					<control type="button" id="9002">
+						<description>Cancel</description>
+						<include>DialogMenuBarBtn</include>
+						<label>$LOCALIZE[15067]</label>
+						<onclick>PreviousMenu</onclick>
+					</control>
+				</control>
+				
+				<control type="spincontrol" id="904">
+					<description>Next Page</description>
+					<left>918</left>
+					<top>562</top>
+					<font />
+					<onup>500</onup>
+					<onleft>9002</onleft>
+					<onright>500</onright>
+					<visible>[Control.IsVisible(10) + Integer.IsGreater(Container(10).NumPages,1)] | [Control.IsVisible(11) + [Container(11).HasNext | Container(11).HasPrevious]] | [Control.IsVisible(12) + [Container(12).HasNext | Container(12).HasPrevious]] | [Control.IsVisible(13) + [Container(13).HasNext | Container(13).HasPrevious]]</visible>
+				</control>
+			</control>
+			
+			<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">LiveTVColumnInfoArea</include>
 		
 			<control type="group" id="500">
 				<left>40</left>
 				<top>110</top>
 				<defaultcontrol always="true">10</defaultcontrol>
 				<visible>Control.IsVisible(10)</visible>
-				<include>ControlsOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim2</include>
+				<animation effect="slide" end="135,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 
 				<control type="image">
 					<width>215</width>
@@ -33,27 +99,34 @@
 				</control>
 				<control type="image">
 					<left>220</left>
-					<width>1030</width>
+					<width>980</width>
 					<height>30</height>
 					<texture border="8" flipx="true">pvr/column-left.png</texture>
 					<colordiffuse>LiveTVColumnColor</colordiffuse>
 					<include>LiveTVColumnFadeAnim</include>
+					<visible>String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
+				</control>
+				<control type="image">
+					<left>220</left>
+					<width>709</width>
+					<height>30</height>
+					<texture border="8" flipx="true">pvr/column-left.png</texture>
+					<colordiffuse>LiveTVColumnColor</colordiffuse>
+					<include>LiveTVColumnFadeAnim</include>
+					<visible>!String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
 				</control>
 
 				<control type="epggrid" id="10">
 					<viewtype label="19032">list</viewtype>
-					<width>1240</width>
-					<height>370</height>
-					<pagecontrol>10</pagecontrol>
+					<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormal</include>
+					<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreen</include>
+					<pagecontrol>904</pagecontrol>
 					<scrolltime>150</scrolltime>
 					<timeblocks>40</timeblocks>
 					<rulerunit>6</rulerunit>
 					<progresstexture border="0,45,20,7">pvr/EpgProgressIndicator.png</progresstexture>
 					<onleft>10</onleft>
-					<onright>10</onright>
-					<onup>850</onup>
-					<onback>850</onback>
-					<ondown>10</ondown>
+					<onright condition="Control.IsVisible(904)">904</onright>
 					<rulerlayout height="34" width="42">
 						<control type="label">
 							<description>Date</description>
@@ -237,7 +310,7 @@
 							<align>left</align>
 							<include>LiveTVColumnItemLabel</include>
 							<label>$INFO[ListItem.Label]</label>
-							<visible>![ListItem.HasTimer | ListItem.IsRecording]</visible>
+							<visible>![ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording]</visible>
 						</control>
 						<control type="label" id="1">
 							<left>40</left>
@@ -246,27 +319,17 @@
 							<align>left</align>
 							<include>LiveTVColumnItemLabel</include>
 							<label>$INFO[ListItem.Label]</label>
-							<visible>ListItem.HasTimer | ListItem.IsRecording</visible>
+							<visible>ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording</visible>
 						</control>
 						<control type="image">
-							<description>Timer</description>
+							<description>Status Icon</description>
 							<left>10</left>
 							<top>8</top>
 							<width>22</width>
 							<height>22</height>
-							<texture>pvr/status_timer.png</texture>
+							<texture>$VAR[PVRStatusIcon]</texture>
 							<colordiffuse>WhiteColor</colordiffuse>
-							<visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
-						</control>
-						<control type="image">
-							<description>Record</description>
-							<left>10</left>
-							<top>8</top>
-							<width>22</width>
-							<height>22</height>
-							<texture>pvr/status_recording.png</texture>
-							<colordiffuse>WhiteColor</colordiffuse>
-							<visible>ListItem.IsRecording</visible>
+							<visible>ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording</visible>
 						</control>
 					</itemlayout>
 					<focusedlayout height="42" width="102">
@@ -284,7 +347,7 @@
 							<align>left</align>
 							<include>LiveTVColumnItemLabel</include>
 							<label>$INFO[ListItem.Label]</label>
-							<visible>![ListItem.HasTimer | ListItem.IsRecording]</visible>
+							<visible>![ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording]</visible>
 						</control>
 						<control type="label" id="1">
 							<left>40</left>
@@ -293,30 +356,22 @@
 							<align>left</align>
 							<include>LiveTVColumnItemLabel</include>
 							<label>$INFO[ListItem.Label]</label>
-							<visible>ListItem.HasTimer | ListItem.IsRecording</visible>
+							<visible>ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording</visible>
 						</control>
 						<control type="image">
-							<description>Timer</description>
+							<description>Status Icon</description>
 							<left>10</left>
 							<top>8</top>
 							<width>22</width>
 							<height>22</height>
-							<texture>pvr/status_timer.png</texture>
+							<texture>$VAR[PVRStatusIcon]</texture>
 							<colordiffuse>WhiteColor</colordiffuse>
-							<visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
-						</control>
-						<control type="image">
-							<description>Record</description>
-							<left>10</left>
-							<top>8</top>
-							<width>22</width>
-							<height>22</height>
-							<texture>pvr/status_recording.png</texture>
-							<colordiffuse>WhiteColor</colordiffuse>
-							<visible>ListItem.IsRecording</visible>
+							<visible>ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording</visible>
 						</control>
 					</focusedlayout>
 				</control>
+				
+				<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">ColumnsViewScrollbar</include>
 			</control>
 
 			<control type="group" id="500">
@@ -324,7 +379,9 @@
 				<top>110</top>
 				<defaultcontrol always="true">11</defaultcontrol>
 				<visible>Control.IsVisible(11)</visible>
-				<include>ControlsOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim2</include>
+				<animation effect="slide" end="135,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 
 				<include>LiveTVColumnHeaderArea2</include>
 
@@ -332,13 +389,10 @@
 					<viewtype label="19030">list</viewtype>
 					<top>34</top>
 					<width>1220</width>
-					<height>336</height>
-					<ondown>11</ondown>
-					<onleft>850</onleft>
+					<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormal2</include>
+					<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreen2</include>
 					<onright condition="Control.IsVisible(904)">904</onright>
-					<onright condition="!Control.IsVisible(904)">850</onright>
-					<onup>850</onup>
-					<onback>850</onback>
+					<ondown condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">11</ondown>
 					<pagecontrol>904</pagecontrol>
 					<preloaditems>2</preloaditems>
 					<itemlayout height="42">
@@ -351,7 +405,7 @@
 					</focusedlayout>
 				</control>
 
-				<include>ColumnsViewScrollbar</include>
+				<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">ColumnsViewScrollbar</include>
 			</control>
 			
 			<control type="group" id="500">
@@ -359,7 +413,9 @@
 				<top>110</top>
 				<defaultcontrol always="true">12</defaultcontrol>
 				<visible>Control.IsVisible(12)</visible>
-				<include>ControlsOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim2</include>
+				<animation effect="slide" end="135,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 
 				<include>LiveTVColumnHeaderArea2</include>
 
@@ -367,13 +423,10 @@
 					<viewtype label="19031">list</viewtype>
 					<top>34</top>
 					<width>1220</width>
-					<height>336</height>
-					<ondown>12</ondown>
-					<onleft>850</onleft>
+					<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormal2</include>
+					<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreen2</include>
 					<onright condition="Control.IsVisible(904)">904</onright>
-					<onright condition="!Control.IsVisible(904)">850</onright>
-					<onup>850</onup>
-					<onback>850</onback>
+					<ondown condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">12</ondown>
 					<pagecontrol>904</pagecontrol>
 					<preloaditems>2</preloaditems>
 					<itemlayout height="42">
@@ -394,7 +447,9 @@
 				<top>110</top>
 				<defaultcontrol always="true">13</defaultcontrol>
 				<visible>Control.IsVisible(13)</visible>
-				<include>ControlsOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim</include>
+				<include>TVGuideFullscreenOpenCloseAnim2</include>
+				<animation effect="slide" end="135,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 
 				<include>LiveTVColumnHeaderArea</include>
 
@@ -438,18 +493,30 @@
 					<include>LiveTVColumnItemLayout</include>
 					<visible>String.IsEqual(Container(13).ListItemPosition(7).ChannelName,)</visible>
 				</control>
+				<control type="group">
+					<top>370</top>
+					<include>LiveTVColumnItemLayout</include>
+					<visible>String.IsEqual(Container(13).ListItemPosition(8).ChannelName,) + !String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
+				</control>
+				<control type="group">
+					<top>412</top>
+					<include>LiveTVColumnItemLayout</include>
+					<visible>String.IsEqual(Container(13).ListItemPosition(9).ChannelName,) + !String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
+				</control>
+				<control type="group">
+					<top>454</top>
+					<include>LiveTVColumnItemLayout</include>
+					<visible>String.IsEqual(Container(13).ListItemPosition(10).ChannelName,) + !String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
+				</control>
 
 				<control type="list" id="13">
 					<viewtype label="19029">list</viewtype>
 					<top>34</top>
 					<width>1220</width>
-					<height>336</height>
-					<ondown>13</ondown>
-					<onleft>13</onleft>
+					<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormal2</include>
+					<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreen2</include>
 					<onright condition="Control.IsVisible(904)">904</onright>
-					<onright condition="!Control.IsVisible(904)">850</onright>
-					<onup>850</onup>
-					<onback>850</onback>
+					<ondown condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">13</ondown>
 					<pagecontrol>904</pagecontrol>
 					<preloaditems>2</preloaditems>
 					<itemlayout height="42">
@@ -464,14 +531,15 @@
 
 				<include>ColumnsViewScrollbar</include>
 			</control>
+			
 			<include>ViewsDialogPopUpScreenDim</include>
 		</control>
 		
-		<include>PVRMenuBar</include>
+		<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">PVRMenuBar</include>
 
 		<control type="group">
 			<description>Top Bar Area</description>
-			<visible>![System.IdleTime(3) + !Control.IsVisible(505) + Skin.HasSetting(HideTopBar) + !Control.HasFocus(555)]</visible>
+			<visible>![System.IdleTime(3) + !Control.IsVisible(505) + Skin.HasSetting(HideTopBar) + !Control.HasFocus(555)] + String.IsEmpty(Window(home).Property(TVGuideFullscreen))</visible>
 			<depth>DepthTopBar</depth>
 			<include>TopBarImage</include>
 			<include>TopBarOpenCloseAnim</include>
