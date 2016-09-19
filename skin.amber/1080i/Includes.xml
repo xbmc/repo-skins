@@ -19,7 +19,7 @@
   <include file="View_53_Icons.xml" />
   <include file="View_54_LowList.xml" />
   <include file="View_55_BigPanel.xml" />
-  <include file="View_57_58_59_Showcase.xml" />
+  <include file="View_56_Fanart.xml" />
   <include file="View_PVR.xml" />
   <include name="ContentFade">
     <animation effect="fade" start="0" end="100" time="500" delay="0">WindowOpen</animation>
@@ -147,9 +147,9 @@
     <posy>-30</posy>
     <width>1</width>
     <height>1</height>
-    <label>-</label>
-    <texturenofocus>-</texturenofocus>
-    <texturefocus>-</texturefocus>
+    <label></label>
+    <texturenofocus></texturenofocus>
+    <texturefocus></texturefocus>
   </include>
   <include name="DimBG">
     <control type="image">
@@ -200,9 +200,8 @@
       <left>0</left>
       <width>1920</width>
       <control type="group">
-        <visible>Window.Is(home) | [!Window.IsActive(home) + !Skin.HasSetting(Hide.TopBar.Sub)]</visible>
+        <visible>Window.Is(home) | [!Window.Is(home) + !Skin.HasSetting(Hide.TopBar.Sub)]</visible>
         <control type="image">
-          <visible>!Window.IsActive(home) | [Player.HasAudio + Window.IsActive(home)] | Window.IsActive(favourites)</visible>
           <include>VisibleFadeEffect</include>
           <posx>0</posx>
           <posy>0</posy>
@@ -210,18 +209,6 @@
           <height>48</height>
           <texture>common/TopStripe.png</texture>
         </control>
-        <control type="image">
-          <visible>!Player.HasAudio + Window.Is(home)</visible>
-          <include>VisibleFadeEffect</include>
-          <posx>630r</posx>
-          <posy>0</posy>
-          <width>630</width>
-          <height>90</height>
-          <texture border="100,0,0,0" flipy="true">common/TimePanel.png</texture>
-        </control>
-      </control>
-      <control type="group">
-        <visible>Window.Is(home) | [!Window.IsActive(home) + !Skin.HasSetting(Hide.TopBar.Sub)]</visible>
         <control type="label">
           <visible>!Player.HasAudio | [Player.HasAudio + !String.IsEmpty(Window(videos).Property(PlayingBackgroundMedia))]</visible>
           <include>VisibleFadeEffect</include>
@@ -255,26 +242,34 @@
           </control>
         </control>
         <control type="grouplist">
-          <left>1200</left>
+          <left>1100</left>
           <top>-3</top>
           <height>40</height>
           <itemgap>10</itemgap>
           <orientation>horizontal</orientation>
           <align>right</align>
-          <width>700</width>
+          <width>800</width>
           <usecontrolcoords>true</usecontrolcoords>
-          <control type="togglebutton">
-            <visible>Skin.HasSetting(ShowMasterLockTitle) + System.HasLocks</visible>
-            <top>9</top>
-            <width>25</width>
-            <height>25</height>
-            <texturefocus>NoMasterNF.png</texturefocus>
-            <texturenofocus>NoMasterNF.png</texturenofocus>
-            <alttexturefocus>MasteFO.png</alttexturefocus>
-            <alttexturenofocus>MasterFO.png</alttexturenofocus>
-            <usealttexture>System.IsMaster</usealttexture>
-            <onclick>mastermode</onclick>
+          <control type="image">
+            <visible>!Skin.HasSetting(Hide.WeatherTitleBar) + !String.IsEmpty(Weather.Plugin)</visible>
+            <visible>!String.IsEqual(Weather.Location,$LOCALIZE[503])</visible>
+            <top>0</top>
+            <width>45</width>
+            <height>45</height>
+            <aspectratio aligny="center">keep</aspectratio>
+            <texture>$VAR[WeatherIconPath]$INFO[Window(Weather).Property(Current.FanartCode),,.png]</texture>
+          </control>
+          <control type="label">
+            <visible>!Skin.HasSetting(Hide.WeatherTitleBar) + !String.IsEmpty(Weather.Plugin)</visible>
+            <visible>!String.IsEqual(Weather.Location,$LOCALIZE[503])</visible>
+            <width>auto</width>
+            <align>right</align>
             <aligny>center</aligny>
+            <font>Details</font>
+            <textcolor>White</textcolor>
+            <shadowcolor>ShadowDark</shadowcolor>
+            <label>$INFO[Weather.Temperature,,[COLOR=Highlight]  • [/COLOR]]</label>
+            <height>40</height>
           </control>
           <control type="label">
             <width>auto</width>
@@ -283,8 +278,21 @@
             <font>Details</font>
             <textcolor>White</textcolor>
             <shadowcolor>ShadowDark</shadowcolor>
-            <label>$VAR[Time]</label>
+            <label>$VAR[TimeLabel]</label>
             <height>40</height>
+          </control>
+          <control type="togglebutton">
+            <visible>Skin.HasSetting(ShowMasterLockTitle) + System.HasLocks</visible>
+            <top>7</top>
+            <width>30</width>
+            <height>30</height>
+            <texturefocus>NoMasterNF.png</texturefocus>
+            <texturenofocus>NoMasterNF.png</texturenofocus>
+            <alttexturefocus colordiffuse="Highlight">MasterNF.png</alttexturefocus>
+            <alttexturenofocus colordiffuse="Highlight">MasterNF.png</alttexturenofocus>
+            <usealttexture>System.IsMaster</usealttexture>
+            <onclick>mastermode</onclick>
+            <aligny>center</aligny>
           </control>
         </control>
       </control>
@@ -323,58 +331,79 @@
   </include>
 
   <include name="ListWatchedOverlay">
-    <control type="image">
-      <visible>![Container.Content(tvshows) | container.content(seasons)]</visible>
-      <posx>52r</posx>
-      <posy>0</posy>
-      <width>30</width>
-      <height>72</height>
-      <texture>$VAR[Overlay]</texture>
-      <aspectratio aligny="center">keep</aspectratio>
-    </control>
-    <control type="group">
-      <visible>[Container.content(tvshows) | container.content(seasons)] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
-      <control type="image" description="Label2 BG">
-        <posx>84r</posx>
-        <posy>15</posy>
-        <width>60</width>
-        <height>42</height>
-        <texture border="3">img/WhiteRoundedT.png</texture>
-      </control>
-      <control type="label" description="l2">
-        <right>3</right>
+    <param name="isFocused">false</param>
+    <definition>
+      <control type="image">
+        <visible>![Container.Content(tvshows) | container.content(seasons)]</visible>
+        <posx>52r</posx>
+        <posy>0</posy>
+        <width>30</width>
         <height>72</height>
-        <width>100</width>
-        <font>ListDetails</font>
-        <align>center</align>
-        <textcolor>Highlight</textcolor>
-        <label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
+        <texture>$VAR[Overlay]</texture>
+        <aspectratio aligny="center">keep</aspectratio>
       </control>
-    </control>
+      <control type="group">
+        <visible>Container.content(tvshows) | container.content(seasons)</visible>
+        <control type="image" description="Label2 BG">
+          <visible>$PARAM[isFocused]</visible>
+          <posx>84r</posx>
+          <posy>15</posy>
+          <width>60</width>
+          <height>42</height>
+          <texture border="3">img/WhiteRoundedT.png</texture>
+          <colordiffuse>Black</colordiffuse>
+        </control>
+        <control type="image" description="Label2 BG">
+          <visible>!$PARAM[isFocused]</visible>
+          <posx>84r</posx>
+          <posy>15</posy>
+          <width>60</width>
+          <height>42</height>
+          <texture border="3">img/WhiteRoundedT.png</texture>
+        </control>
+        <control type="label" description="l2">
+          <visible>$PARAM[isFocused]</visible>
+          <right>3</right>
+          <height>72</height>
+          <width>100</width>
+          <font>ListDetails</font>
+          <align>center</align>
+          <textcolor>Black</textcolor>
+          <shadowcolor></shadowcolor>
+          <label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
+        </control>
+        <control type="label" description="l2">
+          <visible>!$PARAM[isFocused]</visible>
+          <right>3</right>
+          <height>72</height>
+          <width>100</width>
+          <font>ListDetails</font>
+          <align>center</align>
+          <textcolor>Highlight</textcolor>
+          <label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
+        </control>
+      </control>
+    </definition>
   </include>
 
   <include name="9000ViewButtons">
     <height>54</height>
-    <width>500</width>
+    <width>484</width>
     <font>Details</font>
     <textoffsetx>30</textoffsetx>
     <disabledcolor>Grey</disabledcolor>
-    <textureradiofocus>img/ArrowRightFO.png</textureradiofocus>
-    <textureradionofocus>-</textureradionofocus>
-    <radiowidth>15</radiowidth>
-    <radioheight>60</radioheight>
-    <radioposx>5</radioposx>
   </include>
   <include name="9000SysButtons">
     <height>54</height>
-    <width>500</width>
+    <width>484</width>
     <font>Details</font>
     <radioposx>390</radioposx>
     <textoffsetx>30</textoffsetx>
     <disabledcolor>Grey</disabledcolor>
+    <texturenofocus border="3">buttons/ButtonNF.png</texturenofocus>
   </include>
   <include name="9000Commons" description="Regular BG">
-    <visible allowhiddenfocus="true">ControlGroup(9000).HasFocus()</visible>
+    <visible allowhiddenfocus="true">ControlGroup(8999).HasFocus()</visible>
     <animation type="Visible">
       <effect type="fade" start="0" end="100" time="250" />
       <effect type="slide" tween="circle" easing="out" start="0,0" end="500,0" time="350" />
@@ -399,10 +428,10 @@
       <top>-3000</top>
       <width>1</width>
       <height>1</height>
-      <texturefocus>-</texturefocus>
-      <texturenofocus>-</texturenofocus>
-      <label>-</label>
-      <font>-</font>
+      <texturefocus></texturefocus>
+      <texturenofocus></texturenofocus>
+      <label></label>
+      <font></font>
     </control>
     <control type="button" id="4">
       <description>Order Toggle</description>
@@ -410,13 +439,127 @@
       <top>-3000</top>
       <width>1</width>
       <height>1</height>
-      <texturefocus>-</texturefocus>
-      <texturenofocus>-</texturenofocus>
-      <label>-</label>
-      <font>-</font>
+      <texturefocus></texturefocus>
+      <texturenofocus></texturenofocus>
+      <label></label>
+      <font></font>
+    </control>
+    <control type="group" id="9601" description="ViewsPopOut">
+      <visible allowhiddenfocus="true">ControlGroup(9601).HasFocus()</visible>
+      <include>VisibleFadeEffect</include>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>154</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,2)</visible>
+      </control>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>208</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,3)</visible>
+      </control>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>262</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,4)</visible>
+      </control>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>316</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,5)</visible>
+      </control>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>370</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,6)</visible>
+      </control>
+      <control type="image">
+        <posx>0</posx>
+        <posy>92</posy>
+        <width>300</width>
+        <height>424</height>
+        <texture border="45">dialogs/TinyDialog.png</texture>
+        <visible>Integer.IsEqual(Container(9600).NumItems,7)</visible>
+      </control>
+      <control type="grouplist" id="9600">
+        <posx>26</posx>
+        <posy>116</posy>
+        <width>248</width>
+        <height>400</height>
+        <itemgap>0</itemgap>
+        <onleft>9000</onleft>
+        <onright>50</onright>
+        <onup>9600</onup>
+        <ondown>9600</ondown>
+        <onback>9000</onback>
+        <scrolltime>200</scrolltime>
+        <orientation>vertical</orientation>
+        <control type="button" id="9650">
+          <description>Set View 50</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[535]</label>
+          <onclick>Container.SetViewMode(50)</onclick>
+          <visible>!Skin.HasSetting(hide.listview)</visible>
+        </control>
+        <control type="button" id="9651">
+          <description>Set View 51</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[31963]</label>
+          <onclick>Container.SetViewMode(51)</onclick>
+          <visible>!Skin.HasSetting(hide.panelview)</visible>
+        </control>
+        <control type="button" id="9652">
+          <description>Set View 52</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[31999]</label>
+          <onclick>Container.SetViewMode(52)</onclick>
+          <visible>!Skin.HasSetting(hide.biglistview)</visible>
+        </control>
+        <control type="button" id="9653">
+          <description>Set View 53</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[536]</label>
+          <onclick>Container.SetViewMode(53)</onclick>
+          <visible>!Skin.HasSetting(hide.iconsview)</visible>
+        </control>
+        <control type="button" id="9654">
+          <description>Set View 54</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[31962]</label>
+          <onclick>Container.SetViewMode(54)</onclick>
+          <visible>!Skin.HasSetting(hide.lowlistview)</visible>
+        </control>
+        <control type="button" id="9655">
+          <description>Set View 55</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[31958]</label>
+          <onclick>Container.SetViewMode(55)</onclick>
+          <visible>!Skin.HasSetting(hide.bigpanelview)</visible>
+        </control>
+        <control type="button" id="9656">
+          <description>Set View 56</description>
+          <include>9000SysButtons</include>
+          <label>$LOCALIZE[20445]</label>
+          <onclick>Container.SetViewMode(56)</onclick>
+          <visible>!Skin.HasSetting(hide.fanartview)</visible>
+        </control>
+      </control>
     </control>
   </include>
-
 
 <include name="StandardViewSwitches">
   <param name="viewid"/>
@@ -505,7 +648,7 @@
 </include>
 
   <include name="9000GrouplistParameters">
-    <posx>-499</posx>
+    <posx>-491</posx>
     <posy>60</posy>
     <width>500</width>
     <height>1120</height>
@@ -517,6 +660,7 @@
     <onback>50</onback>
     <scrolltime>200</scrolltime>
     <orientation>vertical</orientation>
+    <animation effect="fade" time="200" start="100" end="20" reversible="true" condition="!ControlGroup(9000).HasFocus()">Conditional</animation>
     <control type="label" id="9140">
       <textcolor>Highlight</textcolor>
       <textoffsetx>10</textoffsetx>
@@ -525,11 +669,11 @@
       <label>$LOCALIZE[582]</label>
     </control>
     <control type="button" id="6051">
-      <include>9000ViewButtons</include>
+      <include>9000SysButtons</include>
       <label>$LOCALIZE[31023]</label>
       <label2>$INFO[Container.Viewmode]</label2>
-      <enable>Integer.IsGreater(Container.ViewCount,1)</enable>
-      <onclick>Container.NextViewMode</onclick>
+      <enable>Integer.IsGreater(Container(9600).NumItems,1)</enable>
+      <onclick>Control.SetFocus(9600)</onclick>
     </control>
 
     <include content="StandardViewSwitches">
@@ -544,56 +688,57 @@
       <param name="viewid">51</param>
     </include>
 
-    <control type="radiobutton" id="9162" description="View 57 Enable gallery for EPISODES">
-      <visible>Control.IsVisible(57) + container.content(episodes)</visible>
-      <font>ListDetails</font>
-      <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(57_Episodes_Gallery)</onclick>
-      <selected>Skin.HasSetting(57_Episodes_Gallery)</selected>
-      <label>- $LOCALIZE[31970]</label>
-    </control>
     <control type="radiobutton" id="9163" description="View 57 Enable info for EPISODES">
-      <visible>Control.IsVisible(57) + container.content(episodes)</visible>
+      <visible>Control.IsVisible(56)+ container.content(episodes)</visible>
       <font>ListDetails</font>
       <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(57_Episodes_Info)</onclick>
-      <selected>Skin.HasSetting(57_Episodes_Info)</selected>
+      <onclick>Skin.ToggleSetting(56_Episodes_Info)</onclick>
+      <selected>Skin.HasSetting(56_Episodes_Info)</selected>
       <label>- $LOCALIZE[31968]</label>
     </control>
-
-    <control type="radiobutton" id="9165" description="View 58 Enable gallery for MUSIC">
-      <visible>Control.IsVisible(58) + [container.content(albums) | container.content(artists)]</visible>
+    <control type="radiobutton" id="9162" description="View 57 Enable gallery for EPISODES">
+      <visible>Control.IsVisible(56) + container.content(episodes)</visible>
       <font>ListDetails</font>
       <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(58_Music_Gallery)</onclick>
-      <selected>Skin.HasSetting(58_Music_Gallery)</selected>
+      <onclick>Skin.ToggleSetting(56_Episodes_Gallery)</onclick>
+      <selected>Skin.HasSetting(56_Episodes_Gallery)</selected>
       <label>- $LOCALIZE[31970]</label>
     </control>
+
     <control type="radiobutton" id="9166" description="View 58 Enable Info for MUSIC">
-      <visible>Control.IsVisible(58) + [container.content(albums) | container.content(artists)]</visible>
+      <visible>Control.IsVisible(56) + [container.content(albums) | container.content(artists)]</visible>
       <font>ListDetails</font>
       <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(58_Music_Info)</onclick>
-      <selected>Skin.HasSetting(58_Music_Info)</selected>
+      <onclick>Skin.ToggleSetting(56_Music_Info)</onclick>
+      <selected>Skin.HasSetting(56_Music_Info)</selected>
       <label>- $LOCALIZE[31968]</label>
     </control>
-
-    <control type="radiobutton" id="9168" description="View 59 Enable gallery for POSTERS">
-      <visible>Control.IsVisible(59) + [container.content(MusicVideos) | container.content(movies) | container.content(tvshows) | container.content(seasons)]</visible>
+    <control type="radiobutton" id="9165" description="View 58 Enable gallery for MUSIC">
+      <visible>Control.IsVisible(56) + [container.content(albums) | container.content(artists)]</visible>
       <font>ListDetails</font>
       <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(59_Posters_Gallery)</onclick>
-      <selected>Skin.HasSetting(59_Posters_Gallery)</selected>
+      <onclick>Skin.ToggleSetting(56_Music_Gallery)</onclick>
+      <selected>Skin.HasSetting(56_Music_Gallery)</selected>
       <label>- $LOCALIZE[31970]</label>
     </control>
+
     <control type="radiobutton" id="9169" description="View 59 Enable Info for POSTERS">
-      <visible>Control.IsVisible(59) + [container.content(MusicVideos) | container.content(movies) | container.content(tvshows) | container.content(seasons)]</visible>
+      <visible>Control.IsVisible(56) + [container.content(MusicVideos) | container.content(movies) | container.content(tvshows) | container.content(seasons)]</visible>
       <font>ListDetails</font>
       <include>9000SysButtons</include>
-      <onclick>Skin.ToggleSetting(59_Posters_Info)</onclick>
-      <selected>Skin.HasSetting(59_Posters_Info)</selected>
+      <onclick>Skin.ToggleSetting(56_Posters_Info)</onclick>
+      <selected>Skin.HasSetting(56_Posters_Info)</selected>
       <label>- $LOCALIZE[31968]</label>
     </control>
+    <control type="radiobutton" id="9168" description="View 59 Enable gallery for POSTERS">
+      <visible>Control.IsVisible(56) + [container.content(MusicVideos) | container.content(movies) | container.content(tvshows) | container.content(seasons)]</visible>
+      <font>ListDetails</font>
+      <include>9000SysButtons</include>
+      <onclick>Skin.ToggleSetting(56_Posters_Gallery)</onclick>
+      <selected>Skin.HasSetting(56_Posters_Gallery)</selected>
+      <label>- $LOCALIZE[31970]</label>
+    </control>
+
     <control type="button" id="6053">
       <include>9000SysButtons</include>
       <label>$LOCALIZE[31024]</label>
@@ -614,6 +759,7 @@
       <textwidth>395</textwidth>
       <include>9000SysButtons</include>
       <label>$LOCALIZE[137]</label>
+      <texturenofocus border="3">buttons/ButtonNF.png</texturenofocus>
     </control>
     <control type="radiobutton" id="199">
       <visible>Container.CanFilterAdvanced</visible>
@@ -624,26 +770,48 @@
       <onclick>Filter</onclick>
     </control>
   </include>
+
   <include name="KeyboardButtons">
     <align>center</align>
     <aligny>center</aligny>
     <textoffsetx>0</textoffsetx>
-    <width>87</width>
-    <height>87</height>
+    <width>80</width>
+    <height>80</height>
     <font>Keyboard</font>
-    <focusedcolor>Highlight</focusedcolor>
+    <focusedcolor>Black</focusedcolor>
+    <shadowcolor></shadowcolor>
     <textoffsety>-3</textoffsety>
-    <texturefocus border="16,0,16,0">common/KeyButtonFO.png</texturefocus>
-    <texturenofocus border="16,0,16,0">common/KeyButtonNF.png</texturenofocus>
-    <alttexturefocus border="16,0,16,0">common/KeyButtonFO.png</alttexturefocus>
-    <alttexturenofocus border="16,0,16,0">common/KeyButtonNF.png</alttexturenofocus>
+    <texturefocus border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</texturefocus>
+    <texturenofocus border="4">img/WhiteRoundedT.png</texturenofocus>
+    <alttexturefocus border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</alttexturefocus>
+    <alttexturenofocus border="4">img/WhiteRoundedT.png</alttexturenofocus>
   </include>
+
+  <include name="OSDButtons">
+    <textureradioonfocus colordiffuse="Black">$PARAM[icon]</textureradioonfocus>
+    <textureradioonnofocus>$PARAM[icon]</textureradioonnofocus>
+    <textureradioofffocus colordiffuse="Black">$PARAM[icon]</textureradioofffocus>
+    <textureradiooffnofocus>$PARAM[icon]</textureradiooffnofocus>
+    <textureradioondisabled colordiffuse="Disabled">$PARAM[icon]</textureradioondisabled>
+    <textureradiooffdisabled colordiffuse="Disabled">$PARAM[icon]</textureradiooffdisabled>
+    <texturefocus border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</texturefocus>
+    <width>64</width>
+    <height>64</height>
+    <radiowidth>64</radiowidth>
+    <radioheight>64</radioheight>
+    <font></font>
+    <texturenofocus></texturenofocus>
+    <radioposx>0.1</radioposx>
+    <radioposy>0</radioposy>
+    <oninfo>Skin.ToggleSetting(OSDInfo)</oninfo>
+  </include>
+
   <include name="List_9009_Commons" description="Video Info metadata container">
     <posx>0</posx>
     <posy>0</posy>
     <width>999</width>
     <height>504</height>
-    <pagecontrol>-</pagecontrol>
+    <pagecontrol></pagecontrol>
     <itemlayout height="42" width="999">
       <control type="label">
         <posx>0</posx>
@@ -653,7 +821,7 @@
         <font>Details</font>
         <align>right</align>
         <aligny>center</aligny>
-        <textcolor>Grey2</textcolor>
+        <textcolor>Highlight</textcolor>
         <selectedcolor>selected</selectedcolor>
         <info>ListItem.Label</info>
         <scroll>false</scroll>
@@ -681,7 +849,7 @@
         <font>Details</font>
         <align>right</align>
         <aligny>center</aligny>
-        <textcolor>Grey2</textcolor>
+        <textcolor>Highlight</textcolor>
         <selectedcolor>selected</selectedcolor>
         <info>ListItem.Label</info>
       </control>
@@ -699,6 +867,7 @@
       </control>
     </focusedlayout>
   </include>
+  
   <include name="BG.Defaults">
     <posx>0</posx>
     <posy>0</posy>
@@ -837,6 +1006,12 @@
       <thumb>$VAR[DVD.Art]</thumb>
       <onclick condition="System.HasMediaDvd">PlayDVD()</onclick>
       <onclick condition="!System.HasMediaDvd">Notification($LOCALIZE[164],$LOCALIZE[219],5,DefaultIconWarning.png)</onclick>
+    </item>
+    <item id="100" description="Search">
+      <visible>System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)</visible>
+      <label>$LOCALIZE[137]</label>
+      <thumb>$VAR[Settings.Art]</thumb>
+      <onclick>RunScript(script.globalsearch)</onclick>
     </item>
     <item id="15" description="Weather">
       <visible>!Skin.HasSetting(Weather.Hide)</visible>
@@ -1019,21 +1194,25 @@
     <item id="10" description="Search">
       <visible>[Container(300).HasFocus(3) + Library.HasContent(Video)] | [Container(300).HasFocus(4) + Library.HasContent(Movies)] | [Container(300).HasFocus(5)  + Library.HasContent(TVShows)] | [Container(300).HasFocus(14) + Library.HasContent(MusicVideos)] | [Container(300).HasFocus(6) + Library.HasContent(Music)]</visible>
       <label>$LOCALIZE[137]</label>
-      <onclick condition="!Container(300).HasFocus(6)">ActivateWindow(Videos,root)</onclick>
-      <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,root)</onclick>
-      <onclick>SendClick(8)</onclick>
+      <onclick condition="!Container(300).HasFocus(6) + ![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">ActivateWindow(Videos,root)</onclick>
+      <onclick condition="Container(300).HasFocus(6) + ![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">ActivateWindow(Music,root)</onclick>
+      <onclick condition="![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">SendClick(8)</onclick>
+      <onclick condition="Container(300).HasFocus(4) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,movies=true)</onclick>
+      <onclick condition="Container(300).HasFocus(5) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,tvshows=true&amp;episodes=true)</onclick>
+      <onclick condition="Container(300).HasFocus(6) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,artists=true&amp;albums=true&amp;songs=true)</onclick>
+      <onclick condition="Container(300).HasFocus(14) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,artists=musicvideos)</onclick>
     </item>
     <item id="9" description="Browse">
       <visible>[Container(300).HasFocus(3) + Library.HasContent(Video)] | [Container(300).HasFocus(4) + Library.HasContent(Movies)] | [Container(300).HasFocus(5)  + Library.HasContent(TVShows)] | [Container(300).HasFocus(14) + Library.HasContent(MusicVideos)] | [Container(300).HasFocus(6) + Library.HasContent(Music)]</visible>
       <label>$LOCALIZE[1024]</label>
       <onclick condition="Container(300).HasFocus(3)">ActivateWindow(Videos,root)</onclick>
-      <onclick condition="Container(300).HasFocus(4)">ActivateWindow(Videos,TvShows)</onclick>
-      <onclick condition="Container(300).HasFocus(5)">ActivateWindow(Videos,Movies)</onclick>
+      <onclick condition="Container(300).HasFocus(4)">ActivateWindow(Videos,Movies)</onclick>
+      <onclick condition="Container(300).HasFocus(5)">ActivateWindow(Videos,TVShows)</onclick>
       <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,root)</onclick>
       <onclick condition="Container(300).HasFocus(14)">ActivateWindow(Videos,MusicVideos)</onclick>
     </item>
     <item id="25" description="Files">
-      <visible>Container(300).HasFocus(3) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(14)</visible>
+      <visible>Container(300).HasFocus(3) | Container(300).HasFocus(4) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(14)</visible>
       <label>$LOCALIZE[744]</label>
       <onclick condition="!Container(300).HasFocus(6)">ActivateWindow(Videos,Files,return)</onclick>
       <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,Files,return)</onclick>
@@ -1051,25 +1230,50 @@
       <onclick condition="!Container(300).HasFocus(6)">UpdateLibrary(video)</onclick>
       <onclick condition="Container(300).HasFocus(6)">UpdateLibrary(music)</onclick>
     </item>
-    <item id="41" description="Add-ons">
+    <item id="100" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(movies)</visible>
+      <label>$LOCALIZE[20342]</label>
+      <onclick>RunScript(script.globalsearch,movies=true)</onclick>
+    </item>
+    <item id="101" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(tvshows)</visible>
+      <label>$LOCALIZE[20343]</label>
+      <onclick>RunScript(script.globalsearch,tvshows=true)</onclick>
+    </item>
+    <item id="102" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(tvshows)</visible>
+      <label>$LOCALIZE[20360]</label>
+      <onclick>RunScript(script.globalsearch,episodes=true)</onclick>
+    </item>
+    <item id="103" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(musicvideos)</visible>
+      <label>$LOCALIZE[20389]</label>
+      <onclick>RunScript(script.globalsearch,musicvideos=true)</onclick>
+    </item>
+    <item id="104" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(music)</visible>
+      <label>$LOCALIZE[133]</label>
+      <onclick>RunScript(script.globalsearch,artists=true)</onclick>
+    </item>
+    <item id="105" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(music)</visible>
+      <label>$LOCALIZE[132]</label>
+      <onclick>RunScript(script.globalsearch,albums=true)</onclick>
+    </item>
+    <item id="106" description="Search subitems">
+      <visible>Container(300).HasFocus(100) + Library.HasContent(music)</visible>
+      <label>$LOCALIZE[134]</label>
+      <onclick>RunScript(script.globalsearch,songs=true)</onclick>
+    </item>
+    <item id="41" description="Amber Settings">
       <visible>Container(300).HasFocus(10)</visible>
-      <label>$LOCALIZE[24001]</label>
-      <onclick>ActivateWindow(AddonBrowser,root)</onclick>
+      <label>$LOCALIZE[31028]</label>
+      <onclick>activatewindow(SkinSettings)</onclick>
     </item>
     <item id="42" description="Appearance">
       <visible>Container(300).HasFocus(10)</visible>
       <label>$LOCALIZE[14207]</label>
       <onclick>activatewindow(InterfaceSettings)</onclick>
-    </item>
-    <item id="43" description="System">
-      <visible>Container(300).HasFocus(10)</visible>
-      <label>$LOCALIZE[13000]</label>
-      <onclick>ActivateWindow(SystemSettings)</onclick>
-    </item>
-    <item id="44" description="System information">
-      <visible>Container(300).HasFocus(10)</visible>
-      <label>$LOCALIZE[130]</label>
-      <onclick>ActivateWindow(SystemInfo)</onclick>
     </item>
     <item id="50" description="Reload skin">
       <visible>Container(300).HasFocus(10)</visible>
@@ -1598,6 +1802,7 @@
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].AudioCodec)</visible>
         <visible>$PARAM[showaudiobadge]</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
         <bordersize>3</bordersize>
@@ -1608,6 +1813,7 @@
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].FileExtension)</visible>
         <visible>Container.Content(songs)</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <visible>$PARAM[showaudiobadge]</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
@@ -1618,6 +1824,7 @@
       </control>
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].AudioChannels)</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <visible>$PARAM[showaudiobadge]</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
@@ -1628,6 +1835,7 @@
       </control>      
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].VideoCodec)</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <visible>$PARAM[showvideobadge]</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
@@ -1638,6 +1846,7 @@
       </control>
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].VideoResolution)</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <visible>$PARAM[showvideobadge]</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
@@ -1648,6 +1857,7 @@
       </control>
       <control type="image">
         <visible>!String.IsEmpty($PARAM[type].VideoAspect)</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <visible>$PARAM[showvideobadge]</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
@@ -1659,6 +1869,7 @@
       <control type="image">
         <visible>$PARAM[type].IsStereoscopic</visible>
         <visible>$PARAM[showvideobadge]</visible>
+        <visible>!Skin.HasSetting(Hide.MediaFlagsVideo)</visible>
         <height>$PARAM[itemheight]</height>
         <width>$PARAM[itemwidth]</width>
         <bordersize>3</bordersize>
@@ -1668,11 +1879,11 @@
       </control>
       <control type="image" description="Stars">
         <visible>$PARAM[showratingbadge]</visible>
-        <width>$PARAM[itemwidth]</width>
         <height>$PARAM[itemheight]</height>
+        <width>$PARAM[itemwidth]</width>
         <bordersize>3</bordersize>
         <aspectratio>keep</aspectratio>
-        <texture>$VAR[ratingbadge]</texture>
+        <texture>$VAR[$PARAM[type].ratingbadge]</texture>
         <colordiffuse>$PARAM[diffuse]</colordiffuse>
       </control>
     </definition>
@@ -1914,26 +2125,27 @@
 
   <include name="SettingsListCommons">
     <param name="showicon">true</param>
+    <param name="listwidth">1360</param>
     <definition>
-      <posx>390</posx>
-      <posy>210</posy>
-      <width>1140</width>
-      <height>780</height>
+      <posx>480</posx>
+      <posy>120</posy>
+      <width>$PARAM[listwidth]</width>
+      <height>860</height>
       <onleft>9000</onleft>
       <scrolltime>280</scrolltime>
-      <itemlayout width="1140" height="60">
+      <itemlayout width="$PARAM[listwidth]" height="60">
         <control type="image">
           <posx>0</posx>
           <posy>0</posy>
           <height>60</height>
-          <width>1140</width>
+          <width>$PARAM[listwidth]</width>
           <texture border="3">buttons/ButtonNF.png</texture>
         </control>
         <control type="label" description="Main Label">
           <posx>30</posx>
           <posy>0</posy>
           <height>60</height>
-          <width>930</width>
+          <width>$PARAM[listwidth]</width>
           <scroll>false</scroll>
           <label>$INFO[ListItem.Label]</label>
         </control>
@@ -1942,7 +2154,7 @@
           <right>18</right>
           <posy>0</posy>
           <height>60</height>
-          <width>600</width>
+          <width>400</width>
           <font>ListDetails</font>
           <haspath>true</haspath>
           <align>right</align>
@@ -1961,19 +2173,21 @@
           <texture>$INFO[ListItem.Icon]</texture>
         </control>
       </itemlayout>
-      <focusedlayout width="1140" height="60">
+      <focusedlayout width="$PARAM[listwidth]" height="60">
         <control type="image">
           <posx>0</posx>
           <posy>0</posy>
           <height>60</height>
-          <width>1140</width>
-          <texture border="2">buttons/ButtonFO.png</texture>
+          <width>$PARAM[listwidth]</width>
+          <texture border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</texture>
         </control>
         <control type="label" description="Main Label">
           <posx>30</posx>
           <posy>0</posy>
           <height>60</height>
-          <width>930</width>
+          <width>$PARAM[listwidth]</width>
+          <textcolor>Black</textcolor>
+          <shadowcolor></shadowcolor>
           <label>$INFO[ListItem.Label]</label>
         </control>
         <control type="label" description="Label 2">
@@ -1981,12 +2195,13 @@
           <right>18</right>
           <posy>0</posy>
           <height>60</height>
-          <width>600</width>
+          <width>400</width>
           <font>ListDetails</font>
           <haspath>true</haspath>
           <align>right</align>
           <scroll>false</scroll>
-          <textcolor>Highlight</textcolor>
+          <textcolor>Black</textcolor>
+          <shadowcolor></shadowcolor>
           <label>$INFO[ListItem.Label2]</label>
         </control>
         <control type="image" description="Icon">
@@ -2069,6 +2284,34 @@
     </definition>
   </include>
 
+  <include name="YesNoSettingItemAddon">
+    <param name="itemid" />
+    <param name="itemlabel" />
+    <param name="itemicon"/>
+    <param name="itemvisibility" default="true"/>
+    <param name="skinsetting"/>
+    <param name="addonpath"/>
+    <definition>
+      <item id="$PARAM[itemid]">
+        <visible>Skin.HasSetting($PARAM[skinsetting]) + System.HasAddon($PARAM[addonpath])</visible>
+        <visible>$PARAM[itemvisibility]</visible>
+        <label>$PARAM[itemlabel]</label>
+        <label2>$LOCALIZE[107]</label2>
+        <icon>$PARAM[itemicon]</icon>
+        <onclick>Skin.ToggleSetting($PARAM[skinsetting])</onclick>
+      </item>
+      <item id="$PARAM[itemid]">
+        <visible>!Skin.HasSetting($PARAM[skinsetting]) | !System.HasAddon($PARAM[addonpath])</visible>
+        <visible>$PARAM[itemvisibility]</visible>
+        <label>$PARAM[itemlabel]</label>
+        <label2>$LOCALIZE[106]</label2>
+        <icon>$PARAM[itemicon]</icon>
+        <onclick condition="!System.HasAddon($PARAM[addonpath])">InstallAddon($PARAM[addonpath])</onclick>
+        <onclick condition="System.HasAddon($PARAM[addonpath])">Skin.ToggleSetting($PARAM[skinsetting])</onclick>
+      </item>
+    </definition>
+  </include>
+
   <include name="PlexSettingItem">
     <param name="itemid" />
     <definition>
@@ -2095,16 +2338,18 @@
     <definition>
       <item id="$PARAM[itemid]">
         <visible>!String.IsEmpty(Skin.String(CustomHome.$PARAM[customhomeid].Path))</visible>
-        <label>[COLOR=Highlight]$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Label)][/COLOR]</label>
-        <label2>[COLOR=Highlight]$LOCALIZE[305][/COLOR]</label2>
+        <label>$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Label)]</label>
+        <label2>$LOCALIZE[305]</label2>
         <thumb fallback="special://skin/backgrounds/default/default.jpg">$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Background)]</thumb>
-        <onclick>RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
+        <onclick condition="System.HasAddon(script.favourites)">RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
+        <onclick condition="!System.HasAddon(script.favourites)">InstallAddon(script.favourites)</onclick>
       </item>
       <item id="$PARAM[itemid]">
         <visible>String.IsEmpty(Skin.String(CustomHome.$PARAM[customhomeid].Path))</visible>
         <label>$LOCALIZE[504]</label>
         <thumb fallback="special://skin/backgrounds/default/default.jpg">$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Background)]</thumb>
-        <onclick>RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
+        <onclick condition="System.HasAddon(script.favourites)">RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
+        <onclick condition="!System.HasAddon(script.favourites)">InstallAddon(script.favourites)</onclick>
       </item>
     </definition>
   </include>
@@ -2116,8 +2361,8 @@
     <definition>
       <item id="$PARAM[itemid]">
         <visible>!Skin.HasSetting($PARAM[area].Hide)</visible>
-        <label>[COLOR=Highlight]$PARAM[itemlabel][/COLOR]</label>
-        <label2>[COLOR=Highlight]$LOCALIZE[305][/COLOR]</label2>
+        <label>$PARAM[itemlabel]</label>
+        <label2>$LOCALIZE[305]</label2>
         <thumb fallback="special://skin/backgrounds/$PARAM[area].jpg">$INFO[Skin.String($PARAM[area].Background)]</thumb>
         <onclick>Skin.ToggleSetting($PARAM[area].Hide)</onclick>
       </item>
@@ -2134,40 +2379,40 @@
   <include name="SetBackgroundImage">
     <param name="operation"/>
     <definition>
-      <onclick condition="Container(9004).HasFocus(0)">Skin.$PARAM[operation](Default.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(1)">Skin.$PARAM[operation](Videos.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(2)">Skin.$PARAM[operation](Movies.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(3)">Skin.$PARAM[operation](TVShows.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(4)">Skin.$PARAM[operation](Music.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(5)">Skin.$PARAM[operation](Pictures.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(6)">Skin.$PARAM[operation](Favourites.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(7)">Skin.$PARAM[operation](Weather.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(8)">Skin.$PARAM[operation](Addons.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(9)">Skin.$PARAM[operation](Settings.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(10)">Skin.$PARAM[operation](DVD.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(11)">Skin.$PARAM[operation](Quit.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(12)">Skin.$PARAM[operation](Pvr.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(14)">Skin.$PARAM[operation](MusicVideos.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(21)">Skin.$PARAM[operation](CustomHome.1.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(22)">Skin.$PARAM[operation](CustomHome.2.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(23)">Skin.$PARAM[operation](CustomHome.3.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(24)">Skin.$PARAM[operation](CustomHome.4.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(25)">Skin.$PARAM[operation](CustomHome.5.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(26)">Skin.$PARAM[operation](CustomHome.6.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(27)">Skin.$PARAM[operation](CustomHome.7.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(28)">Skin.$PARAM[operation](CustomHome.8.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(29)">Skin.$PARAM[operation](CustomHome.9.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(60)">Skin.$PARAM[operation](Plexbmc.0.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(61)">Skin.$PARAM[operation](Plexbmc.1.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(62)">Skin.$PARAM[operation](Plexbmc.2.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(63)">Skin.$PARAM[operation](Plexbmc.3.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(64)">Skin.$PARAM[operation](Plexbmc.4.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(65)">Skin.$PARAM[operation](Plexbmc.5.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(66)">Skin.$PARAM[operation](Plexbmc.6.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(67)">Skin.$PARAM[operation](Plexbmc.7.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(68)">Skin.$PARAM[operation](Plexbmc.8.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(69)">Skin.$PARAM[operation](Plexbmc.9.Background)</onclick>
-      <onclick condition="Container(9004).HasFocus(70)">Skin.$PARAM[operation](Plexbmc.10.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(0)">Skin.$PARAM[operation](Default.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(1)">Skin.$PARAM[operation](Videos.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(2)">Skin.$PARAM[operation](Movies.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(3)">Skin.$PARAM[operation](TVShows.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(4)">Skin.$PARAM[operation](Music.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(5)">Skin.$PARAM[operation](Pictures.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(6)">Skin.$PARAM[operation](Favourites.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(7)">Skin.$PARAM[operation](Weather.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(8)">Skin.$PARAM[operation](Addons.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(9)">Skin.$PARAM[operation](Settings.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(10)">Skin.$PARAM[operation](DVD.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(11)">Skin.$PARAM[operation](Quit.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(12)">Skin.$PARAM[operation](Pvr.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(14)">Skin.$PARAM[operation](MusicVideos.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(21)">Skin.$PARAM[operation](CustomHome.1.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(22)">Skin.$PARAM[operation](CustomHome.2.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(23)">Skin.$PARAM[operation](CustomHome.3.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(24)">Skin.$PARAM[operation](CustomHome.4.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(25)">Skin.$PARAM[operation](CustomHome.5.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(26)">Skin.$PARAM[operation](CustomHome.6.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(27)">Skin.$PARAM[operation](CustomHome.7.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(28)">Skin.$PARAM[operation](CustomHome.8.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(29)">Skin.$PARAM[operation](CustomHome.9.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(60)">Skin.$PARAM[operation](Plexbmc.0.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(61)">Skin.$PARAM[operation](Plexbmc.1.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(62)">Skin.$PARAM[operation](Plexbmc.2.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(63)">Skin.$PARAM[operation](Plexbmc.3.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(64)">Skin.$PARAM[operation](Plexbmc.4.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(65)">Skin.$PARAM[operation](Plexbmc.5.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(66)">Skin.$PARAM[operation](Plexbmc.6.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(67)">Skin.$PARAM[operation](Plexbmc.7.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(68)">Skin.$PARAM[operation](Plexbmc.8.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(69)">Skin.$PARAM[operation](Plexbmc.9.Background)</onclick>
+      <onclick condition="Container(9104).HasFocus(70)">Skin.$PARAM[operation](Plexbmc.10.Background)</onclick>
     </definition>
   </include>
 
@@ -2215,7 +2460,7 @@
         <control type="image">
           <visible>$PARAM[isFocused]</visible>
           <texture background="true" fallback="$PARAM[fallbackicon]">$PARAM[iconimage]</texture>
-          <bordertexture colordiffuse="Highlight" border="8">thumbs/SquareBG_FO3.png</bordertexture>
+          <bordertexture colordiffuse="Highlight" border="8">thumbs/IconBorder_FO.png</bordertexture>
           <bordersize>$PARAM[bordersizeLT],$PARAM[bordersizeLT],$PARAM[bordersizeRB],$PARAM[bordersizeRB]</bordersize>
           <aspectratio>$PARAM[aspect]</aspectratio>
         </control>
@@ -2228,7 +2473,7 @@
         </control>
         <include content="GenericThumbLabelTemplate">
           <param name="isFocused">$PARAM[isFocused]</param>
-          <param name="yoffset">75r</param>
+          <param name="yoffset">65r</param>
           <param name="xoffset">$PARAM[iconoffset]</param>
           <param name="labelwidth">$PARAM[iconwidth]</param>
           <param name="labelvisibility">$PARAM[overlaylabelvisibility]</param>
@@ -2305,6 +2550,26 @@
           <param name="textboxwidth">302</param>
           <param name="bordersize">4</param>
         </include>
+    </definition>
+  </include>
+
+  <include name="GenericActorIconBig">
+    <param name="isFocused">false</param>
+    <definition>
+      <include content="GenericThumbIconTemplate">
+        <param name="isFocused">$PARAM[isFocused]</param>
+        <param name="iconwidth">232.5</param>
+        <param name="iconheight">326</param>
+        <param name="iconoffset">0</param>
+        <param name="iconimage">$INFO[ListItem.Thumb]</param>
+        <param name="shadowoffset">8</param>
+        <param name="bordersizeLT">12</param>
+        <param name="bordersizeRB">20</param>
+        <param name="belowdoublelabelvisibility">true</param>
+        <param name="belowdoublelabel1">$INFO[ListItem.Label]</param>
+        <param name="belowdoublelabel2">$INFO[ListItem.Label2]</param>
+        <param name="aspect">scale</param>
+      </include>
     </definition>
   </include>
 
@@ -2564,6 +2829,8 @@
         <param name="shadowoffset">8</param>
         <param name="bordersizeLT">12</param>
         <param name="bordersizeRB">20</param>
+        <param name="overlaylabelvisibility">String.IsEqual(ListItem.DBType,episode)</param>
+        <param name="overlaylabel">[B]$INFO[ListItem.Season,$LOCALIZE[31954]]$INFO[ListItem.Episode,$LOCALIZE[31973]][/B]</param>
       </include>
     </definition>
   </include>
@@ -2724,7 +2991,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>45</height>
-          <texture>img/WhiteRoundedT.png</texture>
+          <texture border="4">img/WhiteRoundedT.png</texture>
           <bordersize>$PARAM[bordersize]</bordersize>
           <aspectratio>stretch</aspectratio>
         </control>
@@ -2734,7 +3001,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>45</height>
-          <texture>img/WhiteRoundedST2.png</texture>
+          <texture border="4">img/WhiteRoundedST2.png</texture>
           <colordiffuse>Highlight</colordiffuse>
           <bordersize>$PARAM[bordersize]</bordersize>
           <aspectratio>stretch</aspectratio>
@@ -2761,7 +3028,7 @@
           <shadowcolor></shadowcolor>
           <label>$PARAM[labeltext]</label>
           <align>$PARAM[labelalign]</align>
-          <scroll>false</scroll>
+          <scroll>true</scroll>
         </control>
       </control>
     </definition>
@@ -2788,7 +3055,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>74</height>
-          <texture>img/WhiteRoundedT.png</texture>
+          <texture border="4">img/WhiteRoundedT.png</texture>
           <bordersize>4,0,4,0</bordersize>
           <aspectratio>stretch</aspectratio>
         </control>
@@ -2798,7 +3065,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>74</height>
-          <texture>img/WhiteRoundedST2.png</texture>
+          <texture border="4">img/WhiteRoundedST2.png</texture>
           <colordiffuse>Highlight</colordiffuse>
           <bordersize>4,0,4,0</bordersize>
           <aspectratio>stretch</aspectratio>
@@ -2824,7 +3091,6 @@
           <font>shelf_label</font>
           <textcolor>Black</textcolor>
           <shadowcolor></shadowcolor>
-          <autoscroll>false</autoscroll>
           <label>$PARAM[labeltext]</label>
           <align>$PARAM[labelalign]</align>
           <aligny>center</aligny>
@@ -2855,7 +3121,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>74</height>
-          <texture>img/WhiteRoundedT.png</texture>
+          <texture border="4">img/WhiteRoundedT.png</texture>
           <bordersize>$PARAM[bordersize]</bordersize>
           <aspectratio>stretch</aspectratio>
         </control>
@@ -2865,7 +3131,7 @@
           <posy>0</posy>
           <width>$PARAM[labelwidth]</width>
           <height>74</height>
-          <texture>img/WhiteRoundedST2.png</texture>
+          <texture border="4">img/WhiteRoundedST2.png</texture>
           <colordiffuse>Highlight</colordiffuse>
           <bordersize>$PARAM[bordersize]</bordersize>
           <aspectratio>stretch</aspectratio>
@@ -2904,7 +3170,7 @@
           <shadowcolor></shadowcolor>
           <label>$PARAM[labeltext1]</label>
           <align>$PARAM[labelalign]</align>
-          <scroll>false</scroll>
+          <scroll>true</scroll>
         </control>
         <control type="label">
           <visible>$PARAM[isFocused]</visible>
@@ -2918,7 +3184,7 @@
           <shadowcolor></shadowcolor>
           <label>$PARAM[labeltext2]</label>
           <align>$PARAM[labelalign]</align>
-          <scroll>false</scroll>
+          <scroll>true</scroll>
         </control>
       </control>
     </definition>
@@ -2928,6 +3194,16 @@
     <param name="isFocused">false</param>
     <definition>
       <include content="GenericLabelIcon">
+        <param name="isFocused">$PARAM[isFocused]</param>
+      </include>
+    </definition>
+  </include>
+
+  <include name="GenericActor">
+    <param name="isFocused">false</param>
+    <param name="size">Big</param>
+    <definition>
+      <include content="GenericActorIcon$PARAM[size]">
         <param name="isFocused">$PARAM[isFocused]</param>
       </include>
     </definition>
@@ -3049,6 +3325,21 @@
       <focusedlayout condition="Container.Content() | Container.Content(files) | Container.Content(playlists) | Container.Content(Tags) | Container.Content(Directors) | Container.Content(Years) | Container.Content(Countries) | Container.Content(roles) | [Container.Content(genres) + Window.IsActive(MyVideoNav.xml) + String.IsEmpty(skin.string(moviegenreiconsResource.path))] | [Container.Content(genres) + Window.IsActive(MyMusicNav.xml) + String.IsEmpty(skin.string(musicgenreiconsResource.path))] | [Container.Content(studios) + String.IsEmpty(skin.string(studiosResource.path))]" height="90" width="310">
         <include content="GenericLabel">
           <param name="isFocused">true</param>
+        </include>
+      </focusedlayout>
+    </definition>
+  </include>
+
+  <include name="ActorLayout">
+    <param name="viewid"/>
+    <definition>
+      <itemlayout height="410" width="232.5">
+        <include content="GenericActor">
+        </include>
+      </itemlayout>
+      <focusedlayout height="410" width="232.5">
+        <include content="GenericActor">
+          <param name="isFocused">Control.HasFocus(50)</param>
         </include>
       </focusedlayout>
     </definition>
@@ -3217,31 +3508,31 @@
       <posx>390</posx>
       <width>1140</width>
       <control type="label" description="Title shadow">
-        <animation effect="slide" start="0,0" end="0,27" time="0" condition="[[Control.IsVisible(58) + Skin.HasSetting(58_Music_Info)] | [Control.IsVisible(57) + Skin.HasSetting(57_Episodes_Info)] | [Control.IsVisible(59) + Skin.HasSetting(59_Posters_Info)]]">Conditional</animation>
+        <animation effect="slide" start="0,0" end="0,27" time="0" condition="Control.IsVisible(56) + [$EXP[56_FanartViewInfo]]">Conditional</animation>
         <left>4</left>
         <top>4</top>
         <width>1140</width>
         <height>50</height>
         <align>center</align>
         <textcolor>Black</textcolor>
-        <shadowcolor>-</shadowcolor>
+        <shadowcolor></shadowcolor>
         <font>InfoTitle</font>
         <scroll>false</scroll>
         <label>$VAR[panelheading]</label>
       </control>
       <control type="label" description="Title Label">
-        <animation effect="slide" start="0,0" end="0,27" time="0" condition="[[Control.IsVisible(58) + Skin.HasSetting(58_Music_Info)] | [Control.IsVisible(57) + Skin.HasSetting(57_Episodes_Info)] | [Control.IsVisible(59) + Skin.HasSetting(59_Posters_Info)]]">Conditional</animation>
+        <animation effect="slide" start="0,0" end="0,27" time="0" condition="Control.IsVisible(56) + [$EXP[56_FanartViewInfo]]">Conditional</animation>
         <width>1140</width>
         <height>50</height>
         <align>center</align>
         <textcolor>White2</textcolor>
-        <shadowcolor>-</shadowcolor>
+        <shadowcolor></shadowcolor>
         <font>InfoTitle</font>
         <scroll>false</scroll>
         <label>$VAR[panelheading]</label>
       </control>
       <control type="label" description="Details">
-        <visible>Control.IsVisible(53) | [[Control.IsVisible(58) + !Skin.HasSetting(58_Music_Info)] | [Control.IsVisible(57) + !Skin.HasSetting(57_Episodes_Info)] | [Control.IsVisible(59) + !Skin.HasSetting(59_Posters_Info)]]</visible>
+        <visible>Control.IsVisible(53) | [Control.IsVisible(56) + ![$EXP[56_FanartViewInfo]]]</visible>
         <posy>59</posy>
         <width>1140</width>
         <height>30</height>
