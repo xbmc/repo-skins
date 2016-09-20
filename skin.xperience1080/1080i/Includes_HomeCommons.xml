@@ -1,10 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
+    <expression name="HomeHideOnActiveDialog">!Window.IsActive(movieinformation) + !Window.IsActive(favourites) + !Window.IsActive(script-globalsearch-main.xml) + !Window.IsActive(script-globalsearch-infodialog.xml) + !Window.IsActive(script-globalsearch-contextmenu.xml) + ![Window.IsVisible(virtualkeyboard) + !String.IsEmpty(Window.Property(HomeSearch))]</expression>
+
     <include name="FocusSettingsCategory">
         <onload>SetFocus(20,$INFO[Container(20).NumItems])</onload>
         <onload>SetFocus(825)</onload>
         <onload>SetFocus(801)</onload>
         <onload>ClearProperty(CategoryChanged,Home)</onload>
+    </include>
+
+    <include name="HomeWidgetContextMenuOverlay">
+        <control type="image">
+            <description>Context menu overlay</description>
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>$PARAM[width]</width>
+            <height>$PARAM[height]</height>
+            <texture border="1">windows/common/darkgrey.png</texture>
+            <animation effect="fade" time="300" start="0" end="95" tween="sine" easing="out">Visible</animation>
+            <animation effect="fade" time="300" start="95" end="0" tween="sine" easing="in">Hidden</animation>
+            <visible>Control.HasFocus($PARAM[container]) + Window.IsActive(contextmenu)</visible>
+        </control>
+    </include>
+
+    <include name="HomeWidgetActions">
+        <!-- click triggers select -->
+        <onclick>SetProperty(ContextMenuOpen,true)</onclick>
+        <onclick>SetFocus($PARAM[container])</onclick>
+        <onclick>Select</onclick>
+        <onclick>ClearProperty(ContextMenuOpen)</onclick>
+        <onclick>SetFocus($PARAM[button])</onclick>
+        <!-- info triggers context menu -->
+        <oninfo>SetProperty(ContextMenuOpen,true)</oninfo>
+        <oninfo>SetFocus($PARAM[container])</oninfo>
+        <oninfo>ContextMenu</oninfo>
+        <oninfo>ClearProperty(ContextMenuOpen)</oninfo>
+        <oninfo>SetFocus($PARAM[button])</oninfo>
     </include>
 
     <!--Home shutdown-favs Buttons-->
@@ -91,14 +122,11 @@
                 <onright>21</onright>
                 <texturefocus>buttons/favourites_fo.png</texturefocus>
                 <texturenofocus>buttons/favourites_nofo.png</texturenofocus>
-                <onclick>CancelAlarm(HomeTileMove,true)</onclick>
-                <onclick>CancelAlarm(HomeTileMoveTwo,true)</onclick>
-                <onclick>CancelAlarm(HomeTileMoveThree,true)</onclick>
                 <onclick>ActivateWindow(Favourites)</onclick>
                 <include>Animation_FavButton</include>
                 <include>homebuttonsanim3</include>
                 <visible>!Skin.HasSetting(KioskMode)</visible>
-                <visible allowhiddenfocus="true">!Window.IsVisible(favourites) + !Window.IsVisible(script-globalsearch-main.xml) + !Window.IsVisible(script-globalsearch-infodialog.xml) + !Window.IsVisible(script-globalsearch-contextmenu.xml) + !Window.IsVisible(virtualkeyboard) + String.IsEmpty(Window.Property(HomeSearch)) + !Window.IsVisible(playercontrols)</visible>
+                <visible allowhiddenfocus="true">!Window.IsVisible(favourites) + !Window.IsVisible(script-globalsearch-main.xml) + !Window.IsVisible(script-globalsearch-infodialog.xml) + !Window.IsVisible(script-globalsearch-contextmenu.xml) + !Window.IsVisible(virtualkeyboard) + String.IsEmpty(Window.Property(HomeSearch)) + !Window.IsVisible(playercontrols) + !Window.IsActive(movieinformation)</visible>
             </control>
             <control type="label">
                 <description>Favourites Label</description>
@@ -113,7 +141,7 @@
                 <include>Animation_FavButton</include>
                 <include>homebuttonsanim4</include>
                 <visible>!Skin.HasSetting(KioskMode)</visible>
-                <visible>!Window.IsVisible(favourites) + !Window.IsVisible(script-globalsearch-main.xml) + !Window.IsVisible(script-globalsearch-infodialog.xml) + !Window.IsVisible(script-globalsearch-contextmenu.xml) + !Window.IsVisible(virtualkeyboard) + String.IsEmpty(Window.Property(HomeSearch)) + !Window.IsVisible(playercontrols)</visible>
+                <visible>!Window.IsVisible(favourites) + !Window.IsVisible(script-globalsearch-main.xml) + !Window.IsVisible(script-globalsearch-infodialog.xml) + !Window.IsVisible(script-globalsearch-contextmenu.xml) + !Window.IsVisible(virtualkeyboard) + String.IsEmpty(Window.Property(HomeSearch)) + !Window.IsVisible(playercontrols) + !Window.IsActive(movieinformation)</visible>
             </control>
         </control>
     </include>
@@ -163,13 +191,9 @@
         <value>$LOCALIZE[31524]</value>
     </variable>
 
-    <variable name="CurrentAiringPVR">
-        <value condition="ControlGroup(900).HasFocus() | ControlGroup(500).HasFocus() | ControlGroup(200).HasFocus() | ControlGroup(100).HasFocus() | ControlGroup(80).HasFocus()">pvr://channels/tv/All&amp;channels/</value>
-    </variable>
-
     <include name="HomeProfileInfo">
         <control type="group">
-            <visible>!Window.IsActive(favourites) + !Window.IsActive(script-globalsearch-main.xml) + !Window.IsActive(script-globalsearch-infodialog.xml) + !Window.IsActive(script-globalsearch-contextmenu.xml) + ![Window.IsVisible(virtualkeyboard) + !String.IsEmpty(Window.Property(HomeSearch))]</visible>
+            <visible>$EXP[HomeHideOnActiveDialog]</visible>
             <posx>75</posx>
             <posy>24</posy>
             <include>BannerListInfoAnimation</include>
@@ -342,7 +366,7 @@
             <itemgap>45</itemgap>
             <align>center</align>
             <usecontrolcoords>true</usecontrolcoords>
-            <visible>!Window.IsActive(favourites) + !Window.IsActive(script-globalsearch-main.xml) + !Window.IsActive(script-globalsearch-infodialog.xml) + !Window.IsActive(script-globalsearch-contextmenu.xml) + ![Window.IsVisible(virtualkeyboard) + !String.IsEmpty(Window.Property(HomeSearch))]</visible>
+            <visible>$EXP[HomeHideOnActiveDialog]</visible>
             <control type="image">
                 <description>Search</description>
                 <posx>0</posx>
