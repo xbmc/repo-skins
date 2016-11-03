@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
+	<variable name="RaspberryPiLabel">
+		<value condition="System.HasAddon(service.openelec.settings)">$LOCALIZE[31129]</value>
+		<value condition="System.HasAddon(service.libreelec.settings)">$LOCALIZE[31190]</value>
+	</variable>
+	
 	<include name="KodiLogo">
 		<control type="button" id="555">
 			<left>9</left>
@@ -240,7 +245,9 @@
 			<icon>homecategories/$INFO[System.Language]/weather-text-nofocus.png</icon>
 			<include condition="Skin.String(CustomWeatherBGType,2) | Skin.String(CustomWeatherBGType,3)">HomeWeatherCustomBGPath</include>
 			<include condition="Skin.String(CustomWeatherBGType,4)">HomeWeatherFanartBGPath</include>
-			<onclick>ActivateWindow(Weather)</onclick>	
+			<onclick condition="!IsEmpty(Weather.Plugin)">ActivateWindow(Weather)</onclick>
+			<onclick condition="IsEmpty(Weather.Plugin)">Notification($LOCALIZE[8],$LOCALIZE[31309],9000)</onclick>
+			<onclick condition="IsEmpty(Weather.Plugin)">ReplaceWindow(WeatherSettings)</onclick>
 		</item>
 	</include>
 
@@ -3950,13 +3957,14 @@
 						<description>Settings</description>
 						<label>$LOCALIZE[5]</label>
 						<onclick>ActivateWindow(AppearanceSettings)</onclick>
-						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + ![System.HasAddon(service.openelec.settings) + System.Platform.Linux.RaspberryPi]</visible>
+						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + ![[System.HasAddon(service.openelec.settings) | System.HasAddon(service.libreelec.settings)] + System.Platform.Linux.RaspberryPi]</visible>
 					</item>
 					<item id="2">
 						<description>OpenELEC Settings</description>
-						<label>$LOCALIZE[31129]</label>
-						<onclick>RunAddon(service.openelec.settings)</onclick>
-						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + [System.HasAddon(service.openelec.settings) + System.Platform.Linux.RaspberryPi]</visible>
+						<label>$VAR[RaspberryPiLabel]</label>
+						<onclick condition="System.HasAddon(service.openelec.settings)">RunAddon(service.openelec.settings)</onclick>
+						<onclick condition="System.HasAddon(service.libreelec.settings)">RunAddon(service.libreelec.settings)</onclick>
+						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + [[System.HasAddon(service.openelec.settings) | System.HasAddon(service.libreelec.settings)] + System.Platform.Linux.RaspberryPi]</visible>
 					</item>
 					<item id="2">
 						<description>Custom Button</description>
@@ -5212,7 +5220,7 @@
 							<font>PanelInfoHeadFont</font>
 							<textcolor>WhiteColor</textcolor>
 							<shadowcolor>ShadowColor</shadowcolor>
-							<label>$INFO[MusicPlayer.Title]</label>
+							<label>$VAR[MusicPlayingTitle]</label>
 							<scroll>true</scroll>
 						</control>
 						<control type="label">

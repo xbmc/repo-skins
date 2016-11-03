@@ -27,6 +27,29 @@
 			<include>ScreenSize</include>
 			<visible>[!Skin.HasSetting(UseFanartForMusicPlayingBG) | Skin.HasSetting(UseVisualizationAndFanartForMusicPlayingBG)] + [StringCompare(Visualisation.Name,spectrum) | StringCompare(Visualisation.Name,waveform)]</visible>
 		</control>
+		
+		<control type="group">
+			<visible>[Player.Paused | [Player.Caching + IntegerGreaterThan(Player.CacheLevel,0)]] + Skin.HasSetting(ShowFullscreenMusicPaused)</visible>
+			<include>MediaViewOpenCloseAnim</include>
+			
+			<control type="image">
+				<include>ScreenSize</include>
+				<texture border="0,0,50,50">black.png</texture>
+				<animation effect="fade" condition="true" end="55">Conditional</animation>
+			</control>
+			
+			<control type="label">
+				<top>250</top>
+				<width>1280</width>
+				<font>PausedFont</font>
+				<label>[B]$VAR[PausedLabels][/B]</label>
+				<textcolor>white</textcolor>
+				<align>center</align>
+				<animation effect="fade" condition="true" end="50">Conditional</animation>
+				<include>MediaInfoOpenCloseAnim</include>
+				<visible>![Window.IsActive(VisualisationPresetList) | Window.IsActive(AddonSettings) | Window.IsActive(SelectDialog) | Window.IsActive(script-cu-lrclyrics-main.xml)]</visible>
+			</control>
+		</control>
 
 		<control type="group">
 			<description>cdart now Playing</description>
@@ -66,7 +89,7 @@
 					<font>FSInfoTitleFont</font>
 					<textcolor>MediaInfoTitleColor</textcolor>
 					<shadowcolor>ShadowColor</shadowcolor>
-					<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+					<label>[UPPERCASE]$VAR[MusicPlayingTitle][/UPPERCASE]</label>
 					<aligny>center</aligny>
 					<include>CdArtLabelOpenCloseAnim</include>
 				</control>
@@ -212,7 +235,7 @@
 						<font>FSInfoTitleFont</font>
 						<textcolor>MediaInfoTitleColor</textcolor>
 						<shadowcolor>ShadowColor</shadowcolor>
-						<label>[UPPERCASE]$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Year, (,)][/UPPERCASE]</label>
+						<label>[UPPERCASE]$VAR[MusicPlayingTitle]$INFO[MusicPlayer.Year, (,)][/UPPERCASE]</label>
 						<aligny>top</aligny>
 						<scroll>true</scroll>
 					</control>
@@ -274,6 +297,7 @@
 					<width>400</width>
 					<align>right</align>
 					<orientation>horizontal</orientation>
+					<visible>!IsEmpty(MusicPlayer.offset(1).Title)</visible>
 					<control type="label">
 						<width min="10" max="110">auto</width>
 						<height>26</height>
@@ -308,6 +332,7 @@
 						<shadowcolor>ShadowColor</shadowcolor>							
 						<label>$LOCALIZE[557]:</label>
 						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.Artist)</visible>
 					</control>
 					<control type="label">
 						<width min="10" max="320">auto</width>
@@ -315,8 +340,9 @@
 						<font>MediaInfoFont</font>
 						<textcolor>MediaInfoItemColor2</textcolor>
 						<shadowcolor>ShadowColor</shadowcolor>
-						<label fallback="31001">$INFO[MusicPlayer.Artist]</label>
+						<label>$INFO[MusicPlayer.Artist]</label>
 						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.Artist)</visible>
 					</control>
 					<control type="label">
 						<width min="10" max="110">auto</width>
@@ -326,6 +352,7 @@
 						<shadowcolor>ShadowColor</shadowcolor>
 						<label>     $LOCALIZE[558]:</label>
 						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.Album)</visible>
 					</control>
 					<control type="label">
 						<width min="10" max="320">auto</width>
@@ -333,8 +360,29 @@
 						<font>MediaInfoFont</font>
 						<textcolor>MediaInfoItemColor2</textcolor>
 						<shadowcolor>ShadowColor</shadowcolor>
-						<label fallback="31001">$INFO[MusicPlayer.Album]</label>
+						<label>$INFO[MusicPlayer.Album]</label>
 						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.Album)</visible>
+					</control>
+					<control type="label">
+						<width min="10" max="110">auto</width>
+						<height>40</height>
+						<font>MediaInfoFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>
+						<label>     $LOCALIZE[19141]:</label>
+						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.ChannelGroup)</visible>
+					</control>
+					<control type="label">
+						<width min="10" max="320">auto</width>
+						<height>40</height>
+						<font>MediaInfoFont</font>
+						<textcolor>MediaInfoItemColor2</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>
+						<label>$INFO[MusicPlayer.ChannelGroup]</label>
+						<aligny>center</aligny>
+						<visible>!IsEmpty(MusicPlayer.ChannelGroup)</visible>
 					</control>
 				</control>
 
@@ -464,7 +512,7 @@
 			</control>
 			
 			<control type="group">
-				<visible>Player.ShowCodec + MusicPlayer.Content(LiveTV) + system.getbool(pvrplayback.signalquality)
+				<visible>Player.ShowCodec + Pvr.IsPlayingRadio + system.getbool(pvrplayback.signalquality)
 				+ ![Window.IsVisible(VisualisationSettings) | Window.IsVisible(VisualisationPresetList) | Window.IsVisible(PVROSDChannels) | Window.IsVisible(PVROSDGuide)]</visible>
 				<top>110</top>
 				<left>28</left>
