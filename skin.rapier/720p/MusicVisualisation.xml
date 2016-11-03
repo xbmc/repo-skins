@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
-	<defaultcontrol>-</defaultcontrol>
 	<onload condition="System.HasAddon(script.artistslideshow) + [Skin.HasSetting(UseFanartForMusicPlayingBG) | Skin.HasSetting(UseVisualizationAndFanartForMusicPlayingBG)] + Skin.HasSetting(EnableArtistFanartSlideshow)">RunScript(script.artistslideshow)</onload>
 	
 	<controls>
@@ -31,6 +30,30 @@
 			<depth>DepthContent</depth>
 			<include>ScreenSize</include>
 			<visible>[!Skin.HasSetting(UseFanartForMusicPlayingBG) | Skin.HasSetting(UseVisualizationAndFanartForMusicPlayingBG)] + [String.IsEqual(Visualisation.Name,spectrum) | String.IsEqual(Visualisation.Name,waveform)]</visible>
+		</control>
+		
+		<control type="group">
+			<depth>DepthOSD-</depth>
+			<visible>[Player.Paused | [Player.Caching + Integer.IsGreater(Player.CacheLevel,0)]] + Skin.HasSetting(ShowFullscreenMusicPaused)</visible>
+			<include>MediaViewOpenCloseAnim</include>
+			
+			<control type="image">
+				<include>ScreenSize</include>
+				<texture border="0,0,50,50">black.png</texture>
+				<animation effect="fade" condition="true" end="55">Conditional</animation>
+			</control>
+			
+			<control type="label">
+				<top>250</top>
+				<width>1280</width>
+				<font>PausedFont</font>
+				<label>[B]$VAR[PausedLabels][/B]</label>
+				<textcolor>white</textcolor>
+				<align>center</align>
+				<animation effect="fade" condition="true" end="50">Conditional</animation>
+				<include>MediaInfoOpenCloseAnim</include>
+				<visible>![Window.IsActive(VisualisationPresetList) | Window.IsActive(AddonSettings) | Window.IsActive(SelectDialog) | Window.IsActive(script-cu-lrclyrics-main.xml)]</visible>
+			</control>
 		</control>
 		
 		<control type="group">
@@ -74,7 +97,7 @@
 						<font>FSInfoTitleFont</font>
 						<textcolor>MediaInfoTitleColor</textcolor>
 						<shadowcolor>ShadowColor</shadowcolor>
-						<label>[UPPERCASE]$INFO[MusicPlayer.Title][/UPPERCASE]</label>
+						<label>[UPPERCASE]$VAR[MusicPlayingTitle][/UPPERCASE]</label>
 						<aligny>center</aligny>
 						<include>CdArtLabelOpenCloseAnim</include>
 					</control>
@@ -219,7 +242,7 @@
 							<font>FSInfoTitleFont</font>
 							<textcolor>MediaInfoTitleColor</textcolor>
 							<shadowcolor>ShadowColor</shadowcolor>
-							<label>[UPPERCASE]$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Year, (,)][/UPPERCASE]</label>
+							<label>[UPPERCASE]$VAR[MusicPlayingTitle]$INFO[MusicPlayer.Year, (,)][/UPPERCASE]</label>
 							<aligny>top</aligny>
 							<scroll>true</scroll>
 						</control>
@@ -281,6 +304,7 @@
 						<width>400</width>
 						<align>right</align>
 						<orientation>horizontal</orientation>
+						<visible>!String.IsEmpty(MusicPlayer.offset(1).Title)</visible>
 						<control type="label">
 							<width min="10" max="110">auto</width>
 							<height>26</height>
@@ -315,6 +339,7 @@
 							<shadowcolor>ShadowColor</shadowcolor>							
 							<label>$LOCALIZE[557]:</label>
 							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.Artist)</visible>
 						</control>
 						<control type="label">
 							<width min="10" max="320">auto</width>
@@ -322,8 +347,9 @@
 							<font>MediaInfoFont</font>
 							<textcolor>MediaInfoItemColor2</textcolor>
 							<shadowcolor>ShadowColor</shadowcolor>
-							<label fallback="31001">$INFO[MusicPlayer.Artist]</label>
+							<label>$INFO[MusicPlayer.Artist]</label>
 							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.Artist)</visible>
 						</control>
 						<control type="label">
 							<width min="10" max="110">auto</width>
@@ -333,6 +359,7 @@
 							<shadowcolor>ShadowColor</shadowcolor>
 							<label>     $LOCALIZE[558]:</label>
 							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.Album)</visible>
 						</control>
 						<control type="label">
 							<width min="10" max="320">auto</width>
@@ -340,8 +367,29 @@
 							<font>MediaInfoFont</font>
 							<textcolor>MediaInfoItemColor2</textcolor>
 							<shadowcolor>ShadowColor</shadowcolor>
-							<label fallback="31001">$INFO[MusicPlayer.Album]</label>
+							<label>$INFO[MusicPlayer.Album]</label>
 							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.Album)</visible>
+						</control>
+						<control type="label">
+							<width min="10" max="110">auto</width>
+							<height>40</height>
+							<font>MediaInfoFont</font>
+							<textcolor>MediaInfoItemColor</textcolor>
+							<shadowcolor>ShadowColor</shadowcolor>
+							<label>     $LOCALIZE[19141]:</label>
+							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.ChannelGroup)</visible>
+						</control>
+						<control type="label">
+							<width min="10" max="320">auto</width>
+							<height>40</height>
+							<font>MediaInfoFont</font>
+							<textcolor>MediaInfoItemColor2</textcolor>
+							<shadowcolor>ShadowColor</shadowcolor>
+							<label>$INFO[MusicPlayer.ChannelGroup]</label>
+							<aligny>center</aligny>
+							<visible>!String.IsEmpty(MusicPlayer.ChannelGroup)</visible>
 						</control>
 					</control>
 
@@ -419,6 +467,68 @@
 						<bordertexture border="8">panels/panel-content-border.png</bordertexture>
 						<texture diffuse="covers/player-media-cover-diffuse.png">$INFO[MusicPlayer.Cover]</texture>
 						<aspectratio>stretch</aspectratio>
+					</control>
+				</control>
+				
+				<control type="grouplist">
+					<description>Live Radio Data Labels</description>
+					<top>277</top>
+					<left>18</left>
+					<width>1192</width>
+					<orientation>horizontal</orientation>
+					<visible>Pvr.IsPlayingRadio</visible>
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19210]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamClient][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamClient)</visible>
+					</control>
+					<include condition="!String.IsEmpty(Pvr.ActStreamClient)">FullScreenInfoDot</include>
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19006]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamDevice][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamDevice)</visible>
+					</control>
+					<include condition="!String.IsEmpty(Pvr.ActStreamDevice)">FullScreenInfoDot</include>					
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19007]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamStatus][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamStatus)</visible>
+					</control>
+					<include condition="!String.IsEmpty(Pvr.ActStreamStatus)">FullScreenInfoDot</include>
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19008]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamSignal][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamSignal)</visible>
+					</control>
+					<include condition="!String.IsEmpty(Pvr.ActStreamSignal)">FullScreenInfoDot</include>					
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19009]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamSnr][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamSnr)</visible>
+					</control>
+					<include condition="!String.IsEmpty(Pvr.ActStreamSnr)">FullScreenInfoDot</include>
+					<control type="label">
+						<width min="10" max="300">auto</width>
+						<font>SubMenuArrowFont</font>
+						<textcolor>MediaInfoItemColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>							
+						<label>$LOCALIZE[19015]: [COLOR=MediaInfoItemColor2]$INFO[Pvr.ActStreamEncryptionName][/COLOR]</label>
+						<visible>!String.IsEmpty(Pvr.ActStreamEncryptionName)</visible>
 					</control>
 				</control>
 			</control>

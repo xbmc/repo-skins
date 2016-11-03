@@ -16,6 +16,11 @@
 		<value condition="!Window.IsVisible(1111)">videodb://musicvideos/titles/</value>
 	</variable>
 	
+	<variable name="RaspberryPiLabel">
+		<value condition="System.HasAddon(service.openelec.settings)">$LOCALIZE[31129]</value>
+		<value condition="System.HasAddon(service.libreelec.settings)">$LOCALIZE[31190]</value>
+	</variable>
+	
 	<include name="KodiLogo">			
 		<control type="button" id="555">
 			<left>9</left>
@@ -268,7 +273,9 @@
 			<include condition="Skin.String(CustomWeatherBGType,4)">HomeWeatherFanartBGPath</include>
 			<include condition="Skin.String(CustomWeatherBGType,5) + Skin.HasSetting(CustomWeatherBGPath.multi)">HomeWeatherFanartAddonMultiBGPath</include>
 			<include condition="Skin.String(CustomWeatherBGType,5) + !Skin.HasSetting(CustomWeatherBGPath.multi)">HomeWeatherFanartAddonBGPath</include>
-			<onclick>ActivateWindow(Weather)</onclick>	
+			<onclick condition="!String.IsEmpty(Weather.Plugin)">ActivateWindow(Weather)</onclick>
+			<onclick condition="String.IsEmpty(Weather.Plugin)">Notification($LOCALIZE[8],$LOCALIZE[31309],9000)</onclick>
+			<onclick condition="String.IsEmpty(Weather.Plugin)">ReplaceWindow(servicesettings,weather)</onclick>
 		</item>
 	</include>
 	
@@ -1064,7 +1071,7 @@
 						<include condition="Skin.String(CustomPVRBGType,4)">HomePVRFanartBGPath</include>
 						<include condition="!Skin.HasSetting(RedirectPVRCategoryEPG)">RedirectPVRCategoryChannels</include>
 						<include condition="Skin.HasSetting(RedirectPVRCategoryEPG)">RedirectPVRCategoryEPG</include>
-						<visible>!Skin.HasSetting(HidePVRCategory) + Pvr.HasTVChannels</visible>
+						<visible>!Skin.HasSetting(HidePVRCategory) + System.HasPVRAddon</visible>
 					</item>
 					<item id="52">
 						<description>PVR Radio Category</description>
@@ -1074,7 +1081,7 @@
 						<include condition="Skin.String(CustomPVRRadioBGType,4)">HomePVRFanartBGPath</include>
 						<include condition="!Skin.HasSetting(RedirectPVRRadioCategoryEPG)">RedirectPVRRadioCategoryChannels</include>
 						<include condition="Skin.HasSetting(RedirectPVRRadioCategoryEPG)">RedirectPVRRadioCategoryEPG</include>
-						<visible>!Skin.HasSetting(HidePVRRadioCategory) + Pvr.HasRadioChannels</visible>
+						<visible>!Skin.HasSetting(HidePVRRadioCategory) + System.HasPVRAddon</visible>
 					</item>
 					<item id="2">
 						<description>Videos Category</description>
@@ -2349,11 +2356,23 @@
 						<visible>Skin.HasSetting(EditAddonsSubMenuBtn4) + !String.IsEmpty(Skin.String(AddonsSubMenuBtn4Label))</visible>
 					</item>
 					<item id="5">
+						<description>Add-on Browser</description>
+						<label>$LOCALIZE[10040]</label>
+						<onclick>ActivateWindow(addonbrowser,root)</onclick>
+						<visible>!Skin.HasSetting(EditAddonsSubMenuBtn5)</visible>
+					</item>
+					<item id="5">
 						<description>Custom Button</description>
 						<label>$INFO[Skin.String(AddonsSubMenuBtn5Label)]</label>
 						<onclick condition="![Skin.String(AddonsSubMenuBtn5Type,Favourite) | Skin.String(AddonsSubMenuBtn5Type,)]">$INFO[Skin.String(AddonsSubMenuBtn5Param)]</onclick>
 						<onclick condition="Skin.String(AddonsSubMenuBtn5Type,Favourite) | Skin.String(AddonsSubMenuBtn5Type,)">$INFO[Skin.String(AddonsSubMenuFavourite.5.Path)]</onclick>
 						<visible>Skin.HasSetting(EditAddonsSubMenuBtn5) + !String.IsEmpty(Skin.String(AddonsSubMenuBtn5Label))</visible>
+					</item>
+					<item id="6">
+						<description>Search Add-on</description>
+						<label>$LOCALIZE[31909]</label>
+						<onclick>ActivateWindow(addonbrowser,addons://search/,return)</onclick>
+						<visible>!Skin.HasSetting(EditAddonsSubMenuBtn6)</visible>
 					</item>
 					<item id="6">
 						<description>Custom Button</description>
@@ -2752,13 +2771,14 @@
 						<description>Settings</description>
 						<label>$LOCALIZE[5]</label>
 						<onclick>ActivateWindow(InterfaceSettings)</onclick>
-						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + ![System.HasAddon(service.openelec.settings) + System.Platform.Linux.RaspberryPi]</visible>
+						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + ![[System.HasAddon(service.openelec.settings) | System.HasAddon(service.libreelec.settings)] + System.Platform.Linux.RaspberryPi]</visible>
 					</item>
 					<item id="2">
-						<description>OpenELEC Settings</description>
-						<label>$LOCALIZE[31129]</label>
-						<onclick>RunAddon(service.openelec.settings)</onclick>
-						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + [System.HasAddon(service.openelec.settings) + System.Platform.Linux.RaspberryPi]</visible>
+						<description>OpenELEC / LibreELEC Settings</description>
+						<label>$VAR[RaspberryPiLabel]</label>
+						<onclick condition="System.HasAddon(service.openelec.settings)">RunAddon(service.openelec.settings)</onclick>
+						<onclick condition="System.HasAddon(service.libreelec.settings)">RunAddon(service.libreelec.settings)</onclick>
+						<visible>![[Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn2)] | [!Skin.HasSetting(HidePowerCategory) + Skin.HasSetting(EditSystemSubMenuBtn1)]] + [[System.HasAddon(service.openelec.settings) | System.HasAddon(service.libreelec.settings)] + System.Platform.Linux.RaspberryPi]</visible>
 					</item>
 					<item id="2">
 						<description>Custom Button</description>
@@ -3618,7 +3638,7 @@
 							<font>PanelInfoHeadFont</font>
 							<textcolor>WhiteColor</textcolor>
 							<shadowcolor>ShadowColor</shadowcolor>
-							<label>$INFO[MusicPlayer.Title]</label>
+							<label>$VAR[MusicPlayingTitle]</label>
 							<scroll>true</scroll>
 						</control>
 						<control type="label">
@@ -3672,7 +3692,6 @@
 					</control>
 					
 					<control type="list" id="6930">
-						<viewtype label="">list</viewtype>
 						<top>11</top>
 						<width>480</width>
 						<height>96</height>
@@ -4269,7 +4288,6 @@
 			</control>
 			
 			<control type="list" id="6926">
-				<viewtype label="">list</viewtype>
 				<top>33</top>
 				<width>383</width>
 				<height>120</height>
@@ -4698,7 +4716,6 @@
 				</control>
 
 				<control type="list" id="6888">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>383</width>
 					<height>96</height>
@@ -4716,7 +4733,6 @@
 				</control>
 
 				<control type="list" id="6888">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>383</width>
 					<height>192</height>
@@ -4837,7 +4853,6 @@
 				</control>
 
 				<control type="list" id="6889">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>287</width>
 					<height>96</height>
@@ -4855,7 +4870,6 @@
 				</control>
 
 				<control type="list" id="6889">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>287</width>
 					<height>192</height>
@@ -4977,7 +4991,6 @@
 				</control>
 
 				<control type="list" id="6890">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>96</height>
@@ -4995,7 +5008,6 @@
 				</control>
 
 				<control type="list" id="6890">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>192</height>
@@ -5106,7 +5118,6 @@
 				</control>
 
 				<control type="list" id="6883">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>96</height>
@@ -5123,7 +5134,6 @@
 				</control>
 
 				<control type="list" id="6883">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>192</height>
@@ -5479,7 +5489,6 @@
 				</control>
 
 				<control type="list" id="6891">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>383</width>
 					<height>120</height>
@@ -5576,7 +5585,6 @@
 				</control>
 
 				<control type="list" id="6892">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>287</width>
 					<height>120</height>
@@ -5672,7 +5680,6 @@
 				</control>
 
 				<control type="list" id="6893">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>120</height>
@@ -5758,7 +5765,6 @@
 				</control>
 
 				<control type="list" id="6882">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>329</width>
 					<height>120</height>
@@ -5976,7 +5982,6 @@
 				</control>
 				
 				<control type="list" id="6928">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>383</width>
 					<height>120</height>
@@ -6069,7 +6074,6 @@
 				</control>
 				
 				<control type="list" id="6929">
-					<viewtype label="">list</viewtype>
 					<top>33</top>
 					<width>383</width>
 					<height>120</height>
@@ -6161,7 +6165,6 @@
 				</control>
 
 				<control type="list" id="6887">
-					<viewtype label="">list</viewtype>
 					<left>10</left>
 					<top>38</top>
 					<width>600</width>
@@ -6308,7 +6311,6 @@
 				</control>
 
 				<control type="list" id="6886">
-					<viewtype label="">list</viewtype>
 					<left>10</left>
 					<top>38</top>
 					<width>600</width>
@@ -6463,7 +6465,6 @@
 				</control>
 
 				<control type="list" id="6876">
-					<viewtype label="">list</viewtype>
 					<left>10</left>
 					<top>38</top>
 					<width>600</width>
@@ -6610,7 +6611,6 @@
 				</control>
 
 				<control type="list" id="6875">
-					<viewtype label="">list</viewtype>
 					<left>10</left>
 					<top>38</top>
 					<width>600</width>
@@ -6785,7 +6785,6 @@
 					</control>
 
 					<control type="list" id="6880">
-						<viewtype label="">list</viewtype>
 						<top>33</top>
 						<width>383</width>
 						<height>96</height>
@@ -6833,7 +6832,6 @@
 					</control>
 
 					<control type="list" id="6880">
-						<viewtype label="">list</viewtype>
 						<top>33</top>
 						<width>383</width>
 						<height>192</height>
@@ -6971,7 +6969,6 @@
 					</control>
 
 					<control type="list" id="6881">
-						<viewtype label="">list</viewtype>
 						<top>33</top>
 						<width>383</width>
 						<height>120</height>
@@ -7067,7 +7064,6 @@
 				</control>
 
 				<control type="list" id="6878">
-					<viewtype label="">list</viewtype>
 					<left>10</left>
 					<top>38</top>
 					<width>600</width>
