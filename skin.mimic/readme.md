@@ -23,25 +23,35 @@ More screenshots available here: http://imgur.com/a/LLSMM
 
 
 ***
-**4.0.5**
-- Add player process info dialog.
-- Add tempo buttons to player controls.
-
-***
-**4.0.4**
-- Redesigned addon info dialog.
-- Added skin screenshots.
-
-***
-**4.0.3**
-- Added subtitle menu to Video OSD (adapted from Estuary).
+**5.0.0**
+- Simplified home window, removed several options.
+- Removed Live DVD background option (wasn't working).
+- Added mouse support for submenus.
+- Redesigned Addon, Extended Info, and Global Search info dialogs.
+- Added more home background options via script.skin.helper.service.
+- Removed dependency on script.grab.fanart.
+- Implemented a context menu for the menu customizer.
+- Removed ShowCase and Poster views.
+- Redesigned InfoWall view.
+- Added LowPanel view for Artists and Albums.
+- Added LowList and InfoWall views for Sets.
+- Added media flags for episode List view.
+- Redesigned volume bar and extended progress bar dialogs (adapted from Estuary).
+- Added button to side menu to edit library nodes.
+- Removed light theme.
+- Added option to customize disabled color.
+- Added color theme management.
+- Added default widgets for new installs.
+- Added Shift view for Files.
+- Added 2 column option for list view.
+- Overhaul skin fonts.
+- Rounded skin textures (based on Arctic Zephyr) and added square theme.
+- Redesigned main menu.
 
 ***
 **4.0.2**
 - Added a quick launch menu to side menu.
 - Redesigned player controls and video/music OSD buttons.
-- Removed Live DVD background options (not working).
-- Redesigned info dialogs.
 
 ***
 **4.0.1**
