@@ -15,15 +15,12 @@ And finally, all of the users, translators, testers, and fans of Mimic.
 
 Support Kodi by donating @ http://kodi.tv/contribute/donate/
 
-![Home Default] (https://github.com/braz96/skin.mimic/raw/master/resources/screenshot-01.jpg)
+![Home Default] (http://i.imgur.com/5439sGH.jpg)
 
-![Shift View] (https://github.com/braz96/skin.mimic/raw/master/resources/screenshot-06.jpg)
+![Home Vertical] (http://i.imgur.com/LBLDthv.jpg)
 
+More screenshots available here: http://imgur.com/a/LLSMM
 
-
-***
-**5.0.1**
-- Reconfigured backgrounds options.
 
 ***
 **5.0.0**
