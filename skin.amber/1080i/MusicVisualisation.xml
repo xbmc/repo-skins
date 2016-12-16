@@ -5,8 +5,6 @@
   <defaultcontrol></defaultcontrol>
   <controls>
     <control type="visualisation" description="Visualisation">
-      <posx>0</posx>
-      <posy>0</posy>
       <width>1920</width>
       <height>1080</height>
       <visible>Player.HasAudio</visible>
@@ -29,7 +27,7 @@
       </animation>
     </control>
     <control type="image" description="Fanart only">
-      <visible>Skin.HasSetting(MusicPlayingFanart) + String.IsEmpty(Window(Visualisation).Property(ArtistSlideshow))</visible>
+      <visible>Skin.HasSetting(MusicPlayingFanart) + [!Skin.HasSetting(Use_Artist_Slideshow) | String.IsEmpty(Window(Visualisation).Property(ArtistSlideshow))]</visible>
       <include>Dimensions_Fullscreen</include>
       <fadetime>400</fadetime>
       <aspectratio>scale</aspectratio>
@@ -44,226 +42,240 @@
       </animation>
     </control>
     <control type="image">
-      <posx>0</posx>
-      <posy>110</posy>
+      <posy>-110</posy>
       <width>1920</width>
-      <height>735</height>
+      <height>1200</height>
       <texture border="0,30,0,30">OSD/FS_OSDBackground.png</texture>
       <colordiffuse>ccE2E2E2</colordiffuse>
       <visible>Window.IsVisible(script-cu-lrclyrics-main.xml)</visible>
     </control>
     <control type="group">
-      <include>OSDFade</include>
-      <animation effect="fade" time="200">VisibleChange</animation>
-      <control type="image" description="Background">
-        <posx>0</posx>
-        <posy>-30</posy>
-        <width>1920</width>
-        <height>188</height>
-        <texture flipy="true" border="0,30,0,30">OSD/FS_OSDBackground.png</texture>
-      </control>
-      <control type="label" description="Clock">
-        <left>1700</left>
-        <top>30</top>
-        <width>190</width>
-        <height>80</height>
-        <align>right</align>
-        <aligny>center</aligny>
-        <font>MainMenu</font>
-        <shadowcolor>Black</shadowcolor>
-        <label>$INFO[System.Time]</label>
+      <visible>Window.IsVisible(MusicOSD.xml) | !Skin.HasSetting(Hide.MusicOSD.DuringPlayback) | [Skin.HasSetting(Hide.MusicOSD.DuringPlayback) +  [!Integer.IsGreater(Control.GetLabel(23),5) | Integer.IsGreater(Control.GetLabel(23),95)]]</visible>
+      <control type="group">
+        <animation effect="fade" time="200">VisibleChange</animation>
+        <control type="image" description="Background">
+          <posy>-30</posy>
+          <width>1920</width>
+          <height>188</height>
+          <texture flipy="true" border="0,30,0,30">OSD/FS_OSDBackground.png</texture>
+        </control>
+        <control type="label" description="Clock">
+          <left>1615</left>
+          <top>20</top>
+          <width>290</width>
+          <height>80</height>
+          <align>center</align>
+          <aligny>center</aligny>
+          <font>MainMenu</font>
+          <shadowcolor>Black</shadowcolor>
+          <label>$INFO[System.Time]</label>
+        </control>
+        <control type="group">
+          <posy>10</posy>
+          <control type="progress" description="Buffer Bar">
+            <posx>30</posx>
+            <posy>3</posy>
+            <width>1570</width>
+            <height>18</height>
+            <texturebg border="15,0,15,0">OSD/ProgressBG.png</texturebg>
+            <midtexture border="15,0,15,0">OSD/ProgressBar.png</midtexture>
+            <colordiffuse>Diffuse2</colordiffuse>
+            <info>Player.ProgressCache</info>
+          </control>
+          <control type="progress" id="23" description="Progress Bar">
+            <posx>30</posx>
+            <posy>3</posy>
+            <width>1570</width>
+            <height>18</height>
+            <texturebg border="15,0,15,0">OSD/ProgressBG.png</texturebg>
+            <midtexture border="15,0,15,0">OSD/ProgressBar.png</midtexture>
+            <colordiffuse>Highlight</colordiffuse>
+            <info>Player.Progress</info>
+          </control>
+          <control type="label" description="Progress time label">
+            <posx>30</posx>
+            <posy>35</posy>
+            <width>1570</width>
+            <height>70</height>
+            <align>center</align>
+            <label>[B][COLOR Highlight]$LOCALIZE[31036][/COLOR][/B][CR]$INFO[MusicPlayer.Offset(1).Title]$INFO[MusicPlayer.Offset(1).Artist, - ,]$INFO[MusicPlayer.Offset(1).Duration, - ,][CR]$INFO[MusicPlayer.Offset(2).Title]$INFO[MusicPlayer.Offset(2).Artist, - ,]$INFO[MusicPlayer.Offset(2).Duration, - ,]</label>
+            <font>font10</font>
+            <shadowcolor>Black</shadowcolor>
+            <visible>!String.IsEmpty(MusicPlayer.Offset(1).Title) + String.IsEmpty(Control.GetLabel(1001))</visible>
+          </control>
+          <control type="label" description="Progress time label">
+            <left>30</left>
+            <top>30</top>
+            <height>30</height>
+            <width>400</width>
+            <align>left</align>
+            <label>$INFO[Player.Time]$INFO[Player.Duration, / ]</label>
+            <font>Details</font>
+            <shadowcolor>Black</shadowcolor>
+          </control>
+          <control type="label" description="Progress rem time label">
+            <left>1200</left>
+            <posy>30</posy>
+            <height>30</height>
+            <width>400</width>
+            <align>right</align>
+            <label>$INFO[Player.TimeRemaining,[COLOR=Highlight]$LOCALIZE[31029]: [/COLOR]]</label>
+            <font>Details</font>
+            <shadowcolor>Black</shadowcolor>
+          </control>
+          <control type="label" description="End Time">
+            <left>1200</left>
+            <top>70</top>
+            <height>30</height>
+            <width>400</width>
+            <align>right</align>
+            <font>Details</font>
+            <shadowcolor>Black</shadowcolor>
+            <scroll>false</scroll>
+            <label>$INFO[Player.FinishTime,[COLOR=Highlight]$LOCALIZE[19127]: [/COLOR]]</label>
+          </control>
+          <control type="label" description="Player Status label" id="1001">
+            <left>30</left>
+            <posy>50</posy>
+            <height>30</height>
+            <width>1570</width>
+            <align>center</align>
+            <label>$VAR[SeekLabel]</label>
+            <font>InfoTitle</font>
+            <shadowcolor>Black</shadowcolor>
+          </control>
+        </control>
       </control>
       <control type="group">
-        <posy>10</posy>
-        <control type="progress" description="Buffer Bar">
-          <posx>30</posx>
-          <posy>3</posy>
-          <width>1670</width>
-          <height>18</height>
-          <texturebg border="15,0,15,0">OSD/ProgressBG.png</texturebg>
-          <midtexture border="15,0,15,0">OSD/ProgressBar.png</midtexture>
-          <colordiffuse>Diffuse2</colordiffuse>
-          <info>Player.ProgressCache</info>
-        </control>
-        <control type="progress" id="23" description="Progress Bar">
-          <posx>30</posx>
-          <posy>3</posy>
-          <width>1670</width>
-          <height>18</height>
-          <texturebg border="15,0,15,0">OSD/ProgressBG.png</texturebg>
-          <midtexture border="15,0,15,0">OSD/ProgressBar.png</midtexture>
-          <colordiffuse>Highlight</colordiffuse>
-          <info>Player.Progress</info>
-        </control>
-        <control type="label" description="Progress time label">
-          <posx>30</posx>
-          <posy>35</posy>
-          <width>1670</width>
-          <height>70</height>
-          <align>center</align>
-          <label>[B][COLOR Highlight]$LOCALIZE[31036][/COLOR][/B][CR]$INFO[MusicPlayer.Offset(1).Title]$INFO[MusicPlayer.Offset(1).Artist, - ,]$INFO[MusicPlayer.Offset(1).Duration, - ,][CR]$INFO[MusicPlayer.Offset(2).Title]$INFO[MusicPlayer.Offset(2).Artist, - ,]$INFO[MusicPlayer.Offset(2).Duration, - ,]</label>
-          <font>font10</font>
-          <shadowcolor>Black</shadowcolor>
-          <visible>!String.IsEmpty(MusicPlayer.Offset(1).Title) + String.IsEmpty(Control.GetLabel(1001))</visible>
-        </control>
-        <control type="label" description="Progress time label">
-          <left>30</left>
-          <top>30</top>
-          <height>30</height>
-          <width>400</width>
-          <align>left</align>
-          <label>$INFO[Player.Time]$INFO[Player.Duration, / ]</label>
-          <font>Details</font>
-          <shadowcolor>Black</shadowcolor>
-        </control>
-        <control type="label" description="Progress rem time label">
-          <left>1300</left>
-          <posy>30</posy>
-          <height>30</height>
-          <width>400</width>
-          <align>right</align>
-          <label>$INFO[Player.TimeRemaining,[COLOR=Highlight]$LOCALIZE[31029]: [/COLOR]]</label>
-          <font>Details</font>
-          <shadowcolor>Black</shadowcolor>
-        </control>
-        <control type="label" description="End Time">
-          <left>1300</left>
-          <top>70</top>
-          <height>30</height>
-          <width>400</width>
-          <align>right</align>
-          <font>Details</font>
-          <shadowcolor>Black</shadowcolor>
-          <scroll>false</scroll>
-          <label>$INFO[Player.FinishTime,[COLOR=Highlight]$LOCALIZE[19127]: [/COLOR]]</label>
-        </control>
-        <control type="label" description="Player Status label" id="1001">
-          <left>30</left>
-          <posy>50</posy>
-          <height>30</height>
-          <width>1670</width>
-          <align>center</align>
-          <label>$VAR[SeekLabel]</label>
-          <font>InfoTitle</font>
-          <shadowcolor>Black</shadowcolor>
-        </control>
-      </control>
-    </control>
-    <control type="group">
-      <posy>820</posy>
-      <include>OSDFade</include>
-      <animation effect="fade" time="200">VisibleChange</animation>
-      <control type="image">
-        <posx>0</posx>
-        <posy>0</posy>
-        <width>1920</width>
-        <height>260</height>
-        <texture border="0,30,0,30">OSD/FS_OSDBackground.png</texture>
-        <colordiffuse>FFE2E2E2</colordiffuse>
-      </control>
-      <control type="image">
-        <posx>539r</posx>
-        <posy>666r</posy>
-        <width>509</width>
-        <height>636</height>
-        <texture>$INFO[MusicPlayer.Cover]</texture>
-        <aspectratio align="center" aligny="bottom">keep</aspectratio>
-        <colordiffuse>HeavyShadow</colordiffuse>
-      </control>
-      <control type="image">
-        <posx>555r</posx>
-        <posy>682r</posy>
-        <width>509</width>
-        <height>636</height>
-        <texture>$INFO[MusicPlayer.Cover]</texture>
-        <aspectratio align="center" aligny="bottom">keep</aspectratio>
-      </control>
-      <control type="label">
-        <posx>30</posx>
-        <posy>50</posy>
-        <width>900</width>
-        <height>40</height>
-        <align>left</align>
-        <label>$INFO[MusicPlayer.Artist]</label>
-        <font>InfoTitle</font>
-        <textcolor>grey</textcolor>
-      </control>
-      <control type="grouplist">
-        <top>50</top>
-        <posx>708</posx>
-        <height>35</height>
-        <width>605</width>
-        <orientation>horizontal</orientation>
-        <itemgap>15</itemgap>
-        <align>right</align>
+        <posy>820</posy>
+        <include>OSDFade</include>
+        <animation effect="fade" time="200">VisibleChange</animation>
         <control type="image">
-          <description>ADSP Master Mode Image</description>
-          <width>85</width>
-          <aspectratio align="center" aligny="center">keep</aspectratio>
-          <visible>![String.IsEmpty(ADSP.MasterOwnIcon) | Player.ChannelPreviewActive]</visible>
-          <texture>$INFO[ADSP.MasterOwnIcon]</texture>
+          <width>1920</width>
+          <height>260</height>
+          <texture border="0,30,0,30">OSD/FS_OSDBackground.png</texture>
+          <colordiffuse>FFE2E2E2</colordiffuse>
         </control>
-        <control type="image">
-          <description>Audio Codec Image</description>
-          <width>85</width>
-          <aspectratio align="center">keep</aspectratio>
-          <texture>$INFO[VideoPlayer.AudioCodec,badges/audiocodec/,.png]</texture>
-          <colordiffuse>silver</colordiffuse>
-          <visible>String.IsEmpty(ADSP.MasterOverrideIcon) + !Player.ChannelPreviewActive</visible>
-        </control>
-        <control type="image">
-          <description>ADSP Audio Codec Override Image</description>
-          <width>85</width>
-          <aspectratio align="center">keep</aspectratio>
-          <visible>![String.IsEmpty(ADSP.MasterOverrideIcon) | Player.ChannelPreviewActive]</visible>
-          <texture>$INFO[ADSP.MasterOverrideIcon]</texture>
-        </control>
-        <control type="image">
-          <description>Audio Channels Image</description>
-          <width>85</width>
-          <aspectratio align="center">keep</aspectratio>
-          <texture>$INFO[VideoPlayer.AudioChannels,badges/audiochannels/channels,.png]</texture>
-          <colordiffuse>silver</colordiffuse>
-          <visible>!Player.ChannelPreviewActive</visible>
-        </control>
-      </control>
-      <control type="grouplist">
-        <left>30</left>
-        <top>110</top>
-        <width>905</width>
-        <height>40</height>
-        <orientation>horizontal</orientation>
-        <control type="image">
-          <width>40</width>
-          <aspectratio align="center" aligny="center">keep</aspectratio>
-          <texture>img/PVR-IsRecording.png</texture>
-          <visible>MusicPlayer.Content(LiveTV) + Player.Recording</visible>
-        </control>
-          <control type="image">
-          <width>20</width>
-          <texture></texture>
-          <visible>MusicPlayer.Content(LiveTV) + Player.Recording</visible>
+        <include content="ShadowedImage">
+          <param name="top">682r</param>
+          <param name="left">555r</param>
+          <param name="width">509</param>
+          <param name="height">636</param>
+          <param name="shadowoffset">16</param>
+          <param name="texture">$INFO[MusicPlayer.Cover]</param>
+          <param name="aligny">bottom</param>
+        </include>
+        <control type="image" description="Dim icon for lyrics visibility if active">
+          <visible>Window.IsVisible(script-cu-lrclyrics-main.xml)</visible>
+          <include>VisibleFadeEffectDelay</include>
+          <top>682r</top>
+          <left>555r</left>
+          <width>509</width>
+          <height>636</height>
+          <texture>$INFO[MusicPlayer.Cover]</texture>
+          <colordiffuse>HeavyShadow</colordiffuse>
+          <aspectratio align="center" aligny="bottom">keep</aspectratio>
         </control>
         <control type="label">
-          <width>840</width>
+          <posx>30</posx>
+          <posy>50</posy>
+          <width>900</width>
           <height>40</height>
-          <font>MainLabelBigTitle</font>
-          <label>$INFO[MusicPlayer.TrackNumber,,: ]$INFO[Player.Title]</label>
-          <textcolor>Highlight</textcolor>
-          <scroll>true</scroll>
-          <scrollspeed>25</scrollspeed>
+          <align>left</align>
+          <label>$INFO[MusicPlayer.Artist]</label>
+          <font>InfoTitle</font>
+          <textcolor>grey</textcolor>
         </control>
-      </control>
-      <control type="label">
-        <posx>30</posx>
-        <posy>170</posy>
-        <width>740</width>
-        <height>40</height>
-        <align>left</align>
-        <label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year, (,) ]</label>
-        <font>InfoTitle</font>
-        <scroll>true</scroll>
-        <textcolor>grey</textcolor>
+        <control type="grouplist">
+          <top>50</top>
+          <posx>708</posx>
+          <height>35</height>
+          <width>605</width>
+          <orientation>horizontal</orientation>
+          <itemgap>15</itemgap>
+          <align>right</align>
+          <control type="image">
+            <description>ADSP Master Mode Image</description>
+            <width>85</width>
+            <aspectratio align="center" aligny="center">keep</aspectratio>
+            <visible>![String.IsEmpty(ADSP.MasterOwnIcon) | Player.ChannelPreviewActive]</visible>
+            <texture>$INFO[ADSP.MasterOwnIcon]</texture>
+          </control>
+          <control type="image">
+            <description>Audio Codec Image</description>
+            <width>85</width>
+            <aspectratio align="center">keep</aspectratio>
+            <texture>$INFO[VideoPlayer.AudioCodec,badges/audiocodec/,.png]</texture>
+            <colordiffuse>silver</colordiffuse>
+            <visible>String.IsEmpty(ADSP.MasterOverrideIcon) + !Player.ChannelPreviewActive</visible>
+          </control>
+          <control type="image">
+            <description>ADSP Audio Codec Override Image</description>
+            <width>85</width>
+            <aspectratio align="center">keep</aspectratio>
+            <visible>![String.IsEmpty(ADSP.MasterOverrideIcon) | Player.ChannelPreviewActive]</visible>
+            <texture>$INFO[ADSP.MasterOverrideIcon]</texture>
+          </control>
+          <control type="image">
+            <description>Audio Channels Image</description>
+            <width>85</width>
+            <aspectratio align="center">keep</aspectratio>
+            <texture>$INFO[VideoPlayer.AudioChannels,badges/audiochannels/channels,.png]</texture>
+            <colordiffuse>silver</colordiffuse>
+            <visible>!Player.ChannelPreviewActive</visible>
+          </control>
+        </control>
+        <control type="grouplist">
+          <left>30</left>
+          <top>100</top>
+          <width>1205</width>
+          <height>60</height>
+          <orientation>horizontal</orientation>
+          <control type="image">
+            <width>40</width>
+            <aspectratio align="center" aligny="center">keep</aspectratio>
+            <texture>img/PVR-IsRecording.png</texture>
+            <visible>MusicPlayer.Content(LiveTV) + Player.Recording</visible>
+          </control>
+            <control type="image">
+            <width>20</width>
+            <texture></texture>
+            <visible>MusicPlayer.Content(LiveTV) + Player.Recording</visible>
+          </control>
+          <control type="label">
+            <width>1140</width>
+            <height>60</height>
+            <font>MainLabelBigTitle</font>
+            <label>$INFO[MusicPlayer.TrackNumber,,: ]$INFO[Player.Title]</label>
+            <textcolor>Highlight</textcolor>
+            <scroll>true</scroll>
+            <scrollspeed>25</scrollspeed>
+          </control>
+        </control>
+        <control type="label">
+          <posx>30</posx>
+          <posy>176</posy>
+          <width>740</width>
+          <height>40</height>
+          <align>left</align>
+          <label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year, (,) ]</label>
+          <font>InfoTitle</font>
+          <scroll>true</scroll>
+          <textcolor>grey</textcolor>
+          <visible>Window.IsVisible(MusicOSD)</visible>
+        </control>
+        <control type="label">
+          <posx>30</posx>
+          <posy>176</posy>
+          <width>1205</width>
+          <height>40</height>
+          <align>left</align>
+          <label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year, (,) ]</label>
+          <font>InfoTitle</font>
+          <scroll>true</scroll>
+          <textcolor>grey</textcolor>
+          <visible>!Window.IsVisible(MusicOSD)</visible>
+        </control>
       </control>
     </control>
   </controls>
