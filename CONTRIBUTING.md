@@ -33,16 +33,16 @@ Before [creating a pull request](https://help.github.com/articles/creating-a-pul
 
 ###### Please follow these guidelines; it's the best way to get your work included in the repository!
 
-- [Click here](https://github.com/xbmc/repo-plugins/fork/) to fork the Kodi script repository,
+- [Click here](https://github.com/xbmc/repo-skins/fork/) to fork the Kodi script repository,
    and [configure the remote](https://help.github.com/articles/configuring-a-remote-for-a-fork/):
 
    ```bash
    # Clone your fork of kodi's repo into the current directory in terminal
-   git clone git@github.com:<your github username>/repo-plugins.git repo-plugins
+   git clone git@github.com:<your github username>/repo-skins.git repo-skins
    # Navigate to the newly cloned directory
    cd repo-plugins
    # Assign the original repo to a remote called "upstream"
-   git remote add upstream https://github.com/xbmc/repo-plugins.git
+   git remote add upstream https://github.com/xbmc/repo-skins.git
    ```
 
 - If you cloned a while ago, get the latest changes from upstream:
