@@ -21,6 +21,13 @@
 		<value condition="System.HasAddon(service.libreelec.settings)">$LOCALIZE[31190]</value>
 	</variable>
 	
+	<include name="ContainerPosition1">
+		<onback>PageUp</onback>
+		<onback>PageUp</onback>
+		<onback>PageUp</onback>
+		<onback>PageUp</onback>
+	</include>
+	
 	<include name="KodiLogo">			
 		<control type="button" id="555">
 			<left>9</left>
@@ -33,6 +40,7 @@
 			<ondown>850</ondown>			
 			<onright condition="Container(850).HasFocus(50) + [Control.IsVisible(6887) | Control.IsVisible(6886)]">6885</onright>
 			<onright condition="Container(850).HasFocus(52) + [Control.IsVisible(6876) | Control.IsVisible(6875)]">6877</onright>
+			<onright condition="Container(850).HasFocus(2) + Control.IsVisible(6873)">6873</onright>
 			<onright condition="Container(850).HasFocus(5) + Control.IsVisible(6880)">6880</onright>
 			<onright condition="Container(850).HasFocus(6) + Control.IsVisible(6883)">6883</onright>
 			<onright condition="Container(850).HasFocus(3) + Control.IsVisible(6888)">6888</onright>
@@ -230,12 +238,14 @@
 	
 	<include name="RedirectMusicCategoryFiles">
 		<label>$LOCALIZE[1214]</label>
-		<onclick>ActivateWindow(Music,Files,Return)</onclick>
+		<onclick>ActivateWindow(Music,sources://music/,Return)</onclick>
 	</include>
 	
 	<include name="RedirectMusicCategoryLibrary">
 		<label>$LOCALIZE[14022]</label>
-		<onclick>ActivateWindow(Music,Return)</onclick>
+		<onclick condition="Library.HasContent(Music)">ActivateWindow(Music,Return)</onclick>
+		<onclick condition="!Library.HasContent(Music)">ActivateWindow(Music,sources://music/,return)</onclick>
+		<onclick condition="!Library.HasContent(Music)">Notification($LOCALIZE[2],$LOCALIZE[31298],9000)</onclick>
 	</include>
 	
 	<include name="RedirectVideosCategoryFiles">
@@ -1013,6 +1023,7 @@
 				<onup condition="Control.IsVisible(541) | Control.IsVisible(542) | Control.IsVisible(543) | Control.IsVisible(544) | Control.IsVisible(545) | Control.IsVisible(546) | Control.IsVisible(547)">556</onup>
 				<onup condition="Container(850).HasFocus(50) + [Control.IsVisible(6887) | Control.IsVisible(6886)]">6885</onup>
 				<onup condition="Container(850).HasFocus(52) + [Control.IsVisible(6876) | Control.IsVisible(6875)]">6877</onup>
+				<onup condition="Container(850).HasFocus(2) + Control.IsVisible(6873)">6873</onup>
 				<onup condition="Container(850).HasFocus(5) + Control.IsVisible(6880)">6880</onup>
 				<onup condition="Container(850).HasFocus(6) + Control.IsVisible(6883)">6883</onup>
 				<onup condition="Container(850).HasFocus(3) + Control.IsVisible(6888)">6888</onup>
@@ -1097,16 +1108,20 @@
 						<label>movies</label>
 						<icon>homecategories/$INFO[System.Language]/movies-text-nofocus.png</icon>
 						<thumb>$VAR[CustomMoviesBGVar]</thumb>
-						<onclick>ActivateWindow(Videos,MovieTitles,Return)</onclick>  
-						<visible>!Skin.HasSetting(HideMoviesCategory) + Library.HasContent(Movies)</visible>
+						<onclick condition="Library.HasContent(Movies)">ActivateWindow(Videos,videodb://movies/titles/,Return)</onclick>  
+						<onclick condition="!Library.HasContent(Movies)">ActivateWindow(Videos,sources://video/,return)</onclick>
+						<onclick condition="!Library.HasContent(Movies)">Notification($LOCALIZE[342],$LOCALIZE[31296],9000)</onclick>
+						<visible>!Skin.HasSetting(HideMoviesCategory)</visible>
 					</item>
 					<item id="4">
 						<description>TV Shows Category</description>
 						<label>tvshows</label>
 						<icon>homecategories/$INFO[System.Language]/tvshows-text-nofocus.png</icon>
 						<thumb>$VAR[CustomTVShowsBGVar]</thumb>
-						<onclick>ActivateWindow(Videos,TVShowTitles,Return)</onclick>
-						<visible>!Skin.HasSetting(HideTVShowsCategory) + Library.HasContent(TVShows)</visible>
+						<onclick condition="Library.HasContent(TVShows)">ActivateWindow(Videos,videodb://tvshows/titles/,Return)</onclick>
+						<onclick condition="!Library.HasContent(TVShows)">ActivateWindow(Videos,sources://video/,return)</onclick>
+						<onclick condition="!Library.HasContent(TVShows)">Notification($LOCALIZE[20343],$LOCALIZE[31297],9000)</onclick>
+						<visible>!Skin.HasSetting(HideTVShowsCategory)</visible>
 					</item>
 					<item id="5">
 						<description>Add-ons Category</description>
@@ -1474,6 +1489,7 @@
 	<include name="HomeAddonShortcuts">
 		<control type="group" id="556">
 			<control type="list" id="541">
+				<onup condition="Control.IsVisible(6873)">6873</onup>
 				<onup condition="Control.IsVisible(6930)">6931</onup>
 				<onup>555</onup>
 				<include content="HomeAddonShortcutsLayout">
@@ -1635,7 +1651,7 @@
 				<onup>555</onup>
 				<ondown>850</ondown>
 				<orientation>horizontal</orientation>		
-				<visible>Container(850).HasFocus(1)</visible>
+				<visible>Container(850).HasFocus(1) + Library.HasContent(Music)</visible>
 				<include>HomeSubMenuItemOpenCloseAnim</include>
 				<include>HomeSubMenuItemsCenterAlignAnim</include>
 				<include>HomeSubMenuItemLayout</include>
@@ -1656,7 +1672,7 @@
 					<item id="2">
 						<description>Albums</description>
 						<label>$LOCALIZE[132]</label>
-						<onclick>ActivateWindow(Music,Albums,Return)</onclick>	
+						<onclick>ActivateWindow(Music,musicdb://albums/,Return)</onclick>	
 						<visible>!Skin.HasSetting(EditMusicSubMenuBtn2)</visible>
 					</item>
 					<item id="2">
@@ -1669,7 +1685,7 @@
 					<item id="3">
 						<description>Songs</description>
 						<label>$LOCALIZE[134]</label>
-						<onclick>ActivateWindow(Music,Songs,Return)</onclick>
+						<onclick>ActivateWindow(Music,musicdb://songs/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMusicSubMenuBtn3)</visible>
 					</item>
 					<item id="3">
@@ -1682,7 +1698,7 @@
 					<item id="4">
 						<description>Recently Added Albums</description>
 						<label>$LOCALIZE[31303]</label>
-						<onclick>ActivateWindow(Music,RecentlyAddedAlbums,Return)</onclick>
+						<onclick>ActivateWindow(Music,musicdb://recentlyaddedalbums/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMusicSubMenuBtn4)</visible>
 					</item>
 					<item id="4">
@@ -1695,7 +1711,7 @@
 					<item id="5">
 						<description>Playlists</description>
 						<label>$LOCALIZE[136]</label>
-						<onclick>ActivateWindow(Music,Playlists,Return)</onclick>
+						<onclick>ActivateWindow(Music,special://musicplaylists/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMusicSubMenuBtn5)</visible>
 					</item>
 					<item id="5">
@@ -1741,6 +1757,7 @@
 				<width>1260</width>
 				<height>34</height>
 				<onup condition="Control.IsVisible(541) | Control.IsVisible(542) | Control.IsVisible(543) | Control.IsVisible(544) | Control.IsVisible(545) | Control.IsVisible(546) | Control.IsVisible(547)">556</onup>
+				<onup condition="Control.IsVisible(6873)">6873</onup>
 				<onup condition="Control.IsVisible(6930)">6931</onup>
 				<onup>555</onup>
 				<ondown>850</ondown>
@@ -1766,7 +1783,9 @@
 					<item id="2">
 						<description>Movies</description>
 						<label>$LOCALIZE[20342]</label>
-						<onclick>ActivateWindow(Videos,MovieTitles,Return)</onclick>
+						<onclick condition="Library.HasContent(Movies)">ActivateWindow(Videos,videodb://movies/titles/,Return)</onclick>
+						<onclick condition="!Library.HasContent(Movies)">ActivateWindow(Videos,sources://video/,return)</onclick>
+						<onclick condition="!Library.HasContent(Movies)">Notification($LOCALIZE[342],$LOCALIZE[31296],9000)</onclick>
 						<visible>!Skin.HasSetting(EditVideosSubMenuBtn2)</visible>
 					</item>
 					<item id="2">
@@ -1779,7 +1798,9 @@
 					<item id="3">
 						<description>TV Shows</description>
 						<label>$LOCALIZE[20343]</label>
-						<onclick>ActivateWindow(Videos,TVShowTitles,Return)</onclick>
+						<onclick condition="Library.HasContent(TVShows)">ActivateWindow(Videos,videodb://tvshows/titles/,Return)</onclick>
+						<onclick condition="!Library.HasContent(TVShows)">ActivateWindow(Videos,sources://video/,return)</onclick>
+						<onclick condition="!Library.HasContent(TVShows)">Notification($LOCALIZE[20343],$LOCALIZE[31297],9000)</onclick>
 						<visible>!Skin.HasSetting(EditVideosSubMenuBtn3)</visible>
 					</item>
 					<item id="3">
@@ -1792,7 +1813,9 @@
 					<item id="4">
 						<description>Music Videos</description>
 						<label>$LOCALIZE[20389]</label>
-						<onclick>ActivateWindow(Videos,MusicVideoTitles,Return)</onclick>
+						<onclick condition="Library.HasContent(MusicVideos)">ActivateWindow(Videos,videodb://musicvideos/titles/,Return)</onclick>
+						<onclick condition="!Library.HasContent(MusicVideos)">ActivateWindow(Videos,sources://video/,return)</onclick>
+						<onclick condition="!Library.HasContent(MusicVideos)">Notification($LOCALIZE[20389],$LOCALIZE[31295],9000)</onclick>
 						<visible>!Skin.HasSetting(EditVideosSubMenuBtn4)</visible>
 					</item>
 					<item id="4">
@@ -1862,7 +1885,7 @@
 				<onup>555</onup>
 				<ondown>850</ondown>
 				<orientation>horizontal</orientation>
-				<visible>Container(850).HasFocus(3)</visible>
+				<visible>Container(850).HasFocus(3) + Library.HasContent(Movies)</visible>
 				<include>HomeSubMenuItemOpenCloseAnim</include>
 				<include>HomeSubMenuItemsCenterAlignAnim</include>
 				<include>HomeSubMenuItemLayout</include>
@@ -1870,7 +1893,7 @@
 					<item id="1">
 						<description>Genres</description>
 						<label>$LOCALIZE[135]</label>
-						<onclick>ActivateWindow(Videos,MovieGenres,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://movies/genres/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn1)</visible>
 					</item>
 					<item id="1">
@@ -1883,7 +1906,7 @@
 					<item id="2">
 						<description>Year</description>
 						<label>$LOCALIZE[345]</label>
-						<onclick>ActivateWindow(Videos,MovieYears,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://movies/years/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn2)</visible>
 					</item>
 					<item id="2">
@@ -1896,7 +1919,7 @@
 					<item id="3">
 						<description>Actors</description>
 						<label>$LOCALIZE[344]</label>
-						<onclick>ActivateWindow(Videos,MovieActors,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://movies/actors/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn3)</visible>
 					</item>
 					<item id="3">
@@ -1909,7 +1932,7 @@
 					<item id="4">
 						<description>Directors</description>
 						<label>$LOCALIZE[20348]</label>
-						<onclick>ActivateWindow(Videos,MovieDirectors,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://movies/directors/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn4)</visible>
 					</item>
 					<item id="4">
@@ -1922,7 +1945,7 @@
 					<item id="5">
 						<description>Studios</description>
 						<label>$LOCALIZE[20388]</label>
-						<onclick>ActivateWindow(Videos,MovieStudios,Return)</onclick>	
+						<onclick>ActivateWindow(Videos,videodb://movies/studios/,Return)</onclick>	
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn5)</visible>
 					</item>
 					<item id="5">
@@ -1935,7 +1958,7 @@
 					<item id="6">
 						<description>Countries</description>
 						<label>$LOCALIZE[20451]</label>
-						<onclick>ActivateWindow(Videos,MovieCountries,Return)</onclick>	
+						<onclick>ActivateWindow(Videos,videodb://movies/countries/,Return)</onclick>	
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn6)</visible>
 					</item>
 					<item id="6">
@@ -1948,7 +1971,7 @@
 					<item id="7">
 						<description>Recently Added Movies</description>
 						<label>$LOCALIZE[31303]</label>
-						<onclick>ActivateWindow(Videos,RecentlyAddedMovies,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://recentlyaddedmovies/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditMoviesSubMenuBtn7)</visible>
 					</item>
 					<item id="7">
@@ -1972,7 +1995,7 @@
 				<onup>555</onup>
 				<ondown>850</ondown>
 				<orientation>horizontal</orientation>
-				<visible>Container(850).HasFocus(4)</visible>
+				<visible>Container(850).HasFocus(4) + Library.HasContent(TVShows)</visible>
 				<include>HomeSubMenuItemOpenCloseAnim</include>
 				<include>HomeSubMenuItemsCenterAlignAnim</include>
 				<include>HomeSubMenuItemLayout</include>
@@ -1980,7 +2003,7 @@
 					<item id="1">
 						<description>Genres</description>
 						<label>$LOCALIZE[135]</label>
-						<onclick>ActivateWindow(Videos,TVShowGenres,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://tvshows/titles/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn1)</visible>
 					</item>
 					<item id="1">
@@ -1993,7 +2016,7 @@
 					<item id="2">
 						<description>Year</description>
 						<label>$LOCALIZE[345]</label>
-						<onclick>ActivateWindow(Videos,TVShowYears,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://tvshows/years/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn2)</visible>
 					</item>
 					<item id="2">
@@ -2006,7 +2029,7 @@
 					<item id="3">
 						<description>Actors</description>
 						<label>$LOCALIZE[344]</label>
-						<onclick>ActivateWindow(Videos,TVShowActors,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://tvshows/actors/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn3)</visible>
 					</item>
 					<item id="3">
@@ -2019,7 +2042,7 @@
 					<item id="4">
 						<description>Studios</description>
 						<label>$LOCALIZE[20388]</label>
-						<onclick>ActivateWindow(Videos,TVShowStudios,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://tvshows/studios/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn4)</visible>
 					</item>
 					<item id="4">
@@ -2032,7 +2055,7 @@
 					<item id="5">
 						<description>Recently Added Episodes</description>
 						<label>$LOCALIZE[31303]</label>
-						<onclick>ActivateWindow(Videos,RecentlyAddedEpisodes,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://recentlyaddedepisodes/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn5)</visible>
 					</item>
 					<item id="5">
@@ -2045,7 +2068,7 @@
 					<item id="6">
 						<description>In Progress TV Shows</description>
 						<label>$LOCALIZE[575]</label>
-						<onclick>ActivateWindow(Videos,InProgressTvShows,Return)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://inprogresstvshows/,Return)</onclick>
 						<visible>!Skin.HasSetting(EditTVShowsSubMenuBtn6)</visible>
 					</item>
 					<item id="6">
@@ -2918,15 +2941,13 @@
 	<include name="MusicPlayingProgressBar">
 		<control type="group">
 			<visible>Player.HasAudio + System.IdleTime(5) + Skin.HasSetting(EnableMusicPlayingHomeProgressBar)</visible>			
-			<animation effect="fade" start="100" end="25" time="750" condition="Player.HasAudio + System.IdleTime(5)">Conditional</animation>			
+			<animation effect="fade" start="100" end="35" time="750" condition="Player.HasAudio + System.IdleTime(5)">Conditional</animation>			
 			<control type="progress">
 				<description>Progressbar</description>
 				<top>6</top>
 				<width>1280</width>
 				<height>108</height>
 				<info>Player.Progress</info>
-				<texturebg colordiffuse="00FFFFFF">gui/progress-bg.png</texturebg>
-				<midtexture border="0,0,0,0">gui/progress.png</midtexture>
 			</control>	
 		</control>
 		<control type="group">
@@ -3700,6 +3721,7 @@
 						<ondown>6931</ondown>
 						<onright>6931</onright>
 						<onleft>6931</onleft>
+						<include>ContainerPosition1</include>
 						<visible>Player.HasAudio + Integer.IsGreater(Playlist.Length(music),1)</visible>
 						<itemlayout height="24">
 							<control type="label">
@@ -4300,6 +4322,7 @@
 				<onleft condition="Control.IsVisible(543)">543</onleft>
 				<onleft condition="Control.IsVisible(110)">110</onleft>
 				<onleft>850</onleft>
+				<include>ContainerPosition1</include>
 				<itemlayout height="24">
 					<control type="label">
 						<left>15</left>
@@ -4728,6 +4751,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedMoviesPanelLayout</include>
 					<visible>!Skin.HasSetting(ShowMoreRecentlyAddedMovies) + [Integer.IsGreater(Container(6888).NumItems,0) | Container(6888).IsUpdating]</visible>
 				</control>
@@ -4745,6 +4769,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedMoviesPanelLayout</include>
 					<visible>Skin.HasSetting(ShowMoreRecentlyAddedMovies) + [Integer.IsGreater(Container(6888).NumItems,0) | Container(6888).IsUpdating]</visible>
 				</control>
@@ -4865,6 +4890,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedTVShowsPanelLayout</include>
 					<visible>!Skin.HasSetting(ShowMoreRecentlyAddedTVShows) + [Integer.IsGreater(Container(6889).NumItems,0) | Container(6889).IsUpdating]</visible>
 				</control>
@@ -4882,6 +4908,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedTVShowsPanelLayout</include>
 					<visible>Skin.HasSetting(ShowMoreRecentlyAddedTVShows) + [Integer.IsGreater(Container(6889).NumItems,0) | Container(6889).IsUpdating]</visible>
 				</control>
@@ -5002,6 +5029,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<onclick>PlayMedia($INFO[ListItem.FolderPath],isdir)</onclick>
 					<include>RecentlyAddedMusicPanelLayout</include>
 					<visible>!Skin.HasSetting(ShowMoreRecentlyAddedMusic) + [Integer.IsGreater(Container(6890).NumItems,0) | Container(6890).IsUpdating]</visible>
@@ -5019,6 +5047,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4829</onright>
+					<include>ContainerPosition1</include>
 					<onclick>PlayMedia($INFO[ListItem.FolderPath],isdir)</onclick>
 					<include>RecentlyAddedMusicPanelLayout</include>
 					<visible>Skin.HasSetting(ShowMoreRecentlyAddedMusic) + [Integer.IsGreater(Container(6890).NumItems,0) | Container(6890).IsUpdating]</visible>
@@ -5129,6 +5158,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4828</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedPicturesPanelLayout</include>
 					<visible>!Skin.HasSetting(ShowMoreRecentlyAddedPictures)</visible>
 				</control>
@@ -5145,6 +5175,7 @@
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
 					<onright>4828</onright>
+					<include>ContainerPosition1</include>
 					<include>RecentlyAddedPicturesPanelLayout</include>
 					<visible>Skin.HasSetting(ShowMoreRecentlyAddedPictures)</visible>
 				</control>
@@ -5499,6 +5530,7 @@
 					<onleft condition="Control.IsVisible(6929)">6929</onleft>
 					<onleft>6888</onleft>
 					<onright>850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6891).NumItems,0) | Container(6891).IsUpdating</visible>
 					<itemlayout height="24">
 						<control type="label">
@@ -5594,6 +5626,7 @@
 					<onleft condition="Control.IsVisible(6930)">6930</onleft>
 					<onleft>6889</onleft>
 					<onright>850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6892).NumItems,0) | Container(6892).IsUpdating</visible>
 					<itemlayout height="24">
 						<control type="label">
@@ -5689,6 +5722,7 @@
 					<onleft condition="Control.IsVisible(6930)">6930</onleft>
 					<onleft>6890</onleft>
 					<onright>850</onright>
+					<include>ContainerPosition1</include>
 					<onclick>PlayMedia($INFO[ListItem.FolderPath],isdir)</onclick>
 					<itemlayout height="24">
 						<control type="label">
@@ -5774,6 +5808,7 @@
 					<onleft condition="Control.IsVisible(6930)">6930</onleft>
 					<onleft>6883</onleft>
 					<onright>850</onright>
+					<include>ContainerPosition1</include>
 					<itemlayout height="24">
 						<control type="label">
 							<width>309</width>
@@ -5994,6 +6029,7 @@
 					<onleft condition="Control.IsVisible(542)">542</onleft>
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
+					<include>ContainerPosition1</include>
 					<onclick>RunScript(script.extendedinfo,info=extendedinfo,name=$INFO[ListItem.Label])</onclick>
 					<visible>Integer.IsGreater(Container(6928).NumItems,0) | Container(6928).IsUpdating</visible>
 					<itemlayout height="24">
@@ -6086,6 +6122,7 @@
 					<onleft condition="Control.IsVisible(542)">542</onleft>
 					<onleft condition="Control.IsVisible(110)">110</onleft>
 					<onleft>850</onleft>
+					<include>ContainerPosition1</include>
 					<onclick>RunScript(script.extendedinfo,info=extendedinfo,name=$INFO[ListItem.Label])</onclick>
 					<visible>Integer.IsGreater(Container(6929).NumItems,0) | Container(6929).IsUpdating</visible>
 					<itemlayout height="24">
@@ -6120,6 +6157,301 @@
 						</control>
 					</focusedlayout>
 					<include>CustomPanelUpcomingMovies</include>
+				</control>
+			</control>
+		</control>
+	</include>
+	
+	<include name="VideosHomeWidget">
+		<control type="group">
+			<visible>Container(850).HasFocus(2)</visible>
+			<visible>!Window.IsActive(PlayerControls) + !Window.IsActive(ShutdownMenu) + !Window.IsActive(NumericInput)</visible>
+			<include>HomeRightPanelOpenCloseAnim</include>
+			
+			<control type="group">
+				<animation type="Conditional" reversible="false" condition="Integer.IsGreater(Container(6873).NumItems,0)">
+					<effect type="fade" end="100" time="250"/>
+					<effect type="slide" start="100,0" time="300" tween="circle" easing="out"/>
+				</animation>
+				
+				<animation type="Conditional" reversible="false" condition="String.IsEqual(Container(6873).NumItems,0)">
+					<effect type="fade" end="0" time="250"/>
+					<effect type="slide" end="100,0" time="300" tween="circle" easing="out"/>
+				</animation>
+
+				<control type="group">
+					<left>495r</left>
+					<top>105</top>
+
+					<control type="image">
+						<width>490</width>
+						<height>164</height>
+						<texture border="8">panels/panel.png</texture>
+						<visible>!Skin.HasSetting(ShowMoreVideoCategories)</visible>
+					</control>
+
+					<control type="image">
+						<width>490</width>
+						<height>260</height>
+						<texture border="8">panels/panel.png</texture>
+						<visible>Skin.HasSetting(ShowMoreVideoCategories)</visible>
+					</control>
+
+					<control type="multiimage">
+						<description>Cover</description>
+						<left>341</left>
+						<top>15</top>
+						<width>134</width>
+						<height>134</height>
+						<imagepath diffuse="covers/home-panel-album-cover-diffuse.png" background="true">$INFO[Container(6873).ListItem.Icon]</imagepath>
+						<aspectratio>keep</aspectratio>
+						<fadetime>IconCrossfadeTime</fadetime>
+					</control>
+
+					<control type="label">
+						<description>Title</description>
+						<left>15</left>
+						<top>9</top>
+						<width>338</width>
+						<font>PanelTitleFont</font>
+						<textcolor>MediaInfoTitleColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>
+						<label>[UPPERCASE]$LOCALIZE[31307][/UPPERCASE]</label>
+					</control>
+
+					<control type="list" id="6873">
+						<top>33</top>
+						<width>329</width>
+						<height>96</height>
+						<scrolltime>200</scrolltime>
+						<onup>555</onup>
+						<ondown>6873</ondown>
+						<onleft condition="Control.IsVisible(6930)">6930</onleft>
+						<onleft condition="Control.IsVisible(541)">541</onleft>
+						<onleft condition="Control.IsVisible(110)">110</onleft>
+						<onleft>850</onleft>
+						<onright>4829</onright>
+						<include>ContainerPosition1</include>
+						<visible>!Skin.HasSetting(ShowMoreVideoCategories) + [Integer.IsGreater(Container(6873).NumItems,0) | Container(6873).IsUpdating]</visible>
+						<itemlayout height="24">
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelItemlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</itemlayout>
+						<focusedlayout height="24">
+							<control type="image">
+								<left>10</left>
+								<width>319</width>
+								<height>24</height>
+								<texture border="4">views/list-focus.png</texture>
+								<aspectratio>stretch</aspectratio>
+								<visible>Control.HasFocus(6873)</visible>
+								<animation type="Focus" condition="Container(6873).OnNext + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,-24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<animation type="Focus" condition="Container(6873).OnPrevious + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<include>ListViewSelectFadeAnim</include>
+							</control>
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelFocusedlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</focusedlayout>
+						<content target="videos">library://video/</content>
+					</control>
+
+					<control type="list" id="6873">
+						<top>33</top>
+						<width>329</width>
+						<height>192</height>
+						<scrolltime>200</scrolltime>
+						<onup>555</onup>
+						<ondown>6873</ondown>
+						<onleft condition="Control.IsVisible(6930)">6930</onleft>
+						<onleft condition="Control.IsVisible(541)">541</onleft>
+						<onleft condition="Control.IsVisible(110)">110</onleft>
+						<onleft>850</onleft>
+						<onright>4829</onright>
+						<include>ContainerPosition1</include>
+						<visible>Skin.HasSetting(ShowMoreVideoCategories) + [Integer.IsGreater(Container(6873).NumItems,0) | Container(6873).IsUpdating]</visible>
+						<itemlayout height="24">
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelItemlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</itemlayout>
+						<focusedlayout height="24">
+							<control type="image">
+								<left>10</left>
+								<width>319</width>
+								<height>24</height>
+								<texture border="4">views/list-focus.png</texture>
+								<aspectratio>stretch</aspectratio>
+								<visible>Control.HasFocus(6873)</visible>
+								<animation type="Focus" condition="Container(6873).OnNext + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,-24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<animation type="Focus" condition="Container(6873).OnPrevious + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<include>ListViewSelectFadeAnim</include>
+							</control>
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelFocusedlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</focusedlayout>
+						<content target="videos">library://video/</content>
+					</control>
+
+					<control type="group">
+						<animation effect="slide" end="0,96" condition="Skin.HasSetting(ShowMoreVideoCategories)">Conditional</animation>
+
+						<control type="image">
+							<left>15</left>
+							<top>135</top>
+							<width>260</width>
+							<height>19</height>
+							<texture border="5">panels/panel-content-border2.png</texture>
+							<animation effect="fade" end="6" condition="true">Conditional</animation>
+						</control>
+
+						<control type="togglebutton" id="4829">
+							<left>15</left>
+							<top>135</top>
+							<width>24</width>
+							<height>19</height>
+							<texturefocus flipy="true">controls/arrow-scroll-up-focus3.png</texturefocus>
+							<texturenofocus flipy="true">controls/arrow-scroll-up-nofocus3.png</texturenofocus>
+							<alttexturefocus>controls/arrow-scroll-up-focus3.png</alttexturefocus>
+							<alttexturenofocus>controls/arrow-scroll-up-nofocus3.png</alttexturenofocus>
+							<usealttexture>Skin.HasSetting(ShowMoreVideoCategories)</usealttexture>
+							<onclick>Skin.ToggleSetting(ShowMoreVideoCategories)</onclick>
+							<onclick condition="!Skin.HasSetting(ShowMoreVideoCategories)">Control.SetFocus(6873,3)</onclick>
+							<onclick condition="!Skin.HasSetting(ShowMoreVideoCategories)">Control.SetFocus(4829)</onclick>
+							<onup>6873</onup>
+							<onleft>850</onleft>
+							<ondown condition="!Control.IsVisible(6874)">850</ondown>
+							<ondown condition="Control.IsVisible(6874)">6874</ondown>
+							<onright condition="!Control.IsVisible(6874)">850</onright>
+							<onright condition="Control.IsVisible(6874)">6874</onright>
+							<animation effect="fade" end="90" condition="true">Conditional</animation>
+						</control>
+
+						<control type="label">
+							<left>45</left>
+							<top>135</top>
+							<width>217</width>
+							<font>PanelStatsFont</font>
+							<textcolor>GreyColor</textcolor>
+							<shadowcolor>ShadowColor</shadowcolor>
+							<label>$INFO[Container(6873).NumItems,, $LOCALIZE[31307]]</label>
+							<animation effect="fade" end="45" condition="true">Conditional</animation>
+						</control>
+					</control>
+				</control>
+			</control>
+		
+			<control type="group">
+				<animation type="Conditional" reversible="false" condition="Integer.IsGreater(Container(6874).NumItems,0)">
+					<effect type="fade" end="100" time="250"/>
+					<effect type="slide" start="100,0" time="300" tween="circle" easing="out"/>
+				</animation>
+				
+				<animation type="Conditional" reversible="false" condition="String.IsEqual(Container(6874).NumItems,0)">
+					<effect type="fade" end="0" time="250"/>
+					<effect type="slide" end="100,0" time="300" tween="circle" easing="out"/>
+				</animation>
+
+				<control type="group">
+					<left>495r</left>
+					<top>280</top>
+					<animation effect="slide" end="0,96" condition="Skin.HasSetting(ShowMoreVideoCategories)">Conditional</animation>
+
+					<control type="image">
+						<width>490</width>
+						<height>164</height>
+						<texture border="8">panels/panel.png</texture>
+					</control>
+
+					<control type="multiimage">
+						<description>Cover</description>
+						<left>341</left>
+						<top>15</top>
+						<width>134</width>
+						<height>134</height>
+						<imagepath diffuse="covers/home-panel-album-cover-diffuse.png" background="true">$INFO[Container(6874).ListItem.Icon]</imagepath>
+						<aspectratio>keep</aspectratio>
+						<fadetime>IconCrossfadeTime</fadetime>
+					</control>
+
+					<control type="label">
+						<description>Title</description>
+						<left>15</left>
+						<top>9</top>
+						<width>368</width>
+						<font>PanelTitleFont</font>
+						<textcolor>MediaInfoTitleColor</textcolor>
+						<shadowcolor>ShadowColor</shadowcolor>
+						<label>[UPPERCASE]$LOCALIZE[24005][/UPPERCASE]</label>
+					</control>
+
+					<control type="list" id="6874">
+						<top>33</top>
+						<width>329</width>
+						<height>120</height>
+						<scrolltime>200</scrolltime>
+						<onup>6874</onup>
+						<ondown>6874</ondown>
+						<onleft condition="Control.IsVisible(6930)">6930</onleft>
+						<onleft>6890</onleft>
+						<onright>850</onright>
+						<include>ContainerPosition1</include>
+						<visible>Integer.IsGreater(Container(6874).NumItems,0) | Container(6874).IsUpdating</visible>
+						<itemlayout height="24">
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelItemlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</itemlayout>
+						<focusedlayout height="24">
+							<control type="image">
+								<left>10</left>
+								<width>319</width>
+								<height>24</height>
+								<texture border="4">views/list-focus.png</texture>
+								<aspectratio>stretch</aspectratio>
+								<visible>Control.HasFocus(6874)</visible>
+								<animation type="Focus" condition="Container(6874).OnNext + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,-24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<animation type="Focus" condition="Container(6874).OnPrevious + ![Skin.String(LowCPUPowerMode,Animations) | Skin.String(LowCPUPowerMode,Full)]" reversible="false">
+									<effect type="Fade" start="40" end="100" time="400" tween="back" easing="in"/>
+									<effect type="slide" start="0,24" time="150" tween="quadratic" easing="out"/>
+								</animation>
+								<include>ListViewSelectFadeAnim</include>
+							</control>
+							<control type="label">
+								<width>309</width>
+								<include>CustomPanelFocusedlayoutLabel</include>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</focusedlayout>
+						<content target="videos">sources://video/</content>
+					</control>
 				</control>
 			</control>
 		</control>
@@ -6179,6 +6511,7 @@
 					<onright condition="Integer.IsGreater(Container(6886).NumItems,0)">Control.SetFocus(6886)</onright>
 					<onright condition="Integer.IsEqual(Container(6886).NumItems,0) + Control.IsVisible(110)">110</onright>
 					<onright condition="Integer.IsEqual(Container(6886).NumItems,0) + !Control.IsVisible(110)">850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6887).NumItems,0) | Container(6887).IsUpdating</visible>
 					<itemlayout height="53">
 						<control type="image">
@@ -6325,6 +6658,7 @@
 					<onright condition="Integer.IsGreater(Container(6887).NumItems,0)">Control.SetFocus(6887)</onright>
 					<onright condition="Integer.IsEqual(Container(6887).NumItems,0) + Control.IsVisible(110)">110</onright>
 					<onright condition="Integer.IsEqual(Container(6887).NumItems,0) + !Control.IsVisible(110)">850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6886).NumItems,0) | Container(6886).IsUpdating</visible>
 					<itemlayout height="53">
 						<control type="image">
@@ -6479,6 +6813,7 @@
 					<onright condition="Integer.IsGreater(Container(6875).NumItems,0)">Control.SetFocus(6875)</onright>
 					<onright condition="Integer.IsEqual(Container(6875).NumItems,0) + Control.IsVisible(110)">110</onright>
 					<onright condition="Integer.IsEqual(Container(6875).NumItems,0) + !Control.IsVisible(110)">850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6876).NumItems,0) | Container(6876).IsUpdating</visible>
 					<itemlayout height="53">
 						<control type="image">
@@ -6625,6 +6960,7 @@
 					<onright condition="Integer.IsGreater(Container(6876).NumItems,0)">Control.SetFocus(6876)</onright>
 					<onright condition="Integer.IsEqual(Container(6876).NumItems,0) + Control.IsVisible(110)">110</onright>
 					<onright condition="Integer.IsEqual(Container(6876).NumItems,0) + !Control.IsVisible(110)">850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6875).NumItems,0) | Container(6875).IsUpdating</visible>
 					<itemlayout height="53">
 						<control type="image">
@@ -6796,6 +7132,7 @@
 						<onleft condition="Control.IsVisible(110)">110</onleft>
 						<onleft>850</onleft>
 						<onright>4829</onright>
+						<include>ContainerPosition1</include>
 						<visible>!Skin.HasSetting(ShowMoreAddons) + [Integer.IsGreater(Container(6880).NumItems,0) | Container(6880).IsUpdating]</visible>
 						<itemlayout height="24">
 							<control type="label">
@@ -6843,6 +7180,7 @@
 						<onleft condition="Control.IsVisible(110)">110</onleft>
 						<onleft>850</onleft>
 						<onright>4829</onright>
+						<include>ContainerPosition1</include>
 						<visible>Skin.HasSetting(ShowMoreAddons) + [Integer.IsGreater(Container(6880).NumItems,0) | Container(6880).IsUpdating]</visible>
 						<itemlayout height="24">
 							<control type="label">
@@ -6978,6 +7316,7 @@
 						<onleft condition="Control.IsVisible(6930)">6930</onleft>
 						<onleft>6880</onleft>
 						<onright>850</onright>
+						<include>ContainerPosition1</include>
 						<visible>Integer.IsGreater(Container(6881).NumItems,0) | Container(6881).IsUpdating</visible>
 						<itemlayout height="24">
 							<control type="label">
@@ -7076,6 +7415,7 @@
 					<onleft>850</onleft>
 					<onright condition="Control.IsVisible(110)">110</onright>
 					<onright condition="!Control.IsVisible(110)">850</onright>
+					<include>ContainerPosition1</include>
 					<visible>Integer.IsGreater(Container(6878).NumItems,0) | Container(6878).IsUpdating</visible>
 					<itemlayout height="53">
 						<control type="image">
