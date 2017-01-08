@@ -1,3 +1,4 @@
+![banner] (http://i.imgur.com/VfxG5Nw.jpg)
 <h1>mim·ic</h1>
 <code>1. To imitate</code><br />
 <code>Synonyms: resemble, look like, have the appearance of</code>
@@ -15,12 +16,23 @@ And finally, all of the users, translators, testers, and fans of Mimic.
 
 Support Kodi by donating @ http://kodi.tv/contribute/donate/
 
-![Home Default] (http://i.imgur.com/5439sGH.jpg)
+![Home Default] (https://github.com/braz96/skin.mimic/raw/master/resources/screenshot-01.jpg)
 
-![Home Vertical] (http://i.imgur.com/LBLDthv.jpg)
+![Shift View] (https://github.com/braz96/skin.mimic/raw/master/resources/screenshot-06.jpg)
 
-More screenshots available here: http://imgur.com/a/LLSMM
 
+
+***
+**5.0.2**
+- Added background overlay options.
+- Added new widget styles based on content type.
+- Redesigned lyrics, thx manfeed!.
+- Enabled "More" menu on info dialog for video widgets and seasons.
+- Fixed home backgrounds for submenu items.
+
+***
+**5.0.1**
+- Reconfigured backgrounds options.
 
 ***
 **5.0.0**

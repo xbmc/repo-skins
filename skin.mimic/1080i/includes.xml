@@ -6,8 +6,8 @@
 	<include file="Includes_CommonValues.xml" />
 	<include file="Includes_Home.xml" />
 	<include file="Includes_Menus.xml" />
-	<include file="Includes_Music.xml" />
 	<include file="Includes_WidgetContent.xml" />
+	<include file="Includes_VideoLyrics.xml" />
 	<include file="View_50_List.xml" />
 	<include file="View_51_InfoWall.xml" />
 	<include file="View_52_Thumbnail.xml" />
@@ -30,8 +30,10 @@
 	<expression name="PluginAdvancedLauncher">String.Contains(Container.FolderPath,plugin://plugin.program.advanced.launcher/) | String.Contains(Container.FolderPath,plugin://plugin.program.advanced.emulator.launcher/)</expression>
 	<expression name="isVideoAddon">String.Contains(Container.FolderPath,plugin://plugin.video)</expression>
 	<expression name="isMovie">String.IsEqual(ListItem.DBTYPE,movie)</expression>
+	<expression name="isVideo">String.IsEqual(ListItem.DBTYPE,video)</expression>
 	<expression name="isTvshow">String.IsEqual(ListItem.DBTYPE,tvshow)</expression>
 	<expression name="isSeason">String.IsEqual(ListItem.DBTYPE,season)</expression>
+	<expression name="isSet">String.IsEqual(ListItem.DBTYPE,set)</expression>
 	<expression name="isEpisode">String.IsEqual(ListItem.DBTYPE,episode)</expression>
 	<expression name="isMusicvideo">String.IsEqual(ListItem.DBTYPE,musicvideo)</expression>
 	<expression name="isArtist">String.IsEqual(ListItem.DBTYPE,artist)</expression>
@@ -182,6 +184,15 @@
 			<onclick>Skin.SetBool(Art2Customizer)</onclick>
 			<onclick>ActivateWindow(1133)</onclick>
 			<visible>Window.IsActive(videos) + Control.IsVisible(51) + !Container.Content(sets) + !Container.Content(seasons) + !Container.Content(addons) + !Container.Content(musicvideos)</visible>
+		</control>
+		<control type="button" id="1897">
+			<description>Fallback</description>
+			<include>ButtonCommonValues</include>
+			<label>31277</label>
+			<onclick>Skin.Reset(ItemToEdit.MultiFanart)</onclick>
+			<onclick>$VAR[FallbackBackgroundOnClickVar]</onclick>
+			<onclick>ActivateWindow(1122)</onclick>
+			<visible>!String.Contains(Container.FolderPath,plugin://)</visible>
 		</control>
 		<control type="radiobutton" id="1805">
 			<label>31140</label>
@@ -472,7 +483,6 @@
 					<label>31039</label>
 					<enable>no</enable>
 					<disabledcolor>$VAR[ColorHighlightVar]</disabledcolor>
-					<visible>Window.IsActive(SettingsCategory.xml) | Player.HasMedia | !Skin.HasSetting(Disable.Quicknav) | !String.IsEqual(Playlist.Length(music),0) | !String.IsEqual(Playlist.Length(video),0)</visible>
 				</control>
 				<control type="button" id="20">
 					<description>Settings level</description>
@@ -491,6 +501,14 @@
 					<onclick>SettingsLevelChange</onclick>
 					<visible>Window.IsActive(SettingsCategory.xml)</visible>
 				</control>
+				<control type="button" id="2216">
+                    <description>Fallback</description>
+                    <include>ButtonCommonValues</include>
+                    <label>31277</label>
+                    <onclick>Skin.Reset(ItemToEdit.MultiFanart)</onclick>
+                    <onclick>$VAR[FallbackBackgroundOnClickVar]</onclick>
+                    <onclick>ActivateWindow(1122)</onclick>
+                </control>
 				<include>QuicknavButton</include>
 				<include>PlaylistButtons</include>
 				<include content="MenuPlayerControls">
@@ -891,7 +909,7 @@
 	</include>
 	<include name="OverlayIcons">
 		<control type="group">
-			<visible>![$EXP[isArtist] | $EXP[isAlbum] | $EXP[isSong] | String.IsEmpty(ListItem.DBTYPE)]</visible>
+			<visible>$EXP[isVideo] | $EXP[isMovie] | $EXP[isTvshow] | $EXP[isSeason] | $EXP[isEpisode] | $EXP[isSet] | $EXP[isMusicvideo] | Container.Content(files) | Container.Content(tvshows) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos) | Container.Content(videos) | Container.Content()</visible>
             <left>$PARAM[OverlayLeft]</left>
             <top>$PARAM[OverlayTop]</top>
             <control type="image">
@@ -907,7 +925,7 @@
                 <height>56</height>
                 <align>center</align>
                 <font>IconPlayer</font>
-                <label>$VAR[OverlayVar]</label>
+                <label>$VAR[OverlayIconVar]</label>
             </control>
             <control type="label">
             	<visible>!ListItem.IsResumable</visible>
@@ -925,8 +943,7 @@
     </include>
     <include name="OverlayList">
     	<control type="group">
-    		<visible>![Container.Content(actors) | Container.Content(countries) | Container.Content(directors) | Container.Content(studios)]</visible>
-    		<visible>![$EXP[isArtist] | $EXP[isAlbum] | $EXP[isSong] | String.IsEmpty(ListItem.DBTYPE)]</visible>
+    		<visible>$EXP[isVideo] | $EXP[isMovie] | $EXP[isTvshow] | $EXP[isSeason] | $EXP[isEpisode] | $EXP[isSet] | $EXP[isMusicvideo] | Container.Content(files) | Container.Content(tvshows) | Container.Content(episodes) | Container.Content(movies) | Container.Content(musicvideos) | Container.Content(videos) | Container.Content()</visible>
 	    	<control type="label">
 				<left>$PARAM[OverlayListLeft]</left>
 				<top>$PARAM[OverlayListTop]</top>
@@ -934,7 +951,7 @@
 				<height>64</height>
 				<font>IconSmall</font>
 				<align>center</align>
-				<label>$VAR[ListItem.Overlay]</label>
+				<label>$VAR[OverlayListVar]</label>
 				<visible>!String.IsEmpty(ListItem.Overlay)</visible>
 			</control>
 			<control type="label">
@@ -984,23 +1001,19 @@
         </control>
     </include>
     <include name="PlaylistButtons">
-		<control type="button" id="613">
+    	<control type="button" id="614">
 			<description>Go to playlist</description>
 			<include>ButtonCommonValues</include>
-			<label>31193</label>
+			<label>31234</label>
 			<onclick>ClearProperty(MediaMenu,Home)</onclick>
-			<onclick>ActivateWindow(musicplaylist)</onclick>
-			<visible>!String.IsEqual(Playlist.Length(music),0)</visible>
-			<enable>!Window.IsActive(musicplaylist)</enable>
-		</control>
-		<control type="button" id="614">
-			<description>Go to playlist</description>
-			<include>ButtonCommonValues</include>
-			<label>31194</label>
-			<onclick>ClearProperty(MediaMenu,Home)</onclick>
-			<onclick>ActivateWindow(videoplaylist)</onclick>
-			<visible>!String.IsEqual(Playlist.Length(video),0)</visible>
-			<enable>!Window.IsActive(videoplaylist)</enable>
+			<onclick condition="!String.IsEqual(Playlist.Length(music),0) + String.IsEqual(Playlist.Length(video),0)">ActivateWindow(musicplaylist)</onclick>
+			<onclick condition="!String.IsEqual(Playlist.Length(video),0) + String.IsEqual(Playlist.Length(music),0)">ActivateWindow(videoplaylist)</onclick>
+			<onclick condition="!String.IsEqual(Playlist.Length(music),0) + !String.IsEqual(Playlist.Length(video),0)">SetProperty(Dialog.1.Label,$LOCALIZE[31193])</onclick>
+            <onclick condition="!String.IsEqual(Playlist.Length(music),0) + !String.IsEqual(Playlist.Length(video),0)">SetProperty(Dialog.1.BuiltIn,ActivateWindow(musicplaylist))</onclick>
+            <onclick condition="!String.IsEqual(Playlist.Length(music),0) + !String.IsEqual(Playlist.Length(video),0)">SetProperty(Dialog.2.Label,$LOCALIZE[31194])</onclick>
+            <onclick condition="!String.IsEqual(Playlist.Length(music),0) + !String.IsEqual(Playlist.Length(video),0)">SetProperty(Dialog.2.BuiltIn,ActivateWindow(videoplaylist))</onclick>
+            <onclick condition="!String.IsEqual(Playlist.Length(music),0) + !String.IsEqual(Playlist.Length(video),0)">RunScript(script.toolbox,info=selectdialog,header=$LOCALIZE[524])</onclick>
+			<visible>!String.IsEqual(Playlist.Length(music),0) | !String.IsEqual(Playlist.Length(video),0) + !Window.Is(videoplaylist)</visible>
 		</control>
     </include>
     <include name="MediaFlags">
@@ -1325,7 +1338,6 @@
             <textoffsetx>15</textoffsetx>
             <textcolor>$VAR[ColorDisabledVar]</textcolor>
             <align>right</align>
-            <aligny>top</aligny>
             <label>$INFO[Container($PARAM[ContainerID]).NumItems,, $LOCALIZE[31025] • ]$INFO[Container($PARAM[ContainerID]).CurrentPage]$INFO[Container($PARAM[ContainerID]).NumPages,/]</label>
             <visible>Integer.IsGreater(Container($PARAM[ContainerID]).NumItems,0) + [$PARAM[Visibility]]</visible>
             <animation effect="fade" start="0" end="100" time="300" tween="sine" easing="inout" delay="300">Visible</animation>
@@ -1395,5 +1407,21 @@
                 <onclick>ActivateWindow(systeminfo)</onclick>
             </item>
         </content>
+    </include>
+    <include name="ThumbnailItemBackground">
+    	<control type="image">
+            <left>10</left>
+            <top>10</top>
+            <right>10</right>
+            <bottom>10</bottom>
+            <texture colordiffuse="33787878" border="5">listselect_fo.png</texture>
+        </control>
+        <control type="image">
+            <left>20</left>
+            <top>20</top>
+            <right>20</right>
+            <height>310</height>
+            <texture colordiffuse="$VAR[ColorBackgroundVar]" border="5">thumbnail_bg.png</texture>
+        </control>
     </include>
 </includes>
