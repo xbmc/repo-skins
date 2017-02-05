@@ -15,5 +15,11 @@ If you would like to express your appreciation for this skin, please consider a 
 
 
 ***
+**1.0.1**
+- Fixed watched/unwatched indicator settings.
+- Added Landscape and Logo views for movies and tvshows.
+- Misc bug fixes.
+
+***
 **1.0.0**
-- Initial release
+- Initial release.
