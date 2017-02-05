@@ -1,6 +1,7 @@
 <p align="center">
-<img src="http://christiangade.com/xtra/rapier.png" width="350" align="middle">
+<img src="http://inlinestudio.dk/xtra/kodi/logo-crop.png" width="400" align="middle">
 </p>
+
 ## ABOUT RAPIER 10.x FOR KODI 17 KRYPTON
 The goal is to provide a simple to use but clean and elegant interface that focuses on efficiency when browsing your media. 
 Important considerations are put on usability, performance, and providing the user with flexibility when it comes to customization.   
@@ -12,7 +13,7 @@ Created by scarfa and Gade
 Can be installed through the official Kodi repository or Gade's Development Repository.
 
 ### DEVELOPMENT:
-[Github](https://github.com/gade01/Rapier)
+[Github](https://github.com/gade01/Rapier/tree/Krypton)
 
 ### DEVELOPMENT REPOSITORY:  
 By installing Gade's Development Repository you will always automatically receive the newest and freshest development updates of Rapier and my other add-ons. You will still automatically get the official updates.  
@@ -58,12 +59,10 @@ Any script dependencies that the skin requires will automatically be downloaded.
 Manual installation can be done by moving the skin.rapier folder inside the zip file into your addons folder of your Kodi profile.
 Please make sure you have the following scripts installed when doing it manually: 
 
-script.favourites v5.0.2  
-script.artwork.downloader v13.0.0  
+script.favourites v5.0.2
 script.randomandlastitems v2.2.1  
 script.tv.show.next.aired v6.0.10  
 script.skin.helper.service v1.0.90  
-script.globalsearch v2.0.8  
 script.image.resource.select 0.0.9  
 resource.uisounds.rapier 1.0.1  
 resource.images.studios.white 0.0.2  
