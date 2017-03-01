@@ -9,10 +9,14 @@ This is a new skin for Kodi 17 called OMNI for its omnipresent menus. Users of M
 - Only keyboard and remote input are supported. Mouse input is entirely untested.
 - There are only two views, List and Wall, and they are available everywhere. No plans to add additional views.
 
-***Note that OMNI is using the developmental version of skin.helper.service that was just released, best to also install marcelveldt's beta repo if you want to test those features. See http://forum.kodi.tv/showthread.php?tid=...pid2460890
-
 If you would like to express your appreciation for this skin, please consider a donation to the XBMC Foundation. http://kodi.tv/contribute/donate/
 
+
+***
+**1.1.0**
+- Removed features that relied on skin.helper.service.
+- Skinned YouTube Browser addon.
+- Major redesign of all dialogs.
 
 ***
 **1.0.1**
