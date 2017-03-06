@@ -1,6 +1,7 @@
 <p align="center">
-<img src="http://christiangade.com/xtra/rapier.png" width="350" align="middle">
+<img src="http://inlinestudio.dk/xtra/kodi/logo-crop.png" width="400" align="middle">
 </p>
+
 ## ABOUT RAPIER 11.x FOR KODI 18 LEIA
 The goal is to provide a simple to use but clean and elegant interface that focuses on efficiency when browsing your media. 
 Important considerations are put on usability, performance, and providing the user with flexibility when it comes to customization.   
@@ -61,7 +62,9 @@ Please make sure you have the following scripts installed when doing it manually
 script.favourites v5.0.2
 script.randomandlastitems v2.2.1  
 script.tv.show.next.aired v6.0.10  
-script.skin.helper.service v1.0.90
+script.skin.helper.service v1.1.3
+script.skin.helper.backgrounds v1.0.21  
+script.skin.helper.widgets v1.0.22
 script.image.resource.select 0.0.9  
 resource.uisounds.rapier 1.0.1  
 resource.images.studios.white 0.0.2  
