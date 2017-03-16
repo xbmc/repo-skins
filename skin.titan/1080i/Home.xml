@@ -3,11 +3,10 @@
 <window>
     <defaultcontrol always="true">1000</defaultcontrol>
     <include>DefaultSkinSettings</include>
-    <onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu|netflixmenu)</onload>
+    <include condition="Skin.HasSetting(KeepWidgetFocus)">WidgetPlaybackFocus</include>
+    <onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=300&amp;group=mainmenu|powermenu)</onload>
 	<include condition="Skin.String(widgets_rotate) + !Skin.String(widgets_rotate,disabled)">WidgetsAutoRotateUnload</include>
     <onunload condition="!Skin.HasSetting(SectionBackgroundHomeOnly)">SetProperty(SectionBackground,$INFO[Control.GetLabel(99004)])</onunload>
-    <onunload condition="[Window.Next(fullscreenvideo) + !IsEmpty(Window(Home).Property(SkinHelper.WidgetContainer))] + Skin.HasSetting(KeepWidgetFocus)">SetProperty(LastFocusWidget,77777,Home)</onunload>
-    <onunload condition="![Window.Next(fullscreenvideo) + !IsEmpty(Window(Home).Property(SkinHelper.WidgetContainer))] + Skin.HasSetting(KeepWidgetFocus)">ClearProperty(LastFocusWidget,Home)</onunload>
     <!-- auto close homemenu and focus mainmenu when home is unloaded -->
     <onunload>ClearProperty(submenu,Home)</onunload>
     <onunload>ClearProperty(ShowWidget,Home)</onunload>
@@ -23,10 +22,13 @@
     
         <control type="button" id="1000">
 			<description>hidden button for onload actions as placing them in onload causes strange behaviour</description>
-            <onfocus condition="[SubString(Skin.String(HomeLayout), netflix) | Skin.String(HomeLayout, win10)] + !Skin.HasSetting(AutoFocusHome)">SetFocus(9000)</onfocus>
+            <onfocus condition="[SubString(Skin.String(HomeLayout), netflix) | Skin.String(HomeLayout, win10)] + !Skin.HasSetting(AutoFocusHome) + IsEmpty(Window(Home).Property(LastFocusWidget))">SetFocus(77777)</onfocus>
             <onfocus condition="[[!SubString(Skin.String(HomeLayout), netflix) + !Skin.String(HomeLayout, win10)] | Skin.HasSetting(AutoFocusHome)] + !Skin.String(home.defaultfocus) + IsEmpty(Window(Home).Property(LastFocusWidget))">SetFocus(300)</onfocus>
             <onfocus condition="[[!SubString(Skin.String(HomeLayout), netflix) + !Skin.String(HomeLayout, win10)] | Skin.HasSetting(AutoFocusHome)] + Skin.String(home.defaultfocus) + IsEmpty(Window(Home).Property(LastFocusWidget))">SetFocus(300,$INFO[Skin.String(home.defaultfocus)])</onfocus>
-            <onfocus condition="!IsEmpty(Window(Home).Property(LastFocusWidget)) + Skin.HasSetting(KeepWidgetFocus)">SetFocus($INFO[Window(Home).Property(LastFocusWidget)])</onfocus>
+            <include name="WidgetsAutoRotate" content="WidgetsAutoRotate" condition="[SubString(Skin.String(HomeLayout), netflix) | Skin.String(HomeLayout, win10)] + Skin.String(widgets_rotate_delay) + !Skin.String(widgets_rotate,disabled)">
+                <param name="interval" value="$INFO[Skin.String(widgets_rotate_delay)]" />
+            </include>            
+            <onfocus condition="IsEmpty(Window(Home).Property(widgetstyle))">SetProperty(widgetstyle, $INFO[Skin.String(widgetstyle)])</onfocus>
             <onfocus>SetProperty(HomeFirstLoadDone,done)</onfocus>
 			<texturenofocus>-</texturenofocus>
 			<texturefocus>-</texturefocus>
@@ -35,7 +37,7 @@
             <onup>300</onup>
             <ondown>300</ondown>
             <onback>300</onback>
-            <label>hiddenbuttonhiddenbuttonhiddenbutton</label>
+            <label>hiddenbutton</label>
             <visible allowhiddenfocus="true">false</visible>
 		</control>
 		
@@ -47,14 +49,20 @@
 			<font>-</font>
 			<label>$INFO[Weather.Conditions]</label>
 		</control>
-        <!--hidden label with widget style-->
-        <control type="label" id="17888">
-            <font>-</font>
-            <label>$VAR[widgetstyle_active]</label>
-        </control>
 		
         <!-- hidden submenu for count calculations -->
         <include condition="!Skin.String(HomeLayout, enhanced) + !Skin.HasSetting(DisableAllSubmenus)">hiddenSubmenu</include>
+        
+        <!-- Header behind home -->
+		<include condition="![Window.IsActive(Home) + SubString(Skin.String(HomeLayout),netflix)]">Header</include>
+        
+        <!--NowPlaying-->
+		<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
+		<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
+		<include condition="!Skin.HasTheme(classic)">NowPlayingInfoBar</include>
+        
+        <!-- PVR recording icon -->
+        <include condition="Skin.HasSetting(Home_RecordingIndicator)">NowRecordingIcon</include>
 	
 		<!-- Home Screen -->
         <include condition="Skin.String(HomeLayout, 1) | Skin.String(HomeLayout, 2) | Skin.String(HomeLayout, 3) | Skin.String(HomeLayout, 1small) | Skin.String(HomeLayout, 2small) | Skin.String(HomeLayout, 3small)">HomeTitanTiles</include>
@@ -64,19 +72,11 @@
         <include condition="Skin.String(HomeLayout, netflix)">HomeNetflix</include>
         <include condition="Skin.String(HomeLayout, netflix2)">HomeNetflix2</include>
         <include condition="Skin.String(HomeLayout, win10)">HomeWin10</include>
+        
+        <!-- Header on top of home -->
+		<include condition="[Window.IsActive(Home) + SubString(Skin.String(HomeLayout),netflix)]">Header</include>
 		
-        <!-- Header -->
-		<include>Header</include>
-        
-        <!--NowPlaying-->
-		<include condition="Skin.HasTheme(classic)">NowPlayingMusicClassic</include>
-		<include condition="Skin.HasTheme(classic)">NowPlayingVideoClassic</include>
-		<include condition="!Skin.HasTheme(classic)">NowPlayingInfoBar</include>
-        
         <include condition="Skin.HasSetting(DebugGrid) | Skin.HasSetting(DebugInfo)">DebugInfo</include>
         
-        <!-- PVR recording icon -->
-        <include condition="Skin.HasSetting(Home_RecordingIndicator)">NowRecordingIcon</include>
-
 	</controls>
 </window>

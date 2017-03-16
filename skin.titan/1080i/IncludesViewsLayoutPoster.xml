@@ -10,14 +10,7 @@
             <include condition="Skin.String(thumbsborder_unfocused, 4)">thumbborder_4</include>
             <include condition="Skin.String(thumbsborder_unfocused, 6)">thumbborder_6</include>
         </control>
-        <control type="image">
-            <include>PosterThumb</include>
-            <visible>!IsEmpty(ListItem.Art(poster)) | !IsEmpty(ListItem.Art(tvshow.poster)) | StringCompare(ListItem.Label,..)</visible>
-        </control>
-        <control type="image">
-            <include>PosterThumbFallback</include>
-            <visible>IsEmpty(ListItem.Art(poster)) + IsEmpty(ListItem.Art(tvshow.poster)) + !StringCompare(ListItem.Label,..)</visible>
-        </control>
+        <include>PosterThumbLayout</include>
         <include condition="!Window.IsActive(Home)">PosterTagOverlay</include>
         <control type="group">
             <include condition="Skin.HasSetting(CaseOverlays)">PosterCaseOverlay</include>
@@ -39,14 +32,7 @@
             <include condition="Skin.String(thumbsborder_focused, 4)">thumbborder_4</include>
             <include condition="Skin.String(thumbsborder_focused, 6)">thumbborder_6</include>
         </control>
-        <control type="image">
-            <include>PosterThumb</include>
-            <visible>!IsEmpty(ListItem.Art(poster)) | !IsEmpty(ListItem.Art(tvshow.poster)) | StringCompare(ListItem.Label,..)</visible>
-        </control>
-        <control type="image">
-            <include>PosterThumbFallback</include>
-            <visible>IsEmpty(ListItem.Art(poster)) + IsEmpty(ListItem.Art(tvshow.poster)) + !StringCompare(ListItem.Label,..)</visible>
-        </control>
+        <include>PosterThumbLayout</include>
         <include condition="!Window.IsActive(Home)">PosterTagOverlay</include>
         <control type="group">
             <include condition="Skin.HasSetting(CaseOverlays)">PosterCaseOverlay</include>
@@ -62,6 +48,23 @@
         </control>
     </include>
     
+    <include name="PosterThumbLayout">
+        <control type="image">
+            <description>Normal Poster thumb stretched aspect</description>
+            <texture border="1" background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png">$VAR[PosterThumbList]</texture>
+            <aspectratio scalediffuse="true" aligny="bottom" align="center">stretch</aspectratio>
+            <bordersize>8</bordersize>
+            <visible>!IsEmpty(ListItem.Art(poster)) | !IsEmpty(ListItem.Art(tvshow.poster))</visible>
+        </control>
+        <control type="image">
+            <description>Fallback Poster thumb keep aspect for all other</description>
+            <texture border="1" background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png">$VAR[PosterThumbList]</texture>
+            <aspectratio scalediffuse="false" aligny="top" align="center">keep</aspectratio>
+            <bordersize>8</bordersize>
+            <visible>IsEmpty(ListItem.Art(poster)) + IsEmpty(ListItem.Art(tvshow.poster))</visible>
+        </control>
+    </include>
+    
     <!-- SMALL POSTER LAYOUT -->
     <include name="SmallPosterPanelLayout">
         <control type="image">
@@ -71,9 +74,7 @@
             <include condition="Skin.String(thumbsborder_unfocused, 4)">thumbborder_4</include>
             <include condition="Skin.String(thumbsborder_unfocused, 6)">thumbborder_6</include>
           </control>
-          <control type="image">
-            <include>PosterThumb</include>
-          </control>
+          <include>PosterThumbLayout</include>
           <include condition="!Window.IsActive(Home)">SmallPosterTagOverlay</include>
           <control type="group">
             <include condition="Skin.HasSetting(CaseOverlays)">PosterCaseOverlay</include>
@@ -95,9 +96,7 @@
             <include condition="Skin.String(thumbsborder_focused, 4)">thumbborder_4</include>
             <include condition="Skin.String(thumbsborder_focused, 6)">thumbborder_6</include>
           </control>
-          <control type="image">
-            <include>PosterThumb</include>
-          </control>
+          <include>PosterThumbLayout</include>
           <include condition="!Window.IsActive(Home)">SmallPosterTagOverlay</include>
           <control type="group">
             <include condition="Skin.HasSetting(CaseOverlays)">PosterCaseOverlay</include>
@@ -122,17 +121,6 @@
         <texture border="0">diffuse/poster.png</texture>
         <colordiffuse>$VAR[ViewDetailsFocusColor]</colordiffuse>
     </include>
-    <include name="PosterThumb">
-        <texture border="1" background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png">$VAR[PosterThumbList]</texture>
-        <aspectratio scalediffuse="true" aligny="bottom" align="center">stretch</aspectratio>
-        <bordersize>8</bordersize>
-    </include>
-    <include name="PosterThumbFallback">
-        <texture border="1" background="true" diffuse="diffuse/poster.png" fallback="DefaultVideo.png">$VAR[PosterThumbList]</texture>
-        <aspectratio scalediffuse="false" aligny="top" align="center">scale</aspectratio>
-        <bordersize>8</bordersize>
-    </include>
-  
     <!-- TAG OVERLAYS -->
     <include name="PosterTagOverlayVisibility">
         <visible>!StringCompare(ListItem.Label,..)</visible>
@@ -329,4 +317,60 @@
         <value condition="StringCompare(Skin.String(CaseOverlays.Fallback),Bluray)">cases/bluray.png</value>
     </variable>
   
+    <!-- Poster thumb vars -->
+    <variable name="PosterThumb">
+        <value condition="Skin.HasSetting(SkinHelper.EnableAnimatedPosters) + !IsEmpty(Window(Home).Property(SkinHelper.ListItem.Art.AnimatedPoster))">$INFO[Window(Home).Property(SkinHelper.ListItem.Art.AnimatedPoster)]</value>
+        <value condition="Container.Content(seasons) + SubString(ListItem.Label,*,left) + !IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="Container.Content(seasons) + !IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="[Container.Content(episodes) | StringCompare(ListItem.DBTYPE,episode) | StringCompare(ListItem.Property(DBTYPE),episode)] + !IsEmpty(Container.Art(season.poster)) + !SubString(Container.FolderPath,season=-)">$INFO[Container.Art(season.poster)]</value>
+        <value condition="[Container.Content(episodes) | StringCompare(ListItem.DBTYPE,episode) | StringCompare(ListItem.Property(DBTYPE),episode)] + !IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+        <value condition="Container.Content(seasons) + !IsEmpty(Container.Art(poster))">$INFO[Container.Art(poster)]</value>
+        <value condition="Container.Content(seasons) + !IsEmpty(Container.Art(tvshow.poster))">$INFO[Container.Art(tvshow.poster)]</value>
+        <value condition="!IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+        <value condition="!IsEmpty(Window(Home).Property(SkinHelper.ListItem.Art.Poster))">$INFO[Window(Home).Property(SkinHelper.ListItem.Art.Poster)]</value>
+		<value condition="!IsEmpty(ListItem.Property(poster))">$INFO[ListItem.Property(poster)]</value>
+		<value condition="!IsEmpty(ListItem.Property(tvshow.poster))">$INFO[ListItem.Property(tvshow.poster)]</value>
+        <value condition="SubString(Container.FolderPath,pvr://) + StringCompare(Container.ListItem.Label,ListItem.Label)">$VAR[PVRThumb]</value>
+		<value condition="!IsEmpty(ListItem.Thumb)">$INFO[ListItem.Thumb]</value>
+		<value condition="StringCompare(ListItem.Label,..)">dialogs/filebrowser/DefaultFolderBack.png</value>
+		<value condition="StringCompare(ListItem.Label,$LOCALIZE[21452])">dialogs/filebrowser/DefaultAddSource.png</value>
+        <value condition="[Container.Content(genres) | StringCompare(ListItem.DBTYPE,genre)] + !SubString(ListItem.FolderPath,music)">$VAR[MovieGenreIconVar]</value>
+        <value condition="[Container.Content(genres) | StringCompare(ListItem.DBTYPE,genre)] + SubString(ListItem.FolderPath,music)">$VAR[MusicGenreIconVar]</value>
+		<value condition="[Container.Content(studios) | StringCompare(ListItem.DBTYPE,studio)] + !IsEmpty(Window(home).Property(SkinHelper.ListItem.StudioLogo))">$INFO[Window(home).Property(SkinHelper.ListItem.StudioLogo)]</value>
+		<value condition="Container.Content(actors) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+		<value condition="Container.Content(directors) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+		<value condition="Container.Content(years)">DefaultYear.png</value>
+		<value condition="Container.Content(countries)">DefaultCountry.png</value>
+		<value condition="Container.Content(tags)">DefaultTags.png</value>
+		<value condition="!IsEmpty(ListItem.Icon)">$INFO[ListItem.Icon]</value>
+    </variable>
+
+    <variable name="PosterThumbList">
+        <value condition="!IsEmpty(ListItem.Art(poster)) + ListItem.IsCollection + SubString(ListItem.Art(poster),emby)">$INFO[ListItem.Art(poster)]&amp;EnableImageEnhancers=false</value>
+        <value condition="Skin.HasSetting(SkinHelper.EnableAnimatedPosters) + !IsEmpty(ListItem.Art(animatedposter)) + !Window.IsActive(Home) + !Skin.HasSetting(AnimatedPostersDisableList)">$INFO[ListItem.Art(animatedposter)]</value>
+		<value condition="Container.Content(seasons) + SubString(ListItem.Label,*,left) + !IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="Container.Content(seasons) + !IsEmpty(ListItem.Icon)">$INFO[ListItem.Icon]</value>
+        <value condition="!IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="!IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+        <value condition="!IsEmpty(ListItem.Property(poster))">$INFO[ListItem.Property(poster)]</value>
+        <value condition="SubString(Container.FolderPath,pvr://) + StringCompare(Container.ListItem.Label,ListItem.Label)">$VAR[PVRThumb]</value>
+		<value condition="!IsEmpty(ListItem.Thumb)">$INFO[ListItem.Thumb]</value>
+		<value condition="StringCompare(ListItem.Label,..)">dialogs/filebrowser/DefaultFolderBack.png</value>
+		<value condition="StringCompare(ListItem.Label,$LOCALIZE[21452])">dialogs/filebrowser/DefaultAddSource.png</value>
+		<value condition="[Container.Content(genres) | StringCompare(ListItem.DBTYPE,genre)] + SubString(ListItem.FolderPath,music)">$VAR[MusicGenreIconVarList]</value>
+        <value condition="[Container.Content(genres) | StringCompare(ListItem.DBTYPE,genre)]">$VAR[MovieGenreIconVarList]</value>
+		<value condition="[Container.Content(studios) | StringCompare(ListItem.DBTYPE,studio)] + System.HasAddon(resource.images.studios.coloured) + Skin.HasSetting(PreferColorStudioLogos)">resource://resource.images.studios.coloured/$INFO[ListItem.Label,,.png]</value>
+        <value condition="[Container.Content(studios) | StringCompare(ListItem.DBTYPE,studio)]">resource://resource.images.studios.white/$INFO[ListItem.Label,,.png]</value>
+		<value condition="Container.Content(actors) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+		<value condition="Container.Content(directors) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+        <value condition="!IsEmpty(ListItem.Property(character)) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+        <value condition="!IsEmpty(ListItem.Property(job)) + IsEmpty(ListItem.Thumb)">DefaultActorPoster.png</value>
+		<value condition="Container.Content(years)">DefaultYear.png</value>
+		<value condition="Container.Content(countries)">DefaultCountry.png</value>
+		<value condition="Container.Content(tags)">DefaultTags.png</value>
+		<value condition="!IsEmpty(ListItem.Icon)">$INFO[ListItem.Icon]</value>
+    </variable>
+    
 </includes>
