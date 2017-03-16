@@ -56,6 +56,18 @@
 			<effect type="fade" start="100" end="0" time="200"/>
 		</animation>
     </include>
+    
+    <include name="animation_fade_visible">
+        <!--Visible/Hidden Aniamtion-->
+        <animation time="250" effect="fade" delay="350">Visible</animation>
+        <animation time="0" effect="fade" delay="0">Hidden</animation>
+		<animation type="WindowOpen" reversible="false">
+			<effect type="fade" start="0" end="100" time="200"/>
+		</animation>
+		<animation type="WindowClose" reversible="false">
+			<effect type="fade" start="100" end="0" time="0"/>
+		</animation>
+    </include>
 	
 	<include name="animation_fade_visible_hidden_delayed">
         <!--Visible/Hidden Aniamtion-->
@@ -522,20 +534,37 @@
  </control>
 </include>
 
+    <include name="AutoTrailerButton">
+        <control type="button">
+            <visible>false</visible>
+            <onfocus condition="Skin.HasSetting(DetailsAutoTrailer) + [Container.Content(movies) | Container.Content(tvshows)]">RunScript(script.skin.helper.service,ACTION=playtrailer,MODE=windowed,YOUTUBE=$INFO[Skin.String(AutoYoutubeTrailer)])</onfocus>
+            <onunfocus condition="Skin.HasSetting(DetailsAutoTrailer) + !IsEmpty(Window(Home).Property(TrailerPlaying)) + !StringCompare(Window(Home).Property(TrailerPlaying),fullscreen)">PlayerControl(Stop)</onunfocus>
+        </control>
+    </include>
+
+    <include name="HiddenHomeMenuButtonEnhancedHome">
+        <control type="button">
+            <visible>false</visible>
+            <onfocus condition="!IsEmpty(Container(300).ListItem.Property(widgetPath.99))">SetProperty(Skinhelper.WidgetContainer,1508,Home)</onfocus>
+            <onfocus condition="IsEmpty(Container(300).ListItem.Property(widgetPath.99)) + !IsEmpty(Container(300).ListItem.Property(widgetPath))">RunScript(script.skin.helper.service,ACTION=SETWIDGETCONTAINER,CONTROLS=$INFO[Container(300).ListItem.Property(id)]510-$INFO[Container(300).ListItem.Property(id)]520-$INFO[Container(300).ListItem.Property(id)]530-$INFO[Container(300).ListItem.Property(id)]540-$INFO[Container(300).ListItem.Property(id)]550-$INFO[Container(300).ListItem.Property(id)]560-$INFO[Container(300).ListItem.Property(id)]570-$INFO[Container(300).ListItem.Property(id)]580)</onfocus>
+            <onfocus condition="IsEmpty(Container(300).ListItem.property(widgetPath)) + IsEmpty(Container(300).ListItem.property(widgetPath.99))">ClearProperty(Skinhelper.WidgetContainer)</onfocus>
+            <include name="WidgetsAutoRotate" content="WidgetsAutoRotate" condition="Skin.String(widgets_rotate_delay) + !Skin.String(widgets_rotate,disabled)">
+                <param name="interval" value="$INFO[Skin.String(widgets_rotate_delay)]" />
+            </include>
+        </control>
+    </include>
+    
     <include name="HiddenHomeMenuButton">
         <control type="button">
             <visible>false</visible>
             <onfocus condition="Skin.String(HomeLayout,win10) | SubString(Skin.String(HomeLayout),netflix)">SetProperty(ShowViewSubMenu,show)</onfocus>
-            <onfocus>ClearProperty(SkinHelper.WidgetContainer)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout,enhanced) + Control.IsVisible(510)">Setproperty(SkinHelper.WidgetContainer,510)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout,enhanced) + Control.IsVisible(520)">Setproperty(SkinHelper.WidgetContainer,520)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout,enhanced) + Control.IsVisible(530)">Setproperty(SkinHelper.WidgetContainer,530)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout,enhanced) + Control.IsVisible(540)">Setproperty(SkinHelper.WidgetContainer,540)</onfocus>
-            <onfocus condition="Skin.String(HomeLayout,enhanced) + ![Control.IsVisible(510) | Control.IsVisible(520) | Control.IsVisible(530) | Control.IsVisible(540)] + Control.IsVisible(1508)">Setproperty(SkinHelper.WidgetContainer,1508)</onfocus>
+            <onfocus condition="!IsEmpty(Container(300).ListItem.Property(widgetPath)) + !Skin.HasSetting(DisableAllWidgets)">RunScript(script.skin.helper.service,ACTION=SETWIDGETCONTAINER,CONTROLS=$INFO[Container(300).ListItem.Property(id)]510-$INFO[Container(300).ListItem.Property(id)]520-$INFO[Container(300).ListItem.Property(id)]530-$INFO[Container(300).ListItem.Property(id)]540-$INFO[Container(300).ListItem.Property(id)]550-$INFO[Container(300).ListItem.Property(id)]560-$INFO[Container(300).ListItem.Property(id)]570-$INFO[Container(300).ListItem.Property(id)]580)</onfocus>
+            <onfocus condition="!IsEmpty(Window.Property(SkinHelper.WidgetContainer)) + IsEmpty(Container(300).ListItem.property(widgetPath))">ClearProperty(Skinhelper.WidgetContainer)</onfocus>
             <onfocus condition="!Skin.HasSetting(DisableAllSubmenus)">SetProperty(submenupos,$INFO[Container(300).Position],Home)</onfocus>
             <onfocus condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.HasSetting(AutoShowSubmenu) + IntegerGreaterThan(Container(4445).NumItems,0) + !Control.IsVisible(4446)">SetProperty(submenu,show,home)</onfocus>
             <onfocus condition="!Skin.HasSetting(DisableAllSubmenus) + Skin.HasSetting(AutoShowSubmenu) + IntegerGreaterThan(Container(4445).NumItems,0) + !Control.IsVisible(4446) + Skin.String(SubmenuLayout, vertical)">SetFocus(4444,0)</onfocus>
             <onfocus condition="!Skin.HasSetting(AutoShowSubmenu) | Control.IsVisible(4446) | !IntegerGreaterThan(Container(4445).NumItems,0)">ClearProperty(submenu,home)</onfocus>
+            <onfocus>SetProperty(widgetstyle, $INFO[Skin.String(widgetstyle)])</onfocus>
             <include name="WidgetsAutoRotate" content="WidgetsAutoRotate" condition="Skin.String(widgets_rotate_delay) + !Skin.String(widgets_rotate,disabled)">
                 <param name="interval" value="$INFO[Skin.String(widgets_rotate_delay)]" />
             </include>
@@ -546,84 +575,261 @@
         <control type="button">
             <visible>false</visible>
             <onfocus condition="!Skin.HasSetting(AutoShowSubmenu)">ClearProperty(submenu)</onfocus>
+            <onfocus>ClearProperty(ShowViewSubMenu, Home)</onfocus>
             <onfocus>SetProperty(ShowWidget,show)</onfocus>
             <onfocus>SetProperty(widgetstyle,$PARAM[widgetstyle])</onfocus>
             <onfocus>SetProperty(SkinHelper.WidgetContainer,$PARAM[widgetid],home)</onfocus>
-            <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate$PARAM[widgetid])) + !SubString(Skin.String(HomeLayout),netflix)">CancelAlarm(WidgetRotate$PARAM[widgetid],true)</onfocus>
-            <onfocus condition="!SubString(Skin.String(HomeLayout),netflix)">ClearProperty(WidgetRotate$PARAM[widgetid],Home)</onfocus>
-            <include name="WidgetsAutoRotateNetFlix" content="WidgetsAutoRotateNetFlix" condition="SubString(Skin.String(HomeLayout),netflix) + Skin.String(widgets_rotate_delay) + !Skin.String(widgets_rotate,disabled)">
-                <param name="interval" value="$INFO[Skin.String(widgets_rotate_delay)]" />
-            </include>
+            <onfocus>SetProperty(LastFocusWidgetPos,$INFO[Container($PARAM[widgetid]).CurrentItem],Home)</onfocus>
+            <onfocus condition="Skin.HasSetting(widgets_rotate_pause) + System.HasAlarm(WidgetRotate$PARAM[widgetid]) + !SubString(Skin.String(HomeLayout),netflix)">CancelAlarm(WidgetRotate$PARAM[widgetid],true)</onfocus>
         </control>
     </include>
 
     <include name="WidgetsAutoRotate">
+        <onfocus condition="!System.HasAlarm(WidgetRotate1508) + Control.IsVisible(1508) + !Control.HasFocus(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]">AlarmClock(WidgetRotate510,Control.Move(510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate1508) + ![Control.IsVisible(1508) + !Control.HasFocus(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]]">CancelAlarm(WidgetRotate510,true)</onfocus>
         
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate1508)) + Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]">AlarmClock(WidgetRotate1508,Control.Move(1508,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate1508)) + Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]">SetProperty(WidgetRotate1508,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate1508)) + ![Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]]">CancelAlarm(WidgetRotate1508,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate1508)) + ![Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.99))]]]">ClearProperty(WidgetRotate1508,Home)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate510) + Control.IsVisible(510) + !Control.HasFocus(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate510,Control.Move(510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate510) + ![Control.IsVisible(510) + !Control.HasFocus(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate1510) + Control.IsVisible(1510) + !Control.HasFocus(1510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate1510,Control.Move(1510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate1510) + ![Control.IsVisible(1510) + !Control.HasFocus(1510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate1510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate2510) + Control.IsVisible(2510) + !Control.HasFocus(2510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate2510,Control.Move(2510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate2510) + ![Control.IsVisible(2510) + !Control.HasFocus(2510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate2510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate3510) + Control.IsVisible(3510) + !Control.HasFocus(3510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate3510,Control.Move(3510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate3510) + ![Control.IsVisible(3510) + !Control.HasFocus(3510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate3510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate4510) + Control.IsVisible(4510) + !Control.HasFocus(4510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate4510,Control.Move(4510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate4510) + ![Control.IsVisible(4510) + !Control.HasFocus(4510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate4510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate5510) + Control.IsVisible(5510) + !Control.HasFocus(5510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate5510,Control.Move(5510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate5510) + ![Control.IsVisible(5510) + !Control.HasFocus(5510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate5510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate6510) + Control.IsVisible(6510) + !Control.HasFocus(6510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate6510,Control.Move(6510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate6510) + ![Control.IsVisible(6510) + !Control.HasFocus(6510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate6510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate7510) + Control.IsVisible(7510) + !Control.HasFocus(7510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate7510,Control.Move(7510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate7510) + ![Control.IsVisible(7510) + !Control.HasFocus(7510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate7510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate8510) + Control.IsVisible(8510) + !Control.HasFocus(8510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate8510,Control.Move(8510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate8510) + ![Control.IsVisible(8510) + !Control.HasFocus(8510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate8510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate9510) + Control.IsVisible(9510) + !Control.HasFocus(9510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate9510,Control.Move(9510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate9510) + ![Control.IsVisible(9510) + !Control.HasFocus(9510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate9510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate10510) + Control.IsVisible(10510) + !Control.HasFocus(10510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate10510,Control.Move(10510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate10510) + ![Control.IsVisible(10510) + !Control.HasFocus(10510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate10510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate11510) + Control.IsVisible(11510) + !Control.HasFocus(11510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate11510,Control.Move(11510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate11510) + ![Control.IsVisible(11510) + !Control.HasFocus(11510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate11510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate12510) + Control.IsVisible(12510) + !Control.HasFocus(12510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate12510,Control.Move(12510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate12510) + ![Control.IsVisible(12510) + !Control.HasFocus(12510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate12510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate13510) + Control.IsVisible(13510) + !Control.HasFocus(13510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate13510,Control.Move(13510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate13510) + ![Control.IsVisible(13510) + !Control.HasFocus(13510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate13510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate14510) + Control.IsVisible(14510) + !Control.HasFocus(14510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate14510,Control.Move(14510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate14510) + ![Control.IsVisible(14510) + !Control.HasFocus(14510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate14510,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate15510) + Control.IsVisible(15510) + !Control.HasFocus(15510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate15510,Control.Move(15510,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate15510) + ![Control.IsVisible(15510) + !Control.HasFocus(15510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate15510,true)</onfocus>
         
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate510)) + !IsEmpty(Container(300).ListItem.Property(widget)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">AlarmClock(WidgetRotate510,Control.Move(510,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate510)) + !IsEmpty(Container(300).ListItem.Property(widget)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]">SetProperty(WidgetRotate510,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate510)) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">CancelAlarm(WidgetRotate510,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate510)) + ![!IsEmpty(Container(300).ListItem.Property(widget)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate))]]]">ClearProperty(WidgetRotate510,Home)</onfocus>
-        
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate520)) + !IsEmpty(Container(300).ListItem.Property(widget.1)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate520,Control.Move(520,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate520)) + !IsEmpty(Container(300).ListItem.Property(widget.1)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">SetProperty(WidgetRotate520,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate520)) + ![!IsEmpty(Container(300).ListItem.Property(widget.1)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate520,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate520)) + ![!IsEmpty(Container(300).ListItem.Property(widget.1)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">ClearProperty(WidgetRotate520,Home)</onfocus>
-        
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate530)) + !IsEmpty(Container(300).ListItem.Property(widget.2)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate530,Control.Move(530,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate530)) + !IsEmpty(Container(300).ListItem.Property(widget.2)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">SetProperty(WidgetRotate530,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate530)) + ![!IsEmpty(Container(300).ListItem.Property(widget.2)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate530,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate530)) + ![!IsEmpty(Container(300).ListItem.Property(widget.2)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">ClearProperty(WidgetRotate530,Home)</onfocus>
-        
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate540)) + !IsEmpty(Container(300).ListItem.Property(widget.3)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate540,Control.Move(540,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate540)) + !IsEmpty(Container(300).ListItem.Property(widget.3)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">SetProperty(WidgetRotate540,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate540)) + ![!IsEmpty(Container(300).ListItem.Property(widget.3)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate540,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate540)) + ![!IsEmpty(Container(300).ListItem.Property(widget.3)) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">ClearProperty(WidgetRotate540,Home)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate520) + Control.IsVisible(520) + !Control.HasFocus(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate520,Control.Move(520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate520) + ![Control.IsVisible(520) + !Control.HasFocus(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate1520) + Control.IsVisible(1520) + !Control.HasFocus(1520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate1520,Control.Move(1520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate1520) + ![Control.IsVisible(1520) + !Control.HasFocus(1520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate1520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate2520) + Control.IsVisible(2520) + !Control.HasFocus(2520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate2520,Control.Move(2520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate2520) + ![Control.IsVisible(2520) + !Control.HasFocus(2520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate2520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate3520) + Control.IsVisible(3520) + !Control.HasFocus(3520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate3520,Control.Move(3520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate3520) + ![Control.IsVisible(3520) + !Control.HasFocus(3520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate3520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate4520) + Control.IsVisible(4520) + !Control.HasFocus(4520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate4520,Control.Move(4520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate4520) + ![Control.IsVisible(4520) + !Control.HasFocus(4520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate4520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate5520) + Control.IsVisible(5520) + !Control.HasFocus(5520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate5520,Control.Move(5520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate5520) + ![Control.IsVisible(5520) + !Control.HasFocus(5520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate5520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate6520) + Control.IsVisible(6520) + !Control.HasFocus(6520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate6520,Control.Move(6520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate6520) + ![Control.IsVisible(6520) + !Control.HasFocus(6520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate6520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate7520) + Control.IsVisible(7520) + !Control.HasFocus(7520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate7520,Control.Move(7520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate7520) + ![Control.IsVisible(7520) + !Control.HasFocus(7520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate7520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate8520) + Control.IsVisible(8520) + !Control.HasFocus(8520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate8520,Control.Move(8520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate8520) + ![Control.IsVisible(8520) + !Control.HasFocus(8520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate8520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate9520) + Control.IsVisible(9520) + !Control.HasFocus(9520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate9520,Control.Move(9520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate9520) + ![Control.IsVisible(9520) + !Control.HasFocus(9520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate9520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate10520) + Control.IsVisible(10520) + !Control.HasFocus(10520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate10520,Control.Move(10520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate10520) + ![Control.IsVisible(10520) + !Control.HasFocus(10520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate10520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate11520) + Control.IsVisible(11520) + !Control.HasFocus(11520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate11520,Control.Move(11520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate11520) + ![Control.IsVisible(11520) + !Control.HasFocus(11520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate11520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate12520) + Control.IsVisible(12520) + !Control.HasFocus(12520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate12520,Control.Move(12520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate12520) + ![Control.IsVisible(12520) + !Control.HasFocus(12520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate12520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate13520) + Control.IsVisible(13520) + !Control.HasFocus(13520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate13520,Control.Move(13520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate13520) + ![Control.IsVisible(13520) + !Control.HasFocus(13520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate13520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate14520) + Control.IsVisible(14520) + !Control.HasFocus(14520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate14520,Control.Move(14520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate14520) + ![Control.IsVisible(14520) + !Control.HasFocus(14520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate14520,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate15520) + Control.IsVisible(15520) + !Control.HasFocus(15520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]">AlarmClock(WidgetRotate15520,Control.Move(15520,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate15520) + ![Control.IsVisible(15520) + !Control.HasFocus(15520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.1))]]]">CancelAlarm(WidgetRotate15520,true)</onfocus>
+
+        <onfocus condition="!System.HasAlarm(WidgetRotate530) + Control.IsVisible(530) + !Control.HasFocus(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate530,Control.Move(530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate530) + ![Control.IsVisible(530) + !Control.HasFocus(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate1530) + Control.IsVisible(1530) + !Control.HasFocus(1530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate1530,Control.Move(1530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate1530) + ![Control.IsVisible(1530) + !Control.HasFocus(1530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate1530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate2530) + Control.IsVisible(2530) + !Control.HasFocus(2530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate2530,Control.Move(2530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate2530) + ![Control.IsVisible(2530) + !Control.HasFocus(2530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate2530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate3530) + Control.IsVisible(3530) + !Control.HasFocus(3530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate3530,Control.Move(3530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate3530) + ![Control.IsVisible(3530) + !Control.HasFocus(3530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate3530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate4530) + Control.IsVisible(4530) + !Control.HasFocus(4530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate4530,Control.Move(4530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate4530) + ![Control.IsVisible(4530) + !Control.HasFocus(4530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate4530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate5530) + Control.IsVisible(5530) + !Control.HasFocus(5530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate5530,Control.Move(5530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate5530) + ![Control.IsVisible(5530) + !Control.HasFocus(5530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate5530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate6530) + Control.IsVisible(6530) + !Control.HasFocus(6530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate6530,Control.Move(6530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate6530) + ![Control.IsVisible(6530) + !Control.HasFocus(6530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate6530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate7530) + Control.IsVisible(7530) + !Control.HasFocus(7530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate7530,Control.Move(7530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate7530) + ![Control.IsVisible(7530) + !Control.HasFocus(7530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate7530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate8530) + Control.IsVisible(8530) + !Control.HasFocus(8530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate8530,Control.Move(8530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate8530) + ![Control.IsVisible(8530) + !Control.HasFocus(8530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate8530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate9530) + Control.IsVisible(9530) + !Control.HasFocus(9530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate9530,Control.Move(9530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate9530) + ![Control.IsVisible(9530) + !Control.HasFocus(9530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate9530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate10530) + Control.IsVisible(10530) + !Control.HasFocus(10530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate10530,Control.Move(10530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate10530) + ![Control.IsVisible(10530) + !Control.HasFocus(10530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate10530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate11530) + Control.IsVisible(11530) + !Control.HasFocus(11530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate11530,Control.Move(11530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate11530) + ![Control.IsVisible(11530) + !Control.HasFocus(11530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate11530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate12530) + Control.IsVisible(12530) + !Control.HasFocus(12530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate12530,Control.Move(12530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate12530) + ![Control.IsVisible(12530) + !Control.HasFocus(12530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate12530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate13530) + Control.IsVisible(13530) + !Control.HasFocus(13530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate13530,Control.Move(13530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate13530) + ![Control.IsVisible(13530) + !Control.HasFocus(13530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate13530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate14530) + Control.IsVisible(14530) + !Control.HasFocus(14530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate14530,Control.Move(14530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate14530) + ![Control.IsVisible(14530) + !Control.HasFocus(14530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate14530,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate15530) + Control.IsVisible(15530) + !Control.HasFocus(15530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]">AlarmClock(WidgetRotate15530,Control.Move(15530,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate15530) + ![Control.IsVisible(15530) + !Control.HasFocus(15530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.2))]]]">CancelAlarm(WidgetRotate15530,true)</onfocus>
+
+        <onfocus condition="!System.HasAlarm(WidgetRotate540) + Control.IsVisible(540) + !Control.HasFocus(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate540,Control.Move(540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate540) + ![Control.IsVisible(540) + !Control.HasFocus(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate1540) + Control.IsVisible(1540) + !Control.HasFocus(1540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate1540,Control.Move(1540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate1540) + ![Control.IsVisible(1540) + !Control.HasFocus(1540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate1540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate2540) + Control.IsVisible(2540) + !Control.HasFocus(2540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate2540,Control.Move(2540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate2540) + ![Control.IsVisible(2540) + !Control.HasFocus(2540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate2540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate3540) + Control.IsVisible(3540) + !Control.HasFocus(3540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate3540,Control.Move(3540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate3540) + ![Control.IsVisible(3540) + !Control.HasFocus(3540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate3540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate4540) + Control.IsVisible(4540) + !Control.HasFocus(4540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate4540,Control.Move(4540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate4540) + ![Control.IsVisible(4540) + !Control.HasFocus(4540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate4540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate5540) + Control.IsVisible(5540) + !Control.HasFocus(5540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate5540,Control.Move(5540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate5540) + ![Control.IsVisible(5540) + !Control.HasFocus(5540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate5540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate6540) + Control.IsVisible(6540) + !Control.HasFocus(6540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate6540,Control.Move(6540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate6540) + ![Control.IsVisible(6540) + !Control.HasFocus(6540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate6540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate7540) + Control.IsVisible(7540) + !Control.HasFocus(7540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate7540,Control.Move(7540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate7540) + ![Control.IsVisible(7540) + !Control.HasFocus(7540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate7540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate8540) + Control.IsVisible(8540) + !Control.HasFocus(8540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate8540,Control.Move(8540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate8540) + ![Control.IsVisible(8540) + !Control.HasFocus(8540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate8540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate9540) + Control.IsVisible(9540) + !Control.HasFocus(9540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate9540,Control.Move(9540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate9540) + ![Control.IsVisible(9540) + !Control.HasFocus(9540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate9540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate10540) + Control.IsVisible(10540) + !Control.HasFocus(10540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate10540,Control.Move(10540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate10540) + ![Control.IsVisible(10540) + !Control.HasFocus(10540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate10540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate11540) + Control.IsVisible(11540) + !Control.HasFocus(11540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate11540,Control.Move(11540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate11540) + ![Control.IsVisible(11540) + !Control.HasFocus(11540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate11540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate12540) + Control.IsVisible(12540) + !Control.HasFocus(12540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate12540,Control.Move(12540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate12540) + ![Control.IsVisible(12540) + !Control.HasFocus(12540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate12540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate13540) + Control.IsVisible(13540) + !Control.HasFocus(13540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate13540,Control.Move(13540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate13540) + ![Control.IsVisible(13540) + !Control.HasFocus(13540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate13540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate14540) + Control.IsVisible(14540) + !Control.HasFocus(14540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate14540,Control.Move(14540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate14540) + ![Control.IsVisible(14540) + !Control.HasFocus(14540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate14540,true)</onfocus>
+        <onfocus condition="!System.HasAlarm(WidgetRotate15540) + Control.IsVisible(15540) + !Control.HasFocus(15540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]">AlarmClock(WidgetRotate15540,Control.Move(15540,1),00:$PARAM[interval],silent,loop)</onfocus>
+        <onfocus condition="System.HasAlarm(WidgetRotate15540) + ![Control.IsVisible(15540) + !Control.HasFocus(15540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540) | [Skin.String(widgets_rotate,override) + !IsEmpty(Container(300).ListItem.Property(widgetAutoRotate.3))]]]">CancelAlarm(WidgetRotate15540,true)</onfocus>
 
     </include>
     
-    <include name="WidgetsAutoRotateNetFlix">
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate1508)) + Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight)]">AlarmClock(WidgetRotate1508,Control.Move(1508,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate1508)) + Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight)]">SetProperty(WidgetRotate1508,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate1508)) + ![Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight)]]">CancelAlarm(WidgetRotate1508,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate1508)) + ![Control.IsVisible(1508) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,spotlight)]]">ClearProperty(WidgetRotate1508,Home)</onfocus>
+    <include name="WidgetsAutoRotateUnload">
+        <onunload condition="System.HasAlarm(WidgetRotate1508)">CancelAlarm(WidgetRotate1508,true)</onunload>
+
+        <onunload condition="System.HasAlarm(WidgetRotate510)">CancelAlarm(WidgetRotate510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate1510)">CancelAlarm(WidgetRotate1510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate2510)">CancelAlarm(WidgetRotate2510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate3510)">CancelAlarm(WidgetRotate3510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate4510)">CancelAlarm(WidgetRotate4510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate5510)">CancelAlarm(WidgetRotate5510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate6510)">CancelAlarm(WidgetRotate6510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate7510)">CancelAlarm(WidgetRotate7510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate8510)">CancelAlarm(WidgetRotate8510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate9510)">CancelAlarm(WidgetRotate9510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate10510)">CancelAlarm(WidgetRotate10510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate11510)">CancelAlarm(WidgetRotate11510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate12510)">CancelAlarm(WidgetRotate12510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate13510)">CancelAlarm(WidgetRotate13510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate14510)">CancelAlarm(WidgetRotate14510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate15510)">CancelAlarm(WidgetRotate15510,true)</onunload>
+
+        <onunload condition="System.HasAlarm(WidgetRotate510)">CancelAlarm(WidgetRotate510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate1510)">CancelAlarm(WidgetRotate1510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate2510)">CancelAlarm(WidgetRotate2510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate3510)">CancelAlarm(WidgetRotate3510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate4510)">CancelAlarm(WidgetRotate4510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate5510)">CancelAlarm(WidgetRotate5510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate6510)">CancelAlarm(WidgetRotate6510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate7510)">CancelAlarm(WidgetRotate7510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate8510)">CancelAlarm(WidgetRotate8510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate9510)">CancelAlarm(WidgetRotate9510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate10510)">CancelAlarm(WidgetRotate10510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate11510)">CancelAlarm(WidgetRotate11510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate12510)">CancelAlarm(WidgetRotate12510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate13510)">CancelAlarm(WidgetRotate13510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate14510)">CancelAlarm(WidgetRotate14510,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate15510)">CancelAlarm(WidgetRotate15510,true)</onunload>
         
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate510)) + Control.IsVisible(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510)]">AlarmClock(WidgetRotate510,Control.Move(510,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate510)) + Control.IsVisible(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510)]">SetProperty(WidgetRotate510,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate510)) + ![Control.IsVisible(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510)]]">CancelAlarm(WidgetRotate510,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate510)) + ![Control.IsVisible(510) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,510)]]">ClearProperty(WidgetRotate510,Home)</onfocus>
+        <onunload condition="System.HasAlarm(WidgetRotate530)">CancelAlarm(WidgetRotate530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate1530)">CancelAlarm(WidgetRotate1530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate2530)">CancelAlarm(WidgetRotate2530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate3530)">CancelAlarm(WidgetRotate3530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate4530)">CancelAlarm(WidgetRotate4530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate5530)">CancelAlarm(WidgetRotate5530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate6530)">CancelAlarm(WidgetRotate6530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate7530)">CancelAlarm(WidgetRotate7530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate8530)">CancelAlarm(WidgetRotate8530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate9530)">CancelAlarm(WidgetRotate9530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate10530)">CancelAlarm(WidgetRotate10530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate11530)">CancelAlarm(WidgetRotate11530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate12530)">CancelAlarm(WidgetRotate12530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate13530)">CancelAlarm(WidgetRotate13530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate14530)">CancelAlarm(WidgetRotate14530,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate15530)">CancelAlarm(WidgetRotate15530,true)</onunload>
+
+        <onunload condition="System.HasAlarm(WidgetRotate540)">CancelAlarm(WidgetRotate540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate1540)">CancelAlarm(WidgetRotate1540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate2540)">CancelAlarm(WidgetRotate2540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate3540)">CancelAlarm(WidgetRotate3540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate4540)">CancelAlarm(WidgetRotate4540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate5540)">CancelAlarm(WidgetRotate5540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate6540)">CancelAlarm(WidgetRotate6540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate7540)">CancelAlarm(WidgetRotate7540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate8540)">CancelAlarm(WidgetRotate8540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate9540)">CancelAlarm(WidgetRotate9540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate10540)">CancelAlarm(WidgetRotate10540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate11540)">CancelAlarm(WidgetRotate11540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate12540)">CancelAlarm(WidgetRotate12540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate13540)">CancelAlarm(WidgetRotate13540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate14540)">CancelAlarm(WidgetRotate14540,true)</onunload>
+        <onunload condition="System.HasAlarm(WidgetRotate15540)">CancelAlarm(WidgetRotate15540,true)</onunload>
         
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate520)) + Control.IsVisible(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520)]">AlarmClock(WidgetRotate520,Control.Move(520,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate520)) + Control.IsVisible(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520)]">SetProperty(WidgetRotate520,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate520)) + ![Control.IsVisible(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520)]]">CancelAlarm(WidgetRotate520,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate520)) + ![Control.IsVisible(520) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,520)]]">ClearProperty(WidgetRotate520,Home)</onfocus>
-        
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate530)) + Control.IsVisible(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530)]">AlarmClock(WidgetRotate530,Control.Move(530,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate530)) + Control.IsVisible(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530)]">SetProperty(WidgetRotate530,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate530)) + ![Control.IsVisible(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530)]]">CancelAlarm(WidgetRotate530,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate530)) + ![Control.IsVisible(530) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,530)]]">ClearProperty(WidgetRotate530,Home)</onfocus>
-        
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate540)) + Control.IsVisible(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540)]">AlarmClock(WidgetRotate540,Control.Move(540,1),00:$PARAM[interval],silent,loop)</onfocus>
-        <onfocus condition="IsEmpty(Window(Home).Property(WidgetRotate540)) + Control.IsVisible(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540)]">SetProperty(WidgetRotate540,active)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate540)) + ![Control.IsVisible(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540)]]">CancelAlarm(WidgetRotate540,true)</onfocus>
-        <onfocus condition="!IsEmpty(Window(Home).Property(WidgetRotate540)) + ![Control.IsVisible(540) + [Skin.String(widgets_rotate,all) | Skin.String(widgets_rotate,540)]]">ClearProperty(WidgetRotate540,Home)</onfocus>
     </include>
     
-    <include name="WidgetsAutoRotateUnload">
-        <onunload condition="!IsEmpty(Window(Home).Property(WidgetRotate1508))">CancelAlarm(WidgetRotate1508,true)</onunload>
-        <onunload condition="!IsEmpty(Window(Home).Property(WidgetRotate510))">CancelAlarm(WidgetRotate510,true)</onunload>
-        <onunload condition="!IsEmpty(Window(Home).Property(WidgetRotate520))">CancelAlarm(WidgetRotate520,true)</onunload>
-        <onunload condition="!IsEmpty(Window(Home).Property(WidgetRotate530))">CancelAlarm(WidgetRotate530,true)</onunload>
-        <onunload condition="!IsEmpty(Window(Home).Property(WidgetRotate540))">CancelAlarm(WidgetRotate540,true)</onunload>
-        <onunload>ClearProperty(WidgetRotate1508,Home)</onunload>
-        <onunload>ClearProperty(WidgetRotate510,Home)</onunload>
-        <onunload>ClearProperty(WidgetRotate520,Home)</onunload>
-        <onunload>ClearProperty(WidgetRotate530,Home)</onunload>
-        <onunload>ClearProperty(WidgetRotate540,Home)</onunload>
+    <include name="WidgetPlaybackFocus">
+        <onload condition="!IsEmpty(Window(Home).Property(LastFocusWidget))">RunScript(script.skin.helper.service,action=setfocus,control=$INFO[Window(Home).Property(LastFocusWidget)],relativeposition=$INFO[Window(Home).Property(LastFocusWidgetPos)],fallback=300)</onload>
+        <onunload condition="Control.HasFocus(77777)">SetProperty(LastFocusWidget,$INFO[Window(Home).Property(SkinHelper.WidgetContainer)],Home)</onunload>
+        <onunload condition="!Control.HasFocus(77777)">ClearProperty(LastFocusWidget,Home)</onunload>
     </include>
+
+	<include name="Fade10">
+		<animation effect="fade" end="10" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade20">
+		<animation effect="fade" end="20" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade30">
+		<animation effect="fade" end="30" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade40">
+		<animation effect="fade" end="40" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade50">
+		<animation effect="fade" end="50" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade60">
+		<animation effect="fade" end="60" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade70">
+		<animation effect="fade" end="70" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade80">
+		<animation effect="fade" end="80" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade90">
+		<animation effect="fade" end="90" time="0" condition="true">Conditional</animation>
+	</include>
+	<include name="Fade100">
+		<animation effect="fade" end="100" time="0" condition="true">Conditional</animation>
+	</include>
 	
 </includes>
