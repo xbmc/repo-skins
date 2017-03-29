@@ -11,7 +11,6 @@
     <include file="View_Episodes.xml"/>
     <include file="View_Movies.xml"/>
     <include file="View_TVShows.xml"/>
-    <include file="View_MusicAddons.xml"/>
     <include file="View_MusicGenres.xml"/>
     <include file="View_VideoFiles.xml"/>
     <include file="View_Photos.xml"/>
@@ -23,22 +22,108 @@
     <include file="View_ArtistAlbums.xml"/>
     <include file="View_MusicVideos.xml"/>
     <include file="script-skinshortcuts-includes.xml"/>
+    <include file="Includes_mediaShowcase.xml"/>
 
-    <!--expressions-->
-    <!--originals
-    <expression name="isSeason">!isempty(container.folderpath) + !StringCompare(container.foldername,files) + !container.content(episodes) + !Substring(Container.folderpath,plugin) + !container.content(addons)</expression>
-    <expression name="isEpisode">Substring(container.folderpath,videodb://) + !isempty(container.folderpath) + container.content(episodes) + !Substring(Container.folderpath,plugin)</expression>
-    <expression name="isTVShow">Substring(container.folderpath,videodb://) + Library.HasContent(tvshows) + !isempty(container.foldername) + !StringCompare(container.foldername,files) + !container.content(movies) + !container.content(episodes) + !container.content(seasons) + !Substring(Container.folderpath,plugin) + !container.content(addons) + !container.content(files)</expression>
-    <expression name="isMovie">Library.HasContent(movies) + !container.content(files) + !isempty(container.foldername) + !StringCompare(container.foldername,files) + Substring(container.folderpath,videodb://) + !StringCompare(container.foldername,Video Playlists) + !container.content(tvshows) + !container.content(episodes) + !container.content(seasons) + !Substring(Container.folderpath,plugin) + !container.content(addons)</expression>
-    <expression name="isVideoList">!isempty(container.folderpath) + !Substring(container.folderpath,videodb://) | container.content(files) | StringCompare(container.foldername,files) | Substring(container.folderpath,special://videoplaylists)</expression>
--->
-
+    <!--view type conditions-->
     <expression name="isVideoList">container.content(files) | isempty(container.content) | container.content(playlists) | container.content(addons)</expression>
     <expression name="isMovie">container.content(movies) + [Substring(container.folderpath,videodb://) | Substring(container.folderpath,special://profile/playlists/video)]</expression>
     <expression name="isTVShow">container.content(tvshows) + [Substring(container.folderpath,videodb://) | Substring(container.folderpath,special://profile/playlists/video)]</expression>
     <expression name="isSeason">container.content(seasons) + Substring(container.folderpath,videodb://)</expression>
     <expression name="isEpisode">container.content(episodes) + !Substring(Container.folderpath,plugin)</expression>
     <expression name="isMusicVideo">container.content(musicvideos) + !Substring(Container.folderpath,plugin)</expression>
+
+    <expression name="isMusicList">Substring(container.foldername,Files) | container.content(files) | container.content(addons) | [container.content(playlists) + !Substring(Container.folderpath,special://profile/playlists)]</expression>
+    <expression name="isMusicArtist">container.content(artists) + [Substring(container.folderpath,musicdb://) | Substring(Container.folderpath,special://profile/playlists)]</expression>
+    <expression name="isMusicArtistCatalogue">container.content(albums) + Substring(container.folderpath,albumartistsonly)</expression>
+    <expression name="isMusicAlbum">container.content(albums) + [Substring(container.folderpath,musicdb://) | Substring(Container.folderpath,special://profile/playlists)]</expression>
+    <expression name="isMusicGenre">container.content(genres) + Substring(container.folderpath,musicdb://)</expression>
+    <expression name="isMusicSong">container.content(songs) + Substring(Container.folderpath,musicdb://)</expression>
+    <expression name="isMusicPlaylist">container.content(songs) + [Substring(Container.folderpath,special://profile/playlists) | Substring(Container.foldername,PartyMode) | Substring(Container.folderpath,playlistmusic://)]</expression>
+
+    <!--item fanart-->
+    <include name="itemFanart">
+        <control type="wraplist" id="99999">
+            <posx>0</posx>
+            <posy>0</posy>
+            <width>1000</width>
+            <height>1000</height>
+            <enable>false</enable>
+            <preloaditems>2</preloaditems>
+            <scrolltime>15000</scrolltime>
+            <autoscroll>true</autoscroll>
+            <itemlayout />
+            <focusedlayout />
+            <content>$VAR[extraFanartLocation]</content>
+        </control>
+        <control type="image">
+            <visible>Integer.IsGreater(container(99999).numitems,0) + !Skin.HasSetting(disableExtendedFanart)</visible>
+            <include>dimensionsFullscreen</include>
+            <texture>$INFO[container(99999).listitem.filenameandpath,,]</texture>
+            <colordiffuse>ffffffff</colordiffuse>
+            <fadetime>500</fadetime>
+            <aspectratio>stretch</aspectratio>
+            <include>kenBurnsey</include>
+        </control>
+        <control type="image">
+            <visible>!Integer.IsGreater(container(99999).numitems,0) | Skin.HasSetting(disableExtendedFanart)</visible>
+            <posx>0</posx>
+            <posy>0</posy>
+            <include>dimensionsFullscreen</include>
+            <texture>$INFO[ListItem.Art(fanart)]</texture>
+            <colordiffuse>ffffffff</colordiffuse>
+            <aspectratio>stretch</aspectratio>
+            <include>kenBurnsey</include>
+        </control>
+    </include>
+
+    <!--keyboard autocomplete-->
+    <include name="AutoComplete">
+            <control type="group">
+            <visible>!String.IsEmpty(Control.GetLabel(312).index(1)) + !Control.IsVisible(313)</visible>
+            <posx>0</posx>
+            <posy>0</posy>
+            <control type="group">
+                <animation effect="fade" time="300" tween="cubic" start="0" end="100" reversible="false" condition="!String.IsEmpty(Container(5000).ListItem.Label)">Conditional</animation>
+                <animation effect="fade" time="150" tween="cubic" start="100" end="0" reversible="false" condition="String.IsEmpty(Container(5000).ListItem.Label)">Conditional</animation>
+            </control>
+            <control type="panel" id="5000">
+                <posx>col-5-begin</posx>
+                <posy>-36</posy>
+                <width>16-col</width>
+                <height>2-row</height>
+                <onleft>5000</onleft>
+                <onright>5000</onright>
+                <ondown>312</ondown>
+                <onback>noop</onback>
+                <orientation>horizontal</orientation>
+                <itemlayout height="2-row" width="4-col">
+                    <control type="label">
+                        <posx>0</posx>
+                        <posy>0</posy>
+                        <width>4-col-gutter</width>
+                        <height>2-row</height>
+                        <align>center</align>
+                        <textcolor>textDisabled</textcolor>
+                        <font>itemTitle</font>
+                        <label>$INFO[ListItem.Label]</label>
+                    </control>
+                </itemlayout>
+                <focusedlayout height="2-row" width="4-col">
+                    <control type="label">
+                        <posx>0</posx>
+                        <posy>0</posy>
+                        <width>4-col-gutter</width>
+                        <height>2-row</height>
+                        <align>center</align>
+                        <textcolor>textActive</textcolor>
+                        <font>itemTitle</font>
+                        <label>$INFO[ListItem.Label]</label>
+                    </control>
+                </focusedlayout>
+                <content>plugin://plugin.program.autocompletion?info=autocomplete&amp;&amp;id=$INFO[Control.GetLabel(312).index(1)]&amp;&amp;limit=8</content>
+            </control>
+        </control>
+    </include>
 
     <!--modal dialogs-->
     <include name="modalDialog">
