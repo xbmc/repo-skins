@@ -43,8 +43,8 @@
 				<include>DropDownMenuBtn</include>
 				<label>$LOCALIZE[172]</label>
 				<onclick>Dialog.Close(1101)</onclick>
-				<onclick condition="Window.IsActive(script-script.extendedinfo-VideoList.xml)">SendClick(3011,5003)</onclick>				
-				<onclick condition="Window.IsActive(script-script.extendedinfo-YoutubeList.xml)">SendClick(3000,5002)</onclick>				
+				<onclick condition="Window.IsActive(script-script.extendedinfo-VideoList.xml)">SendClick(3011,5003)</onclick>
+				<onclick condition="Window.IsActive(script-script.extendedinfo-YoutubeList.xml)">SendClick(3000,5002)</onclick>
 			</control>
 			<control type="button" id="743">
 				<description>Runtime</description>
@@ -231,7 +231,7 @@
 				<include>DropDownMenuRadioBtn</include>
 				<label>$LOCALIZE[31043]</label>
 				<selected>Skin.HasSetting(ShowExtendedInfoYoutubeFanart)</selected>
-				<onclick>Skin.ToggleSetting(ShowExtendedInfoYoutubeFanart)</onclick>	
+				<onclick>Skin.ToggleSetting(ShowExtendedInfoYoutubeFanart)</onclick>
 				<visible>Window.IsActive(script-script.extendedinfo-YoutubeList.xml)</visible>
 			</control>
 			<control type="radiobutton" id="765">
@@ -477,11 +477,12 @@
 				<textoffsetx>12</textoffsetx>
 				<include>DropDownMenuBtn</include>
 				<label>$VAR[ExtraVideoInfoLabel]</label>
-				<onclick>Dialog.Close(1101)</onclick>
-				<onclick condition="String.IsEqual(ListItem.DBTYPE,movie)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
-				<onclick condition="String.IsEqual(ListItem.DBTYPE,tvshow)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
-				<onclick condition="String.IsEqual(ListItem.DBTYPE,season) + !String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
-				<onclick condition="String.IsEqual(ListItem.DBTYPE,season) + String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Container.ShowTitle])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo)">Dialog.Close(1101)</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + String.IsEqual(ListItem.DBTYPE,movie)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + String.IsEqual(ListItem.DBTYPE,tvshow)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + String.IsEqual(ListItem.DBTYPE,season) + !String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + String.IsEqual(ListItem.DBTYPE,season) + String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Container.ShowTitle])</onclick>
+				<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
 				<visible>String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season) | Window.IsVisible(Home)</visible>
 			</control>
 			<control type="button" id="792">
@@ -496,17 +497,30 @@
 				<visible>[String.IsEqual(ListItem.DBTYPE,movie) + !String.IsEmpty(ListItem.SetID)] | String.IsEqual(ListItem.DBTYPE,set)</visible>
 			</control>
 			<control type="button" id="793">
+				<description>Movie Set Info</description>
+				<width>173</width>
+				<textwidth>149</textwidth>
+				<textoffsetx>12</textoffsetx>
+				<include>DropDownMenuBtn</include>
+				<label>$LOCALIZE[31167]</label>
+				<onclick>Dialog.Close(1101)</onclick>
+				<onclick>Dialog.Close(movieinformation)</onclick>
+				<onclick>ActivateWindow(1117)</onclick>
+				<visible>!String.IsEmpty(ListItem.SetID) | String.IsEqual(ListItem.DBTYPE,set)</visible>
+			</control>
+			<control type="button" id="794">
 				<description>Similar Movies / TV Shows</description>
 				<width>173</width>
 				<textwidth>149</textwidth>
 				<textoffsetx>12</textoffsetx>
 				<include>DropDownMenuBtn</include>
 				<label>$VAR[SimilarVideosLabel]</label>
-				<onclick>Dialog.Close(1101)</onclick>
-				<onclick>Skin.SetString(VideoInfoMenubar,SimilarVideos)</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo)">Dialog.Close(1101)</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo)">Skin.SetString(VideoInfoMenubar,SimilarVideos)</onclick>
+				<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
 				<visible>String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set) | String.IsEqual(ListItem.DBTYPE,tvshow)</visible>
 			</control>
-			<control type="button" id="794">
+			<control type="button" id="795">
 				<description>Search Youtube</description>
 				<width>173</width>
 				<textwidth>149</textwidth>
@@ -515,13 +529,14 @@
 				<label>$LOCALIZE[31092]</label>
 				<onclick>Dialog.Close(1101)</onclick>
 				<onclick>Dialog.Close(movieinformation)</onclick>
-				<onclick condition="!String.IsEqual(ListItem.DBTYPE,season)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Label])</onclick>
-				<onclick condition="String.IsEqual(ListItem.DBTYPE,season)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + !String.IsEqual(ListItem.DBTYPE,season)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Label])</onclick>
+				<onclick condition="System.HasAddon(script.extendedinfo) + String.IsEqual(ListItem.DBTYPE,season)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label])</onclick>
+				<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
 			</control>
-			<control type="image" id="795">
+			<control type="image" id="796">
 				<width>173</width>
 				<include>DropDownMenuBottomBorder</include>
 			</control>
 		</control>
-	</controls>	
+	</controls>
 </window>
