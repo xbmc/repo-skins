@@ -29,18 +29,17 @@ To install this repository, you must do so by following these steps:
 
 After this, you will automatically receive the latest development versions directly within Kodi.   
 
-### SUPPORT:
-[Kodi forum](http://forum.kodi.tv/forumdisplay.php?fid=120)
+### LINKS:
+[Kodi forum (skin support)](http://forum.kodi.tv/forumdisplay.php?fid=120)
 
-### KODI WIKI:  
-[Kodi Wiki for Rapier](http://kodi.wiki/view/Add-on:Rapier)
+[Kodi Wiki](http://kodi.wiki/view/Add-on:Rapier)
 
-###DONATIONS:
+### [Screenshots](http://kodi.wiki/view/Add-on:Rapier#Screenshots)
+
+### DONATIONS:
 If you like Rapier and want to buy me a coffee or beer, feel free to donate. Greatly appreciated!
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=TKBVTL8RFC43N&lc=DK&item_name=Gade&item_number=skin%2erapier&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_LG%2egif%3aNonHostedGuest)   
-
-### [SCREENSHOTS](http://kodi.wiki/view/Add-on:Rapier#Screenshots)
 
 ## INSTALL   
 To install this add-on you must do so from the Add-on manager from within Kodi by going to:   
@@ -72,5 +71,12 @@ script.image.resource.select 0.0.9
 resource.uisounds.rapier 1.0.1  
 resource.images.studios.white 0.0.2  
 
-Rapier uses text images for the home menu categories. More categories can be found in skin.rapier->extras folder when customizing the home menu.   
-[Additional home category images can be requested at the forum](http://forum.kodi.tv/showthread.php?tid=101862)
+## LICENSE
+This software is licensed under a [Attribution-NonCommercial-ShareAlike 3.0 Unported license](http://creativecommons.org/licenses/by-nc-sa/3.0/)
+
+<img src="https://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-nc-sa.png">
+
+Excerpt:
+"NonCommercial — You may not use the material for commercial purposes."
+
+This means that Kodi box sellers etc. are NOT allowed to sell products with Rapier (pre)installed without my prior written consent!
