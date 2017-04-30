@@ -7,10 +7,17 @@ This is a new skin for Kodi 17 called OMNI for its omnipresent menus. Users of M
 - The main menu and info dialog menus use icons only. Although it may not be absolutely clear at first what some options do, you will quickly figure out what they are.
 - Press right from the window content or scrollbar to access the media menu. Or press "m" on your keyboard or remote.
 - Only keyboard and remote input are supported. Mouse input is entirely untested.
-- There are only two views, List and Wall, and they are available everywhere. No plans to add additional views.
 
 If you would like to express your appreciation for this skin, please consider a donation to the XBMC Foundation. http://kodi.tv/contribute/donate/
 
+
+***
+**1.2.0**
+- Added fanart list view.
+- Added support for extended weather info.
+- Added submenu widget.
+- Added support for keyboard autocomplete.
+- Misc fixes.
 
 ***
 **1.1.0**
