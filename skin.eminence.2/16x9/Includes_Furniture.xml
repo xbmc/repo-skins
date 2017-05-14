@@ -11,7 +11,6 @@
             <onback>50</onback>
             <onleft>50</onleft>
             <onright>50</onright>
-            <onclick>50</onclick>
             <ondown>50</ondown>
             <orientation>vertical</orientation>
             <animation effect="fade" condition="true" time="0" start="100" end="0">Conditional</animation>
@@ -136,7 +135,6 @@
                 <onback>9000</onback>
                 <onleft>9000</onleft>
                 <onright>9000</onright>
-                <onclick>9000</onclick>
                 <ondown>9000</ondown>
                 <width>8</width>
                 <orientation>vertical</orientation>
@@ -336,7 +334,7 @@
             <control type="group">
                 <width>64</width>
                 <height>64</height>
-                <visible>!String.IsEmpty(Window(home).Property(SkinHelper.ListItem.IMDB.Top250))</visible>
+                <visible>!String.IsEmpty(Window(home).Property(SkinHelper.ListItem.IMDB.Top250)) + Integer.IsGreater(Window(home).Property(SkinHelper.ListItem.IMDB.Top250),0)</visible>
                 <control type="image">
                     <width>64</width>
                     <height>64</height>
@@ -592,6 +590,8 @@
             <visible>![Player.HasVideo | Player.HasAudio] | [Player.HasAudio + !Skin.HasSetting(background.showvisualisation)] | [Player.HasVideo + !Skin.HasSetting(background.showvideo)] | Window.IsVisible(weather)</visible>
         </control>
 
+        
+
         <control type="group">
             <visible>Skin.HasSetting(background.showvisualisation)</visible>
             <visible>Player.HasAudio</visible>
@@ -599,30 +599,19 @@
             <width>100%</width>
             <height>100%</height>
             <control type="visualisation">
-                <visible>Skin.HasSetting(OSDVisualisation.ShowFanart) | [!Skin.HasSetting(musicvis.fanartfallback) + [!System.HasAddon(script.artistslideshow) | !Skin.HasSetting(ArtistSlideShow.Enabled)]] | [Skin.HasSetting(musicvis.fanartfallback) + [!System.HasAddon(script.artistslideshow) | !Skin.HasSetting(ArtistSlideShow.Enabled)] + String.IsEmpty(Player.Art(fanart))]</visible>
+                <visible>Skin.HasSetting(OSDVisualisation.ShowFanart) | [!Skin.HasSetting(musicvis.fanartfallback) + !Skin.HasSetting(ArtistSlideShow.Enabled)] | [Skin.HasSetting(musicvis.fanartfallback) + !Skin.HasSetting(ArtistSlideShow.Enabled) + String.IsEmpty(Player.Art(fanart))]</visible>
                 <description>visualisation</description>
 
             </control>
-            <control type="image">
-                <aspectratio>scale</aspectratio>
 
-                <texture background="true">$INFO[Player.Art(fanart)]</texture>
-                <visible>!System.HasAddon(script.artistslideshow) | !Skin.HasSetting(ArtistSlideShow.Enabled)</visible>
-                <visible>Skin.HasSetting(musicvis.fanartfallback)</visible>
-                <visible>!String.IsEmpty(Player.Art(fanart))</visible>
-                <animation effect="fade" start="100" end="65" time="0" condition="Skin.HasSetting(OSDVisualisation.ShowFanart)">Conditional</animation>
-                <animation effect="zoom" start="110" end="130" center="auto" time="10000" tween="sine" easing="inout" pulse="true" condition="Skin.HasSetting(ArtistSlideshow.Animate)">Conditional</animation>
-                <animation effect="slide" start="-30,-30" end="30,30" time="6000" tween="sine" easing="inout" pulse="true" condition="Skin.HasSetting(ArtistSlideshow.Animate)">Conditional</animation>
-            </control>
             <control type="multiimage">
                 <aspectratio>scale</aspectratio>
-
                 <timeperimage>10000</timeperimage>
                 <randomize>true</randomize>
                 <fadetime>600</fadetime>
                 <loop>yes</loop>
-                <imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
-                <visible>System.HasAddon(script.artistslideshow) + Skin.HasSetting(ArtistSlideShow.Enabled)</visible>
+                <visible>Skin.HasSetting(musicvis.fanartfallback) | Skin.HasSetting(ArtistSlideShow.Enabled)</visible>
+                <imagepath background="true">$VAR[Image_MusicVisualisation]</imagepath>
                 <animation effect="fade" start="100" end="65" time="0" condition="Skin.HasSetting(OSDVisualisation.ShowFanart)">Conditional</animation>
                 <animation effect="zoom" start="110" end="130" center="auto" time="10000" tween="sine" easing="inout" pulse="true" condition="Skin.HasSetting(ArtistSlideshow.Animate)">Conditional</animation>
                 <animation effect="slide" start="-30,-30" end="30,30" time="6000" tween="sine" easing="inout" pulse="true" condition="Skin.HasSetting(ArtistSlideshow.Animate)">Conditional</animation>
@@ -647,6 +636,12 @@
             <animation effect="fade" start="100" end="100" condition="!Skin.HasSetting(background.hidefanart) + String.IsEqual(Skin.String(fanart.opacity),100)">Conditional</animation>
         </control>
 
+        <!-- <control type="image">
+            <texture background="true">special://skin/extras/backgrounds/rain.gif</texture>
+            <visible>true</visible>
+            <colordiffuse>2fFFFFFF</colordiffuse>
+        </control> -->
+
         <control type="image" description="Transition Fade">
             <width>100%</width>
             <height>100%</height>
@@ -658,11 +653,24 @@
             <width>100%</width>
             <height>100%</height>
             <fadetime>1000</fadetime>
+            <animation effect="fade" end="30" condition="true">Conditional</animation>
+            <texture colordiffuse="$VAR[HighlightColor]">$INFO[Skin.String(global.background)]</texture>
+            <visible>!String.IsEmpty(Skin.String(global.background))</visible>
+            <animation effect="fade" end="100" start="0" time="250" condition="Window.Previous(home) | Window.Previous(visualisation) | Window.Previous(fullscreenvideo)">WindowOpen</animation>
+            <animation effect="fade" end="0" start="100" time="250" condition="Window.Next(home)">WindowClose</animation>
+            <visible>!Window.IsVisible(home) + !Window.IsVisible(visualisation)</visible>
+            <visible>Skin.HasSetting(EnableColorFilter)</visible>
+        </control>
+        <control type="image" description="Background Overlay">
+            <width>100%</width>
+            <height>100%</height>
+            <fadetime>1000</fadetime>
             <texture colordiffuse="4f777777">$INFO[Skin.String(global.background)]</texture>
             <visible>!String.IsEmpty(Skin.String(global.background))</visible>
             <animation effect="fade" end="100" start="0" time="250" condition="Window.Previous(home) | Window.Previous(visualisation) | Window.Previous(fullscreenvideo)">WindowOpen</animation>
             <animation effect="fade" end="0" start="100" time="250" condition="Window.Next(home)">WindowClose</animation>
             <visible>!Window.IsVisible(home) + !Window.IsVisible(visualisation)</visible>
+            <visible>!Skin.HasSetting(EnableColorFilter)</visible>
         </control>
     </include>
 
@@ -701,7 +709,8 @@
         <value condition="!String.IsEmpty(Container.FolderName)">[CAPITALIZE]$INFO[Container.FolderName][/CAPITALIZE]</value>
         <value condition="Window.IsVisible(home) + String.IsEmpty(Skin.String(home.mainheadertext))">$LOCALIZE[31158]</value>
         <value condition="Window.IsVisible(home) + !String.IsEmpty(Skin.String(home.mainheadertext))">$INFO[Skin.String(home.mainheadertext)]</value>
-        <value condition="Window.IsActive(systeminfo) | Window.IsActive(profiles) | Window.IsVisible(SettingsCategory.xml) | Window.IsActive(addonbrowser) | Window.IsVisible(SkinSettings.xml)">$VAR[Label_SettingsHeader]</value>
+        <!-- <value condition="Window.IsActive(systeminfo) | Window.IsActive(profiles) | Window.IsVisible(SettingsCategory.xml) | Window.IsActive(addonbrowser) | Window.IsVisible(SkinSettings.xml)">$VAR[Label_SettingsHeader]</value> -->
+                <value condition="Window.IsActive(systeminfo) | Window.IsActive(profiles) | Window.IsVisible(SettingsCategory.xml) | Window.IsActive(addonbrowser) | Window.IsVisible(SkinSettings.xml)">$LOCALIZE[5]</value>
         <value condition="Window.IsVisible(settings)">$LOCALIZE[5]</value>
         <value condition="Window.IsVisible(EventLog.xml)">$LOCALIZE[14111]</value>
         <value>$LOCALIZE[15100]</value>
@@ -798,11 +807,19 @@
     </variable>
     <include name="Furniture_TopBar_Tile">
         <control type="image">
+            <posy>-6</posy>
+            <posx>-88</posx>
+            <width>324</width>
+            <height>212</height>
+            <visible>!Skin.HasSetting(global.hideobjectshadows)</visible>
+            <texture border="75">common/header-shadow-24.png</texture>
+        </control>
+        <control type="image">
             <posy>18</posy>
             <posx>-88</posx>
             <width>300</width>
             <height>164</height>
-            <texture align="left" border="75" colordiffuse="Background">common/header.png</texture>
+            <texture border="75" colordiffuse="Background">common/header.png</texture>
             <visible>!Window.IsVisible(home) + !Window.IsVisible(weather) + !VideoPlayer.IsFullscreen + !Window.IsVisible(visualisation)</visible>
             <animation effect="fade" start="100" end="80" condition="!Skin.HasSetting(background.hidefanart) + String.IsEqual(Skin.String(fanart.opacity),10)">Conditional</animation>
             <animation effect="fade" start="100" end="70" condition="!Skin.HasSetting(background.hidefanart) + String.IsEqual(Skin.String(fanart.opacity),20)">Conditional</animation>
@@ -819,7 +836,7 @@
             <posx>-88</posx>
             <width>300</width>
             <height>164</height>
-            <texture align="left" border="75">common/header.png</texture>
+            <texture border="75">common/header.png</texture>
             <colordiffuse>$VAR[Furniture_TopBar_Tile_BGCOLOR]</colordiffuse>
             <animation effect="fade" start="100" end="90" time="200" condition="Skin.HasSetting(home.transparent) + [Window.IsVisible(home) | Window.IsVisible(weather)]">Conditional</animation>
         </control>
@@ -1013,7 +1030,6 @@
                 <font>Font-Sublabel</font>
                 <textcolor>$VAR[Furniture_TopBar_SubLabel_Color]</textcolor>
                 <align>center</align>
-                <aligny>top</aligny>
                 <label>$INFO[Weather.Temperature]</label>
                 <visible>!Skin.HasSetting(disable.weatherheader)</visible>
             </control>
@@ -1055,9 +1071,8 @@
         </control>
     </include>
     <include name="Furniture_TopBar">
-        <!-- <include>GlobalInfoOverlay</include> -->
         <control type="group">
-            <visible>[Window.IsVisible(home) + ![Control.HasFocus(9001) | Control.HasFocus(9101)]] | [Window.IsVisible(DialogSeekBar.xml) + [Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | Window.IsVisible(musicosd) | Window.IsVisible(videoosd)]] | Window.IsVisible(DialogBusy.xml) | ![Window.IsVisible(home) | Window.IsVisible(DialogSeekBar.xml)] | Window.IsVisible(script-script.extendedinfo-DialogVideoInfo.xml) | Window.IsVisible(script-script.extendedinfo-DialogInfo.xml) | Window.IsVisible(DialogVideoInfo.xml) | Window.IsVisible(DialogMusicInfo.xml)</visible>
+            <visible>[Window.IsVisible(home) + ![Control.HasFocus(9001) | Control.HasFocus(9101) | Control.HasFocus(9002)]] | [Window.IsVisible(DialogSeekBar.xml) + [Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | !Skin.HasSetting(OSDNoInfo)] + [Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | Player.Caching | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Window.IsVisible(musicosd) | Window.IsVisible(videoosd)]] | Window.IsVisible(DialogBusy.xml) | ![Window.IsVisible(home) | Window.IsVisible(DialogSeekBar.xml)] | Window.IsVisible(script-script.extendedinfo-DialogVideoInfo.xml) | Window.IsVisible(script-script.extendedinfo-DialogInfo.xml) | Window.IsVisible(DialogVideoInfo.xml) | Window.IsVisible(DialogMusicInfo.xml)</visible>
             <animation type="Visible">
                 <effect type="slide" start="0,-32" end="0" time="200" tween="quadratic" />
                 <effect type="fade" start="0" end="100" time="200" />
@@ -1077,7 +1092,7 @@
             <include>Furniture_TopBar_Clock</include>
         </control>
         <control type="group">
-            <visible>[Window.IsVisible(home) + ![Control.HasFocus(9001) | Control.HasFocus(9101)]] | [Window.IsVisible(DialogSeekBar.xml) + [Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | Window.IsVisible(musicosd) | Window.IsVisible(videoosd)]] | Window.IsVisible(DialogBusy.xml) | Window.IsActive(DialogVolumeBar.xml) | Player.Muted | ![Window.IsVisible(home) | Window.IsVisible(DialogSeekBar.xml)] | Window.IsVisible(script-script.extendedinfo-DialogVideoInfo.xml) | Window.IsVisible(script-script.extendedinfo-DialogInfo.xml) | Window.IsVisible(DialogVideoInfo.xml) | Window.IsVisible(DialogMusicInfo.xml)</visible>
+            <visible>[Window.IsVisible(home) + ![Control.HasFocus(9001) | Control.HasFocus(9101) | Control.HasFocus(9002)]] | [Window.IsVisible(DialogSeekBar.xml) + [Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | !Skin.HasSetting(OSDNoInfo)] + [Player.Caching | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsVisible(DialogFullScreenInfo.xml) | Window.IsVisible(musicosd) | Window.IsVisible(videoosd)]] | Window.IsVisible(DialogBusy.xml) | Window.IsActive(DialogVolumeBar.xml) | Player.Muted | ![Window.IsVisible(home) | Window.IsVisible(DialogSeekBar.xml)] | Window.IsVisible(script-script.extendedinfo-DialogVideoInfo.xml) | Window.IsVisible(script-script.extendedinfo-DialogInfo.xml) | Window.IsVisible(DialogVideoInfo.xml) | Window.IsVisible(DialogMusicInfo.xml)</visible>
             <animation type="Visible">
                 <effect type="slide" start="0,-32" end="0" time="200" tween="quadratic" />
                 <effect type="fade" start="0" end="100" time="200" />
