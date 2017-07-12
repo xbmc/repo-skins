@@ -10,6 +10,9 @@
 	<onunload>AlarmClock(exfa2,Skin.Reset(SkinHelper_ExtraFanArtPath),00:01,true)</onunload>
 	<onload>SetFocus(9000,0)</onload>
 	<onload>AlarmClock(foc1,SetFocus(61),00:01,silent)</onload>
+	<onload>SetProperty(cfa_daemon_fire,True,home)</onload>
+	<onunload condition="Skin.String(OSDCast,1)">ActivateWindow(fullscreenvideo)</onunload>
+	<onunload>Skin.SetString(OSDCast,0)</onunload>
 	<controls>
 		<control type="multiimage" id="7975">
 			<left>-2160</left>
@@ -71,11 +74,12 @@
 					<bottom>120</bottom>
 					<aspectratio align="center" aligny="center">scale</aspectratio>
 					<fadetime>400</fadetime>
-					<texture background="true" diffuse="thumbs/colorbox_poster_mask.png" colordiffuse="$VAR[LibColorHighlightVar]">$VAR[FocusImage]</texture>
+					<texture background="true" colordiffuse="$VAR[LibColorHighlightVar]">$VAR[FocusImage]</texture>
 				</control>
 			</control>
 		</control>
 		<control type="group">
+			<visible>!Skin.HasSetting(movieinformation.fullfanart)</visible>
 			<include>Animation.Common</include>
 			<left>60</left>
 			<top>0</top>
@@ -100,13 +104,36 @@
 			</control>
 		</control>
 		<control type="group">
+			<visible>Skin.HasSetting(movieinformation.fullfanart)</visible>
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<include>FullscreenDimensions</include>
+			<control type="image">
+				<fadetime>400</fadetime>
+				<aspectratio align="center">scale</aspectratio>
+				<texture background="true">$INFO[ListItem.Art(fanart)]</texture>
+			</control>
+			<control type="image">
+				<fadetime>400</fadetime>
+				<aspectratio align="center">scale</aspectratio>
+				<texture background="true">$VAR[ColorboxImage]</texture>
+			</control>
+			<control type="image">
+				<fadetime>400</fadetime>
+				<texture background="true">background.png</texture>
+				<colordiffuse>$VAR[ColorBackgroundVar]</colordiffuse>
+			</control>
+		</control>
+		<control type="group">
 			<top>-120</top>
 			<include>Animation.Common</include>
 			<left>120</left>
 			<control type="group">
-				<top>60</top>
+				<top>10</top>
 				<width>1030</width>
-				<height>854</height>
+				<height>904</height>
 				<control type="panel">
 					<top>118</top>
 					<width>1030</width>
@@ -332,7 +359,7 @@
 					<left>20</left>
 					<top>440</top>
 					<width>1000</width>
-					<height>400</height>
+					<height>515</height>
 					<font>font14</font>
 					<label>$VAR[VideoInfoPlotVar]</label>
 					<pagecontrol>60</pagecontrol>
@@ -350,23 +377,32 @@
 					<ondown>9000</ondown>
 					<orientation>vertical</orientation>
 				</control>
+				<!--
+				<control type="image">
+					<left>10</left>
+					<top>990</top>
+					<width>1020</width>
+					<height>80</height>
+					<texture>black.png</texture>
+				</control>
+				-->
 				<control type="group">
 					<visible>![Control.IsVisible(250) | Control.HasFocus(206) | Control.IsVisible(350)]</visible>
 					<animation effect="fade" time="300" start="0" end="100" delay="100">Visible</animation>
 					<include content="MediaFlags">
-						<param name="left" value="0" />
-						<param name="top" value="885" />
-						<param name="width" value="1000" />
+						<param name="left" value="10" />
+						<param name="top" value="990" />
+						<param name="width" value="1020" />
 						<param name="align" value="center" />
 						<param name="orientation" value="horizontal" />
 					</include>
 				</control>
 				<control type="group">
-					<left>200</left>
+					<left>210</left>
 					<visible>$EXP[isTvshow] + !Control.IsVisible(150) + !Control.IsVisible(90019)</visible>
 					<animation effect="fade" time="300" start="0" end="100" delay="100">Visible</animation>
 					<animation effect="slide" time="0" start="0" end="100" condition="String.IsEmpty(ListItem.Property(TotalSeasons))">Conditional</animation>
-					<top>875</top>
+					<top>980</top>
 					<control type="group">
 						<visible>!String.IsEmpty(ListItem.Property(TotalSeasons))</visible>
 						<width>200</width>
@@ -503,7 +539,8 @@
 					<width>1000</width>
 					<height>60</height>
 					<itemgap>10</itemgap>
-					<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(widgetName))">9003</onup>
+					<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(widgetName)) + !Control.IsVisible(12345)">9003</onup>
+					<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(widgetName)) + Control.IsVisible(12345)">61</onup>
 					<onup condition="String.IsEmpty(Container(9000).ListItem.Property(widgetName))">61</onup>
 					<onleft>9000</onleft>
 					<onright>9000</onright>
@@ -515,9 +552,11 @@
 						<item>
 							<property name="MovieInfoIconThumbImage">$INFO[ListItem.Path]</property>
 							<thumb>$VAR[MovieInfoIconThumbImage]</thumb>
-							<onclick>SendClick(8)</onclick>
+							<onclick condition="Window.IsVisible(home) + String.IsEqual(ListItem.DBType,tvshow)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+							<onclick condition="Window.IsVisible(home) + String.IsEqual(ListItem.DBType,movie)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+							<onclick condition="!Window.IsVisible(home)">SendClick(8)</onclick>
 						</item>
-						<item id="90002">
+						<item>
 							<label>$LOCALIZE[208] $INFO[ListItem.Label,[LIGHT],[/LIGHT]]</label>
 							<label2>$LOCALIZE[208] $INFO[ListItem.Label]</label2>
 							<icon>$INFO[Skin.String(MenuDefaultIconsPath)]stopplay.png</icon>
@@ -592,8 +631,8 @@
 			<animation effect="slide" tween="cubic" time="300" start="0,0" end="0,700" reversible="false">WindowClose</animation>
 			<animation effect="slide" tween="cubic" time="600" start="0,700" end="0,0" reversible="false">Visible</animation>
 			<animation effect="slide" tween="cubic" time="300" start="0,0" end="0,700" reversible="false">Hidden</animation>
-			<animation effect="slide" time="300" delay="0" start="0" end="0,483" tween="cubic" reversible="true" condition="!Window.IsVisible(DialogTextViewer.xml) + !Window.IsVisible(DialogButtonMenu.xml) + !Window.IsVisible(DialogKeyboard.xml) + !Window.IsVisible(DialogNumeric.xml) + !Window.IsVisible(1130) + !Window.IsVisible(DialogSelect.xml) + !Window.IsVisible(FileBrowser.xml) + [Integer.IsLess(System.CurrentControlID, 6000) | Integer.IsGreaterOrEqual(System.CurrentControlID, 9050)] + [!String.StartsWith(System.CurrentControlID, 8011) + !String.StartsWith(System.CurrentControlID, 909)] + [[String.IsEqual(Container(9000).ListItem.Property(widget),weather) + Weather.IsFetched] | [!Control.IsVisible(12345) + !String.IsEqual(Container(9000).ListItem.Property(widget),weather) + !String.IsEmpty(Container(9000).ListItem.Property(widgetName))]]">Conditional</animation>
-			<animation effect="slide" time="300" delay="0" start="0" end="0,163" tween="cubic" reversible="true" condition="!Window.IsVisible(DialogTextViewer.xml) + !Window.IsVisible(DialogButtonMenu.xml) + !Window.IsVisible(DialogKeyboard.xml) + !Window.IsVisible(DialogNumeric.xml) + !Control.HasFocus(9010) + [Integer.IsLess(System.CurrentControlID, 6000) | Integer.IsGreaterOrEqual(System.CurrentControlID, 9050)] + [!String.StartsWith(System.CurrentControlID, 8011) + !String.StartsWith(System.CurrentControlID, 909)] + [String.IsEmpty(Container(9000).ListItem.Property(widgetName))]">Conditional</animation>
+			<animation effect="slide" time="300" delay="0" start="0" end="0,483" tween="cubic" reversible="true" condition="!Window.IsVisible(DialogConfirm.xml) + !Window.IsVisible(DialogTextViewer.xml) + !Window.IsVisible(DialogButtonMenu.xml) + !Window.IsVisible(DialogKeyboard.xml) + !Window.IsVisible(DialogNumeric.xml) + !Window.IsVisible(1130) + !Window.IsVisible(DialogSelect.xml) + !Window.IsVisible(FileBrowser.xml) + [Integer.IsLess(System.CurrentControlID, 6000) | Integer.IsGreaterOrEqual(System.CurrentControlID, 9050)] + [!String.StartsWith(System.CurrentControlID, 8011) + !String.StartsWith(System.CurrentControlID, 909)] + [[String.IsEqual(Container(9000).ListItem.Property(widget),weather) + Weather.IsFetched] | [!Control.IsVisible(12345) + !String.IsEqual(Container(9000).ListItem.Property(widget),weather) + !String.IsEmpty(Container(9000).ListItem.Property(widgetName))]]">Conditional</animation>
+			<animation effect="slide" time="300" delay="0" start="0" end="0,163" tween="cubic" reversible="true" condition="!Window.IsVisible(DialogConfirm.xml) + !Window.IsVisible(DialogTextViewer.xml) + !Window.IsVisible(DialogButtonMenu.xml) + !Window.IsVisible(DialogKeyboard.xml) + !Window.IsVisible(DialogNumeric.xml) + !Control.HasFocus(9010) + [Integer.IsLess(System.CurrentControlID, 6000) | Integer.IsGreaterOrEqual(System.CurrentControlID, 9050)] + [!String.StartsWith(System.CurrentControlID, 8011) + !String.StartsWith(System.CurrentControlID, 909)] + [String.IsEmpty(Container(9000).ListItem.Property(widgetName))]">Conditional</animation>
 			<control type="group">
 				<include>HomeDefault</include>
 			</control>
