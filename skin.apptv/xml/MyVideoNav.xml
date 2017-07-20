@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<views>50,52,53,54,57,58</views>
+	<onload>ClearProperty(ShowScreenSettings,home)</onload>
+	<onunload>ClearProperty(ShowScreenSettings,home)</onunload>
+	<menucontrol>9000</menucontrol>
+	<include>window-openclose</include>
+	<controls>
+		<visible>!Window.IsVisible(movieinformation)</visible>
+		<include>background</include>
+		<include>fake-overlay</include>
+		<control type="grouplist">
+			<left>1170</left>
+			<top>30</top>
+			<width>auto</width>
+			<height>108</height>
+			<align>left</align>
+			<aligny>top</aligny>
+			<orientation>horizontal</orientation>
+			<control type="label">
+				<!-- Video screen heading -->
+				<width max="600">auto</width>
+				<height>93</height>
+				<label>$VAR[VideoHeadings]</label>
+				<font>apptv30</font>
+				<wrapmultiline>true</wrapmultiline>
+				<aligny>top</aligny>
+			</control>
+			<control type="label">
+				<!-- Number of files -->
+				<top>21</top>
+				<width max="120">auto</width>
+				<height>57</height>
+				<label>$INFO[Container.NumItems,(,)]</label>
+				<font>apptv23</font>
+			</control>
+		</control>
+		<control type="group">
+			<!-- Various Views of Video library node -->
+			<visible>![String.IsEmpty(ListItem.Label) + String.IsEmpty(Container().ListItem(1).Label)]</visible>
+			<include file="View-Video.xml">VideoListView</include>
+			<include file="View-Video.xml">VideoIconView</include>
+			<include file="View-Video.xml">BannerView</include>
+			<include file="View-Video.xml">VideoWrapView</include>
+			<include file="View-Video.xml">VideoCoverflow</include>
+			<include file="View-Video.xml">VideoWallView</include>
+		</control>
+		<control type="group">
+			<!-- No Label tag means video addon is busy pulling in content, so show a busy animation -->
+			<visible>String.IsEmpty(ListItem.Label) + String.IsEmpty(Container().ListItem(1).Label) + System.IdleTime(1) + !Window.IsVisible(busydialog)</visible>
+			<include>fadebackground</include>
+			<control type="image">
+				<!-- Busy animation -->
+				<left>864</left>
+				<top>435</top>
+				<width>192</width>
+				<height>192</height>
+				<texture>busy.png</texture>
+				<aspectratio>keep</aspectratio>
+				<include>busy-spin</include>
+			</control>
+		</control>
+		<include>touch-controls</include>
+		<control type="group">
+			<!-- Screen-settings Menu -->
+			<left>0</left>
+			<top>1080</top>
+			<include>screen-settings</include>
+			<include>fadebackground</include>
+			<control type="image">
+				<!-- Button background -->
+				<left>622</left>
+				<top>114</top>
+				<width>669</width>
+				<height>852</height>
+				<texture border="14">button-menu-background.png</texture>
+			</control>
+			<control type="label">
+				<!-- Dialog heading -->
+				<left>638</left>
+				<top>126</top>
+				<width>639</width>
+				<height>51</height>
+				<font>apptv23</font>
+				<label>$LOCALIZE[31557]$INFO[Container(9000).NumItems, (,)]</label>
+				<align>center</align>
+			</control>
+			<control type="button">
+				<!-- Touch Close button -->
+				<left>1260</left>
+				<top>98</top>
+				<width>48</width>
+				<height>48</height>
+				<texturefocus>touch-close.png</texturefocus>
+				<texturenofocus>touch-close.png</texturenofocus>
+				<onclick condition="!String.IsEqual(Window(home).Property(ShowScreenSettings),show)">SetProperty(ShowScreenSettings,show,home)</onclick>
+				<onclick condition="String.IsEqual(Window(home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,home)</onclick>
+				<visible>$EXP[isEnabledTouch]</visible>
+			</control>
+			<control type="image">
+				<left>638</left>
+				<top>180</top>
+				<width>639</width>
+				<height>6</height>
+				<texture>separator.png</texture>
+			</control>
+			<control type="grouplist" id="9000">
+				<left>638</left>
+				<top>192</top>
+				<width>639</width>
+				<height>759</height>
+				<itemgap>0</itemgap>
+				<onright>50</onright>
+				<onleft>50</onleft>
+				<control type="button" id="2">
+					<!-- View as button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[100]</label>
+				</control>
+				<control type="button" id="1195">
+					<!-- List view idle animantion delay -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31885]</label>
+					<label2>$VAR[DelayListAnimation]</label2>
+					<font>apptv22</font>
+					<onclick>RunScript(script.skin.helper.service,action=setskinsetting,setting=listview-idleanim-val,header=$LOCALIZE[31885])</onclick>
+					<visible>String.EndsWith(Control.GetLabel(2),$LOCALIZE[31941])</visible>
+				</control>
+				<control type="radiobutton" id="1196">
+					<!-- Use animated Artwork  -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31867]</label>
+					<font>apptv22</font>
+					<onclick>Skin.ToggleSetting(SkinHelper.EnableAnimatedPosters)</onclick>
+					<selected>Skin.HasSetting(SkinHelper.EnableAnimatedPosters)</selected>
+					<radioposx>495</radioposx>
+					<visible>Skin.HasSetting(SkinHelper.EnableExtraFanart) + Container.Content(movies)</visible>
+				</control>
+				<control type="radiobutton" id="1197">
+					<!-- Tilt list view icons button  -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31886]</label>
+					<font>apptv22</font>
+					<onclick>Skin.ToggleSetting(tiltvideolisticon)</onclick>
+					<selected>Skin.HasSetting(tiltvideolisticon)</selected>
+					<radioposx>495</radioposx>
+					<visible>String.EndsWith(Control.GetLabel(2),$LOCALIZE[31941])</visible>
+				</control>
+				<control type="radiobutton" id="1198">
+					<!-- Tilt wall view icons button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31886]</label>
+					<font>apptv22</font>
+					<onclick>Skin.ToggleSetting(tiltvideowallicon)</onclick>
+					<selected>Skin.HasSetting(tiltvideowallicon)</selected>
+					<radioposx>495</radioposx>
+					<visible>String.EndsWith(Control.GetLabel(2),$LOCALIZE[31944])</visible>
+				</control>
+				<control type="radiobutton" id="208">
+					<!-- Use Media case Toggle -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31869]</label>
+					<font>apptv22</font>
+					<onclick>Skin.ToggleSetting(dvd-case)</onclick>
+					<selected>Skin.HasSetting(dvd-case)</selected>
+					<radioposx>495</radioposx>
+				</control>
+				<control type="button" id="3">
+					<!-- Sort by button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[103]</label>
+				</control>
+				<control type="togglebutton" id="4">
+					<!-- Sort direction button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[21429]: $LOCALIZE[21430]</label>
+					<altlabel>$LOCALIZE[21429]: $LOCALIZE[21431]</altlabel>
+					<font>apptv22</font>
+				</control>
+				<control type="button" id="10">
+					<!-- Watched toggle button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+				</control>
+				<control type="button" id="210">
+					<!-- Custom Studio Icons Button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31878]</label>
+					<font>apptv22</font>
+					<onclick condition="!System.HasAddon(script.image.resource.select)">InstallAddon(script.image.resource.select)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">RunScript(script.image.resource.select,type=resource.images.studios&amp;property=custom-moviestudioicons)</onclick>
+					<enable>String.Contains(Control.GetLabel(2),$LOCALIZE[31941]) | String.Contains(Control.GetLabel(2),$LOCALIZE[31945])</enable>
+					<visible>Container.Content(studios)</visible>
+				</control>
+				<control type="button" id="211">
+					<!-- Custom Genre Icons Button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[31879]</label>
+					<font>apptv22</font>
+					<onclick condition="!System.HasAddon(script.image.resource.select)">InstallAddon(script.image.resource.select)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">RunScript(script.image.resource.select,type=resource.images.moviegenreicons&amp;property=custom-moviegenresicons)</onclick>
+					<enable>[String.Contains(Control.GetLabel(2),$LOCALIZE[31941]) | String.Contains(Control.GetLabel(2),$LOCALIZE[31945])]</enable>
+					<visible>Container.Content(genres)</visible>
+				</control>
+				<control type="button" id="8">
+					<!-- Search button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[137]</label>
+					<font>apptv22</font>
+				</control>
+				<control type="edit" id="19">
+					<!-- Filter button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[587]</label>
+					<textwidth>510</textwidth>
+					<visible>!Container.CanFilterAdvanced</visible>
+				</control>
+				<control type="radiobutton" id="98">
+					<!-- Advanced filter button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[587]</label>
+					<font>apptv22</font>
+					<selected>Container.Filtered</selected>
+					<onclick>Filter</onclick>
+					<radioposx>495</radioposx>
+					<visible>Container.CanFilterAdvanced</visible>
+				</control>
+				<control type="button" id="16">
+					<!-- Party mode button -->
+					<width>639</width>
+					<height>69</height>
+					<label>$LOCALIZE[589]</label>
+					<font>apptv22</font>
+					<visible>Container.Content(musicvideos)</visible>
+				</control>
+				<control type="radiobutton" id="11">
+					<!-- Unlock shares button -->
+					<label>$LOCALIZE[20336]</label>
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<onclick>Mastermode</onclick>
+					<selected>system.ismaster</selected>
+					<radioposx>495</radioposx>
+					<visible>system.haslocks</visible>
+				</control>
+				<control type="button" id="200">
+					<!-- Clean library button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[334]</label>
+					<onclick>CleanLibrary(video)</onclick>
+				</control>
+				<control type="togglebutton" id="20">
+					<!-- Update library button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[653]</label>
+					<altlabel>$LOCALIZE[13353]</altlabel>
+					<usealttexture>library.isscanningvideo</usealttexture>
+				</control>
+				<control type="button" id="1200">
+					<!-- player controls button -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[16003] $LOCALIZE[478]</label>
+					<onclick>SetFocus(50)</onclick>
+					<onclick condition="String.IsEqual(Window(home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,home)</onclick>
+					<onclick>ActivateWindow(playercontrols)</onclick>
+					<visible>Player.HasAudio | Player.HasVideo</visible>
+				</control>
+				<control type="button" id="22">
+					<!-- now playing -->
+					<width>639</width>
+					<height>69</height>
+					<font>apptv22</font>
+					<label>$LOCALIZE[13350]</label>
+					<onclick>ActivateWindow(videoplaylist)</onclick>
+					<visible>!String.IsEqual(Playlist.Length(video),0)</visible>
+				</control>
+			</control>
+		</control>
+		<!-- Show a iOS style page indicator to show which focus group has the current focus -->
+		<!-- Focus group can be hidden or shown but is potentially focusable, that is it has not be disabled -->
+		<control type="group">
+			<visible>![String.IsEmpty(Container().ListItem.Label) + String.IsEmpty(Container().ListItem(1).Label)]</visible>
+			<!-- Don't show markers until we have some content to show -->
+			<control type="group">
+				<visible>Integer.IsGreater(Container(3500).NumItems,1) + [Control.IsVisible(50) | Control.IsVisible(52) | Control.IsVisible(53) | Control.IsVisible(58)]</visible>
+				<include content="page-indicator">
+					<param name="indicatorleft" value="864" />
+					<param name="indicatortop" value="0" />
+					<param name="indicatorwidth" value="192" />
+					<param name="indicatorheight" value="48" />
+					<param name="indicatororientation" value="horizontal" />
+					<param name="grp1indicate" value="[ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp1visible" value="[!Skin.HasSetting(lock-screensettings)]" />
+					<param name="grp2indicate" value="[Control.HasFocus(50)|Control.HasFocus(52)|Control.HasFocus(53)|Control.HasFocus(58)]" />
+					<param name="grp2visible" value="[Control.IsVisible(50)|Control.IsVisible(52)|Control.IsVisible(53)|Control.IsVisible(58)]" />
+					<param name="grp3indicate" value="[Control.HasFocus(1240)|Control.HasFocus(1242)|Control.HasFocus(1243)|Control.HasFocus(1248)|Control.HasFocus(1260)|Control.HasFocus(1262)|Control.HasFocus(1263)|Control.HasFocus(1268)]" />
+					<param name="grp3visible" value="[Skin.HasSetting(show-letterbar)+[Container.Content(movies)|Container.Content(tvshows)]]" />
+					<param name="grp4indicate" value="[Control.HasFocus(1250)|Control.HasFocus(1252)|Control.HasFocus(1253)|Control.HasFocus(1258)]" />
+					<param name="grp4visible" value="[!String.IsEqual(Skin.String(show-scrollbar),$LOCALIZE[31877])]" />
+				</include>
+			</control>
+			<control type="group">
+				<visible>Integer.IsGreater(Container(3500).NumItems,1) + [Control.IsVisible(54) | Control.IsVisible(57)]</visible>
+				<include content="page-indicator">
+					<param name="indicatorleft" value="0" />
+					<param name="indicatortop" value="225" />
+					<param name="indicatorwidth" value="48" />
+					<param name="indicatorheight" value="192" />
+					<param name="indicatororientation" value="vertical" />
+					<param name="grp1indicate" value="[ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp1visible" value="[!Skin.HasSetting(lock-screensettings)]" />
+					<param name="grp2indicate" value="[Control.HasFocus(54)|Control.HasFocus(57)]" />
+					<param name="grp2visible" value="[Control.IsVisible(54)|Control.IsVisible(57)]" />
+					<param name="grp3indicate" value="[Control.HasFocus(1244)|Control.HasFocus(1247)|Control.HasFocus(1264)|Control.HasFocus(1267)]" />
+					<param name="grp3visible" value="[Skin.HasSetting(show-letterbar)+[Container.Content(movies)|Container.Content(tvshows)]]" />
+					<param name="grp4indicate" value="[Control.HasFocus(1254)|Control.HasFocus(1257)]" />
+					<param name="grp4visible" value="[!String.IsEqual(Skin.String(show-scrollbar),$LOCALIZE[31877])]" />
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>
