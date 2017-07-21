@@ -1,4 +1,4 @@
-## Xperience1080 (Kodi 17.x, 16.x, 15.x)
+## Xperience1080 for Kodi 17.x (Krypton)
 
 Xperience1080 is one of the most beautiful skin for Kodi that was ever created.
 
