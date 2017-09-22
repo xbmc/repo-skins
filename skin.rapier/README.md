@@ -63,12 +63,11 @@ script.artistslideshow v1.6.9
 script.artwork.downloader v13.0.0  
 script.randomandlastitems v2.2.1  
 script.tv.show.next.aired v6.0.10  
-script.skin.helper.service v1.1.3
+script.skin.helper.service v1.1.3  
 script.skin.helper.backgrounds v1.0.21  
-script.skin.helper.widgets v1.0.22
+script.skin.helper.widgets v1.0.22  
 script.globalsearch v2.0.8  
 script.image.resource.select 0.0.9  
-resource.uisounds.rapier 1.0.1  
 resource.images.studios.white 0.0.2  
 
 ## LICENSE
