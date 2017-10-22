@@ -4,6 +4,7 @@
 	<include>fadeInOut</include>
 	<onload>RunScript(script.skinshortcuts,type=buildxml&amp;mainmenuID=9001&amp;group=mainmenu|videosubmenu|musicsubmenu|picturessubmenu)</onload>
 	<onload condition="Skin.hassetting(stopVideoOnMenu) + !Player.HasAudio">PlayerControl(stop)</onload>
+	<onload>AlarmClock(hidemenu,setfocus(9999),00:20,true)</onload>
 	<controls>
 		<include>globalBackground</include>
 		<control type="group">
@@ -30,11 +31,14 @@
 		<include>miniVideoPlayer</include>
 		<!--main menu-->
 		<control type="panel" id="9000">
+			<animation type="conditional" condition="control.hasfocus(9999)" reversible="true">
+				<effect type="fade" start="100" end="0" time="500" delay="0"/>
+			</animation>
 			<posx>col-5-begin</posx>
 			<posy>row-12-begin</posy>
 			<width>18-col</width>
 			<height>12-row</height>
-			<ondown>9001</ondown>
+			<ondown>setfocus(9001,1)</ondown>
 			<orientation>vertical</orientation>
 			<itemlayout width="4-col" height="3-row">
 				<control type="image">
@@ -94,8 +98,8 @@
 			<posy>row-26-begin</posy>
 			<control type="panel" id="9001">
 				<posx>0</posx>
-				<posy>0</posy>
-				<width>3-col</width>
+				<posy>18</posy>
+				<width>4-col</width>
 				<height>1-col</height>
 				<orientation>horizontal</orientation>
 				<onup>9000</onup>
@@ -142,106 +146,129 @@
 						<onclick>ActivateWindow(Settings)</onclick>
 					</item>
 					<item>
-						<label></label>
-						<onclick>ActivateWindow(shutdownmenu)</onclick>
+						<visible>control.hasfocus(9999)</visible>
+						<label></label>
+						<onclick>setfocus(9000,0)</onclick>
 					</item>
 					<item>
-						<label></label>
-						<onclick>ActivateWindow(systeminfo)</onclick>
+						<visible>!control.hasfocus(9999)</visible>
+						<label></label>
+						<onclick>setfocus(9999)</onclick>
+					</item>
+					<item>
+						<label></label>
+						<onclick>ActivateWindow(shutdownmenu)</onclick>
 					</item>
 				</content>
 			</control>
 		</control>
 		<!--Date / time and weather-->
-        <control type="group">
-            <posx>col-1-begin</posx>
-            <posy>row-8-begin</posy>
-            <control type="label">
-                <posx>0</posx>
-                <posy>-48</posy>
-                <width>24-col</width>
-                <height>2-row</height>
-                <align>center</align>
-                <font>veryLarge</font>
-                <textcolor>textActive</textcolor>
+		<control type="group">
+			<posx>col-1-begin</posx>
+			<posy>row-8-begin</posy>
+			<animation type="conditional" condition="control.hasfocus(9999) + !player.hasaudio" reversible="true">
+				<effect type="slide" start="0,0" end="0,538" time="200" delay="0"/>
+			</animation>
+			<animation type="conditional" condition="control.hasfocus(9999) + player.hasaudio" reversible="true">
+				<effect type="slide" start="0,0" end="0,484" time="200" delay="0"/>
+			</animation>
+			<control type="label">
+				<posx>0</posx>
+				<posy>-48</posy>
+				<width>24-col</width>
+				<height>2-row</height>
+				<align>center</align>
+				<font>veryLarge</font>
+				<textcolor>textActive</textcolor>
 				<shadowcolor>44000000</shadowcolor>
-                <label>$INFO[System.Time]</label>
-            </control>
-            <control type="label">
-                <posx>0</posx>
-                <posy>1-row</posy>
-                <width>24-col</width>
-                <height>2-row</height>
-                <font>regular</font>
-                <align>center</align>
-                <textcolor>textActive</textcolor>
+				<label>$INFO[System.Time]</label>
+			</control>
+			<control type="label">
+				<posx>0</posx>
+				<posy>1-row</posy>
+				<width>24-col</width>
+				<height>2-row</height>
+				<font>regular</font>
+				<align>center</align>
+				<textcolor>textActive</textcolor>
 				<shadowcolor>44000000</shadowcolor>
-                <label>$INFO[System.Date(DDD)] [B]$INFO[System.Date(dd)][/B] $INFO[System.Date(MMM)]</label>
-            </control>
-        </control>
+				<label>$INFO[System.Date(DDD)] [B]$INFO[System.Date(dd)][/B] $INFO[System.Date(MMM)]</label>
+			</control>
+		</control>
 		<!--now playing music-->
-		            <control type="group">
-		                <visible>player.hasaudio</visible>
-		                <posx>col-1-begin</posx>
-		                <posy>row-24-begin</posy>
-		                <control type="grouplist">
-		                    <posx>0</posx>
-		                    <posy>0</posy>
-		                    <width>24-col</width>
-		                    <align>center</align>
-		                    <itemgap>18</itemgap>
-		                    <orientation>horizontal</orientation>
-		                    <control type="image">
-		                        <visible>!player.paused + !System.Platform.Linux.RaspberryPi</visible>
-		                        <posx>0</posx>
-		                        <posy>0</posy>
-		                        <width>1-col-gutter</width>
-		                        <height>1-col-gutter</height>
-		                        <texture>equaliser.gif</texture>
-		                    </control>
-		                    <control type="label">
-		                        <visible>!player.paused + System.Platform.Linux.RaspberryPi</visible>
-		                        <posx>0</posx>
-		                        <posy>0</posy>
-		                        <width>1-col-gutter</width>
-		                        <height>2-row</height>
-		                        <align>center</align>
-		                        <aligny>center</aligny>
-		                        <font>symbolLarge</font>
-		                        <textcolor>textActive</textcolor>
-		                        <shadowcolor>-</shadowcolor>
-		                        <label></label>
-		                    </control>
-		                    <control type="label">
-		                        <visible>player.paused</visible>
-		                        <posx>0</posx>
-		                        <posy>0</posy>
-		                        <width>1-col-gutter</width>
-		                        <height>2-row</height>
-		                        <align>center</align>
-		                        <aligny>center</aligny>
-		                        <font>symbolLarge</font>
-		                        <textcolor>textActive</textcolor>
-		                        <shadowcolor>-</shadowcolor>
-		                        <label></label>
-		                    </control>
-		                    <control type="label">
-		                        <description>Artist</description>
-		                        <posx>0</posx>
-		                        <posy>0</posy>
-		                        <font>small</font>
-		                        <width>auto</width>
-		                        <height>2-row</height>
-		                        <align>center</align>
-		                        <aligny>center</aligny>
-		                        <height>2-row</height>
-		                        <label>$INFO[MusicPlayer.TimeRemaining,, ][B]$INFO[musicplayer.Artist,, ][/B]$INFO[MusicPlayer.Title]</label>
-		                        <scroll>true</scroll>
-		                        <textcolor>textActive</textcolor>
-		                        <wrapmultiline>false</wrapmultiline>
-		                    </control>
-		                </control>
-		            </control>
+		<control type="group">
+			<visible>player.hasaudio</visible>
+			<posx>col-1-begin</posx>
+			<posy>row-24-begin</posy>
+			<control type="grouplist">
+				<posx>0</posx>
+				<posy>0</posy>
+				<width>24-col</width>
+				<align>center</align>
+				<itemgap>18</itemgap>
+				<orientation>horizontal</orientation>
+				<control type="image">
+					<visible>!player.paused + !System.Platform.Linux.RaspberryPi</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1-col-gutter</width>
+					<height>1-col-gutter</height>
+					<texture>equaliser.gif</texture>
+				</control>
+				<control type="label">
+					<visible>!player.paused + System.Platform.Linux.RaspberryPi</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1-col-gutter</width>
+					<height>2-row</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>symbolLarge</font>
+					<textcolor>textActive</textcolor>
+					<shadowcolor>-</shadowcolor>
+					<label></label>
+				</control>
+				<control type="label">
+					<visible>player.paused</visible>
+					<posx>0</posx>
+					<posy>0</posy>
+					<width>1-col-gutter</width>
+					<height>2-row</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>symbolLarge</font>
+					<textcolor>textActive</textcolor>
+					<shadowcolor>-</shadowcolor>
+					<label></label>
+				</control>
+				<control type="label">
+					<description>Artist</description>
+					<posx>0</posx>
+					<posy>0</posy>
+					<font>small</font>
+					<width>auto</width>
+					<height>2-row</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<height>2-row</height>
+					<label>$INFO[MusicPlayer.TimeRemaining,, ][B]$INFO[musicplayer.Artist,, ][/B]$INFO[MusicPlayer.Title]</label>
+					<scroll>true</scroll>
+					<textcolor>textActive</textcolor>
+					<wrapmultiline>false</wrapmultiline>
+				</control>
+			</control>
+		</control>
+		<control type="button" id="9999">
+            <posx>-500</posx>
+            <posy>0</posy>
+            <width>1-col</width>
+            <height>2-row</height>
+			<onleft>setfocus(9000,0)</onleft>
+			<onright>setfocus(9000,0)</onright>
+			<onup>setfocus(9000,0)</onup>
+			<ondown>setfocus(9000,0)</ondown>
+			<onclick>setfocus(9000,0)</onclick>
+        </control>
 		<!--debugging-->
 		<include>DebugGrid</include>
 		<control type="label">
