@@ -1,5 +1,7 @@
 ## Xperience1080 for Kodi 17.x (Krypton)
 
+![Xperience1080 Logo](https://raw.githubusercontent.com/xperience1080/skin.xperience1080/master/resources/icon.png)
+
 Xperience1080 is one of the most beautiful skin for Kodi that was ever created.
 
 #### Features
@@ -11,12 +13,24 @@ Xperience1080 is one of the most beautiful skin for Kodi that was ever created.
 * Support for low powered devices
 * Quick Media Guide to easily access latest statistics
 
-#### Installation (best to install from the official Kodi Repository)
-1. Download the zip file from Github
-2. IMPORTANT: Install from the zip, this will trigger the installation of skin dependencies.
-3. Allow the skin to install, dependencies to be downloaded (where required) and load.
-4. Xperience1080 textures are the default, but you can choose to new texture set by going to Settings -> Appearance -> Theme -> Alternative.
-5. Sounds are optional from Kodi 15 onwards, you can install the default sounds for this skin from the Add-ons area.
+#### Installation
+1. Go to Settings -> Interface Settings -> Skin -> (Select current skin) -> Get More... -> Xperience1080
+2. The skin and dependencies will now be installed, this may take a few minutes.
+3. You will be asked if you would like to keep the new skin, select Yes.
+4. Sounds are optional from Kodi 15 onwards, you can install the default sounds for this skin from the Add-ons area.
+
+#### Install from GitHub (unstable version)
+If you can't wait for the official release of the skin in Kodi add-on repository, you can manually install the latest skin revision from GitHub.
+
+**NOTE:** The flat theme is only available in the packaged version of Xperience1080 you get from the official Kodi add-on repository.
+
+Here is how:
+
+1. Download the repository as zip from Github
+2. Start Kodi and go to Settings -> Add-ons and select "Install from zip file". Browse for the file downloaded and press "OK".
+3. The skin and dependencies will now be installed, this may take a few minutes.
+4. You will be asked if you would like to keep the new skin, select Yes.
+
 
 #### Credit to `Black and his work, of which this is a continuation.
 
