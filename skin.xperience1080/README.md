@@ -31,6 +31,10 @@ Here is how:
 3. The skin and dependencies will now be installed, this may take a few minutes.
 4. You will be asked if you would like to keep the new skin, select Yes.
 
+### Translations
+We use Transifex to translate Xperience1080 into your native language. So if you want to help translating Xperience1080 sign up at Transifex and join our project.
+
+https://www.transifex.com/xperience1080/xperience1080/dashboard/
 
 #### Credit to `Black and his work, of which this is a continuation.
 
