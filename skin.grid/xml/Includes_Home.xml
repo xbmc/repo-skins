@@ -1,32 +1,12 @@
 <includes>
 
 	<include name="home_Vertical">
-
-		<control type="multiimage" id="7975">
-			<imagepath background="true">$VAR[background:Home]</imagepath>
-			<visible>![Player.HasAudio + Skin.HasSetting(home.nowplaying)] + Skin.HasSetting(home.fx.home.image)</visible>
-		</control>
-
-
 		<include content="background_Home">
 			<param name="GridTexture">overlays/home.png</param>
 			<param name="DiffuseColor">$VAR[home:FX.ColorVertDiffuse]</param>
 			<param name="DiffuseTexture">diffuse/home.png</param>
 			<param name="id" condition="Skin.HasSetting(fx.home.color)">7977</param>
 		</include>
-
-		<!-- Full blur overlay -->
-		<control type="image">
-			<bottom>0</bottom>
-			<width>screen_Width</width>
-			<height>screen_Height</height>
-			<aspectratio aligny="bottom">scale</aspectratio>
-			<texture>$VAR[home:FX.Texture]</texture>
-			<include>fadeinout</include>
-			<include>transition_HomeAlt</include>
-			<visible>String.IsEqual(Window(Home).Property(BlurIsActive),true)</visible>
-
-		</control>
 
 		<!-- Scroll indicators -->
 		<control type="label">
@@ -52,6 +32,14 @@
 			<include>fadeinout</include>
 			<visible>Container(9000).HasNext + Integer.IsGreater(Container(9000).NumItems,8)</visible>
 		</control>
+
+		<!-- Volume slider -->
+		<include content="global_Progress">
+			<param name="ID">29999</param>
+			<param name="Info">Player.Volume</param>
+			<param name="ProgressHeight">98</param>
+			<param name="Visible">Window.IsActive(volumebar) + Integer.IsGreater(Player.Volume,0)</param>
+		</include>
 
 		<include>home_Menu-vertical</include>
 
@@ -122,9 +110,21 @@
 					<animation effect="fade" start="100" end="0" time="400" reversible="true" tween="Quadratic" easing="Out">Hidden</animation>
 					<visible>!String.IsEqual(Window(Home).Property(BlurIsActive),true)</visible>
 				</control>
+
+				<!-- Volume slider -->
+				<include content="global_Progress">
+					<param name="ID">29999</param>
+					<param name="Info">Player.Volume</param>
+					<param name="ProgressHeight">108</param>
+					<param name="Visible">Window.IsActive(volumebar) + Integer.IsGreater(Player.Volume,0)</param>
+				</include>
 		
 				<!-- Horizontal home window chrome -->
-				<include condition="String.IsEqual(Skin.String(homemenu.layout),horizontal)">global_WindowChrome</include>
+				<include content="global_WindowChrome">
+					<param name="Height">108</param>
+					<param name="Title">$VAR[window:Title.Home]</param>
+					<param name="ProgressHeight">108</param>
+				</include>
 
 				<!-- Feed container-->
 				<include content="home_Widgets">
@@ -181,6 +181,70 @@
 				<include>transition_Background</include>
 				<visible>![Player.HasAudio + Skin.HasSetting(home.nowplaying)]</visible>
 				<visible>Skin.HasSetting(home.logo) + String.StartsWith(Skin.String(background.home),fanart-)</visible>
+			</control>
+		</definition>
+	</include>
+
+	<include name="home_Status">
+		<param name="Left" default="128"/>
+		<param name="Width" default="1792"/>
+		<definition>
+			<control type="group">
+				<left>$PARAM[Left]</left>
+				<include>fadeinout</include>
+				<visible>!ControlGroup(9100).HasFocus()</visible>
+				<control type="label">
+					<bottom>0</bottom>
+					<width>$PARAM[Width]</width>
+					<height>100</height>
+					<font>Regular-20</font>
+					<label>$VAR[home:Status]</label>
+					<align>center</align>
+					<aligny>center</aligny>
+					<textcolor>$VAR[color:Accent]</textcolor>
+					<shadowcolor>black</shadowcolor>
+					<include>fadeinout</include>
+				</control>
+				<control type="rss">
+					<bottom>0</bottom>
+					<width>$PARAM[Width]</width>
+					<height>64</height>
+					<font>Regular-20</font>
+					<urlset>1</urlset>
+					<textcolor>$VAR[color:Accent]</textcolor>
+					<titlecolor>$VAR[color:Text.2]</titlecolor>
+					<headlinecolor>$VAR[color:Accent]</headlinecolor>
+					<include>fadeinout</include>
+					<visible>String.IsEqual(Skin.String(home.status),rss)</visible>
+				</control>
+				<!-- Feed Indicator -->
+				<control type="group">
+					<bottom>0</bottom>
+					<right>0</right>
+					<width>128</width>
+					<height>98</height>
+					<include>fadeinout</include>
+					<visible>String.IsEqual(Skin.String(home.status),feed)</visible>
+					<control type="image">
+						<bottom>0</bottom>
+						<right>0</right>
+						<width>128</width>
+						<height>98</height>
+						<texture colordiffuse="ff000000">colorize/10.png</texture>
+						<visible>Window.IsActive(home)</visible>
+					</control>
+					<control type="label">
+						<right>0</right>
+						<width>128</width>
+						<height>98</height>
+						<label>&#58920;</label>
+						<font>Symbols-32</font>
+						<align>center</align>
+						<aligny>center</aligny>
+						<textcolor>$VAR[color:Accent]</textcolor>
+						<shadowcolor>black</shadowcolor>
+					</control>
+				</control>
 			</control>
 		</definition>
 	</include>
@@ -312,7 +376,7 @@
 					<width>$PARAM[ItemWidth]</width>
 					<height>$PARAM[Height]</height>
 					<texture>$PARAM[Art]</texture>
-					<aspectratio align="center" aligny="top">scale</aspectratio>
+					<aspectratio align="center" aligny="center">scale</aspectratio>
 					<bordersize>10</bordersize>
 				</control>
 				<control type="image">
@@ -401,7 +465,7 @@
 						<width>$PARAM[ItemWidth]</width>
 						<height>$PARAM[Height]</height>
 						<texture>$PARAM[Art]</texture>
-						<aspectratio align="center" aligny="top">scale</aspectratio>
+						<aspectratio align="center" aligny="center">scale</aspectratio>
 						<bordersize>10</bordersize>
 					</control>
 					<control type="image">
@@ -418,7 +482,7 @@
 						<width>$PARAM[ItemWidth]</width>
 						<height>$PARAM[Height]</height>
 						<texture>$PARAM[Art]</texture>
-						<aspectratio align="center" aligny="top">scale</aspectratio>
+						<aspectratio align="center" aligny="center">scale</aspectratio>
 						<bordertexture>colorize/100.png</bordertexture>
 						<bordersize>10</bordersize>
 					</control>

@@ -140,7 +140,7 @@
 			</animation>
 			<control type="visualisation" id="2">
 				<include>screen_Dimensions</include>
-				<visible>Player.HasAudio + [String.IsEqual(Skin.String(viz.mode),viz) | String.IsEqual(Skin.String(viz.mode),blend)]</visible>
+				<visible>Player.HasAudio + [String.IsEqual(Skin.String(viz.mode),viz) | String.IsEqual(Skin.String(viz.mode),blend) | Pvr.IsPlayingRadio]</visible>
 			</control>
 			<control type="multiimage">
 				<imagepath background="true">$VAR[background:Player]</imagepath>
@@ -151,13 +151,39 @@
 		</control>
 	</include>
 
+	<include name="global_Progress">
+		<param name="ID"/>
+		<param name="Info"/>
+		<param name="Left" default="128"/>
+		<param name="ProgressHeight"/>
+		<param name="Top"/>
+		<param name="Visible"/>
+		<param name="Width" default="1664"/>
+		<definition>
+			<control type="progress" id="$PARAM[ID]">
+				<top>$PARAM[Top]</top>
+				<left>$PARAM[Left]</left>
+				<width>$PARAM[Width]</width>
+				<height>$PARAM[ProgressHeight]</height>
+				<info>$PARAM[Info]</info>
+				<texturebg colordiffuse="$VAR[color:Accent]">progress/player/0.png</texturebg>
+				<lefttexture></lefttexture>
+				<midtexture colordiffuse="$VAR[color:Accent]">progress/player/50.png</midtexture>
+				<righttexture></righttexture>
+				<visible>$PARAM[Visible]</visible>
+				<include>fadeinout</include>
+				<orientation>vertical</orientation>
+			</control>
+		</definition>
+	</include>
+
 	<include name="global_WindowChrome">
 		<param name="Font" default="Black-48"/>
 		<param name="Height" default="108"/>
-		<param name="ItemCount" default="$INFO[Container.NumItems]"/>
+		<param name="ItemCount" default="$VAR[window:ItemCount]"/>
+		<param name="ProgressHeight" default="108"/>
 		<param name="ProgressLeft" default="128"/>
 		<param name="ProgressTop" default="0"/>
-		<param name="ProgressHeight" default="108"/>
 		<param name="ProgressWidth" default="1664"/>
 		<param name="ShowItemCount" default="True" />
 		<param name="ShowSymbol" default="true"/>
@@ -182,7 +208,6 @@
 					<height>$PARAM[Height]</height>
 					<texture colordiffuse="ff000000">colorize/30.png</texture>
 					<aspectratio>stretch</aspectratio>
-
 					<visible>![Window.IsActive(Home) + Integer.IsGreater(Player.Volume,0)]</visible>
 				</control>
 				<control type="label">
@@ -223,32 +248,20 @@
 				</control>
 
 				<!-- Volume slider -->
-				<control type="progress" id="29999">
-					<top>$PARAM[ProgressTop]</top>
-					<left>$PARAM[ProgressLeft]</left>
-					<width>$PARAM[ProgressWidth]</width>
-					<height>$PARAM[ProgressHeight]</height>
-					<info>Player.Volume</info>
-					<texturebg colordiffuse="$VAR[color:Accent]">colorize/0.png</texturebg>
-					<lefttexture></lefttexture>
-					<midtexture colordiffuse="$VAR[color:Accent]">colorize/25.png</midtexture>
-					<righttexture></righttexture>
-					<visible>Window.IsActive(volumebar) + Integer.IsGreater(Player.Volume,0)</visible>
-				</control>
+				<include content="global_Progress">
+					<param name="ID">29999</param>
+					<param name="Info">Player.Volume</param>
+					<param name="ProgressHeight">108</param>
+					<param name="Visible">!Window.IsVisible(home) + Window.IsActive(volumebar) + Integer.IsGreater(Player.Volume,0)</param>
+				</include>
 
 				<!-- Player progress -->
-				<control type="progress" id="12">
-					<left>128</left>
-					<width>1664</width>
-					<height>$PARAM[ProgressHeight]</height>
-					<info>Player.Progress</info>
-					<texturebg colordiffuse="$VAR[color:Accent]">progress/player/0.png</texturebg>
-					<lefttexture></lefttexture>
-					<midtexture colordiffuse="$VAR[color:Accent]">progress/player/50.png</midtexture>
-					<righttexture></righttexture>
-					<visible>[Window.IsVisible(seekbar) | Window.IsVisible(visualisation)] + ![Window.IsActive(volumebar) +  [!Player.Muted | VideoPlayer.IsFullscreen]] + !Window.IsActive(DialogSettings.xml)</visible>
-					<include>transition_Chrome</include>
-				</control>
+				<include content="global_Progress" condition="!Window.IsVisible(pvrgroupmanager)">
+					<param name="ID">12</param>
+					<param name="ProgressHeight">108</param>
+					<param name="Info">Player.Progress</param>
+					<param name="Visible">[Window.IsVisible(seekbar) | Window.IsVisible(visualisation)] + ![Window.IsActive(volumebar) +  [!Player.Muted | VideoPlayer.IsFullscreen]] + !Window.IsActive(DialogSettings.xml)</param>
+				</include>
 
 				<!-- Window title -->
 				<control type="label" id="1">
@@ -502,6 +515,8 @@
 				<animation effect="slide" start="0,0"  end="0,-11" time="150" condition="Window.IsVisible(Home) + !Skin.HasSetting(home.clock)">Conditional</animation>
 				<animation effect="slide" start="0"  end="128" time="150" condition="Window.IsActive(Home) + !Skin.HasSetting(home.clock) + !String.IsEqual(Skin.String(homemenu.layout),compact)">Conditional</animation>
 				<animation effect="slide" start="0,0"  end="118,10" time="150" condition="Window.IsActive(Home) + String.IsEqual(Skin.String(homemenu.layout),compact)">Conditional</animation>
+
+				<animation effect="fade" start="100" end="0" condition="Window.IsActive(volumebar)">Conditional</animation>
 
 				<control type="image">
 					<width>$PARAM[Width]</width>
