@@ -1,9 +1,9 @@
 ## Black Glass Nova skin for Kodi 17 KRYPTON
 Black Glass Nova is an easy to use and fanart oriented skin designed for Full HD TV screens.
 
-![](http://i.imgur.com/bNT9T4C.jpg)
+![](https://github.com/Tgxcorporation/skin.blackglassnova/raw/master/screenshots/screenshot01.jpg)
 
-![](http://i.imgur.com/NxPPyDE.jpg)
+![](https://i.imgur.com/fswAmrp.jpg)
 
 #### Some pictures of the skin:
 - [Black Glass Nova Mode](https://github.com/Tgxcorporation/skin.blackglassnova/wiki/Screenshots-BGN)
@@ -15,10 +15,21 @@ Black Glass Nova is an easy to use and fanart oriented skin designed for Full HD
 
 #### [Download from GitHub](https://github.com/Tgxcorporation/skin.blackglassnova/wiki/Install-from-GitHub)
 
-#### Thanks
-All the Kodi/XBMC team and addon developers.
+&nbsp;
+#### Credits
 
+[![Kodi](https://github.com/Tgxcorporation/skin.andromeda/blob/master/media/kodi.png?raw=true)](https://kodi.tv)
+
+Thanks to the [Kodi](https://kodi.tv) team and addon developers.
+
+&nbsp;
+
+&nbsp;&nbsp;[![JetBrains](https://github.com/Tgxcorporation/skin.andromeda/blob/master/media/jetbrains.png?raw=true)](https://www.jetbrains.com)
+
+Thanks to [JetBrains](https://www.jetbrains.com) for providing a free lincese for their wonderfuld IDEs used during the code development of the skin.
+
+&nbsp;
 #### Donations
 If you liked this skin and you want to help a little bit, you can donate here:
 
-[![PayPal Donate](https://www.paypal.com/en_US/i/btn/x-click-but04.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=BQTJSRCZ8GWHY&lc=US&item_name=Skins%20by%20Tgx%20for%20Kodi%20Entertainment%20Center&item_number=Kodi&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)
+[![PayPal Donate](https://www.paypal.com/en_US/i/btn/x-click-but04.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=BQTJSRCZ8GWHY&lc=US&item_name=Skins%20by%20Tgx%20for%20Kodi%20Entertainment%20Center&item_number=Kodi&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted)
