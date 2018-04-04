@@ -23,7 +23,7 @@
 				<textcolor>WhiteColor</textcolor>
 				<shadowcolor>ShadowColor</shadowcolor>
 				<label>$INFO[System.CurrentControl]</label>
-				<visible>![Control.HasFocus(257) | Window.IsVisible(OSDAudioDSPSettings)]</visible>
+				<visible>!Control.HasFocus(257)</visible>
 			</control>
 			
 			<control type="label">
@@ -33,7 +33,7 @@
 				<textcolor>WhiteColor</textcolor>
 				<shadowcolor>ShadowColor</shadowcolor>
 				<label>$LOCALIZE[590]$INFO[Playlist.Random,: ]</label>
-				<visible>Control.HasFocus(257) + !Window.IsVisible(OSDAudioDSPSettings)</visible>
+				<visible>Control.HasFocus(257)</visible>
 			</control>
 			
 			<control type="grouplist" id="201">
@@ -42,16 +42,16 @@
 				<top>17</top>
 				<width>324</width>
 				<height>35</height>
-				<include condition="!Player.CanRecord">MusicOSDItemgap2</include>
-				<include condition="Player.CanRecord">MusicOSDItemgap3</include>
+				<include condition="!PVR.CanRecordPlayingChannel">MusicOSDItemgap2</include>
+				<include condition="PVR.CanRecordPlayingChannel">MusicOSDItemgap3</include>
 				<orientation>horizontal</orientation>
 				<onup condition="Window.IsVisible(script-cu-lrclyrics-main.xml)">Dialog.Close(MusicOSD,true)</onup>
 				<onup condition="Window.IsVisible(script-cu-lrclyrics-main.xml)">SetFocus(9000)</onup>
 				<onback condition="Window.IsVisible(script-cu-lrclyrics-main.xml)">Dialog.Close(MusicOSD,true)</onback>
 				<onback condition="Window.IsVisible(script-cu-lrclyrics-main.xml)">SetFocus(9000)</onback>
 				<onleft>109</onleft>
-				<onright condition="Player.CanRecord">110</onright>
-				<onright condition="!Player.CanRecord">250</onright>
+				<onright condition="PVR.CanRecordPlayingChannel">110</onright>
+				<onright condition="!PVR.CanRecordPlayingChannel">250</onright>
 				<control type="button" id="100">
 					<description>Exit Fullscreen</description>
 					<width>35</width>
@@ -100,18 +100,6 @@
 					<onup>400</onup>
 					<visible>!Skin.HasSetting(UseFanartForMusicPlayingBG)</visible>
 				</control>
-				<control type="button" id="153">
-					<description>Audio DSP</description>
-					<width>35</width>
-					<height>35</height>
-					<font />
-					<label>$LOCALIZE[15047]</label>
-					<texturefocus>osd/osd-audio-settings-focus.png</texturefocus>
-					<texturenofocus>osd/osd-audio-settings-nofocus.png</texturenofocus>
-					<onclick>ActivateWindow(OSDAudioDSPSettings)</onclick>
-					<pulseonselect>false</pulseonselect>
-					<visible>system.getbool(audiooutput.dspaddonsenabled)</visible>
-				</control>
 				<control type="button" id="154">
 					<description>User Rating</description>
 					<width>35</width>
@@ -157,8 +145,8 @@
 				<top>10</top>
 				<width>480</width>
 				<height>50</height>
-				<include condition="!Player.CanRecord">MusicOSDItemgap1</include>
-				<include condition="Player.CanRecord">MusicOSDItemgap3</include>
+				<include condition="!PVR.CanRecordPlayingChannel">MusicOSDItemgap1</include>
+				<include condition="PVR.CanRecordPlayingChannel">MusicOSDItemgap3</include>
 				<usecontrolcoords>true</usecontrolcoords>
 				<orientation>horizontal</orientation>
 				<onup condition="Window.IsVisible(script-cu-lrclyrics-main.xml)">Dialog.Close(MusicOSD,true)</onup>
@@ -171,26 +159,28 @@
 				<onleft condition="!Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + Control.IsVisible(153)">153</onleft>
 				<onleft condition="!Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + !Control.IsVisible(153)">500</onleft>
 				<onright>100</onright>
-				<animation effect="slide" end="-18,0" condition="Player.CanRecord">Conditional</animation>
+				<animation effect="slide" end="-18,0" condition="PVR.CanRecordPlayingChannel">Conditional</animation>
+				<animation effect="slide" end="50,0" condition="MusicPartyMode.Enabled">Conditional</animation>
 				<control type="togglebutton" id="110">
 					<description>Rec</description>
 					<top>5</top>
 					<width>40</width>
 					<height>40</height>
-					<onclick>PlayerControl(Record)</onclick>
+					<onclick>PVR.ToggleRecordPlayingChannel</onclick>
 					<pulseonselect>false</pulseonselect>
 					<label>264</label>
 					<altlabel>265</altlabel>
 					<font />
 					<texturefocus>osd/osd-record-focus.png</texturefocus>
 					<texturenofocus>osd/osd-record-nofocus.png</texturenofocus>
-					<usealttexture>Player.Recording</usealttexture>
+					<usealttexture>PVR.IsRecordingPlayingChannel</usealttexture>
 					<alttexturefocus>osd/osd-record-focus.png</alttexturefocus>
 					<alttexturenofocus>osd/osd-record-2.png</alttexturenofocus>
 					<onright>250</onright>
-					<visible>Player.CanRecord</visible>
+					<visible>PVR.CanRecordPlayingChannel</visible>
 				</control>
 				<control type="group" id="410">
+					<visible>!MusicPartyMode.Enabled</visible>
 					<top>5</top>
 					<width>40</width>
 					<control type="button" id="250">
@@ -202,12 +192,12 @@
 						<label>$LOCALIZE[486]$INFO[Playlist.Repeat,: ]</label>
 						<onclick>PlayerControl(Repeat)</onclick>
 						<pulseonselect>false</pulseonselect>
-						<onleft condition="Player.CanRecord">110</onleft>
-						<onleft condition="!Player.CanRecord + Control.IsVisible(152)">152</onleft>
-						<onleft condition="!Player.CanRecord + !Control.IsVisible(152) + Control.IsVisible(151)">151</onleft>
-						<onleft condition="!Player.CanRecord + !Control.IsVisible(152) + !Control.IsVisible(151) + Control.IsVisible(154)">154</onleft>
-						<onleft condition="!Player.CanRecord + !Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + Control.IsVisible(153)">153</onleft>
-						<onleft condition="!Player.CanRecord + !Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + !Control.IsVisible(153)">500</onleft>
+						<onleft condition="PVR.CanRecordPlayingChannel">110</onleft>
+						<onleft condition="!PVR.CanRecordPlayingChannel + Control.IsVisible(152)">152</onleft>
+						<onleft condition="!PVR.CanRecordPlayingChannel + !Control.IsVisible(152) + Control.IsVisible(151)">151</onleft>
+						<onleft condition="!PVR.CanRecordPlayingChannel + !Control.IsVisible(152) + !Control.IsVisible(151) + Control.IsVisible(154)">154</onleft>
+						<onleft condition="!PVR.CanRecordPlayingChannel + !Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + Control.IsVisible(153)">153</onleft>
+						<onleft condition="!PVR.CanRecordPlayingChannel + !Control.IsVisible(152) + !Control.IsVisible(151) + !Control.IsVisible(154) + !Control.IsVisible(153)">500</onleft>
 						<onright>257</onright>
 					</control>
 					<control type="image" id="251">
@@ -271,6 +261,7 @@
 					<alttexturenofocus>osd/osd-random-on-nofocus.png</alttexturenofocus>
 					<onclick>PlayerControl(Random)</onclick>
 					<pulseonselect>false</pulseonselect>
+					<visible>!MusicPartyMode.Enabled</visible>
 				</control>
 				<control type="button" id="106">
 					<description>Skip Prev</description>
