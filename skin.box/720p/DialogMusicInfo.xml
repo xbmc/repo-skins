@@ -119,24 +119,36 @@
 						<height>50</height>
 						<aligny>top</aligny>
 						<font>Panel_Title_Footer</font>
-                        <label>$INFO[ListItem.Artist]</label>
+                        <label>$INFO[ListItem.Artist]$INFO[ListItem.Property(Album_Label), • ]</label>
                         <scroll>true</scroll>
-						<visible>String.IsEqual(ListItem.DBType,artist)</visible>
+						<visible>String.IsEqual(ListItem.DBType,album)</visible>
                     </control>
 				<!-- SubTitle for Artists -->	
 				<control type="label">
-                        <description>Genre</description>
+                        <description>Born</description>
 						<left>635</left>
 						<top>245</top>
 						<width>610</width>
 						<height>50</height>
 						<aligny>top</aligny>
 						<font>Panel_Title_Footer</font>
-                        <label>$INFO[ListItem.Genre]</label>
+                        <label>$INFO[ListItem.Property(Artist_Born)]</label>
                         <scroll>true</scroll>
-						<visible>String.IsEqual(ListItem.DBType,artist)</visible>
+						<visible>String.IsEqual(ListItem.DBType,artist) + String.IsEqual(ListItem.Property(Artist_Formed),)</visible>
                     </control>
-				<!-- Genre for Albums-->
+					<control type="label">
+                        <description>Born</description>
+						<left>635</left>
+						<top>245</top>
+						<width>610</width>
+						<height>50</height>
+						<aligny>top</aligny>
+						<font>Panel_Title_Footer</font>
+                        <label>$INFO[ListItem.Property(Artist_Formed)]</label>
+                        <scroll>true</scroll>
+						<visible>String.IsEqual(ListItem.DBType,artist) + !String.IsEqual(ListItem.Property(Artist_Formed),)</visible>
+                    </control>	
+				<!-- Genre for Albums Lower Left Corner-->
 				<control type="label">
 					<left>635</left>
                     <top>560</top>
@@ -144,12 +156,27 @@
                     <height>50</height>
                     <aligny>top</aligny>
                     <font>Panel_Title_Footer</font>
-                    <label>$LOCALIZE[515] [COLOR Accent]$INFO[ListItem.Genre][/COLOR]</label>
+                    <label>[COLOR Accent]$INFO[ListItem.Genre,[COLOR White]$LOCALIZE[515] [/COLOR], ][/COLOR][COLOR Accent]$INFO[ListItem.Property(Album_Style),[COLOR White]Style [/COLOR], ][/COLOR][COLOR Accent]$INFO[ListItem.Property(Album_Mood),[COLOR White]Mood [/COLOR]][/COLOR] [COLOR Accent]$INFO[ListItem.Property(Album_Theme),[COLOR White]Theme [/COLOR]][/COLOR]</label>
                     <scroll>true</scroll>
                     <scrollout>false</scrollout>
                     <pauseatend>600</pauseatend>
                     <scrollspeed>50</scrollspeed>
-					<visible>String.IsEqual(ListItem.DBType,album) + !String.IsEmpty(ListItem.Genre)</visible>
+					<visible>String.IsEqual(ListItem.DBType,album)</visible>
+				</control>	
+				<!-- Genre for Artists Lower Left Corner-->
+				<control type="label">
+					<left>635</left>
+                    <top>560</top>
+                    <width>610</width>
+                    <height>50</height>
+                    <aligny>top</aligny>
+                    <font>Panel_Title_Footer</font>
+                    <label>[COLOR Accent]$INFO[ListItem.Property(Artist_Genre),[COLOR White]$LOCALIZE[515] [/COLOR], ][/COLOR][COLOR Accent]$INFO[ListItem.Property(Artist_Style),[COLOR White]Style [/COLOR], ][/COLOR][COLOR Accent]$INFO[ListItem.Property(Artist_Mood),[COLOR White]Mood [/COLOR]][/COLOR]</label>
+                    <scroll>true</scroll>
+                    <scrollout>false</scrollout>
+                    <pauseatend>600</pauseatend>
+                    <scrollspeed>50</scrollspeed>
+					<visible>String.IsEqual(ListItem.DBType,artist)</visible>
 				</control>					
                 <!-- Album & Artist Info -->
 				<control type="textbox">
@@ -180,8 +207,9 @@
 					<top>275</top>
 					<width>100</width>
 					<height>25</height>
-					<texture>other_textures/colorrating/$INFO[ListItem.Rating,rating,.png]</texture>
+					<texture>$VAR[ItemStarRating]</texture>
 					<aspectratio scalediffuse="false">keep</aspectratio>
+					<visible>String.IsEqual(ListItem.DBType,album)</visible>
 				</control>
 				<!-- Album Tracks & Discography -->
 				<control type="list" id="50">
@@ -485,28 +513,45 @@
                     <onright>50</onright>
                     <onleft>9001</onleft>
                     <orientation>vertical</orientation>
-					<control type="togglebutton" id="102">
-						<description>Albums List</description>
+					<control type="button" id="102">
+						<description>Show Artist Albums</description>
 						<width>145</width>
 						<align>center</align>
 						<label>$LOCALIZE[132]</label>
-						<altlabel>$LOCALIZE[29915]</altlabel>
+						<font>Panel_Hint</font>
+						<onclick>Skin.ToggleSetting(ArtistAlbums)</onclick>
+						<visible>String.IsEqual(ListItem.DBType,artist) + !Skin.HasSetting(ArtistAlbums)</visible>
+					</control>
+					<control type="button" id="103">
+						<description>Show Artist Description</description>
+						<width>145</width>
+						<align>center</align>
+						<label>$LOCALIZE[29915]</label>
 						<font>Panel_Hint</font>
 						<onclick>Skin.ToggleSetting(ArtistAlbums)</onclick>
 						<altclick>Skin.Reset(ArtistAlbums)</altclick>
-						<visible>String.IsEqual(ListItem.DBType,artist)</visible>
-					</control>
-					<control type="togglebutton" id="103">
-						<description>Songs List</description>
+						<visible>String.IsEqual(ListItem.DBType,artist) + Skin.HasSetting(ArtistAlbums)</visible>
+					</control>					
+					<control type="button" id="104">
+						<description>Show Album Songs</description>
 						<width>145</width>
 						<align>center</align>
-						<label>$LOCALIZE[132]</label>
-						<altlabel>$LOCALIZE[29915]</altlabel>
+						<label>$LOCALIZE[182]</label>
 						<font>Panel_Hint</font>
 						<onclick>Skin.ToggleSetting(AlbumSongs)</onclick>
 						<altclick>Skin.Reset(AlbumSongs)</altclick>
-						<visible>String.IsEqual(ListItem.DBType,album)</visible>
+						<visible>String.IsEqual(ListItem.DBType,album) + !Skin.HasSetting(AlbumSongs)</visible>
 					</control>
+					<control type="button" id="105">
+						<description>Show Album Description</description>
+						<width>145</width>
+						<align>center</align>
+						<label>$LOCALIZE[29915]</label>
+						<font>Panel_Hint</font>
+						<onclick>Skin.ToggleSetting(AlbumSongs)</onclick>
+						<altclick>Skin.Reset(AlbumSongs)</altclick>
+						<visible>String.IsEqual(ListItem.DBType,album) + Skin.HasSetting(AlbumSongs)</visible>
+					</control>					
  
 		            <control type="button" id="6">
                         <description>Refresh button</description>

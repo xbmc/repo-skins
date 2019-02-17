@@ -10,10 +10,16 @@
 	<include file="Viewtype_Fanart.xml" />
 	<include file="Viewtype_FanartLogo.xml" />
 	<include file="Viewtype_Artists_List.xml" />
+	<include file="Viewtype_Artists_ListInfo.xml" />
 	<include file="Viewtype_Directors_List.xml" />
     <include file="Viewtype_Episodes.xml" />
+	<include file="Viewtype_RecentEpisodes.xml" />
     <include file="Viewtype_Episodes_List.xml" />
+	<include file="Viewtype_Episodes_ListInfo.xml" />	
+    <include file="Viewtype_RecentEpisodes_List.xml" />
+	<include file="Viewtype_RecentEpisodes_ListInfo.xml" />	
 	<include file="Viewtype_Episodes_Wide.xml" />
+	<include file="Viewtype_RecentEpisodes_Wide.xml" />
     <include file="Viewtype_MusicVideos.xml" />
     <include file="Viewtype_MusicVideos_List.xml" />
 	<include file="Viewtype_MusicVideos_List2.xml" />
@@ -22,6 +28,7 @@
 	<include file="Viewtype_Artist_Albums.xml" />
 	<include file="Viewtype_Panel_Tall.xml" />
 	<include file="Viewtype_Panel_Tall_List.xml" />
+	<include file="Viewtype_Panel_Tall_ListInfo.xml" />
 	<include file="Viewtype_Panel_Tall_Wide.xml" />
     <include file="Viewtype_Panel_Genre.xml" />
 	<include file="Viewtype_Panel_Year.xml" />
@@ -29,6 +36,7 @@
     <include file="Viewtype_Season_Tall.xml" />
     <include file="Viewtype_Panel_Square.xml" />
     <include file="Viewtype_Panel_Square_List.xml" />
+	<include file="Viewtype_Panel_Square_ListInfo.xml" />
 	<include file="Viewtype_Panel_Square_Wide.xml" />
 	<include file="Viewtype_Posters.xml" />
 	<include file="Viewtype_Pictures.xml" />
@@ -371,7 +379,8 @@
 				!$EXP[isMovieList] +
 				!$EXP[isTvShowList] + 
 				!$EXP[isSeasonList] + 
-				!$EXP[isEpisodeList] + 
+				!$EXP[isEpisodeList] +
+				!$EXP[isRecentEpisodeList] + 
 				!$EXP[isMusicVideoList] + 
 				!$EXP[isSongList] + 
 				!$EXP[isAlbumList] + 
@@ -400,7 +409,14 @@
 		</visible>
 	</include>          
 	<include name="PVRSideMenu">
-		<control type="image">
+		<control type="group">
+			<animation type="TYPE" condition="Window.IsVisible(DialogPVRInfo.xml) | Window.IsVisible(DialogPVRChannelGuide.xml) " reversible="false">
+                <effect type="slide" end="-1500,0" time="200" />
+            </animation>
+            <animation type="TYPE" condition="!Window.IsVisible(DialogPVRInfo.xml) + !Window.IsVisible(DialogPVRChannelGuide.xml)" reversible="false">
+                <effect type="slide" start="-1500,0" time="200" />
+            </animation>
+			<control type="image">
 				<visible>Skin.HasSetting(showViewOptions)</visible>
 				<animation type="Visible">
 					<effect type="fade" time="300" start="0" end="100" />
@@ -633,6 +649,7 @@
 					</control>
 				</control>
 			</control>	
+		</control>
 	</include>
 	<include name ="ViewOptionsAnimation">
 		<animation type="Conditional" condition="Skin.HasSetting(showViewOptions)">
@@ -1287,7 +1304,7 @@
 			<top>290</top>
 			<width>215</width>
 			<height>315</height>
-			<texture background="true">$INFO[ListItem.Thumb]</texture>
+			<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
 			<fadetime>200</fadetime>
 			<aspectratio scalediffuse="false">scale</aspectratio>
 			<bordersize>5</bordersize>
@@ -1331,7 +1348,7 @@
 				<top></top>
 				<width>100</width>
 				<height>155</height>
-				<texture background="true">$INFO[ListItem.Thumb]</texture>
+				<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
 				<aspectratio scalediffuse="false">scale</aspectratio>
 				<bordersize>5</bordersize>
 				<visible>String.IsEmpty(ListItem.Art(poster)) + !String.IsEqual(ListItem.Label,..) + !String.Contains(ListItem.Label,default)</visible>
@@ -1575,8 +1592,19 @@
 			<align>right</align>
 			<font>Panel_Description_Title</font>
 			<label>$INFO[ListItem.Property(Artist_Formed)]</label>
-			<visible>Container.Content(artists)</visible>
+			<visible>Container.Content(artists) + !String.IsEqual(ListItem.Property(Artist_Formed),)</visible>
 		</control>
+		<control type="label">
+			<left>795</left>
+			<top>300</top>
+			<width>450</width>
+			<height>50</height>
+			<textcolor>Accent</textcolor>
+			<align>right</align>
+			<font>Panel_Description_Title</font>
+			<label>$INFO[ListItem.Property(Artist_Born)]</label>
+			<visible>Container.Content(artists) + String.IsEqual(ListItem.Property(Artist_Formed),)</visible>
+		</control>		
 		<control type="label">
 			<left>795</left>
 			<top>300</top>
@@ -1754,7 +1782,7 @@
 			<texture background="true">$INFO[ListItem.ActualIcon]</texture>
 			<aspectratio scalediffuse="false">keep</aspectratio>
 			<bordersize>35</bordersize>
-			<visible>String.IsEmpty(ListItem.Thumb)</visible>
+			<visible>String.IsEmpty(ListItem.Art(thumb))</visible>
 		</control>
 		<control type="image">
 			<left>50</left>
@@ -1772,10 +1800,10 @@
 			<top>290</top>
 			<width>315</width>
 			<height>315</height>
-			<texture>$INFO[ListItem.Thumb]</texture>
+			<texture>$INFO[ListItem.Art(thumb)]</texture>
 			<aspectratio scalediffuse="false">scale</aspectratio>
 			<bordersize>35</bordersize>
-			<visible>String.Contains(ListItem.Thumb,Default)</visible>
+			<visible>String.Contains(ListItem.Art(thumb),Default)</visible>
 		</control>
 		<!-- Album or Artist Image -->
 		<control type="image">
@@ -1783,11 +1811,11 @@
 			<top>290</top>
 			<width>315</width>
 			<height>315</height>
-			<texture>$INFO[ListItem.Thumb]</texture>
+			<texture>$INFO[ListItem.Art(thumb)]</texture>
 			<aspectratio scalediffuse="false">scale</aspectratio>
 			<bordersize>5</bordersize>
 			<bordertexture>white_box.png</bordertexture>
-			<visible>!String.Contains(ListItem.Thumb,Default)</visible>
+			<visible>!String.Contains(ListItem.Art(thumb),Default)</visible>
 		</control>
 	</include>
 	<include name="AlbumPanelItemLayout">
@@ -1805,7 +1833,7 @@
 				<top></top>
 				<width>75</width>
 				<height>75</height>
-				<texture background="true">$INFO[ListItem.Thumb]</texture>
+				<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
 				<bordersize>5</bordersize>
 				<aspectratio scalediffuse="false">stretch</aspectratio>
 			</control>
@@ -1817,7 +1845,7 @@
 				<texture background="true">$INFO[ListItem.Icon]</texture>
 				<bordersize>10</bordersize>
 				<aspectratio scalediffuse="false">stretch</aspectratio>
-				<visible>String.IsEmpty(ListItem.Thumb)</visible>
+				<visible>String.IsEmpty(ListItem.Art(thumb))</visible>
 			</control>
 		</itemlayout>
 	</include>
@@ -1836,7 +1864,7 @@
 				<top></top>
 				<width>75</width>
 				<height>75</height>
-				<texture background="true">$INFO[ListItem.Thumb]</texture>
+				<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
 				<bordersize>5</bordersize>
 				<aspectratio scalediffuse="false">stretch</aspectratio>
 			</control>
@@ -1848,7 +1876,7 @@
 				<texture background="true">$INFO[ListItem.Icon]</texture>
 				<bordersize>10</bordersize>
 				<aspectratio scalediffuse="false">stretch</aspectratio>
-				<visible>String.IsEmpty(ListItem.Thumb)</visible>
+				<visible>String.IsEmpty(ListItem.Art(thumb))</visible>
 			</control>
 		</focusedlayout>
 	</include>
@@ -2910,9 +2938,10 @@
         <aspectratio scalediffuse="false">stretch</aspectratio>
 	</include>
 	<include name="PanelButtonFullIcon">	
-		<width>155</width>
-        <height>155</height>
-		<bordersize>5</bordersize>
+		<width>145</width>
+        <height>145</height>
+		<top>5</top>
+		<left>5</left>
 		<aspectratio>stretch</aspectratio>
 	</include>
 	<include name="PanelButtonImageNF">
@@ -3612,6 +3641,13 @@
 			<onclick>RunScript(script.favourites,property=CustomHomeTile)</onclick>
 			<visible>System.HasAddon(script.favourites)</visible>
 		 </item>
+		 <item id="8">
+			<label>$LOCALIZE[31225]</label>
+			<icon>DefaultKodiLogo.png</icon>
+			<thumb>DefaultKodiLogo.png</thumb>
+			<onclick>Skin.SetString(CustomHomeTile.Type,UserTile)</onclick>
+			<onclick>Skin.SetString(CustomHomeTile.Path)</onclick>
+		 </item>
 	</include>
 
 	<include name="MainMenuActionChooser">
@@ -4195,7 +4231,404 @@
 			<visible>true</visible>
 		 </item>		 
 	</include>
-  
+	
+	<include name="FullScreenChannelGuide">
+	  <control type="group">
+			<animation type="WindowOpen">
+                <effect type="slide" time="300" start="0,275" end="0,0" easing="out" tween="cubic" />
+            </animation>
+            <animation type="WindowClose">
+                <effect type="slide" time="300" start="0,0" end="0,275" easing="in" tween="cubic" />
+            </animation>
+            <left>0</left>
+            <top>540</top>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1280</width>
+				<height>5</height>
+				<texture>button.png</texture>
+			</control>
+            <control type="fixedlist" id="11">
+                <left>0</left>
+                <top>5</top>
+                <width>1280</width>
+                <height>175</height>
+                <onleft>60</onleft>
+                <onright>60</onright>
+				<movement>1</movement>
+				<focusposition>1</focusposition>
+				<onup>11</onup>
+                <ondown>11</ondown>
+                <pagecontrol>60</pagecontrol>
+                <scrolltime>200</scrolltime>
+                <itemlayout height="50" width="1280">
+                    <control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>1280</width>
+                        <height>50</height>
+                        <texture>tile.png</texture>
+                    </control>
+				    <control type="label">
+                        <left>10</left>
+                        <top>0</top>
+                        <width>150</width>
+                        <height>50</height>
+                        <font>Music_Vis_Title4</font>
+                        <align>left</align>
+                        <aligny>center</aligny>
+                        <label>$INFO[ListItem.StartTime]</label>
+                    </control>
+					<control type="label">
+                        <left>150</left>
+                        <top>0</top>
+                        <width>1130</width>
+                        <height>50</height>
+                        <align>left</align>
+                        <aligny>center</aligny>
+						<font>Music_Vis_Title4</font>
+                        <label>$INFO[ListItem.Label]</label>
+                    </control>
+                    <control type="image">
+						<left>1235</left>
+						<top>5</top>
+						<width>40</width>
+						<height>40</height>
+						<texture>PVRRecording.png</texture>
+						<visible>ListItem.IsRecording</visible>
+					</control>
+					<control type="image">
+						<left>1240</left>
+						<top>10</top>
+						<width>30</width>
+						<height>30</height>
+						<texture>PVRTimer.png</texture>
+						<visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
+					</control>
+                </itemlayout>
+                <focusedlayout height="75" width="1280">
+                    <control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>1280</width>
+                        <height>75</height>
+                        <texture>button.png</texture>
+						<colordiffuse>BBFFFFFF</colordiffuse>
+                    </control>
+					<control type="image">
+                        <left>0</left>
+                        <top>0</top>
+                        <width>1280</width>
+                        <height>75</height>
+                        <texture>tile.png</texture>
+						<colordiffuse>ImageDiffuse</colordiffuse>
+                    </control>
+                    <control type="label">
+                        <left>10</left>
+                        <top>0</top>
+                        <width>150</width>
+                        <height>50</height>
+                        <font>Music_Vis_Title4</font>
+                        <align>left</align>
+                        <aligny>center</aligny>
+                        <label>$INFO[ListItem.StartTime]</label>
+                    </control>
+					<control type="label">
+                        <left>150</left>
+                        <top>0</top>
+                        <width>1130</width>
+                        <height>50</height>
+                        <align>left</align>
+                        <aligny>center</aligny>
+						<font>Music_Vis_Title4</font>
+                        <label>$INFO[ListItem.Label]</label>
+                    </control>
+                    <control type="label">
+                        <left>10</left>
+                        <top>40</top>
+                        <width>1260</width>
+                        <height>25</height>
+                        <align>left</align>
+                        <aligny>top</aligny>
+						<font>Panel_Description</font>
+                        <label>$INFO[ListItem.Plot]</label>
+	                </control>
+					<control type="image">
+						<left>1235</left>
+						<top>5</top>
+						<width>40</width>
+						<height>40</height>
+						<texture>PVRRecording.png</texture>
+						<visible>ListItem.IsRecording</visible>
+					</control>
+					<control type="image">
+						<left>1240</left>
+						<top>10</top>
+						<width>30</width>
+						<height>30</height>
+						<texture>PVRTimer.png</texture>
+						<visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
+					</control>
+                                   
+                </focusedlayout>
+			</control>
+            <control type="scrollbar" id="60">
+                <left>440</left>
+                <top>100</top>
+                <width>25</width>
+                <height>490</height>
+                <texturesliderbackground border="0,14,0,14">ScrollBarV.png</texturesliderbackground>
+                <texturesliderbar border="0,14,0,14">ScrollBarV_bar.png</texturesliderbar>
+                <texturesliderbarfocus border="0,14,0,14">ScrollBarV_bar_focus.png</texturesliderbarfocus>
+                <textureslidernib>ScrollBarNib.png</textureslidernib>
+                <textureslidernibfocus>ScrollBarNib.png</textureslidernibfocus>
+                <onleft>11</onleft>
+                <onright>11</onright>
+                <ondown>61</ondown>
+                <onup>61</onup>
+                <showonepage>false</showonepage>
+                <orientation>vertical</orientation>
+            </control>
+        </control>
+
+	</include>
+	<include name="NoneFullScreenChannelGuide">
+		 <control type="group">
+            <animation type="WindowClose">
+                <effect type="fade" time="300" />
+                <effect type="slide" end="+1500,0" time="300" />
+            </animation>
+            <animation type="WindowOpen">
+                <effect type="fade" time="300" />
+                <effect type="slide" start="+1500,0" time="300" />
+            </animation>
+            <animation type="Hidden">
+                <effect type="fade" time="300" />
+                <effect type="slide" end="+1500,0" time="300" />
+            </animation>
+            <animation type="Visible">
+                <effect type="fade" time="300" />
+                <effect type="slide" start="+1500,0" time="300" />
+            </animation>		 
+            <description>TV Guide Channel</description>
+ 			<control type="label">
+				<include>ViewMainTitle</include>	
+                <left>395</left>
+                <top>210</top>
+                <width>600</width>
+                <height>50</height>
+                <textcolor>White</textcolor>
+                <label>$LOCALIZE[19069] [COLOR Accent]$INFO[ListItem.ChannelName][/COLOR]</label>
+            </control>
+            <control type="group">
+                <include>PanelCoordinates</include>
+				<control type="image">
+					<left>0</left>
+					<width>280</width>
+					<height>43</height>
+					<texture>tile.png</texture>
+				</control>
+				<control type="image">
+					<left>285</left>
+					<width>900</width>
+					<height>43</height>
+					<texture>tile.png</texture>
+				</control>
+				<control type="label">
+                    <description>Date Time label</description>
+                    <left>20</left>
+                    <width>300</width>
+                    <height>45</height>
+					<font>List_Unfocused</font>
+                    <label>[B]$LOCALIZE[21820][/B]</label>
+                </control>
+                <control type="label">
+                    <description>Title</description>
+                    <left>300</left>
+                    <width>600</width>
+                    <height>45</height>
+					<font>List_Unfocused</font>
+                    <label>[B]$LOCALIZE[369][/B]</label>
+                </control>
+                <control type="list" id="11">
+					<viewtype label="19029">EPG Channel View</viewtype>
+                    <left>0</left>
+                    <top>45</top>
+                    <width>1204</width>
+                    <height>270</height>
+                    <onup>13</onup>
+                    <ondown>13</ondown>
+                    <onleft>9000</onleft>
+					<onleft>Skin.ToggleSetting(showViewOptions)</onleft>
+                    <pagecontrol>75</pagecontrol>
+                    <scrolltime>200</scrolltime>
+                    <itemlayout height="45">
+						<control type="image">
+							<left>0</left>
+							<width>280</width>
+							<height>43</height>
+							<texture>tile.png</texture>
+						</control>
+						<control type="image">
+							<left>285</left>
+							<width>900</width>
+							<height>43</height>
+							<texture>tile.png</texture>
+						</control>
+                       <control type="label">
+                            <left>20</left>
+                            <top>0</top>
+                            <width>240</width>
+                            <height>40</height>
+							<font>List_Unfocused</font>
+                            <label>$INFO[ListItem.Date]</label>
+                        </control>
+                         <control type="label">
+                            <left>300</left>
+                            <width>620</width>
+                            <font>List_Unfocused</font>
+                            <align>left</align>
+							<height>43</height>
+                            <label>$INFO[ListItem.Label]</label>
+                        </control>
+                        <control type="image">
+                            <left>1150</left>
+							<top>9</top>
+                            <width>25</width>
+                            <height>25</height>
+                            <texture>PVRRecording.png</texture>
+                            <visible>ListItem.IsRecording</visible>
+                        </control>
+						<control type="image">
+                            <left>1150</left>
+							<top>9</top>
+                            <width>25</width>
+                            <height>25</height>
+                            <texture>PVRTimer.png</texture>
+                            <visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
+                        </control>
+                        <control type="label">
+                            <left>940</left>
+                            <top>0</top>
+                            <width>80</width>
+                            <height>40</height>
+                            <align>left</align>
+                            <label>19043</label>
+                            <visible>ListItem.IsRecording</visible>
+                        </control>
+                        <control type="label">
+                            <left>940</left>
+                            <top>0</top>
+                            <width>80</width>
+                            <height>40</height>
+                            <align>left</align>
+                            <label>31510</label>
+                            <visible>ListItem.HasTimer</visible>
+                        </control>
+                    </itemlayout>
+                    <focusedlayout height="135">
+                        <control type="image">
+							<left>0</left>
+							<width>280</width>
+							<height>43</height>
+							<texture>button.png</texture>
+						</control>
+						<control type="image">
+							<left>285</left>
+							<width>900</width>
+							<height>43</height>
+							<texture>button.png</texture>
+						</control>
+						<control type="image">
+							<left>0</left>
+							<top>48</top>
+							<width>1185</width>
+							<height>82</height>
+							<texture>tile.png</texture>
+						</control>
+                        <control type="label">
+                            <left>20</left>
+                            <top>0</top>
+                            <width>240</width>
+                            <height>40</height>
+							<font>List_Focused</font>
+                            <label>[B]$INFO[ListItem.Date][/B]</label>
+                        </control>
+                         <control type="label">
+                            <left>300</left>
+                            <width>620</width>
+                            <font>List_Focused</font>
+                            <align>left</align>
+							<height>43</height>
+                            <label>[B]$INFO[ListItem.Label][/B]</label>
+                        </control>
+                        
+                         <control type="textbox">
+                            <description>Plot Value for TVShow</description>
+                            <left>10</left>
+                            <top>48</top>
+                            <width>1165</width>
+                            <height>72</height>
+                            <align>justify</align>
+							<font>Panel_Description</font>
+                            <pagecontrol></pagecontrol>
+                            <info>ListItem.Plot</info>
+                        </control>
+						<control type="image">
+                            <left>1150</left>
+							<top>9</top>
+                            <width>25</width>
+                            <height>25</height>
+                            <texture>PVRRecording.png</texture>
+                            <visible>ListItem.IsRecording</visible>
+                        </control>
+						<control type="image">
+                            <left>1150</left>
+							<top>9</top>
+                            <width>25</width>
+                            <height>25</height>
+                            <texture>PVRTimer.png</texture>
+                            <visible>ListItem.HasTimer + !ListItem.IsRecording</visible>
+                        </control>
+                        <control type="label">
+                            <left>940</left>
+                            <top>0</top>
+                            <width>80</width>
+                            <height>40</height>
+                            <align>left</align>
+                            <label>19043</label>
+                            <visible>ListItem.IsRecording</visible>
+                        </control>
+                        <control type="label">
+                            <left>940</left>
+                            <top>0</top>
+                            <width>80</width>
+                            <height>40</height>
+                            <align>left</align>
+                            <label>31510</label>
+                            <visible>ListItem.HasTimer</visible>
+                        </control>
+                    </focusedlayout>
+                </control>
+                <control type="scrollbar" id="33">
+                    <left>1190</left>
+                    <top>0</top>
+                    <width>5</width>
+                    <height>315</height>
+                    <texturesliderbackground></texturesliderbackground>
+                    <textureslidernib>bar.png</textureslidernib>
+                    <textureslidernibfocus>scroll_nib.png</textureslidernibfocus>
+                    <texturesliderbar></texturesliderbar>
+                    <texturesliderbarfocus></texturesliderbarfocus>
+                    <showonepage>true</showonepage>
+                    <orientation>vertical</orientation>
+                </control>
+            </control>
+        </control>
+    
+	
+	</include>
 
   </includes>
   
