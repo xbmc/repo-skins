@@ -1,0 +1,2870 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+	<!-- Aeon MQ 8 -->
+	<include name="widgets_bar_button">
+		<left>0</left>
+		<top>0</top>
+		<height>40</height>
+		<width>356</width>
+		<align>center</align>
+		<aligny>center</aligny>
+		<font>font_button</font>
+		<textoffsetx>15</textoffsetx>
+		<textoffsety>0</textoffsety>
+		<textcolor>$INFO[skin.string(colortext)]</textcolor>
+		<focusedcolor>$INFO[skin.string(colortextfocused)]</focusedcolor>
+		<texturenofocus></texturenofocus>
+		<texturefocus colordiffuse="$INFO[skin.string(colortext)]">white.png</texturefocus>
+		<pulseonselect>false</pulseonselect>
+	</include>	
+	<include name="widgets_selector_legend">
+		<definition>
+			<control type="group">
+				<width>300</width>
+				<height>28</height>
+				<control type="image">
+					<left>15</left>
+					<top>13</top>
+					<width>24</width>
+					<height>24</height>
+					<aspectratio>stretch</aspectratio>
+					<texture>$PARAM[icon]</texture>
+				</control>
+				<control type="label">
+					<left>50</left>
+					<top>10</top>
+					<width>290</width>
+					<height>30</height>
+					<label align="left" aligny="center">$PARAM[label]</label>
+					<font>font_button</font>
+					<scroll>true</scroll>
+					<scrollout>false</scrollout>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- PAINEL DE WIDGETS -->
+	<include name="widgets_layout">
+		<definition>
+			<left>45</left>
+			<top>514</top>
+			<width>$PARAM[width]</width>
+			<height>300</height>
+			<onup condition="String.IsEmpty(Container(9000).ListItem.Property(fastchange))">9000</onup>
+			<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(fastchange))">8010</onup>
+			<ondown>512</ondown>
+			<orientation>horizontal</orientation>
+			<pagecontrol></pagecontrol>
+			<scrolltime tween="sine" easing="out">500</scrolltime>
+			<animation effect="fade" start="0" end="100" time="1000" delay="1000" condition="Window.Previous(Startup)">WindowOpen</animation>
+			<animation effect="fade" start="0" end="100" time="300" delay="250">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="0">Hidden</animation>
+			<animation effect="fade" start="100" end="0" time="0" condition="!Control.IsVisible(8007)">Conditional</animation>
+			<animation effect="fade" start="0" end="100" time="300" condition="Control.IsVisible(8007)">Conditional</animation>
+			<animation effect="fade" start="100" end="0" time="300" easing="inout" tween="sine" condition="[String.Contains(skin.string(widgets_mode),manual) | String.Contains(skin.string(widgets_mode),auto) + !Control.IsVisible(8000)] + ![Control.HasFocus(500) | Control.HasFocus(510) | Control.HasFocus(520) | Control.HasFocus(521) | Control.HasFocus(523) | Control.HasFocus(530) | ControlGroup(540).HasFocus | Control.HasFocus(5100) | ControlGroup(512).HasFocus]">Conditional</animation>
+			<animation effect="slide" start="0,0" end="760,0" time="300" tween="sine" easing="out" condition="Skin.HasSetting(mainmenuvertical) + ![Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus | Control.HasFocus(530) | ControlGroup(540).HasFocus]">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,-40" time="300" tween="sine" easing="out" condition="Control.HasFocus(519) | Control.HasFocus(530) | ControlGroup(540).HasFocus">Conditional</animation>
+			<itemlayout width="152" height="285">
+				<control type="group">
+					<visible>![Control.HasFocus(500) | String.IsEqual(Container(9000).ListItem.Property(widgets),weather) | String.IsEqual(Container(9000).ListItem.Property(widgets),settings)]</visible>
+					<!-- reflexo video -->
+					<control type="image">
+						<left>6</left>
+						<top>249</top>
+						<width>145</width>
+						<height>248</height>
+						<texture flipy="true" fallback="DefaultPicture.png" diffuse="thumb_poster_reflect.png" background="true">$VAR[widgets_poster]</texture>
+						<colordiffuse>97FFFFFF</colordiffuse>
+						<aspectratio align="center" aligny="top">keep</aspectratio>
+						<animation effect="fade" start="100" end="25" time="400" condition="ControlGroup(512).HasFocus + !Control.HasFocus(519)">Conditional</animation>
+						<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
+						<visible>!Container(510).IsUpdating</visible>
+					</control>
+					<!-- poster -->
+					<control type="image">
+						<left>6</left>
+						<top>0</top>
+						<width>145</width>
+						<height>248</height>
+						<texture fallback="DefaultPicture.png" diffuse="thumb_poster_diffuse.png" background="true">$VAR[widgets_poster]</texture>
+						<aspectratio align="center" aligny="bottom">keep</aspectratio>
+						<animation effect="fade" start="100" end="25" time="400" condition="ControlGroup(512).HasFocus + !Control.HasFocus(519)">Conditional</animation>
+						<animation effect="fade" reversible="true" time="300">VisibleChange</animation>
+						<visible>!Container(510).IsUpdating</visible>
+					</control>
+					<!-- ocupado -->
+					<control type="image">
+						<left>6</left>
+						<top>100</top>
+						<width>145</width>
+						<height>145</height>
+						<texture>dialogs_busy.png</texture>
+						<aspectratio align="center" aligny="bottom">keep</aspectratio>
+						<animation effect="rotate" end="-360" center="auto" time="2000" loop="true" reversible="false" condition="true">Conditional</animation>
+						<visible>Container(510).IsUpdating</visible>
+					</control>
+					<control type="progress">
+						<left>14</left>
+						<top>255</top>
+						<width>130</width>
+						<height>8</height>
+						<info>ListItem.PercentPlayed</info>
+						<include>animation_widgetsprogress</include>
+						<animation effect="fade" start="100" end="25" time="400" condition="ControlGroup(512).HasFocus + !Control.HasFocus(519)">Conditional</animation>
+						<visible>Integer.IsGreater(ListItem.PercentPlayed,0) + !Container(510).IsUpdating</visible>
+					</control>
+					<control type="image">
+						<left>114</left>
+						<top>207</top>
+						<width>38</width>
+						<height>38</height>
+						<texture>OverlayWatched.png</texture>
+						<colordiffuse>$INFO[skin.string(colorwatched)]</colordiffuse>
+						<aspectratio align="center" aligny="bottom">keep</aspectratio>
+						<animation effect="fade" start="100" end="25" time="400" condition="ControlGroup(512).HasFocus">Conditional</animation>
+						<visible>![Skin.HasSetting(nooverlays) | Container(510).IsUpdating] + Integer.IsGreater(ListItem.Playcount,0)</visible>
+					</control>
+					<control type="label">
+						<left>7</left>
+						<top>181</top>
+						<width>140</width>
+						<height>45</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>font_yearshome</font>
+						<textcolor>FFF8F8F8</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<shadowcolor>black</shadowcolor>
+						<visible>String.Contains(Container(9000).ListItem.Property(widgets),years)</visible>
+					</control>
+				</control>
+			</itemlayout>
+			<focusedlayout condition="![Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus + !Control.HasFocus(519)]" width="152" height="285">
+				<!-- reflexo video -->
+				<control type="image">
+					<left>6</left>
+					<top>249</top>
+					<width>145</width>
+					<height>248</height>
+					<texture flipy="true" fallback="DefaultPicture.png" diffuse="thumb_poster_reflect.png" background="true">$VAR[widgets_poster]</texture>
+					<colordiffuse>97FFFFFF</colordiffuse>
+					<aspectratio align="center" aligny="top">keep</aspectratio>
+					<visible>!Container(510).IsUpdating</visible>
+				</control>
+				<!-- poster -->
+				<control type="image">
+					<left>6</left>
+					<top>0</top>
+					<width>145</width>
+					<height>248</height>
+					<texture fallback="DefaultPicture.png" diffuse="thumb_poster_diffuse.png" background="true">$VAR[widgets_poster]</texture>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<visible>!Container(510).IsUpdating</visible>
+				</control>
+				<!-- ocupado -->
+				<control type="image">
+					<left>6</left>
+					<top>100</top>
+					<width>145</width>
+					<height>145</height>
+					<texture>dialogs_busy.png</texture>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<animation effect="rotate" end="-360" center="auto" time="2000" loop="true" reversible="false" condition="true">Conditional</animation>
+					<visible>Container(510).IsUpdating</visible>
+				</control>
+				<control type="progress">
+					<left>14</left>
+					<top>255</top>
+					<width>130</width>
+					<height>8</height>
+					<info>ListItem.PercentPlayed</info>
+					<include>animation_widgetsprogress</include>
+					<visible>Integer.IsGreater(ListItem.PercentPlayed,0) + !Container(510).IsUpdating</visible>
+				</control>
+				<control type="image">
+					<left>114</left>
+					<top>207</top>
+					<width>38</width>
+					<height>38</height>
+					<texture>OverlayWatched.png</texture>
+					<colordiffuse>$INFO[skin.string(colorwatched)]</colordiffuse>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<visible>![Skin.HasSetting(nooverlays) | Container(510).IsUpdating] + Integer.IsGreater(ListItem.Playcount,0)</visible>
+				</control>
+				<control type="label">
+					<left>7</left>
+					<top>181</top>
+					<width>140</width>
+					<height>45</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>font_yearshome</font>
+					<textcolor>FFF8F8F8</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+					<shadowcolor>black</shadowcolor>
+					<visible>String.Contains(Container(9000).ListItem.Property(widgets),years)</visible>
+				</control>
+			</focusedlayout>
+			<focusedlayout condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus + !Control.HasFocus(519)" width="450" height="285">
+				<!-- reflexo -->
+				<control type="image">
+					<left>6</left>
+					<top>249</top>
+					<width>145</width>
+					<height>248</height>
+					<texture flipy="true" fallback="DefaultPicture.png" diffuse="thumb_poster_reflect.png" background="true">$VAR[widgets_poster]</texture>
+					<colordiffuse>CCFFFFFF</colordiffuse>
+					<aspectratio align="center" aligny="top">keep</aspectratio>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+					<visible>!Container(510).IsUpdating</visible>
+				</control>
+				<!-- poster -->
+				<control type="image">
+					<left>6</left>
+					<top>0</top>
+					<width>145</width>
+					<height>248</height>
+					<texture fallback="DefaultPicture.png" diffuse="thumb_poster_diffuse.png" background="true">$VAR[widgets_poster]</texture>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+					<visible>!Container(510).IsUpdating</visible>
+				</control>
+				<!-- ocupado -->
+				<control type="image">
+					<left>6</left>
+					<top>100</top>
+					<width>145</width>
+					<height>145</height>
+					<texture>dialogs_busy.png</texture>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+					<animation effect="rotate" end="-360" center="auto" time="2000" loop="true" reversible="false" condition="true">Conditional</animation>
+					<visible>Container(510).IsUpdating</visible>
+				</control>
+				<control type="image">
+					<left>114</left>
+					<top>207</top>
+					<width>38</width>
+					<height>38</height>
+					<texture>OverlayWatched.png</texture>
+					<colordiffuse>$INFO[skin.string(colorwatched)]</colordiffuse>
+					<aspectratio align="center" aligny="bottom">keep</aspectratio>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+					<visible>![Skin.HasSetting(nooverlays) | Container(510).IsUpdating] + Integer.IsGreater(ListItem.Playcount,0)</visible>
+				</control>
+				<control type="label">
+					<left>7</left>
+					<top>181</top>
+					<width>140</width>
+					<height>45</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>font_yearshome</font>
+					<textcolor>FFF8F8F8</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+					<visible>String.Contains(Container(9000).ListItem.Property(widgets),years)</visible>
+				</control>
+				<!-- indicacao de porcentagem -->
+				<control type="group">
+					<include>animation_widgetsprogress</include>
+					<visible>Integer.IsGreater(ListItem.PercentPlayed,0) + !Container(510).IsUpdating</visible>
+				<control type="label">
+					<left>6</left>
+					<top>246</top>
+					<width>80</width>
+					<height>30</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$INFO[ListItem.PercentPlayed]%</label>
+					<font>font_plotsmall</font>
+					<textcolor>FFF8F8F8</textcolor>
+					<animation effect="fade" start="0" end="100" time="300" delay="500" condition="Control.HasFocus(510)">Conditional</animation>
+				</control>
+				<control type="progress">
+					<left>30</left>
+					<top>251</top>
+					<width>115</width>
+					<height>6</height>
+					<info>ListItem.PercentPlayed</info>
+					<animation effect="zoom" center="0,248" start="100" end="250" time="400" tween="cubic" easing="out" condition="Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus">Conditional</animation>
+				</control>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+	<include name="widgets_content">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content sortby="$INFO[Container(9000).ListItem.Property(sort)]" sortorder="$INFO[Container(9000).ListItem.Property(order)]" target="$VAR[widgets_target]">$VAR[widgets_content]</content>
+				<visible>String.IsEqual(Container(9000).ListItem.Property(name),menu$PARAM[item]) + $EXP[WidgetsbyDB]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- ################################################################################ MEU MENU ################################################################################ -->
+	<include name="widgets_mymenu">
+		<definition>
+			<label fallback="31014">$VAR[submenu$PARAM[item].label]</label>
+			<icon></icon>
+			<thumb>$INFO[skin.string(submenu$PARAM[item].background)]</thumb>
+			<property name="customthumb">$VAR[submenu$PARAM[item].customthumb]</property>
+			<onclick condition="Window.IsVisible(home) + ![String.IsEqual(skin.string(submenu$PARAM[item].master),vplaylist) | String.IsEqual(skin.string(submenu$PARAM[item].master),aplaylist) | String.IsEqual(skin.string(submenu$PARAM[item].master),vnodes) | String.IsEqual(skin.string(submenu$PARAM[item].master),anodes) | String.IsEqual(skin.string(submenu$PARAM[item].master),addons)]">$INFO[skin.string(submenu$PARAM[item].path)]</onclick>
+			<onclick condition="Window.IsVisible(home) + [String.IsEqual(skin.string(submenu$PARAM[item].master),vplaylist) | String.IsEqual(skin.string(submenu$PARAM[item].master),vnodes)]">ActivateWindow(videos,$INFO[skin.string(submenu$PARAM[item].path)],return)</onclick>
+			<onclick condition="Window.IsVisible(home) + [String.IsEqual(skin.string(submenu$PARAM[item].master),aplaylist) | String.IsEqual(skin.string(submenu$PARAM[item].master),anodes)]">ActivateWindow(music,$INFO[skin.string(submenu$PARAM[item].path)],return)</onclick>
+			<onclick condition="Window.IsVisible(home) + String.IsEqual(skin.string(submenu$PARAM[item].master),addons)">RunAddon($INFO[skin.string(submenu$PARAM[item].path)])</onclick>
+			<visible>![String.IsEmpty(skin.string(submenu$PARAM[item].master)) | String.Contains(skin.string(submenu$PARAM[item].visible),off)]</visible>
+		</definition>
+	</include>
+	<include name="widgets_mymenu1">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="41.12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_mymenu2">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="42.12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_mymenu3">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="43.12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_mymenu4">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="44.12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_mymenu5">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_mymenu">
+							<param name="item" value="45.12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- ################################################################################ JOGOS RCB ################################################################################ -->
+	<include name="widgets_rcbgames">
+		<definition>
+			<label fallback="31014">$INFO[Window(home).Property(MostPlayedROM.$PARAM[item].Title)]</label>
+			<icon>$INFO[Window(home).Property(MostPlayedROM.$PARAM[item].Thumb)]</icon>
+			<property name="Fanart">$INFO[Window(home).Property(MostPlayedROM.$PARAM[item].Fanart)]</property>
+			<property name="Events">$INFO[Window(home).Property(MostPlayedROM.$PARAM[item].Genre)]</property>
+			<property name="Description">$INFO[Window(0).Property(MostPlayedROM.$PARAM[item].Plot)]</property>
+			<property name="Release">$INFO[Window(0).Property(MostPlayedROM.$PARAM[item].Year)]</property>
+			<onclick>RunScript(script.games.rom.collection.browser,launchid=$INFO[Window(home).Property(MostPlayedROM.$PARAM[item].Id)])</onclick>
+			<visible>!String.IsEmpty(Window(home).Property(MostPlayedROM.$PARAM[item].Title))</visible>
+		</definition>
+	</include>
+	<include name="widgets_games">
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<include content="widgets_layout" condition="String.Contains(skin.string(widgetsnumber_h),4) | String.Contains(skin.string(widgetsnumber_v),4)">
+					<param name="width" value="608" />
+				</include>
+				<include content="widgets_layout" condition="Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_v),7)">
+					<param name="width" value="1063" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),8)">
+					<param name="width" value="1215" />
+				</include>
+				<include content="widgets_layout" condition="!Skin.HasSetting(mainmenuvertical) + String.Contains(skin.string(widgetsnumber_h),12)">
+					<param name="width" value="1822" />
+				</include>
+				<content>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="1" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="2" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="3" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="4" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="5" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="6" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="7" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="8" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="9" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="10" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="11" />
+						</include>
+					</item>
+					<item>
+						<include content="widgets_rcbgames">
+							<param name="item" value="12" />
+						</include>
+					</item>
+				</content>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- ######################################################################### PAINEL DE INFO #########################################################################-->
+	<include name="widgets_info">
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<!-- Titulo/subtitulo/genero -->
+				<control type="group">
+					<top>-75</top>
+					<animation effect="slide" start="0,-375" end="0,0" time="400" delay="500" easing="inout" tween="cubic">WindowOpen</animation>
+					<animation effect="slide" start="0,-375" end="0,0" time="400" delay="500" easing="inout" tween="cubic">Visible</animation>
+					<animation effect="slide" start="0,0" end="0,-375" time="300" easing="inout" tween="cubic">WindowClose</animation>
+					<animation effect="slide" start="0,0" end="0,-375" time="300" easing="inout" tween="cubic">Hidden</animation>
+					<visible>Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus + !Control.HasFocus(519)</visible>
+					<control type="image">
+						<left>0</left>
+						<top>-30</top>
+						<width>1920</width>
+						<height>480</height>
+						<texture flipy="true" diffuse="shadow_mask.png">$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="85" condition="true">Conditional</animation>
+					</control>
+					<!-- Oscar -->
+					<control type="image">
+						<left>57</left>
+						<top>90</top>
+						<width>67</width>
+						<height>165</height>
+						<fadetime>commonfadetime</fadetime>
+						<aspectratio align="center" aligny="bottom">keep</aspectratio>
+						<texture>years.png</texture>
+						<animation effect="fade" start="0" end="100" time="300" delay="400">Visible</animation>
+						<visible>String.StartsWith(Window(home).Property(SkinHelper.ListItem.Awards),won)</visible>
+					</control>
+					<control type="grouplist">
+						<left>65</left>
+						<top>87</top>
+						<itemgap>5</itemgap>
+						<animation effect="slide" start="0,0" end="70,0" time="300" easing="inout" tween="cubic" condition="String.StartsWith(Window(home).Property(SkinHelper.ListItem.Awards),won)">Conditional</animation>
+						<control type="label">
+							<!-- Titulo -->
+							<left>0</left>
+							<top>0</top>
+							<width>1380</width>
+							<height>60</height>
+							<font>font_title</font>
+							<label>$VAR[widgets_title]</label>
+							<scroll>true</scroll>
+							<scrollout>false</scrollout>
+							<shadowcolor>grey</shadowcolor>
+						</control>
+						<!-- Subtitulo -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>1380</width>
+							<height>30</height>
+							<font>font_subtitle</font>
+							<label>$VAR[widgets_subtitle]</label>
+							<scroll>true</scroll>
+							<scrollout>false</scrollout>
+							<shadowcolor>grey</shadowcolor>
+							<visible>![String.IsEmpty(Container(510).ListItem.Year) + String.IsEmpty(Container(510).ListItem.Premiered) + String.IsEmpty(Container(510).ListItem.Duration) + String.IsEmpty(Container(510).ListItem.Tagline) + String.IsEmpty(Container(510).ListItem.Artist) + String.IsEmpty(Container(510).ListItem.Property(Release)) | Control.HasFocus(500)]</visible>
+						</control>
+						<!-- Papel -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>1380</width>
+							<height>60</height>
+							<font>font_subtitle</font>
+							<label>$LOCALIZE[20347][CR][COLOR=$INFO[skin.string(colorheader)]][B]$INFO[Container(500).ListItem.Label2][/B][/COLOR]</label>
+							<scroll>true</scroll>
+							<scrollout>false</scrollout>
+							<shadowcolor>grey</shadowcolor>
+							<visible>Control.HasFocus(500)</visible>
+						</control>
+						<!-- Diretor -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>1380</width>
+							<height>30</height>
+							<align>left</align>
+							<font>font_plot</font>
+							<label>$LOCALIZE[31882] $INFO[Container(510).ListItem.Director]</label>
+							<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+							<scroll>true</scroll>
+							<shadowcolor>grey</shadowcolor>
+							<visible>![String.IsEmpty(Container(510).ListItem.Director) | Control.HasFocus(500)]</visible>
+						</control>
+						<!-- Genero -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>1380</width>
+							<height>30</height>
+							<align>left</align>
+							<font>font_plot</font>
+							<label>$INFO[Container(510).ListItem.Genre]$INFO[Container(510).ListItem.Property(Events)]$INFO[Container(510).ListItem.AddonSummary]</label>
+							<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+							<scroll>true</scroll>
+							<shadowcolor>grey</shadowcolor>
+							<visible>![String.IsEmpty(Container(510).ListItem.Genre) + String.IsEmpty(Container(510).ListItem.Property(Events)) + String.IsEmpty(Container(510).ListItem.AddonSummary) | Control.HasFocus(500)]</visible>
+						</control>
+					</control>
+					<!-- Estrelas -->
+					<control type="image">
+						<left>1575</left>
+						<top>100</top>
+						<width>300</width>
+						<height>30</height>
+						<texture fallback="$VAR[styleratingstars,,0.png]">$VAR[styleratingstars]$INFO[Container(510).ListItem.Rating,,.png]</texture>
+						<aspectratio align="left" aligny="center">keep</aspectratio>
+						<colordiffuse>$VAR[widgets_colorratingstars]</colordiffuse>
+						<visible>!Control.HasFocus(500)</visible>
+					</control>
+					<control type="grouplist">
+						<left>1475</left>
+						<top>140</top>
+						<itemgap>2</itemgap>						
+						<!-- Nota e votos -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>400</width>
+							<height>38</height>
+							<align>right</align>
+							<aligny>center</aligny>
+							<font>font_subtitle</font>
+							<label>$INFO[Container(510).ListItem.RatingAndVotes]</label>
+							<visible>!Control.HasFocus(500)</visible>
+						</control>
+						<!-- Top250 -->
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>400</width>
+							<height>38</height>
+							<align>right</align>
+							<aligny>center</aligny>
+							<font>font_subtitle</font>
+							<label>[B]$INFO[Window(home).Property(SkinHelper.ListItem.IMDB.Top250),Top250 - ][/B]</label>
+							<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+							<visible>[Control.HasFocus(510) | ControlGroup(512).HasFocus | Control.HasFocus(530) | ControlGroup(540).HasFocus] + !String.IsEqual(Window(home).Property(SkinHelper.ListItem.IMDB.Top250),0)</visible>
+						</control>
+					</control>
+				</control>
+				<!-- Barra auxiliar do fast change -->
+				<control type="group">
+					<include>animation_widgetsbar</include>
+					<animation effect="fade" start="100" end="0" time="0" condition="Control.HasFocus(510)">True</animation>
+					<visible allowhiddenfocus="true">Control.HasFocus(8010)</visible>
+					<control type="image">
+						<left>50</left>
+						<top>420</top>
+						<width>1810</width>
+						<height>40</height>
+						<texture>$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="65" condition="true">Conditional</animation>
+					</control>
+						<control type="grouplist">
+							<left>0</left>
+							<top>420</top>
+							<orientation>horizontal</orientation>
+							<include content="fastchange_bar">
+								<param name="label" value="$LOCALIZE[31410]" />
+								<param name="texture" value="arrow_left.png" />
+							</include>
+							<include content="fastchange_bar">
+								<param name="label" value="$LOCALIZE[31410]" />
+								<param name="texture" value="arrow_up.png" />
+							</include>
+							<include content="fastchange_bar">
+								<param name="label" value="$LOCALIZE[31244]" />
+								<param name="texture" value="arrow_down.png" />
+							</include>
+							<include content="fastchange_bar">
+								<param name="label" value="$LOCALIZE[31249]" />
+								<param name="texture" value="arrow_right.png" />
+							</include>			
+						</control>
+				</control>
+				<!-- Widgets Estatus -->
+				<control type="group">
+					<include>animation_widgetsbar</include>
+					<animation effect="slide" start="0,0" end="0,-40" time="300" tween="sine" easing="out" condition="Control.HasFocus(519) | Control.HasFocus(530) | ControlGroup(540).HasFocus">Conditional</animation>
+					<visible>Control.HasFocus(510) | ControlGroup(512).HasFocus | Control.HasFocus(530) | ControlGroup(540).HasFocus | Control.HasFocus(8010)</visible>
+					<control type="image">
+						<left>500</left>
+						<top>490</top>
+						<width>1360</width>
+						<height>38</height>
+						<texture flipx="true" diffuse="gradient_button.png">$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="85" condition="true">Conditional</animation>
+					</control>
+					<control type="label">
+						<left>680</left>
+						<top>490</top>
+						<width>1160</width>
+						<height>38</height>
+						<align>right</align>
+						<aligny>center</aligny>
+						<label>$INFO[Container(9000).ListItem.Property(widgetsstatus)] $VAR[widgets_counter]$INFO[Container(9000).ListItem.Property(widgetsstatussort), | ]$VAR[widgets_order,/] | $LOCALIZE[31215] $INFO[Container(510).CurrentPage]/$INFO[Container(510).NumPages]</label>
+						<font>font_plot</font>
+					</control>
+				</control>
+				<!-- Grupo dos botoes regular -->
+				<control type="group">
+					<include>animation_widgetsbar</include>
+					<visible>Control.HasFocus(510) | ControlGroup(512).HasFocus | Control.HasFocus(530) | ControlGroup(540).HasFocus</visible>
+					<control type="image">
+						<left>60</left>
+						<top>790</top>
+						<width>1800</width>
+						<height>40</height>
+						<texture>$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="65" condition="true">Conditional</animation>
+					</control>
+					<control type="grouplist" id="512">
+						<left>60</left>
+						<top>790</top>
+						<align>left</align>
+						<onup>SetFocus(510)</onup>
+						<ondown>500</ondown>
+						<onleft>512</onleft>
+						<onright>512</onright>
+						<orientation>horizontal</orientation>
+						<!-- Info -->
+						<control type="button" id="513">
+							<include>widgets_bar_button</include>
+							<label>31406</label>
+							<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+							<onclick condition="System.HasAddon(script.extendedinfo) + [String.IsEmpty(Container(510).ListItem.TvShowTitle) + String.IsEmpty(Container(510).ListItem.Artist)]">RunScript(script.extendedinfo,info=extendedinfo,name=$INFO[Container(510).ListItem.Title],imdb_id=$INFO[Container(510).ListItem.IMDBNumber])</onclick>
+							<onclick condition="System.HasAddon(script.extendedinfo) + !String.IsEmpty(Container(510).ListItem.TvShowTitle)">RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Container(510).ListItem.TvShowTitle],imdb_id=$INFO[Container(510).ListItem.IMDBNumber])</onclick>
+							<onclick condition="System.HasAddon(script.extendedinfo) + !String.IsEmpty(Container(510).ListItem.Artist)">RunScript(script.extendedinfo,info=extendedinfo,name=$INFO[Container(510).ListItem.Artist],imdb_id=$INFO[Container(510).ListItem.IMDBNumber])</onclick>
+							<enable>$EXP[WidgetsControl]</enable>
+						</control>
+						<!-- Ver fanart -->
+						<control type="button" id="514">
+							<include>widgets_bar_button</include>
+							<label>31947</label>
+							<onclick>SetFocus(8005)</onclick>
+						</control>
+						<!-- Trailer -->
+						<control type="button" id="515">
+							<include>widgets_bar_button</include>
+							<label>31945</label>
+							<onclick>PlayMedia($INFO[Container(510).ListItem.Trailer])</onclick>
+							<enable>!String.IsEmpty(Container(510).ListItem.Trailer)</enable>
+						</control>
+						<!-- CinemaVision -->
+						<control type="button" id="516">
+							<include>widgets_bar_button</include>
+							<label>31066</label>
+							<onclick condition="!System.HasAddon(script.cinemavision)">InstallAddon(script.cinemavision)</onclick>
+							<onclick condition="System.HasAddon(script.cinemavision)">RunScript(script.cinemavision,movieid=$INFO[Container(510).ListItem.Property(DBID)])</onclick>
+							<enable>String.IsEqual(Container(9000).ListItem.Property(widgets),movie.recent) | String.IsEqual(Container(9000).ListItem.Property(widgets),movie.title) | String.IsEqual(Container(9000).ListItem.Property(widgets),movie.random) | String.IsEqual(Container(9000).ListItem.Property(widgets),movie.inprogress) | String.IsEqual(Container(9000).ListItem.Property(widgets),movie.unwatched) |  String.IsEqual(Container(9000).ListItem.Property(widgets),tvshow.recent) | String.IsEqual(Container(9000).ListItem.Property(widgets),tvshow.title) | String.IsEqual(Container(9000).ListItem.Property(widgets),tvshow.random) | String.IsEqual(Container(9000).ListItem.Property(widgets),tvshow.inprogress) | String.IsEqual(Container(9000).ListItem.Property(widgets),tvshow.unwatched) | [String.Contains(Container(9000).ListItem.Property(widgets),vplaylist) | String.Contains(Container(9000).ListItem.Property(widgets),dualwidget)] + String.IsEmpty(Container(510).ListItem.TVShowTitle)</enable>							
+						</control>
+						<!-- Seletor de widgets -->
+						<control type="button" id="519">
+							<include>widgets_bar_button</include>
+							<label>31249</label>
+							<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(widgets)) + !$EXP[MyMenuControl]">SetFocus(541)</onup>
+							<onup condition="!String.IsEmpty(Container(9000).ListItem.Property(widgets)) + $EXP[MyMenuControl]">SetFocus(9000)</onup>
+							<ondown condition="!String.IsEmpty(Container(9000).ListItem.Property(widgets)) + !$EXP[MyMenuControl]">SetFocus(530)</ondown>
+							<ondown condition="!String.IsEmpty(Container(9000).ListItem.Property(widgets)) + $EXP[MyMenuControl]">SetFocus(9000)</ondown>
+							<onclick condition="!Skin.HasSetting(kioskcode)">ActivateWindow(1171)</onclick>
+							<onclick condition="Skin.HasSetting(kioskcode) + String.IsEqual(skin.string(codestep),step3)">ActivateWindow(1171)</onclick>
+							<onclick condition="Skin.HasSetting(kioskcode) + !String.IsEqual(skin.string(codestep),step3)">ActivateWindow(1151)</onclick>
+							<enable>![Skin.HasSetting(kiosk) | Skin.HasSetting(kiosksmart)] | Skin.HasSetting(kioskcode)</enable>
+						</control>
+					</control>
+				</control>
+				<!-- Grupo dos botoes ordenar -->
+				<control type="group">
+					<left>1504</left>
+					<top>748</top>
+					<include>animation_widgetsbar</include>
+					<visible>[Control.HasFocus(519) | ControlGroup(540).HasFocus] + !$EXP[MyMenuControl]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>356</width>
+						<height>40</height>
+						<texture>$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="65" condition="true">Conditional</animation>
+					</control>
+					<control type="grouplist" id="540">
+						<left>0</left>
+						<top>0</top>
+						<width>356</width>
+						<height>40</height>
+						<align>left</align>
+						<onup>510</onup>
+						<ondown>SetFocus(519)</ondown>
+						<onleft>9000</onleft>
+						<onright>9000</onright>
+						<orientation>horizontal</orientation>
+						<itemgap>0</itemgap>
+						<!-- Ordenar -->
+						<control type="button" id="541">
+							<include>widgets_bar_button</include>
+							<ondown>519</ondown>
+							<label>$LOCALIZE[21429]: $VAR[widgets_order]</label>
+							<ondown>SetFocus(519)</ondown>
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(order),ascending)">Skin.SetString($INFO[skin.string(menulabel)].order,descending)</onclick>
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(order),descending)">Skin.SetString($INFO[skin.string(menulabel)].order,ascending)</onclick>		
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),1) + String.IsEqual(Container(9000).ListItem.Property(order3),ascending)">Skin.SetString($INFO[skin.string(menulabel)].order3,descending)</onclick>
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),1) + String.IsEqual(Container(9000).ListItem.Property(order3),descending)">Skin.SetString($INFO[skin.string(menulabel)].order3,ascending)</onclick>							
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),2) + String.IsEqual(Container(9000).ListItem.Property(order1),ascending)">Skin.SetString($INFO[skin.string(menulabel)].order1,descending)</onclick>
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),2) + String.IsEqual(Container(9000).ListItem.Property(order1),descending)">Skin.SetString($INFO[skin.string(menulabel)].order1,ascending)</onclick>							
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),3) + String.IsEqual(Container(9000).ListItem.Property(order2),ascending)">Skin.SetString($INFO[skin.string(menulabel)].order2,descending)</onclick>
+							<onclick condition="String.IsEqual(Container(9000).ListItem.Property(fastchange),3) + String.IsEqual(Container(9000).ListItem.Property(order2),descending)">Skin.SetString($INFO[skin.string(menulabel)].order2,ascending)</onclick>
+						</control>
+					</control>
+				</control>
+				<!-- Grupo dos botoes classificar -->
+				<control type="group">
+					<left>0</left>
+					<top>845</top>
+					<include>animation_sortselector</include>
+					<visible>[Control.HasFocus(519) | Control.HasFocus(530) | ControlGroup(540).HasFocus] + !$EXP[MyMenuControl]</visible>
+					<control type="label">
+						<left>65</left>
+						<top>0</top>
+						<width>630</width>
+						<height>30</height>
+						<align>left</align>
+						<label>$LOCALIZE[31483]</label>
+						<font>font_button</font>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>1920</width>
+						<height>240</height>
+						<texture diffuse="shadow_mask.png">$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+					</control>
+					<control type="panel" id="530">
+						<viewtype>list</viewtype>
+						<left>0</left>
+						<top>40</top>
+						<width>1920</width>
+						<height>190</height>
+						<onleft>9000</onleft>
+						<onright>9000</onright>
+						<onup>519</onup>
+						<ondown>530</ondown>
+						<orientation>vertical</orientation>
+						<scrolltime>350</scrolltime>
+						<focusposition>3</focusposition>
+						<itemgap>0</itemgap>
+						<itemlayout width="320" height="38">
+							<control type="image">
+								<left>0</left>
+								<top>0</top>
+								<width>320</width>
+								<height>38</height>
+								<texture colordiffuse="$INFO[skin.string(colortext)]">submenu_button_nofocus.png</texture>
+							</control>
+							<control type="label">
+								<left>11</left>
+								<top>0</top>
+								<height>38</height>
+								<width>298</width>
+								<align>center</align>
+								<aligny>center</aligny>
+								<font>font_button</font>
+								<label>$INFO[ListItem.Label]</label>
+							</control>
+						</itemlayout>
+						<focusedlayout width="320" height="38">
+							<control type="image">
+								<left>0</left>
+								<top>0</top>
+								<width>320</width>
+								<height>38</height>
+								<texture colordiffuse="$INFO[skin.string(colortext)]">white.png</texture>
+								<animation effect="fade" start="100" end="50" time="0" condition="!Control.Hasfocus(530)">conditional</animation>
+							</control>
+							<control type="label">
+								<left>11</left>
+								<top>0</top>
+								<height>38</height>
+								<width>298</width>
+								<align>center</align>
+								<aligny>center</aligny>
+								<font>font_button</font>
+								<label>$INFO[ListItem.Label]</label>
+								<textcolor>$INFO[skin.string(colortextfocused)]</textcolor>
+							</control>
+						</focusedlayout>
+						<content>
+							<item>
+								<!-- Titulo -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[556]" />
+									<param name="action" value="title" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Data -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[552]" />
+									<param name="action" value="dateadded" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Random -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[590]" />
+									<param name="action" value="random" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Ultima reproducao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[568]" />
+									<param name="action" value="lastplayed" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Duracao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[555]" />
+									<param name="action" value="time" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Genero -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[515]" />
+									<param name="action" value="genre" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Pais -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[574]" />
+									<param name="action" value="country" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Ano -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[345]" />
+									<param name="action" value="year" />
+									<param name="visible" value="" />
+								</include>
+							</item>
+							<item>
+								<!-- Estudio -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[29909]" />
+									<param name="action" value="studio" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Gravadora -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21899]" />
+									<param name="action" value="label" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),music)" />
+								</include>
+							</item>
+							<item>
+								<!-- Classificacao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[563]" />
+									<param name="action" value="rating" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Classificacao do usuario -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[38018]" />
+									<param name="action" value="userrating" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Votos -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[205]" />
+									<param name="action" value="votes" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Top250 -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31758]" />
+									<param name="action" value="top250" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Playlist -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[559]" />
+									<param name="action" value="playlist" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- MPAA -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31996]" />
+									<param name="action" value="MPAA" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert) | String.Contains(Container(9000).ListItem.Property(widgets),music)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Resolucao de video -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21443]" />
+									<param name="action" value="videoresolution" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Codec de video -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21445]" />
+									<param name="action" value="videocodec" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Aspecto -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31759]" />
+									<param name="action" value="videoaspectratio" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Canais de audio -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21444]" />
+									<param name="action" value="audiochannels" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert) | String.Contains(Container(9000).ListItem.Property(widgets),music)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Codec de audio -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21446]" />
+									<param name="action" value="audiocodec" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert) | String.Contains(Container(9000).ListItem.Property(widgets),music)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Linguagem de audio -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21447]" />
+									<param name="action" value="audiolanguage" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Linguagem de legendas -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[21448]" />
+									<param name="action" value="subtitlelanguage" />
+									<param name="visible" value="[String.StartsWith(Container(9000).ListItem.Property(widgets),movie) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Artista -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[29904]" />
+									<param name="action" value="artist" />
+									<param name="visible" value="[String.Contains(Container(9000).ListItem.Property(widgets),music) | String.StartsWith(Container(9000).ListItem.Property(widgets),concert)] + !String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Album -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[558]" />
+									<param name="action" value="album" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),music)" />
+								</include>
+							</item>
+							<item>
+								<!-- Tipo de album -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31760]" />
+									<param name="action" value="albumtype" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),music)" />
+								</include>
+							</item>
+							<item>
+								<!-- Numero da faixa -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31761]" />
+									<param name="action" value="tracknumber" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),music)" />
+								</include>
+							</item>
+							<item>
+								<!-- Episodio -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[20359]" />
+									<param name="action" value="episode" />
+									<param name="visible" value="String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode)" />
+								</include>
+							</item>
+							<item>
+								<!-- Numero de episodios -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31762]" />
+									<param name="action" value="totalepisodes" />
+									<param name="visible" value="String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode)" />
+								</include>
+							</item>
+							<item>
+								<!-- Temporada -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[20373]" />
+									<param name="action" value="season" />
+									<param name="visible" value="String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode)" />
+								</include>
+							</item>
+							<item>
+								<!-- Estatus da serie -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31990]" />
+									<param name="action" value="tvshowstatus" />
+									<param name="visible" value="String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode)" />
+								</include>
+							</item>
+							<item>
+								<!-- Titulo da serie -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31764]" />
+									<param name="action" value="tvshowtitle" />
+									<param name="visible" value="String.StartsWith(Container(9000).ListItem.Property(widgets),tvshow) | String.StartsWith(Container(9000).ListItem.Property(widgets),episode)" />
+								</include>
+							</item>
+							<item>
+								<!-- Execucoes -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[567]" />
+									<param name="action" value="playcount" />
+									<param name="visible" value="!String.Contains(Container(9000).ListItem.Property(widgets),actors)" />
+								</include>
+							</item>
+							<item>
+								<!-- Canal PVR -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[19029]" />
+									<param name="action" value="channel" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),pvr)" />
+								</include>
+							</item>
+							<item>
+								<!-- Numero do canal PVR -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[31765]" />
+									<param name="action" value="channelnumber" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),pvr)" />
+								</include>
+							</item>
+							<item>
+								<!-- Instalacao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[12013]" />
+									<param name="action" value="installdate" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),addon)" />
+								</include>
+							</item>
+							<item>
+								<!-- Atualizacao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[12014]" />
+									<param name="action" value="lastupdated" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),addon)" />
+								</include>
+							</item>
+							<item>
+								<!-- Ultima utilizacao -->
+								<include content="widgets_selector_sort">
+									<param name="label" value="$LOCALIZE[12012]" />
+									<param name="action" value="lastused" />
+									<param name="visible" value="String.Contains(Container(9000).ListItem.Property(widgets),addon)" />
+								</include>
+							</item>
+						</content>
+					</control>
+				</control>				
+				<!-- Plot/elenco -->
+				<control type="group">
+					<left>0</left>
+					<top>0</top>
+					<animation effect="slide" start="0,450" end="0,0" time="400" delay="500" tween="sine" easing="out">WindowOpen</animation>
+					<animation effect="slide" start="0,450" end="0,0" time="400" delay="500" tween="sine" easing="out">Visible</animation>
+					<animation effect="slide" start="0,0" end="0,450" time="300" tween="sine" easing="out">Hidden</animation>
+					<animation effect="slide" start="0,0" end="0,40" time="300" tween="sine" easing="out" condition="String.IsEmpty(Control.GetLabel(556)) + String.IsEmpty(Control.GetLabel(557)) + String.IsEmpty(Control.GetLabel(558)) + String.IsEmpty(Control.GetLabel(559)) + String.IsEmpty(Control.GetLabel(560)) + String.IsEmpty(Control.GetLabel(561)) + String.IsEmpty(Control.GetLabel(562)) + String.IsEmpty(Control.GetLabel(563)) + String.IsEmpty(Control.GetLabel(564)) + String.IsEmpty(Control.GetLabel(565))">Conditional</animation>
+					<visible>[Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus] + ![Skin.HasSetting(nodetailspanel) | Control.HasFocus(519) | Control.HasFocus(530) | ControlGroup(540).HasFocus]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>845</top>
+						<width>1920</width>
+						<height>170</height>
+						<texture diffuse="shadow_mask.png">$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="65" condition="true">Conditional</animation>
+						<visible>!$EXP[FlagsControl]</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>845</top>
+						<width>1920</width>
+						<height>240</height>
+						<texture diffuse="shadow_mask.png">$VAR[texture_base]</texture>
+						<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+						<animation effect="fade" end="65" condition="true">Conditional</animation>
+						<visible>$EXP[FlagsControl]</visible>
+					</control>
+					<!-- Plot video -->
+					<control type="textbox">
+						<left>60</left>
+						<top>838</top>
+						<width>1080</width>
+						<height>168</height>
+						<font>font_plot</font>
+						<label>$VAR[widgets_plot]$INFO[Container(510).ListItem.Property(Description)]$INFO[Container(510).ListItem.Property(Album_Description)]$INFO[Container(510).ListItem.Property(Artist_Description)]$INFO[Container(510).ListItem.AddonDescription]</label>
+						<autoscroll delay="10000" time="3000" repeat="10000">!Skin.HasSetting(noallowscroll)</autoscroll>
+						<visible>$EXP[WidgetsControl]</visible>
+					</control>
+					<!-- Plot video -->
+					<control type="textbox">
+						<left>60</left>
+						<top>838</top>
+						<width>1800</width>
+						<height>168</height>
+						<font>font_plot</font>
+						<label>$VAR[widgets_plot]$INFO[Container(510).ListItem.Property(Description)]$INFO[Container(510).ListItem.Property(Album_Description)]$INFO[Container(510).ListItem.Property(Artist_Description)]$INFO[Container(510).ListItem.AddonDescription]</label>
+						<autoscroll delay="10000" time="3000" repeat="10000">!Skin.HasSetting(noallowscroll)</autoscroll>
+						<visible>!$EXP[WidgetsControl]</visible>
+					</control>
+					<!-- Miniaturas do elenco -->
+					<control type="group">
+						<visible>$EXP[WidgetsControl]</visible>
+						<control type="label">
+							<left>1240</left>
+							<top>838</top>
+							<width>630</width>
+							<height>30</height>
+							<font>font_button</font>
+							<label>31703</label>
+							<visible>!String.IsEmpty(Container(500).ListItem.Icon) | Control.HasFocus(500)</visible>
+						</control>
+						<control type="fixedlist" id="500">
+							<viewtype label="list">List Info</viewtype>
+							<left>1240</left>
+							<top>865</top>
+							<width>615</width>
+							<height>168</height>
+							<onup>510</onup>
+							<ondown>9000</ondown>
+							<orientation>horizontal</orientation>
+							<scrolltime tween="sine" easing="out">500</scrolltime>
+							<focusposition>0</focusposition>
+							<itemlayout height="135" width="105">
+								<control type="image">
+									<left>2</left>
+									<top>8</top>
+									<width>87</width>
+									<height>130</height>
+									<aligny>center</aligny>
+									<align>center</align>
+									<aspectratio scalediffuse="false">scale</aspectratio>
+									<texture fallback="DefaultActor.png" diffuse="thumb_poster_diffuse.png" background="true">$INFO[ListItem.Icon]</texture>
+									<fadetime>commonfadetime</fadetime>
+									<animation effect="fade" start="100" end="50" time="300" condition="Control.HasFocus(500)">Conditional</animation>
+								</control>
+							</itemlayout>
+							<focusedlayout height="135" width="105">
+								<control type="image">
+									<left>2</left>
+									<top>8</top>
+									<width>87</width>
+									<height>130</height>
+									<aligny>center</aligny>
+									<align>center</align>
+									<aspectratio scalediffuse="false">scale</aspectratio>
+									<texture fallback="DefaultActor.png" diffuse="thumb_poster_diffuse.png" background="true">$INFO[ListItem.Icon]</texture>
+									<fadetime>commonfadetime</fadetime>
+									<visible>!Control.HasFocus(500)</visible>
+								</control>
+								<control type="image">
+									<left>2</left>
+									<top>8</top>
+									<width>87</width>
+									<height>130</height>
+									<aligny>center</aligny>
+									<align>center</align>
+									<aspectratio scalediffuse="false">scale</aspectratio>
+									<texture fallback="DefaultActor.png" diffuse="thumb_poster_diffuse.png" background="true">$INFO[ListItem.Icon]</texture>
+									<bordertexture colordiffuse="$INFO[skin.string(colortexture)]" border="-2">white.png</bordertexture>
+									<visible>Control.HasFocus(500)</visible>
+								</control>
+							</focusedlayout>
+							<content>$VAR[widgets_cast]</content>
+							<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+							<onclick condition="System.HasAddon(script.extendedinfo) + !String.IsEmpty(Container(500).ListItem.Icon)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
+						</control>
+						<control type="image">
+							<left>1200</left>
+							<top>900</top>
+							<width>30</width>
+							<height>80</height>
+							<aligny>center</aligny>
+							<align>center</align>
+							<texture flipx="true">arrow_settings.png</texture>
+							<colordiffuse>20FFFFF0</colordiffuse>
+							<include>animation_fade</include>
+							<visible>Control.HasFocus(500)</visible>
+						</control>
+						<control type="image">
+							<left>1865</left>
+							<top>900</top>
+							<width>30</width>
+							<height>80</height>
+							<aligny>center</aligny>
+							<align>center</align>
+							<texture>arrow_settings.png</texture>
+							<colordiffuse>20FFFFF0</colordiffuse>
+							<include>animation_fade</include>
+							<visible>Control.HasFocus(500)</visible>
+						</control>
+					</control>
+					<!-- Imagem do ator -->
+					<control type="group">
+						<left>1920</left>
+						<top>0</top>
+						<animation effect="slide" start="0,0" end="-1920,0" time="400" tween="cubic" easing="inout" condition="Control.HasFocus(500)">Conditional</animation>
+						<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(500)">Conditional</animation>
+						<control type="image">
+							<left>750</left>
+							<top>190</top>
+							<width>407</width>
+							<height>600</height>
+							<align>center</align>
+							<texture>actor_border.png</texture>
+							<animation effect="rotate" start="0,0" end="-2.0.0" center="auto" delay="1000" easing="out" tween="back" time="600" condition="Control.HasFocus(500)">Conditional</animation>
+						</control>
+						<control type="image">
+							<left>772</left>
+							<top>218</top>
+							<width>363</width>
+							<height>544</height>
+							<aspectratio>scale</aspectratio>
+							<texture fallback="DefaultActor.png" background="true">$INFO[Container(500).ListItem.Icon]</texture>
+							<fadetime>commonfadetime</fadetime>
+						</control>
+						<control type="image">
+							<left>750</left>
+							<top>190</top>
+							<width>407</width>
+							<height>600</height>
+							<align>center</align>
+							<texture>actor_border.png</texture>
+						</control>
+					</control>
+				</control>
+				<!-- etiquetas -->
+				<control type="group">
+					<animation effect="slide" start="0,450" end="0,0" time="400" delay="500" tween="sine" easing="out">WindowOpen</animation>
+					<animation effect="slide" start="0,450" end="0,0" time="400" delay="500" tween="sine" easing="out">Visible</animation>
+					<animation effect="slide" start="0,0" end="0,450" time="300" tween="sine" easing="out">Hidden</animation>
+					<visible>[Control.HasFocus(500) | Control.HasFocus(510) | ControlGroup(512).HasFocus] + ![Control.HasFocus(519) | $EXP[FlagsControl]]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>1015</top>
+						<height>65</height>
+						<width>1920</width>
+						<texture colordiffuse="cc505050">shadow_mask.png</texture>
+						<visible>Skin.HasSetting(texture_white)</visible>
+					</control>
+					<control type="grouplist">
+						<left>30</left>
+						<top>1015</top>
+						<orientation>horizontal</orientation>
+						<itemgap>5</itemgap>
+						<!-- estudio/gravadora -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="401" />
+							<param name="flag" value="$VAR[widgets_studio]" />
+							<param name="separator" value="true" />
+						</include>		
+						<!-- mpaa -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="402" />
+							<param name="flag" value="$VAR[widgets_mpaa]" />
+							<param name="separator" value="true" />
+						</include>		
+						<!-- tipo de midia -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="403" />
+							<param name="flag" value="$VAR[widgets_mediatype]" />
+							<param name="separator" value="true" />
+						</include>		
+						<!-- codec de video -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="404" />
+							<param name="flag" value="$VAR[videocodec_path]$INFO[Container(510).ListItem.VideoCodec,,.png]" />
+							<param name="separator" value="true" />
+						</include>		
+						<!-- hdr -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="405" />
+							<param name="flag" value="$VAR[widgets_hdr]" />
+							<param name="separator" value="true" />
+						</include>			
+						<!-- 10 bit -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="406" />
+							<param name="flag" value="$VAR[widgets_10bit]" />
+							<param name="separator" value="true" />
+						</include>		
+						<!-- resolucao -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="407" />
+							<param name="flag" value="$VAR[resolution_path]$INFO[Container(510).ListItem.VideoResolution,,.png]" />
+							<param name="separator" value="true" />
+						</include>
+						<!-- aspecto -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="408" />
+							<param name="flag" value="$VAR[aspectratio_path]$INFO[Container(510).ListItem.VideoAspect,,.png]" />
+							<param name="separator" value="true" />
+						</include>	
+						<!-- codec de audio/musica -->
+						<include content="mediaflags_common">
+							<param name="flag_id" value="409" />
+							<param name="flag" value="$VAR[widgets_audio]" />
+							<param name="separator" value="true" />
+						</include>	
+						<!-- canais -->
+						<control type="group">
+							<width>450</width>
+							<height>50</height>
+							<visible>!String.IsEmpty(Container(510).ListItem.Property(AudioLanguage.1))</visible>
+							<include content="mediaflags_common">
+								<param name="flag_id" value="410" />
+								<param name="flag" value="$VAR[extras_path]flag_audio.png" />
+								<param name="separator" value="false" />
+							</include>
+							<control type="label">
+								<left>100</left>								
+								<width>330</width>
+								<align>left</align>
+								<include>FlagLabel</include>
+								<label>$VAR[audiochannelshome1]$INFO[Container(510).ListItem.Property(AudioLanguage.1),-] $VAR[audiochannelshome2]$INFO[Container(510).ListItem.Property(AudioLanguage.2),-] $VAR[audiochannelshome3]$INFO[Container(510).ListItem.Property(AudioLanguage.3),-] $VAR[audiochannelshome4]$INFO[Container(510).ListItem.Property(AudioLanguage.4),-] $VAR[audiochannelshome5]$INFO[Container(510).ListItem.Property(AudioLanguage.5),-]</label>
+							</control>
+						</control>
+						<control type="image">
+							<include>FlagSeparator</include>
+						</control>
+						<!-- legenda -->
+						<control type="group">
+							<width>250</width>
+							<height>50</height>
+							<visible>!String.IsEmpty(Container(510).ListItem.Property(SubtitleLanguage.1))</visible>
+							<include content="mediaflags_common">
+								<param name="flag_id" value="411" />
+								<param name="flag" value="$VAR[extras_path]flag_subtitle.png" />
+								<param name="separator" value="false" />
+							</include>
+							<control type="label">
+								<left>100</left>								
+								<width>200</width>
+								<align>left</align>
+								<include>FlagLabel</include>
+								<label>$INFO[Container(510).ListItem.Property(SubtitleLanguage.1)]$INFO[Container(510).ListItem.Property(SubtitleLanguage.2), / ]$INFO[Container(510).ListItem.Property(SubtitleLanguage.3), / ]$INFO[Container(510).ListItem.Property(SubtitleLanguage.4), / ]$INFO[Container(510).ListItem.Property(SubtitleLanguage.5)]</label>
+							</control>
+						</control>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>1020</top>
+						<height>63</height>
+						<width>1920</width>
+						<texture>gradient_small.png</texture>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- ######################################################################### CLIMA #########################################################################-->
+	<include name="widgets_weather7days">
+		<definition>
+			<control type="group">
+				<width>184</width>
+				<include>animation_visiblechange</include>
+				<control type="label">
+					<left>15</left>
+					<top>24</top>
+					<width>158</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[B]$INFO[Window(Weather).Property(Daily.$PARAM[item].ShortDay)][/B]</label>
+					<font>font_header</font>
+					<scroll>true</scroll>
+				</control>
+				<control type="label">
+					<left>15</left>
+					<top>90</top>
+					<width>158</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$INFO[Window(Weather).Property(Daily.$PARAM[item].ShortDate)]</label>
+					<font>font_plot</font>
+					<scroll>true</scroll>
+				</control>
+				<control type="image">
+					<include>Widget_WeatherArrowUp</include>
+				</control>
+				<control type="label">
+					<left>81</left>
+					<top>292</top>
+					<width>188</width>
+					<height>30</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>$INFO[Window(Weather).Property(Daily.$PARAM[item].HighTemperature)]</label>
+					<font>font_plot</font>
+				</control>
+				<control type="image">
+					<include>Widget_WeatherArrowDown</include>
+				</control>
+				<control type="label">
+					<left>81</left>
+					<top>345</top>
+					<width>188</width>
+					<height>30</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<label>$INFO[Window(Weather).Property(Daily.$PARAM[item].LowTemperature)]</label>
+					<font>font_plot</font>
+				</control>
+				<control type="image">
+					<top>150</top>
+					<width>195</width>
+					<height>120</height>
+					<aspectratio>keep</aspectratio>
+					<texture>$VAR[weathericons_path]$INFO[Window(Weather).Property(Daily.$PARAM[item].OutlookIcon)]</texture>
+					<visible>![Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))]</visible>
+				</control>
+				<control type="multiimage">
+					<top>150</top>
+					<width>195</width>
+					<height>120</height>
+					<aspectratio>keep</aspectratio>
+					<timeperimage>75</timeperimage>
+					<randomize>false</randomize>
+					<fadetime>1</fadetime>
+					<imagepath>$VAR[weathericons_path]$INFO[Window(Weather).Property(Daily.$PARAM[item].FanartCode)]</imagepath>
+					<visible>Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))</visible>
+				</control>
+				<control type="image">
+					<left>188</left>
+					<top>15</top>
+					<width>3</width>
+					<height>390</height>
+					<texture>line_v.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_weekend">
+		<definition>
+			<control type="group">
+				<width>225</width>
+				<include>animation_visiblechange</include>
+				<control type="label">
+					<left>0</left>
+					<top>24</top>
+					<width>270</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$PARAM[label]</label>
+					<font>font_header</font>
+					<scroll>true</scroll>
+				</control>
+				<control type="group">
+					<left>38</left>
+					<control type="image">
+						<include>Widget_WeatherArrowUp</include>
+					</control>
+					<control type="label">
+						<left>81</left>
+						<top>292</top>
+						<width>188</width>
+						<height>30</height>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[Window(Weather).Property(Daily.$PARAM[item].HighTemperature)]</label>
+						<font>font_plot</font>
+					</control>
+					<control type="image">
+						<include>Widget_WeatherArrowDown</include>
+					</control>
+					<control type="label">
+						<left>81</left>
+						<top>345</top>
+						<width>188</width>
+						<height>30</height>
+						<align>left</align>
+						<aligny>center</aligny>
+						<label>$INFO[Window(Weather).Property(Daily.$PARAM[item].LowTemperature)]</label>
+						<font>font_plot</font>
+					</control>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>65</top>
+					<width>270</width>
+					<height>225</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<aspectratio>keep</aspectratio>
+					<texture>$VAR[weathericons_path]$INFO[Window(Weather).Property(Weekend.$PARAM[item].OutlookIcon)]</texture>
+					<visible>![Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))]</visible>
+				</control>
+				<control type="multiimage">
+					<left>0</left>
+					<top>65</top>
+					<width>270</width>
+					<height>225</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<aspectratio>keep</aspectratio>
+					<timeperimage>75</timeperimage>
+					<randomize>false</randomize>
+					<fadetime>1</fadetime>
+					<imagepath>$VAR[weathericons_path]$INFO[Window(Weather).Property(Weekend.$PARAM[item].FanartCode)]</imagepath>
+					<visible>Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))</visible>
+				</control>
+				<control type="image">
+					<left>510</left>
+					<top>15</top>
+					<width>3</width>
+					<height>390</height>
+					<texture>line_v.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="widgets_36hour">
+		<definition>
+			<control type="group">
+				<width>450</width>
+				<include>animation_visiblechange</include>
+				<control type="label">
+					<left>15</left>
+					<top>24</top>
+					<width>300</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>[B]$INFO[Window(Weather).Property(36Hour.$PARAM[item].Heading)][/B]</label>
+					<font>font_header</font>
+					<scroll>true</scroll>
+				</control>
+				<control type="label">
+					<left>15</left>
+					<top>300</top>
+					<width>300</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$INFO[Window(Weather).Property(36Hour.$PARAM[item].TemperatureHeading)] [COLOR=$INFO[skin.string(colortext)]]$INFO[Window(Weather).Property(36Hour.$PARAM[item].Temperature)][/COLOR]</label>
+					<font>font_plot</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<scroll>true</scroll>
+				</control>
+				<control type="label">
+					<left>15</left>
+					<top>330</top>
+					<width>300</width>
+					<height>38</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$LOCALIZE[376]: [COLOR=$INFO[skin.string(colortext)]]$INFO[Window(Weather).Property(36Hour.$PARAM[item].Precipitation)][/COLOR]</label>
+					<font>font_plot</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<scroll>true</scroll>
+				</control>
+				<control type="image">
+					<texture>$VAR[weathericons_path]$INFO[Window(Weather).Property(36Hour.$PARAM[item].OutlookIcon)]</texture>
+					<left>0</left>
+					<top>65</top>
+					<width>270</width>
+					<height>225</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<aspectratio>keep</aspectratio>
+					<visible>![Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))]</visible>
+				</control>
+				<control type="multiimage">
+					<imagepath>$VAR[weathericons_path]$INFO[Window(Weather).Property(36Hour.$PARAM[item].FanartCode)]</imagepath>
+					<left>0</left>
+					<top>65</top>
+					<width>270</width>
+					<height>225</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<aspectratio>keep</aspectratio>
+					<timeperimage>75</timeperimage>
+					<randomize>false</randomize>
+					<fadetime>1</fadetime>
+					<visible>Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))</visible>
+				</control>
+				<control type="image">
+					<left>375</left>
+					<top>15</top>
+					<width>3</width>
+					<height>390</height>
+					<texture>line_v.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Widget_WeatherArrowUp">
+		<left>44</left>
+		<top>292</top>
+		<width>30</width>
+		<height>30</height>
+		<texture>arrow.png</texture>
+		<colordiffuse>FFB20000</colordiffuse>
+		<aspectratio>keep</aspectratio>
+	</include>
+	<include name="Widget_WeatherArrowDown">
+		<left>44</left>
+		<top>345</top>
+		<width>30</width>
+		<height>30</height>
+		<texture flipy="true">arrow.png</texture>
+		<colordiffuse>FF007399</colordiffuse>
+		<aspectratio>keep</aspectratio>
+	</include>
+	<!-- Weather Popup -->
+	<include name="widgets_weather">
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>-75</top>
+				<animation effect="fade" start="0" end="100" time="400" delay="1000" condition="!Window.Previous(Startup)">WindowOpen</animation>
+				<animation effect="fade" start="0" end="100" time="500" delay="3000" condition="Window.Previous(Startup)">WindowOpen</animation>
+				<animation effect="slide" start="0,-525" end="0,0" time="300" delay="700" easing="out" tween="sine">Visible</animation>
+				<animation effect="slide" start="0,0" end="0,-525" time="200" easing="in" tween="sine">Hidden</animation>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="510">
+					<include>invisible</include>
+					<onleft>SetFocus(9000)</onleft>
+					<onright>SetFocus(9000)</onright>
+					<onup condition="[String.Contains(skin.string(widgets_mode),manual) | String.Contains(skin.string(widgets_mode),auto)]">ActivateWindow(1171)</onup>
+					<ondown>SetFocus(9000)</ondown>
+					<onfocus condition="!String.Contains(skin.string(widgets_mode),manual)">SetFocus(9000)</onfocus>
+					<onfocus condition="!String.Contains(skin.string(widgets_mode),manual)">ActivateWindow(1171)</onfocus>
+					<visible>String.IsEqual(Container(9000).ListItem.Property(widgets),weather) + Window.IsVisible(home) + ![String.IsEmpty(Weather.Plugin) | Window.IsVisible(1171) | Skin.HasSetting(submode) + Skin.HasSetting(mainmenuvertical)]</visible>
+				</control>
+				<!-- Fundo -->
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>1920</width>
+					<height>578</height>
+					<texture>$VAR[texture_details]</texture>
+					<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+					<include>animation_homeglass2</include>
+				</control>
+				<!-- Icone -->
+				<control type="image">
+					<left>82</left>
+					<top>150</top>
+					<width>420</width>
+					<height>420</height>
+					<aspectratio align="center">keep</aspectratio>
+					<texture>$VAR[weathericons_path]$INFO[Window(Weather).Property(Current.OutlookIcon)]</texture>
+					<colordiffuse>75FFFFFF</colordiffuse>
+					<visible>![Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))]</visible>
+				</control>
+				<control type="multiimage">
+					<left>82</left>
+					<top>150</top>
+					<width>420</width>
+					<height>420</height>
+					<aspectratio align="center">keep</aspectratio>
+					<imagepath>$VAR[weathericons_path]$INFO[Window(Weather).Property(Current.FanartCode)]</imagepath>
+					<timeperimage>175</timeperimage>
+					<randomize>false</randomize>
+					<fadetime>1</fadetime>
+					<colordiffuse>75FFFFFF</colordiffuse>
+					<visible>Skin.HasSetting(resource.images.weathericons.multi) | String.IsEmpty(skin.string(resource.images.weathericons.path))</visible>
+				</control>
+				<!-- Local / Condicao atual -->
+				<control type="label">
+					<left>82</left>
+					<top>120</top>
+					<width>1410</width>
+					<height>38</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<font>font_titlesettings</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<shadowcolor>grey</shadowcolor>
+					<label>$INFO[Window(Weather).Property(Location)][COLOR=50FFFAF0] | [/COLOR]$INFO[Window(Weather).Property(Current.Temperature)]$INFO[System.TemperatureUnits]</label>
+					<scroll>true</scroll>
+				</control>
+				<!-- Condicao atual -->
+				<control type="label">
+					<left>82</left>
+					<top>165</top>
+					<width>412</width>
+					<height>38</height>
+					<align>left</align>
+					<aligny>center</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.Condition)]</label>
+					<scroll>true</scroll>
+				</control>
+				<!-- Sensacao termica -->
+				<control type="label">
+					<left>82</left>
+					<top>240</top>
+					<width>195</width>
+					<height>60</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[402]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>82</left>
+					<top>270</top>
+					<width>195</width>
+					<height>60</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.FeelsLike)]$INFO[System.TemperatureUnits]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Change de chuva -->
+				<control type="label">
+					<left>82</left>
+					<top>330</top>
+					<width>195</width>
+					<height>60</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[31874]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>82</left>
+					<top>360</top>
+					<width>195</width>
+					<height>60</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Daily.1.Precipitation)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Maxima prevista -->
+				<control type="image">
+					<left>75</left>
+					<top>442</top>
+					<width>30</width>
+					<height>30</height>
+					<texture>arrow.png</texture>
+					<colordiffuse>FFB20000</colordiffuse>
+				</control>
+				<control type="label">
+					<left>112</left>
+					<top>442</top>
+					<width>150</width>
+					<height>30</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Daily.1.HighTemperature)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Minima prevista -->
+				<control type="image">
+					<left>75</left>
+					<top>495</top>
+					<width>30</width>
+					<height>30</height>
+					<texture flipy="true">arrow.png</texture>
+					<colordiffuse>FF007399</colordiffuse>
+				</control>
+				<control type="label">
+					<left>112</left>
+					<top>495</top>
+					<width>150</width>
+					<height>30</height>
+					<align>left</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Daily.1.LowTemperature)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Umidade -->
+				<control type="label">
+					<left>300</left>
+					<top>240</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[406]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>300</left>
+					<top>270</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.Humidity)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Indice UV -->
+				<control type="label">
+					<left>300</left>
+					<top>300</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[403]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>300</left>
+					<top>330</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.UVIndex)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Pt Orvalho -->
+				<control type="label">
+					<left>300</left>
+					<top>360</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[405]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>300</left>
+					<top>390</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.DewPoint)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<!-- Vento -->
+				<control type="label">
+					<left>300</left>
+					<top>420</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>$LOCALIZE[404]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="label">
+					<left>300</left>
+					<top>450</top>
+					<width>195</width>
+					<height>330</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>font_button</font>
+					<label>$INFO[Window(Weather).Property(Current.Wind)]</label>
+					<scroll>true</scroll>
+					<shadowcolor>grey</shadowcolor>
+				</control>
+				<control type="image">
+					<left>540</left>
+					<top>165</top>
+					<width>3</width>
+					<height>390</height>
+					<texture>line_v.png</texture>
+				</control>
+				<!-- 7 dias -->
+				<control type="grouplist">
+					<left>540</left>
+					<top>150</top>
+					<orientation>horizontal</orientation>
+					<include>animation_homefade</include>
+					<visible>String.Contains(skin.string(weathermode),7days)</visible>
+					<!-- Dia 1 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="1" />
+					</include>
+					<!-- Dia 2 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="2" />
+					</include>
+					<!-- Dia 3 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="3" />
+					</include>
+					<!-- Dia 4 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="4" />
+					</include>
+					<!-- Dia 5 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="5" />
+					</include>
+					<!-- Dia 6 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="6" />
+					</include>
+					<!-- Dia 7 -->
+					<include content="widgets_weather7days">
+						<param name="item" value="7" />
+					</include>
+				</control>
+				<!-- Final de semana -->
+				<control type="grouplist">
+					<left>720</left>
+					<top>150</top>
+					<orientation>horizontal</orientation>
+					<itemgap>495</itemgap>
+					<include>animation_homefade</include>
+					<visible>String.Contains(skin.string(weathermode),weekend)</visible>
+					<!-- Dia 1 -->
+					<include content="widgets_weekend">
+						<param name="item" value="1" />
+						<param name="label" value="[B]$LOCALIZE[16][/B]" />
+					</include>
+					<!-- Dia 2 -->
+					<include content="widgets_weekend">
+						<param name="item" value="2" />
+						<param name="label" value="[B]$LOCALIZE[17][/B]" />
+					</include>
+				</control>
+				<!-- 36 horas -->
+				<control type="grouplist">
+					<left>600</left>
+					<top>150</top>
+					<orientation>horizontal</orientation>
+					<itemgap>0</itemgap>
+					<visible>String.Contains(skin.string(weathermode),36hour)</visible>
+					<!-- Dia 1 -->
+					<include content="widgets_36hour">
+						<param name="item" value="1" />
+					</include>
+					<!-- Dia 2 -->
+					<include content="widgets_36hour">
+						<param name="item" value="2" />
+					</include>
+					<!-- Dia 3 -->
+					<include content="widgets_36hour">
+						<param name="item" value="3" />
+					</include>
+				</control>
+				<!-- Alerts -->
+				<control type="group">
+					<left>540</left>
+					<top>150</top>
+					<visible>[!String.IsEmpty(Window(Weather).Property(Alerts)) + String.IsEmpty(Window(Home).Property(WeatherOverride))] | String.IsEqual(Window(Home).Property(WeatherOverride),alerts)</visible>
+					<control type="textbox">
+						<left>15</left>
+						<top>15</top>
+						<width>1320</width>
+						<height>400</height>
+						<pagecontrol></pagecontrol>
+						<align>left</align>
+						<aligny>top</aligny>
+						<info>Window(Weather).Property(Alerts)</info>
+						<animation effect="fade" start="0" end="100" delay="1600" time="400">Visible</animation>
+						<animation effect="fade" start="100" end="0" time="200">Hidden</animation>
+						<autoscroll time="2000" delay="10000" repeat="15000">!Skin.HasSetting(noallowscroll)</autoscroll>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- ################################################################################ SISTEMA ################################################################################ -->
+	<include name="widgets_settings">
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>-75</top>
+				<animation effect="fade" start="0" end="100" time="400" delay="1000" condition="!Window.Previous(Startup)">WindowOpen</animation>
+				<animation effect="fade" start="0" end="100" time="500" delay="3000" condition="Window.Previous(Startup)">WindowOpen</animation>
+				<animation effect="slide" start="0,-525" end="0,0" time="300" delay="700" easing="out" tween="sine">Visible</animation>
+				<animation effect="slide" start="0,0" end="0,-525" time="200" easing="in" tween="sine">Hidden</animation>
+				<animation effect="slide" start="0,0" end="0,-570" time="300" easing="out" tween="sine" condition="[String.Contains(skin.string(widgets_mode),manual) | String.Contains(skin.string(widgets_mode),auto) + !Control.IsVisible(8000)] + ![Control.HasFocus(500) | Control.HasFocus(510) | Control.HasFocus(520) | Control.HasFocus(521) | Control.HasFocus(523) | Control.HasFocus(5100) | ControlGroup(512).HasFocus]">Conditional</animation>
+				<visible>$PARAM[visible]</visible>
+				<!-- Fundo -->
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>1920</width>
+					<height>578</height>
+					<texture>$VAR[texture_details]</texture>
+					<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+					<include>animation_homeglass2</include>
+				</control>
+				<control type="image">
+					<left>1575</left>
+					<top>90</top>
+					<width>45</width>
+					<height>488</height>
+					<texture diffuse="details_back.png">shadow.png</texture>
+				</control>
+				<!-- Skin Logo -->
+				<control type="image">
+					<posx>1647</posx>
+					<posy>106</posy>
+					<width>210</width>
+					<height>150</height>
+					<texture>aeonmq8_logo.png</texture>
+					<colordiffuse>FFFFFFFF</colordiffuse>
+					<aspectratio align="center" aligny="top">keep</aspectratio>
+					<animation effect="fade" start="20" end="100" time="600" pulse="true" condition="true">Conditional</animation>
+					<visible>Control.HasFocus(520)</visible>
+				</control>
+				<!-- Skin Logo -->
+				<control type="image">
+					<posx>1647</posx>
+					<posy>106</posy>
+					<width>210</width>
+					<height>150</height>
+					<texture>aeonmq8_logo.png</texture>
+					<colordiffuse>FFFFFFFF</colordiffuse>
+					<aspectratio align="center" aligny="top">keep</aspectratio>
+					<visible>!Control.HasFocus(520)</visible>
+				</control>
+				<!-- Versao -->
+				<control type="label">
+					<left>1547</left>
+					<top>210</top>
+					<width>410</width>
+					<height>38</height>
+					<align>center</align>
+					<font>font_button</font>
+					<label>$VAR[skin_version]</label>
+				</control>
+				<!-- Versao do Kodi -->
+				<control type="label">
+					<left>1647</left>
+					<top>240</top>
+					<width>210</width>
+					<height>38</height>
+					<align>center</align>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>Leia</label>
+				</control>
+				<control type="label">
+					<left>1647</left>
+					<top>270</top>
+					<width>210</width>
+					<height>38</height>
+					<align>center</align>
+					<font>font_plot</font>
+					<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+					<label>by MarcosQui</label>
+				</control>
+				<control type="button" id="520">
+					<include>invisible</include>
+					<onleft>510</onleft>
+					<onright>SetFocus(9000)</onright>
+					<onup>SetFocus(9000)</onup>
+					<ondown>521</ondown>
+					<onclick>ActivateWindow(1156)</onclick>
+				</control>
+				<!-- Notas de lancamento -->
+				<control type="button" id="521">
+					<left>1576</left>
+					<top>330</top>
+					<width>344</width>
+					<height>33</height>
+					<onleft>510</onleft>
+					<onright>SetFocus(9000)</onright>
+					<onup>520</onup>
+					<ondown>SetFocus(9000)</ondown>
+					<label>31948</label>
+					<font>font_button</font>
+					<textcolor>$INFO[skin.string(colortext)]</textcolor>
+					<focusedcolor>$INFO[skin.string(colortextfocused)]</focusedcolor>
+					<textoffsetx>45</textoffsetx>
+					<align>center</align>
+					<pulseonselect>false</pulseonselect>
+					<texturefocus colordiffuse="$INFO[skin.string(colortext)]">grey.png</texturefocus>
+					<onclick>ActivateWindow(1162)</onclick>
+				</control>
+				<!-- Titulo Sistema -->
+				<control type="label">
+					<left>75</left>
+					<top>117</top>
+					<width>668</width>
+					<height>45</height>
+					<font>font_list</font>
+					<label>[UPPERCASE]$LOCALIZE[130][/UPPERCASE]</label>
+				</control>
+				<control type="image">
+					<left>75</left>
+					<top>165</top>
+					<width>668</width>
+					<height>3</height>
+					<align>left</align>
+					<texture flipx="true">divider.png</texture>
+				</control>
+				<!-- Lista de info -->
+				<control type="list">
+					<left>75</left>
+					<top>195</top>
+					<width>668</width>
+					<height>495</height>
+					<itemgap>0</itemgap>
+					<pagecontrol></pagecontrol>
+					<scrolltime>200</scrolltime>
+					<visible>String.IsEqual(Container(9000).ListItem.Property(widgets),settings) + !Window.IsVisible(1171)</visible>
+					<itemlayout height="30">
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>668</width>
+							<height>30</height>
+							<font>font_button</font>
+							<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+							<selectedcolor>$INFO[skin.string(colorheader)]</selectedcolor>
+							<label>$INFO[ListItem.Label] [COLOR=$INFO[skin.string(colortext)]]$INFO[ListItem.Label2][/COLOR]</label>
+							<scroll>true</scroll>
+						</control>
+					</itemlayout>
+					<focusedlayout height="30">
+						<control type="label">
+							<left>0</left>
+							<top>0</top>
+							<width>668</width>
+							<height>30</height>
+							<font>font_button</font>
+							<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+							<selectedcolor>$INFO[skin.string(colorheader)]</selectedcolor>
+							<label>$INFO[ListItem.Label] [COLOR=$INFO[skin.string(colortext)]]$INFO[ListItem.Label2][/COLOR]</label>
+							<scroll>true</scroll>
+						</control>
+					</focusedlayout>
+					<content>
+						<item>
+							<!-- Sistema -->
+							<label>$LOCALIZE[9]</label>
+							<label2>$INFO[System.BuildVersion] | $INFO[System.BuildDate]</label2>
+							<onclick></onclick>
+						</item>
+						<item>
+							<!-- Resolucao da tela -->
+							<label>$LOCALIZE[13287]</label>
+							<label2>$INFO[System.ScreenWidth]x$INFO[System.ScreenHeight] pxl ($INFO[System.FPS] hz)</label2>
+							<onclick></onclick>
+						</item>
+						<item>
+							<!-- Estado de rede -->
+							<label>$LOCALIZE[13295]</label>
+							<label2>$INFO[System.InternetState] ($INFO[Network.IPAddress])</label2>
+							<onclick></onclick>
+						</item>
+						<item>
+							<!-- Tempo em uso -->
+							<label>$LOCALIZE[12390]:</label>
+							<label2>$INFO[System.Uptime]</label2>
+							<onclick></onclick>
+						</item>
+					</content>
+				</control>
+				<control type="group">
+					<top>312</top>
+					<!-- Consumo da CPU -->
+					<control type="label">
+						<left>75</left>
+						<top>0</top>
+						<width>668</width>
+						<height>38</height>
+						<font>font_button</font>
+						<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+						<label>$LOCALIZE[13271] [COLOR=$INFO[skin.string(colortext)]]$INFO[System.CPUUsage] ($INFO[System.CpuFrequency])[/COLOR]</label>
+					</control>
+					<!-- Grafico da CPU -->
+					<control type="progress">
+						<left>75</left>
+						<top>38</top>
+						<width>668</width>
+						<height>15</height>
+						<info>System.CPUUsage</info>
+					</control>
+					<!-- Consumo de memoria -->
+					<control type="label">
+						<left>75</left>
+						<top>60</top>
+						<width>668</width>
+						<height>38</height>
+						<font>font_button</font>
+						<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+						<label>$LOCALIZE[31346]: [COLOR=$INFO[skin.string(colortext)]]$INFO[System.Memory(used.percent)][/COLOR]</label>
+					</control>
+					<!-- Grafico de memoria -->
+					<control type="progress">
+						<left>75</left>
+						<top>98</top>
+						<width>668</width>
+						<height>15</height>
+						<info>System.Memory(used)</info>
+					</control>
+					<!-- Espaco usado -->
+					<control type="label">
+						<left>75</left>
+						<top>120</top>
+						<width>668</width>
+						<height>38</height>
+						<font>font_button</font>
+						<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+						<label>$LOCALIZE[31345]: [COLOR=$INFO[skin.string(colortext)]]$INFO[System.UsedSpacePercent][/COLOR]</label>
+						<visible>![System.Platform.Android | System.Platform.Linux | System.Platform.Linux.RaspberryPi]</visible>
+					</control>
+					<!-- Grafico de disco -->
+					<control type="progress">
+						<left>75</left>
+						<top>158</top>
+						<width>668</width>
+						<height>15</height>
+						<info>System.UsedSpace</info>
+						<visible>![System.Platform.Android | System.Platform.Linux | System.Platform.Linux.RaspberryPi]</visible>
+					</control>
+					<!-- Bateria -->
+					<control type="label">
+						<left>75</left>
+						<top>180</top>
+						<width>668</width>
+						<height>38</height>
+						<font>font_button</font>
+						<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+						<label>$LOCALIZE[12395]: [COLOR=$INFO[skin.string(colortext)]]$INFO[System.BatteryLevel][/COLOR]</label>
+						<visible>Integer.IsGreater(System.BatteryLevel,0)</visible>
+					</control>
+					<!-- Grafico da bateria -->
+					<control type="progress">
+						<left>75</left>
+						<top>218</top>
+						<width>668</width>
+						<height>15</height>
+						<info>System.BatteryLevel</info>
+						<visible>Integer.IsGreater(System.BatteryLevel,0)</visible>
+					</control>
+				</control>
+				<control type="image">
+					<left>825</left>
+					<top>90</top>
+					<width>750</width>
+					<height>488</height>
+					<texture>$VAR[texture_details]</texture>
+					<colordiffuse>$INFO[skin.string(colortexture)]</colordiffuse>
+					<animation effect="fade" end="55" condition="true">Conditional</animation>
+				</control>
+				<!-- Titulo Opcoes -->
+				<control type="label">
+					<left>900</left>
+					<top>117</top>
+					<width>600</width>
+					<height>45</height>
+					<font>font_list</font>
+					<label>31202</label>
+				</control>
+				<control type="image">
+					<left>900</left>
+					<top>165</top>
+					<width>600</width>
+					<height>3</height>
+					<align>left</align>
+					<texture flipx="true">divider.png</texture>
+				</control>
+				<control type="group">
+					<left>825</left>
+					<top>180</top>
+					<!-- Lista de botoes -->
+					<control type="list" id="510">
+						<left>0</left>
+						<top>0</top>
+						<width>750</width>
+						<height>495</height>
+						<onleft>SetFocus(9000)</onleft>
+						<onright>520</onright>
+						<onup>510</onup>
+						<ondown>523</ondown>
+						<itemgap>0</itemgap>
+						<pagecontrol></pagecontrol>
+						<scrolltime>200</scrolltime>
+						<visible>String.IsEqual(Container(9000).ListItem.Property(widgets),settings) + !Window.IsVisible(1171)</visible>
+						<itemlayout height="33">
+							<control type="label">
+								<left>75</left>
+								<top>0</top>
+								<width>600</width>
+								<height>33</height>
+								<label>$INFO[ListItem.Label] [COLOR=$INFO[skin.string(colortext)]]$INFO[ListItem.Label2][/COLOR]</label>
+								<font>font_button</font>
+								<textcolor>$INFO[skin.string(colorheader)]</textcolor>
+								<selectedcolor>$INFO[skin.string(colorheader)]</selectedcolor>								
+								<scroll>true</scroll>
+							</control>
+						</itemlayout>
+						<focusedlayout height="33">
+							<control type="image">
+								<left>0</left>
+								<top>0</top>
+								<width>750</width>
+								<height>33</height>
+								<texture colordiffuse="$INFO[skin.string(colortext)]">white.png</texture>
+								<visible>Control.HasFocus(510)</visible>
+							</control>
+							<control type="label">
+								<left>75</left>
+								<top>0</top>
+								<width>600</width>
+								<height>33</height>
+								<label>$INFO[ListItem.Label] [COLOR=$INFO[skin.string(colortext)]]$INFO[ListItem.Label2][/COLOR]</label>
+								<font>font_button</font>
+								<textcolor>$INFO[skin.string(colortext)]</textcolor>								
+								<scroll>true</scroll>
+								<visible>!Control.HasFocus(510)</visible>
+							</control>
+							<control type="label">
+								<left>75</left>
+								<top>0</top>
+								<width>600</width>
+								<height>33</height>
+								<label>$INFO[ListItem.Label]  $INFO[ListItem.Label2]</label>
+								<font>font_button</font>
+								<textcolor>$INFO[skin.string(colortextfocused)]</textcolor>								
+								<scroll>true</scroll>
+								<visible>Control.HasFocus(510)</visible>
+							</control>
+						</focusedlayout>
+						<content>
+							<!-- Tema -->
+							<item>
+								<label fallback="">$LOCALIZE[31748]:</label>
+								<label2>$VAR[themes_status]</label2>
+								<thumb>blanc.png</thumb>
+								<onclick>ActivateWindowAndFocus(SkinSettings, 9100,5)</onclick>
+							</item>
+						</content>
+					</control>
+					<!-- Seletor de widgets -->
+					<control type="button" id="523">
+						<left>0</left>
+						<top>327</top>
+						<onup>510</onup>
+						<ondown>9000</ondown>
+						<onleft>9000</onleft>
+						<onright>9000</onright>
+						<width>750</width>
+						<include>widgets_bar_button</include>
+						<label>31460</label>
+						<onclick>SetFocus(9000)</onclick>
+						<onclick condition="!Skin.HasSetting(kioskcode)">ActivateWindow(1171)</onclick>
+						<onclick condition="Skin.HasSetting(kioskcode) + String.IsEqual(skin.string(codestep),step3)">ActivateWindow(1171)</onclick>
+						<onclick condition="Skin.HasSetting(kioskcode) + !String.IsEqual(skin.string(codestep),step3)">ActivateWindow(1151)</onclick>
+					</control>
+				</control>
+				<control type="image">
+					<left>780</left>
+					<top>90</top>
+					<width>45</width>
+					<height>488</height>
+					<texture flipx="true" diffuse="details_back.png">shadow.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+</includes>
