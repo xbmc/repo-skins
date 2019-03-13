@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <window>
-    <visible>!window.isactive(videoosd) + !window.isactive(osdvideosettings) + !window.isactive(osdaudiosettings) + !Window.IsActive(DialogSubtitles.xml) + !Window.IsVisible(fullscreeninfo) + [VideoPlayer.IsFullscreen + !Window.IsVisible(visualisation)] + [!String.IsEmpty(Player.SeekNumeric) | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding]</visible>
+    <visible>!window.isactive(videoosd) + !window.isactive(osdvideosettings) + !window.isactive(osdaudiosettings) + !Window.IsActive(DialogSubtitles.xml) + !Window.IsVisible(fullscreeninfo) + [VideoPlayer.IsFullscreen + !Window.IsVisible(visualisation)] + [!String.IsEmpty(Player.SeekNumeric) | Player.ShowInfo | Player.Seeking | Player.DisplayAfterSeek | Player.Paused | Player.Forwarding | Player.Rewinding]</visible>
     <controls>
 		<control type="image">
 			<visible>!String.IsEmpty(player.Art(clearart))</visible>
@@ -28,6 +28,16 @@
             <colordiffuse>ffffffff</colordiffuse>
             <aspectratio>stretch</aspectratio>
         </control>
+		<control type="label">	
+			<description>Numeric Input OSD</description>
+			<posx>col-1-begin</posx>
+			<posy>row-11-begin</posy>
+			<width>24-col</width>
+	        <font>veryLarge</font>
+			<align>center</align>
+			<label>$INFO[PVR.ChannelNumberInput]</label>
+			<textcolor>textActive</textcolor>
+		</control>
         <control type="group">
             <posx>col-1-begin</posx>
             <posy>row-19-begin</posy>
@@ -70,6 +80,7 @@
                 <visible>[Player.Paused + Player.Caching] + !Player.Seeking</visible>
             </control>
             <control type="progress">
+				<visible>!VideoPlayer.Content(LiveTV)</visible>
                 <description>Progress Bar</description>
                 <posx>0</posx>
                 <posy>84</posy>
@@ -79,6 +90,16 @@
                 <midtexture colordiffuse="highlight">colors/white.png</midtexture>
                 <info>Player.Progress</info>
             </control>
+			<control type="progress">
+				<visible>VideoPlayer.Content(LiveTV)</visible>
+				<posx>0</posx>
+				<posy>84</posy>
+				<width>20-col</width>
+				<height>6</height>
+				<texturebg colordiffuse="77000000">colors/black.png</texturebg>
+				<midtexture colordiffuse="highlight">colors/white.png</midtexture>
+				<info>PVR.EpgEventProgress</info>
+			</control>
             <control type="slider" id="401">
                 <posx>0</posx>
                 <posy>84</posy>
@@ -88,37 +109,47 @@
                 <textureslidernib>colors/white.png</textureslidernib>
                 <orientation>horizontal</orientation>
             </control>
+			<control type="slider" id="403">
+				<posx>0</posx>
+				<posy>84</posy>
+				<width>20-col</width>
+				<height>6</height>
+				<texturesliderbar colordiffuse="00FFFFFF">colors/white.png</texturesliderbar>
+				<textureslidernib>colors/white.png</textureslidernib>
+				<textureslidernibfocus>colors/white.png</textureslidernibfocus>
+				<orientation>horizontal</orientation>
+				<visible>Player.SeekEnabled + !Player.ChannelPreviewActive</visible>
+			</control>
             <control type="label">
-                <visible>String.IsEqual(VideoPlayer.TVShowTitle,Player.title)</visible>
                 <posx>0</posx>
                 <posy>1-row</posy>
-                <width>15-col</width>
+                <width>13-col</width>
                 <align>left</align>
                 <font>menuTitle</font>
                 <textcolor>textActive</textcolor>
-                <label>$INFO[Player.title]</label>
+                <label>$INFO[VideoPlayer.ChannelName,, - ]$INFO[VideoPlayer.TVShowTitle,, - ]$INFO[Player.title]</label>
                 <shadowcolor></shadowcolor>
             </control>
             <control type="label">
-                <visible>!String.IsEqual(VideoPlayer.TVShowTitle,Player.title)</visible>
-                <posx>0</posx>
-                <posy>1-row</posy>
-                <width>15-col</width>
-				<height>1-row</height>
-                <align>left</align>
-                <font>menuTitle</font>
-                <textcolor>textActive</textcolor>
-                <label>$INFO[VideoPlayer.TVShowTitle,, - ]$INFO[Player.title]</label>
-                <shadowcolor></shadowcolor>
-            </control>
-            <control type="label">
+				<visible>!VideoPlayer.Content(LiveTV)</visible>
                 <posx>20-col</posx>
                 <posy>1-row</posy>
                 <width>8-col</width>
 				<align>right</align>
                 <font>itemTitle</font>
                 <textcolor>textActive</textcolor>
-                <label>[B]$INFO[Player.Time][/B] / [B]$INFO[Player.Duration][/B]</label>
+                <label>[B]$INFO[Player.Time][/B] / [B]$INFO[Player.Duration][/B]    [B]$INFO[VideoPlayer.EndTime,$LOCALIZE[31160] ,][/B]</label>
+                <shadowcolor></shadowcolor>
+            </control>		
+			<control type="label">
+				<visible>VideoPlayer.Content(LiveTV)</visible>
+                <posx>20-col</posx>
+                <posy>1-row</posy>
+                <width>8-col</width>
+				<align>right</align>
+                <font>itemTitle</font>
+                <textcolor>textActive</textcolor>
+                <label>[B]$INFO[PVR.EpgEventElapsedTime][/B] / [B]$INFO[PVR.EpgEventDuration][/B]</label>
                 <shadowcolor></shadowcolor>
             </control>
         </control>
