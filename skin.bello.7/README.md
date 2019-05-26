@@ -29,8 +29,7 @@ Bello 7 is compatible only with Kodi 18.xx Leia.
 
 ## Installation
 Bello 7 is available for download on Kodi's official repository. Please refer to [this page](http://wiki.kodi.tv/index.php?title=HOW-TO:Change_skins) for instructions.
-**Pease do not install the skin from GitHub**. I will not provide support for that. Use only the official version
-from Kodi official repo.
+**Please do not install the skin from GitHub**. I will not provide support for that. Use only the official version from Kodi official repo.
 <br><br>
 
 ## Required Add-ons
@@ -89,8 +88,17 @@ These add-ons are not required for the installation but are needed for certain s
 <br>**A:** Maybe yes, maybe not. Usually i'm pretty busy with other stuff outside of Kodi so any help or explanations they might be delay. So if you couldn't get any help from other users please be patient!. Also any requests or suggestions whom i don't agree or like will be ignored. Sorry guys, but i don't have the time to answer no & why to all of these stuff.
 
 **Q: Where i can find support for this ?**
-<br>**A:** [Bello forum at Kodi.tv community.](http://forum.kodi.tv/forumdisplay.php?fid=198)
+<br>**A:** [Bello 7 thread at Kodi.tv community forums.](https://forum.kodi.tv/showthread.php?tid=335209)
 <br><br>
+
+## Translations
+Currently Bello is available in folowing languages. Obviously it needs a lot of translations. If you want to help on translating Bello in your native language please sing up to Transifex and join the [Bello UI Translation Team](https://www.transifex.com/bello-ui/bello-translation-team/dashboard/). If your language is not added, PM me and i will add it.
+<ul><li>English</li>
+<li>Greek (Greece)</li>
+<li>Italian (Italy)</li></ul>
+<li>Russian (Russia)</li></ul>
+<li>German (Germany</li></ul>
+<br>
 
 ## Disclaimer
 <ul><li>No mouse support</li>
@@ -116,6 +124,6 @@ Any donation it's greatly appreciated!!!
 <br><br>
 
 ## Links
-[![badge-kodi](https://img.shields.io/badge/Powered_by-Kodi_18.xx-blue.svg)](https://kodi.tv/)  [![badge-kodi](https://img.shields.io/badge/Current_Version-v7.0.0-8D4DE9.svg)](https://kodi.tv/download)  [![badge-kodi](https://img.shields.io/badge/Skin-Support-red.svg)](https://forum.kodi.tv/forumdisplay.php?fid=198) [![badge-kodi](https://img.shields.io/badge/Skin-Gallery-571181.svg)](https://imgur.com/a/BMt48) [![badge-kodi](https://img.shields.io/badge/@-Fanart.tv-4949E7.svg)](https://fanart.tv/) [![badge-kodi](https://img.shields.io/badge/@-TMDB-00BECA.svg)](https://www.themoviedb.org/)  [![badge-kodi](https://img.shields.io/badge/Creative_Commons-BY--NC--SA-78DE00.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![badge-kodi](https://img.shields.io/badge/Powered_by-Kodi_18.xx-blue.svg)](https://kodi.tv/)  [![badge-kodi](https://img.shields.io/badge/Current_Version-v7.0.0-8D4DE9.svg)](https://kodi.tv/addon/skins/bello-7)  [![badge-kodi](https://img.shields.io/badge/Skin-Support-red.svg)](https://forum.kodi.tv/forumdisplay.php?fid=198) [![badge-kodi](https://img.shields.io/badge/Skin-Gallery-571181.svg)](https://imgur.com/a/BMt48) [![badge-kodi](https://img.shields.io/badge/@-Fanart.tv-4949E7.svg)](https://fanart.tv/) [![badge-kodi](https://img.shields.io/badge/@-TMDB-00BECA.svg)](https://www.themoviedb.org/)  [![badge-kodi](https://img.shields.io/badge/Creative_Commons-BY--NC--SA-78DE00.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 <!-- [![badge-kodi](https://img.shields.io/badge/Kodi-Wiki-FACE14.svg)](https://kodi.wiki/) -->
