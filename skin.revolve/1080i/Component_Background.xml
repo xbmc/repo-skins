@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
     <expression name="HasVideoInBackground">Player.HasVideo + Skin.HasSetting(Background.Video.Active) + !SlideShow.IsActive</expression>
-    <expression name="HasVisualizationInBackground">Player.HasAudio + Visualisation.Enabled + [[Skin.HasSetting(Background.Visualiser.Active) + !SlideShow.IsActive] | Skin.HasSetting(Background.Visualiser.RunHidden)]</expression>
-    <expression name="HasImageInBackground">!Player.HasMedia | [!$EXP[HasVideoInBackground] + !$EXP[HasVisualizationInBackground]]</expression>
+
+    <expression name="HasVisualization">Player.HasAudio + Visualisation.Enabled + [Skin.HasSetting(Background.Visualiser.Active) | Skin.HasSetting(Background.Visualiser.RunHidden)]</expression>
+    <expression name="HasVisualizationInBackground">$EXP[HasVisualization] + Skin.HasSetting(Background.Visualiser.Active) + !SlideShow.IsActive</expression>
+
+    <expression name="HasSlideshowInBackground">Skin.HasSetting(Background.Slideshow.Active) + Skin.String(Background.Slideshow.ImagePath) + !$EXP[HasVideoInBackground] + !$EXP[HasVisualizationInBackground]</expression>
+
+    <expression name="HasImage">!$EXP[HasVideoInBackground] + !$EXP[HasVisualizationInBackground] + !$EXP[HasSlideshowInBackground]</expression>
+    <expression name="HasImageInBackground">Skin.HasSetting(Background.Image.Active) + $EXP[HasImage] + !SlideShow.IsActive</expression>
 
     <include name="GlobalBackground">
         <definition>
             <include content="VideoBackground" />
             <include content="MusicVisualizationBackground" />
+            <include content="SlideshowBackground" />
             <include content="DefaultBackground" />
             <include content="ImageBackground" />
         </definition>
@@ -25,7 +32,7 @@
     <include name="DefaultBackground">
         <definition>
             <control type="image">
-                <visible>$EXP[HasImageInBackground]</visible>
+                <visible>$EXP[HasImage]</visible>
 
                 <include content="FullscreenDimensions" />
                 <texture colordiffuse="$VAR[BackgroundColor]">white.png</texture>
@@ -36,7 +43,7 @@
     <include name="ImageBackground">
         <definition>
             <control type="group">
-                <visible>$EXP[HasImageInBackground] + Skin.HasSetting(Background.Image.Active)</visible>
+                <visible>$EXP[HasImageInBackground]</visible>
 
                 <control type="image">
                     <include content="FadeAnimationForBackground" />
@@ -58,6 +65,32 @@
 
                 <control type="image">
                     <visible>Skin.HasSetting(Background.Image.Faded)</visible>
+                    <include content="FadeAnimationForBackground" />
+                    <include content="FullscreenDimensions" />
+                    <fadetime>WindowFadeDuration</fadetime>
+                    <texture colordiffuse="$VAR[FademaskColor]">white.png</texture>
+                </control>
+        </control>
+        </definition>
+    </include>
+
+    <include name="SlideshowBackground">
+        <definition>
+            <control type="group">
+                <visible>$EXP[HasSlideshowInBackground]</visible>
+
+                <control type="multiimage">
+                    <include content="FadeAnimationForBackground" />
+                    <include content="FullscreenDimensions" />
+                    <timeperimage>8000</timeperimage>
+                    <randomize>true</randomize>
+                    <fadetime>WindowFadeDuration</fadetime>
+                    <imagepath background="true">$INFO[Skin.String(Background.Slideshow.ImagePath)]</imagepath>
+                    <aspectratio scalediffuse="false">scale</aspectratio>
+                </control>
+
+                <control type="image">
+                    <visible>Skin.HasSetting(Background.Slideshow.Faded)</visible>
                     <include content="FadeAnimationForBackground" />
                     <include content="FullscreenDimensions" />
                     <fadetime>WindowFadeDuration</fadetime>
