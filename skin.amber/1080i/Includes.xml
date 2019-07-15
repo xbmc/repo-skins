@@ -8,22 +8,23 @@
     _1118 Custom_FullscreenMusic * go straight to visualisation when playing music
     _1119 CustomAddons * browse addons united under the same roof
 	_1120 CustomGameSettings * Game Settings from the Game OSD
-	_1121 CustomInfoSelect * Select whether to search local library or show extendedinfo for actors/directors
+	_1121 CustomInfoSelect * Select whether to search local library or show extendedinfo for actors/directors; also select delay time in seconds between fanart changes on home
     _1122 Custom_1122_Search * Search without addons, thanks to sualfred and jurialmunkey
+    _1123 Custom_1123_PausedOverlay * Overlay to show info when paused, thanks to mikeSiLVO
 
    -->
 
+    <include file="script-skinshortcuts-includes.xml"/>
     <include file="Includes_Variables.xml" />
     <include file="defaults.xml" />
-    <include file="Includes_Plexbmc.xml" />
-    <include file="Includes_Plexbmc_Jarvis.xml" />
     <include file="Includes_Horizontal_Home.xml" />
     <include file="Includes_Vertical_Home.xml" />
-    <include file="Includes_Shelf_Contents_Jarvis.xml" />
     <include file="Includes_Shelf_Contents.xml" />
     <include file="Includes_Search.xml" />
+    <include file="Includes_CustomSelect.xml" />
 
     <include file="Includes_Media.xml" />
+    <include file="Includes_List.xml" />
     <include file="View_50_List.xml" />
     <include file="View_51_Panel.xml" />
     <include file="View_52_BigList.xml" />
@@ -31,6 +32,7 @@
     <include file="View_54_LowList.xml" />
     <include file="View_55_BigPanel.xml" />
     <include file="View_56_Fanart.xml" />
+    <include file="View_501_TallList.xml" />
     <include file="View_PVR.xml" />
 
     <include name="ContentFade">
@@ -168,6 +170,20 @@
         <label></label>
         <font></font>
     </include>
+
+	<include name="DialogBackgroundFade">
+		<control type="image">
+			<left>-2000</left>
+			<top>-2000</top>
+			<width>6000</width>
+			<height>6000</height>
+            <animation effect="fade" time="300">VisibleChange</animation>
+			<animation effect="fade" start="0" end="100" time="300">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="200">WindowClose</animation>
+			<texture colordiffuse="C2FFFFFF">colors/black.png</texture>
+		</control>
+	</include>    
+    
     <include name="DimBG">
         <control type="image">
             <width>1920</width>
@@ -503,11 +519,18 @@
                 <texture border="45">dialogs/TinyDialog.png</texture>
                 <visible>Integer.IsEqual(Container(9600).NumItems,7)</visible>
             </control>
+            <control type="image">
+                <posy>92</posy>
+                <width>300</width>
+                <height>478</height>
+                <texture border="45">dialogs/TinyDialog.png</texture>
+                <visible>Integer.IsEqual(Container(9600).NumItems,8)</visible>
+            </control>            
             <control type="grouplist" id="9600">
                 <posx>26</posx>
                 <posy>116</posy>
                 <width>248</width>
-                <height>400</height>
+                <height>454</height>
                 <onleft>9000</onleft>
                 <onright>50</onright>
                 <onup>9600</onup>
@@ -522,6 +545,13 @@
                     <onclick>Container.SetViewMode(50)</onclick>
                     <visible>!Skin.HasSetting(hide.listview)</visible>
                 </control>
+                <control type="button" id="96501">
+                    <description>Set View 501</description>
+                    <include>9000SysButtons</include>
+                    <label>$LOCALIZE[32060]</label>
+                    <onclick>Container.SetViewMode(501)</onclick>
+                    <visible>!Skin.HasSetting(hide.talllistview)</visible>
+                </control>                
                 <control type="button" id="9651">
                     <description>Set View 51</description>
                     <include>9000SysButtons</include>
@@ -813,12 +843,12 @@
     </include>
 
     <include name="List_9009_Commons" description="Video Info metadata container">
-        <posy>35</posy>
+        <posy>95</posy>
         <left>640</left>
         <width>540</width>
-        <height>430</height>
-        <ondown>9000</ondown>
-        <onup>9000</onup>
+        <height>370</height>
+<!--        <ondown>9000</ondown>
+        <onup>9000</onup> -->
         <onleft>9000</onleft>
         <onright>9000</onright>
         <pagecontrol></pagecontrol>
@@ -855,7 +885,6 @@
 
     <include name="Library_Count">
         <control type="group" description="Library stats">
-            <visible>[Container(300).HasFocus(4) + Library.HasContent(movies)] | [Container(300).HasFocus(5) + Library.HasContent(tvshows)] | [Container(300).HasFocus(6) + Library.HasContent(music)] | [Container(300).HasFocus(14) + Library.HasContent(musicvideos)]</visible>
             <animation effect="slide" tween="cubic" easing="inout" start="0,0" end="0,120" time="240">Conditional</animation>
             <control type="image">
                 <posx>630r</posx>
@@ -877,7 +906,6 @@
         </control>
     </include>
 
-
     <include name="BG.Defaults">
         <width>1920</width>
         <height>1080</height>
@@ -887,485 +915,7 @@
         <aspectratio>scale</aspectratio>
     </include>
 
-    <include name="Home.Main.Menu.Custom.Item">
-        <param name="item"/>
-        <param name="customid"/>
-        <definition>
-            <item id="$PARAM[itemid]" description="Custom1">
-                <visible>!String.IsEmpty(Skin.String(CustomHome.$PARAM[customid].Path))</visible>
-                <visible>!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)</visible>
-                <label>$INFO[Skin.String(CustomHome.$PARAM[customid].Label)]</label>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome.$PARAM[customid].Background)]</thumb>
-                <onclick>$INFO[Skin.String(CustomHome.$PARAM[customid].Path)]</onclick>
-            </item>
-            <item id="$PARAM[itemid]" description="Custom1">
-                <visible>!String.IsEmpty(Skin.String(CustomHome2$PARAM[customid]Path))</visible>
-                <visible>System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)</visible>
-                <label>$INFO[Skin.String(CustomHome2$PARAM[customid]Label)]</label>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome2$PARAM[customid].Background)]</thumb>
-                <onclick>$INFO[Skin.String(CustomHome2$PARAM[customid]Path)]</onclick>
-            </item>
-        </definition>
-    </include>
 
-    <include name="Home.Main.Menu.Items">
-        <include condition="Skin.HasSetting(plexbmc)">Plexbmc.Home.Main.Menu.Items</include>
-        <item id="2" description="Addons">
-            <visible>!Skin.HasSetting(Addons.Hide)</visible>
-            <label>$LOCALIZE[24001]</label>
-            <thumb>$VAR[Addons.Art]</thumb>
-            <onclick>ActivateWindow(1119)</onclick>
-        </item>
-        <item id="3" description="Videos">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(Videos.Hide)</visible>
-            <label>$LOCALIZE[3]</label>
-            <thumb>$VAR[Videos.Art]</thumb>
-            <onclick>ActivateWindow(Videos,root)</onclick>
-        </item>        
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">21</param>
-            <param name="customid">1</param>
-        </include>        
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">22</param>
-            <param name="customid">2</param>
-        </include>
-        <item id="4" description="Movies">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(Movies.Hide)</visible>
-            <label>$LOCALIZE[20342]</label>
-            <thumb>$VAR[Movies.Art]</thumb>
-            <onclick>$VAR[MovieEntryPoint]</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">23</param>
-            <param name="customid">3</param>
-        </include>
-
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">24</param>
-            <param name="customid">4</param>
-        </include>
-        <item id="5" description="TVShows">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(TVShows.Hide)</visible>
-            <label>$LOCALIZE[20343]</label>
-            <thumb>$VAR[TVShows.Art]</thumb>
-            <onclick>$VAR[TVShowEntryPoint]</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">25</param>
-            <param name="customid">5</param>
-        </include>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">26</param>
-            <param name="customid">6</param>
-        </include>        
-        <item id="6" description="Music">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(Music.Hide)</visible>
-            <label>$LOCALIZE[2]</label>
-            <thumb>$VAR[Music.Art]</thumb>
-            <onclick>$VAR[MusicEntryPoint]</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">27</param>
-            <param name="customid">7</param>
-        </include>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">28</param>
-            <param name="customid">8</param>
-        </include>
-        <item id="14" description="MusicVideos">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(MusicVideos.Hide)</visible>
-            <label>$LOCALIZE[20389]</label>
-            <thumb>$VAR[MusicVideos.Art]</thumb>
-            <onclick>ActivateWindow(Videos,MusicVideoTitles,return)</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">29</param>
-            <param name="customid">9</param>
-        </include>        
-        <item id="12" description="Live TV">
-            <visible>PVR.HasTVChannels</visible>
-            <label>$LOCALIZE[31500]</label>
-            <thumb>$VAR[Pvr.Art]</thumb>
-            <onclick>$VAR[TVEntryPoint]</onclick>
-        </item>
-        <item id="13" description="Live Radio">
-            <visible>PVR.HasRadioChannels</visible>
-            <label>$LOCALIZE[31509]</label>
-            <thumb>$VAR[Radio.Art]</thumb>
-            <onclick>$VAR[RadioEntryPoint]</onclick>
-        </item>
-        <item id="1" description="Pictures">
-            <visible>!Skin.HasSetting(plexbmc)</visible>
-            <visible>!Skin.HasSetting(Pictures.Hide)</visible>
-            <label>$LOCALIZE[1]</label>
-            <thumb>$VAR[Pictures.Art]</thumb>
-            <onclick>ActivateWindow(Pictures,root)</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">30</param>
-            <param name="customid">10</param>
-        </include>
-        <item id="16" description="Games">
-            <visible>!Skin.HasSetting(Games.Hide)</visible>
-            <label>$LOCALIZE[15016]</label>
-            <thumb>$VAR[Games.Art]</thumb>
-            <onclick>ActivateWindow(Games,root)</onclick>
-        </item>        
-        <item id="7" description="Favorites">
-            <visible>!Skin.HasSetting(Favourites.Hide)</visible>
-            <label>$LOCALIZE[1036]</label>
-            <thumb>$VAR[Favourites.Art]</thumb>
-            <onclick>ActivateWindow(Favourites)</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">31</param>
-            <param name="customid">11</param>
-        </include>
-        <item id="8" description="DVD">
-            <visible>System.HasMediaDVD + !Skin.HasSetting(DVD.Hide)</visible>
-            <label>$LOCALIZE[427]</label>
-            <thumb>$VAR[DVD.Art]</thumb>
-            <onclick condition="System.HasMediaDvd">PlayDVD()</onclick>
-            <onclick condition="!System.HasMediaDvd">Notification($LOCALIZE[164],$LOCALIZE[219],5,DefaultIconWarning.png)</onclick>
-        </item>
-        <item id="100" description="Search">
-            <visible>!Skin.HasSetting(Search.Hide)</visible>
-            <label>$LOCALIZE[137]</label>
-            <thumb>$VAR[Search.Art]</thumb>
-            <include>search_action</include>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">32</param>
-            <param name="customid">12</param>
-        </include>		
-        <item id="15" description="Weather">
-            <visible>!Skin.HasSetting(Weather.Hide)</visible>
-            <label>$LOCALIZE[8]</label>
-            <thumb>$VAR[Weather.Art]</thumb>
-            <onclick>ActivateWindow(Weather)</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">33</param>
-            <param name="customid">13</param>
-        </include>		
-        <item id="10" description="Settings">
-            <visible>!Skin.HasSetting(SettingsLocation.Quit)</visible>
-            <label>$LOCALIZE[5]</label>
-            <thumb>$VAR[Settings.Art]</thumb>
-            <onclick>ActivateWindow(Settings)</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">34</param>
-            <param name="customid">14</param>
-        </include>		
-        <item id="11" description="Quit">
-            <visible>!Skin.HasSetting(Quit.Hide) | [Skin.HasSetting(Quit.Hide) + Skin.HasSetting(SettingsLocation.Quit)]</visible>
-            <label fallback="13009">$VAR[QuitLabel2]</label>
-            <thumb>$VAR[Quit.Art]</thumb>
-            <onclick>$VAR[QuitAction]</onclick>
-        </item>
-        <include content="Home.Main.Menu.Custom.Item">
-            <param name="itemid">35</param>
-            <param name="customid">15</param>
-        </include>		
-    </include>
-
-    <include name="Home.Submenu.Items">
-        <item id="1" description="DVD eject">
-            <visible>Container(300).HasFocus(8)</visible>
-            <label>$LOCALIZE[13391]</label>
-            <onclick>EjectTray()</onclick>
-        </item>
-        <item id="2" description="Program apps">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[0]</label>
-            <onclick condition="!System.Platform.Android">ActivateWindow(programs,addons://sources/executable/,return)</onclick>
-            <onclick condition="System.Platform.Android">ActivateWindow(programs,androidapp://sources/apps/,return)</onclick>
-        </item>
-        <item id="3" description="Video apps">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[157]</label>
-            <onclick>ActivateWindow(Videos,Addons,return)</onclick>
-        </item>
-        <item id="4" description="Music apps">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[2]</label>
-            <onclick>ActivateWindow(Music,Addons,return)</onclick>
-        </item>
-        <item id="5" description="Picture apps">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[1]</label>
-            <onclick>ActivateWindow(Pictures,Addons,return)</onclick>
-        </item>
-        <item id="60" description="Game apps">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[15016]</label>
-            <onclick>ActivateWindow(Games,Addons,return)</onclick>
-        </item>		
-        <item id="6" description="Add-on Browser">
-            <visible>Container(300).HasFocus(2)</visible>
-            <label>$LOCALIZE[10040]</label>
-            <onclick>ActivateWindow(AddonBrowser,root)</onclick>
-        </item>
-        <item id="8" description="RecentlyAddedEpisodes">
-            <visible>Container(300).HasFocus(5) + Library.HasContent(TVShows)</visible>
-            <label>$LOCALIZE[31020]</label>
-            <onclick>ActivateWindow(Videos,RecentlyAddedEpisodes,return)</onclick>
-        </item>
-        <item id="7" description="TVShow InProgress">
-            <visible>Container(300).HasFocus(5) + Library.HasContent(TVShows)</visible>
-            <label>$LOCALIZE[575]</label>
-            <onclick>ActivateWindow(Videos,InProgressTvShows,return)</onclick>
-        </item>
-        <item id="36" description="TVShowGenres">
-            <visible>Container(300).HasFocus(5) + Library.HasContent(TVShows)</visible>
-            <label>$LOCALIZE[135]</label>
-            <onclick>ActivateWindow(Videos,TvShowGenres,return)</onclick>
-        </item>
-        <item id="13" description="RecentlyAddedMovies">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(Movies)</visible>
-            <label>$LOCALIZE[31020]</label>
-            <onclick>ActivateWindow(Videos,RecentlyAddedMovies,return)</onclick>
-        </item>
-        <item id="34" description="Movies InProgress">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(Movies)</visible>
-            <label>$LOCALIZE[575]</label>
-            <onclick>ActivateWindow(Videos,special://skin/xsp/movies_inprogress.xsp,return)</onclick>
-        </item>
-        <item id="35" description="Movie Genres">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(Movies)</visible>
-            <label>$LOCALIZE[135]</label>
-            <onclick>ActivateWindow(Videos,MovieGenres,return)</onclick>
-        </item>
-        <item id="12" description="Movie Sets">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(MovieSets)</visible>
-            <label>$LOCALIZE[20434]</label>
-            <onclick>ActivateWindow(Videos,MovieSets,return)</onclick>
-        </item>
-        <item id="14" description="Movie Tags">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(Movies)</visible>
-            <label>$LOCALIZE[20459]</label>
-            <onclick>ActivateWindow(Videos,MovieTags,return)</onclick>
-        </item>
-        <item id="53" description="Movie Years">
-            <visible>Container(300).HasFocus(4) + Library.HasContent(Movies)</visible>
-            <label>$LOCALIZE[652]</label>
-            <onclick>ActivateWindow(Videos,MovieYears,return)</onclick>
-        </item>		
-        <item id="24" description="Recently added music videos">
-            <visible>Container(300).HasFocus(14) + Library.HasContent(MusicVideos)</visible>
-            <label>$LOCALIZE[31020]</label>
-            <onclick>ActivateWindow(Videos,recentlyaddedmusicvideos,return)</onclick>
-        </item>
-        <item id="28" description="MusicVideo albums">
-            <visible>Container(300).HasFocus(14) + Library.HasContent(MusicVideos)</visible>
-            <label>$LOCALIZE[132]</label>
-            <onclick>ActivateWindow(Videos,MusicVideoAlbums,return)</onclick>
-        </item>
-        <item id="29" description="MusicVideo artists">
-            <visible>Container(300).HasFocus(14) + Library.HasContent(MusicVideos)</visible>
-            <label>$LOCALIZE[133]</label>
-            <onclick>ActivateWindow(Videos,MusicVideoArtists,return)</onclick>
-        </item>
-        <item id="30" description="Recent MusicVideo">
-            <visible>Container(300).HasFocus(14) + Library.HasContent(MusicVideos)</visible>
-            <label>$LOCALIZE[31020]</label>
-            <onclick>ActivateWindow(Videos,RecentlyAddedMusicVideos,return)</onclick>
-        </item>
-        <item id="31" description="MusicVideo genres">
-            <visible>Container(300).HasFocus(14) + Library.HasContent(MusicVideos)</visible>
-            <label>$LOCALIZE[135]</label>
-            <onclick>ActivateWindow(Videos,MusicVideoGenres,return)</onclick>
-        </item>
-        <item id="21" description="Music Albums">
-            <visible>Container(300).HasFocus(6) + Library.HasContent(Music)</visible>
-            <label>$LOCALIZE[132]</label>
-            <onclick>ActivateWindow(Music,Albums)</onclick>
-        </item>
-        <item id="22" description="Music Artists">
-            <visible>Container(300).HasFocus(6) + Library.HasContent(Music)</visible>
-            <label>$LOCALIZE[133]</label>
-            <onclick>ActivateWindow(Music,Artists)</onclick>
-        </item>
-        <item id="24" description="Recently added albums">
-            <visible>Container(300).HasFocus(6) + Library.HasContent(Music)</visible>
-            <label>$LOCALIZE[31020]</label>
-            <onclick>ActivateWindow(Music,recentlyaddedalbums,return)</onclick>
-        </item>    
-        <item id="25" description="Recently played albums">
-            <visible>Container(300).HasFocus(6) + Library.HasContent(Music)</visible>
-            <label>$LOCALIZE[31021]</label>
-            <onclick>ActivateWindow(Music,recentlyplayedalbums,return)</onclick>
-        </item>
-        <item id="23" description="Top 100">
-            <visible>Container(300).HasFocus(6) + Library.HasContent(Music)</visible>
-            <label>$LOCALIZE[271]</label>
-            <onclick>ActivateWindow(Music,top100,return)</onclick>
-        </item>
-        <item id="120" description="TV/Radio Channels">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[19019]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVChannels)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioChannels)</onclick>
-        </item>
-        <item id="121" description="TV/Radio Timeline">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[22020]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVGuide)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioGuide)</onclick>
-        </item>
-        <item id="122" description="TV/Radio Recordings">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[19163]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVRecordings)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioRecordings)</onclick>
-        </item>
-        <item id="123" description="TV/Radio Timer Rules">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[19138]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVTimerRules)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioTimerRules)</onclick>
-        </item>    
-        <item id="124" description="TV/Radio Timers">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[19040]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVTimers)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioTimers)</onclick>
-        </item>
-        <item id="125" description="TV/Radio Search">
-            <visible>Container(300).HasFocus(12) | Container(300).HasFocus(13)</visible>
-            <label>$LOCALIZE[137]</label>
-            <onclick condition="Container(300).HasFocus(12)">ActivateWindow(TVSearch)</onclick>      
-            <onclick condition="Container(300).HasFocus(13)">ActivateWindow(RadioSearch)</onclick>
-        </item>
-        <item id="6" description="Playlists">
-            <visible>Container(300).HasFocus(3) | Container(300).HasFocus(4) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(14)</visible>
-            <label>$LOCALIZE[136]</label>
-            <onclick condition="!Container(300).HasFocus(6)">ActivateWindow(Videos,playlists,return)</onclick>
-            <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,playlists,return)</onclick>
-        </item>
-        <item id="10" description="Search">
-            <visible>[Container(300).HasFocus(3) + Library.HasContent(Video)] | [Container(300).HasFocus(4) + Library.HasContent(Movies)] | [Container(300).HasFocus(5)  + Library.HasContent(TVShows)] | [Container(300).HasFocus(14) + Library.HasContent(MusicVideos)] | [Container(300).HasFocus(6) + Library.HasContent(Music)]</visible>
-            <label>$LOCALIZE[137]</label>
-            <onclick condition="!Container(300).HasFocus(6) + ![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">ActivateWindow(Videos,root)</onclick>
-            <onclick condition="Container(300).HasFocus(6) + ![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">ActivateWindow(Music,root)</onclick>
-            <onclick condition="![System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)]">SendClick(8)</onclick>
-            <onclick condition="Container(300).HasFocus(4) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,movies=true)</onclick>
-            <onclick condition="Container(300).HasFocus(5) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,tvshows=true&amp;episodes=true)</onclick>
-            <onclick condition="Container(300).HasFocus(6) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,artists=true&amp;albums=true&amp;songs=true)</onclick>
-            <onclick condition="Container(300).HasFocus(14) + System.HasAddon(script.globalsearch) + Skin.HasSetting(Enable.GlobalSearch)">RunScript(script.globalsearch,musicvideos=true)</onclick>
-        </item>
-        <item id="9" description="Browse">
-            <visible>[Container(300).HasFocus(3) + Library.HasContent(Video)] | [Container(300).HasFocus(4) + Library.HasContent(Movies)] | [Container(300).HasFocus(5)  + Library.HasContent(TVShows)] | [Container(300).HasFocus(14) + Library.HasContent(MusicVideos)] | [Container(300).HasFocus(6) + Library.HasContent(Music)]</visible>
-            <label>$LOCALIZE[1024]</label>
-            <onclick condition="Container(300).HasFocus(3)">ActivateWindow(Videos,root)</onclick>
-            <onclick condition="Container(300).HasFocus(4)">ActivateWindow(Videos,Movies)</onclick>
-            <onclick condition="Container(300).HasFocus(5)">ActivateWindow(Videos,TVShows)</onclick>
-            <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,root)</onclick>
-            <onclick condition="Container(300).HasFocus(14)">ActivateWindow(Videos,MusicVideos)</onclick>
-        </item>
-        <item id="25" description="Files">
-            <visible>Container(300).HasFocus(3) | Container(300).HasFocus(4) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(14)</visible>
-            <label>$LOCALIZE[744]</label>
-            <onclick condition="!Container(300).HasFocus(6)">ActivateWindow(Videos,Files,return)</onclick>
-            <onclick condition="Container(300).HasFocus(6)">ActivateWindow(Music,Files,return)</onclick>
-        </item>
-        <item id="27" description="Master mode button">
-            <visible>Container(300).HasFocus(4) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(10) | Container(300).HasFocus(14)</visible>
-            <visible>System.HasLocks</visible>
-            <label>$VAR[MasterModeLabel]</label>
-            <onclick>mastermode</onclick>
-        </item>
-        <item id="0" description="Update Library">
-            <visible>!Skin.HasSetting(Hide.LibraryUpdate.Button)</visible>
-            <visible>Container(300).HasFocus(3) | Container(300).HasFocus(4) | Container(300).HasFocus(5) | Container(300).HasFocus(6) | Container(300).HasFocus(14)</visible>
-            <label>$VAR[ScanningLabel]</label>
-            <onclick condition="!Container(300).HasFocus(6)">UpdateLibrary(video)</onclick>
-            <onclick condition="Container(300).HasFocus(6)">UpdateLibrary(music)</onclick>
-        </item>
-        <item id="100" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(movies) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[20342]</label>
-            <onclick>RunScript(script.globalsearch,movies=true)</onclick>
-        </item>
-        <item id="101" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(tvshows) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[20343]</label>
-            <onclick>RunScript(script.globalsearch,tvshows=true)</onclick>
-        </item>
-        <item id="102" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(tvshows) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[20360]</label>
-            <onclick>RunScript(script.globalsearch,episodes=true)</onclick>
-        </item>
-        <item id="103" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(musicvideos) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[20389]</label>
-            <onclick>RunScript(script.globalsearch,musicvideos=true)</onclick>
-        </item>
-        <item id="104" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(music) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[133]</label>
-            <onclick>RunScript(script.globalsearch,artists=true)</onclick>
-        </item>
-        <item id="105" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(music) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[132]</label>
-            <onclick>RunScript(script.globalsearch,albums=true)</onclick>
-        </item>
-        <item id="106" description="Search subitems">
-            <visible>Container(300).HasFocus(100) + Library.HasContent(music) + Skin.HasSetting(Enable.GlobalSearch)</visible>
-            <label>$LOCALIZE[134]</label>
-            <onclick>RunScript(script.globalsearch,songs=true)</onclick>
-        </item>
-        <item id="41" description="Amber Settings">
-            <visible>Container(300).HasFocus(10)</visible>
-            <label>$LOCALIZE[31028]</label>
-            <onclick>ActivateWindow(SkinSettings)</onclick>
-        </item>
-        <item id="42" description="Appearance">
-            <visible>Container(300).HasFocus(10)</visible>
-            <label>$LOCALIZE[14207]</label>
-            <onclick>ActivateWindow(InterfaceSettings)</onclick>
-        </item>
-        <item id="43" description="Profiles">
-            <visible>Container(300).HasFocus(10)</visible>
-            <label>$LOCALIZE[13200]</label>
-            <onclick>ActivateWindow(Profiles)</onclick>
-        </item>
-        <item id="44" description="File Manager">
-            <visible>Container(300).HasFocus(10)</visible>
-            <label>$LOCALIZE[10003]</label>
-            <onclick>ActivateWindow(Filemanager)</onclick>
-        </item>		
-        <item id="50" description="Reload skin">
-            <visible>Container(300).HasFocus(10)</visible>
-            <label>$LOCALIZE[20183]</label>
-            <onclick>ReloadSkin()</onclick>
-        </item>
-        <!--		<item id="51" description="Debug Info">
-			<visible>Container(300).HasFocus(10)</visible>
-			<label>Debug Info</label>
-			<onclick>Skin.ToggleSetting(DebugInfo)</onclick>
-		</item>
-		<item id="52" description="Debug Grid">
-			<visible>Container(300).HasFocus(10)</visible>
-			<label>Debug Grid</label>
-			<onclick>Skin.ToggleSetting(DebugGrid)</onclick>
-		</item>
-		<item id="53" description="Debug">
-			<visible>Container(300).HasFocus(10)</visible>
-			<label>Debug</label>
-			<onclick>Skin.ToggleDebug</onclick>
-		</item> -->		
-        <include condition="System.HasAddon(plugin.video.plexbmc)">Plexbmc.Submenu.Items</include>
-    </include>
 
     <include name="WeatherItemBG">
         <param name="xoffset" default="0"/>
@@ -1677,157 +1227,6 @@
         </definition>
     </include>
 
-    <include name="PlexSettingItem">
-        <param name="itemid" />
-        <definition>
-            <item id="$PARAM[itemid]" description="Enabled">
-                <visible>!String.IsEmpty(Window(Home).Property(plexbmc.$PARAM[itemid].title)) + !Skin.HasSetting(hide.plexbmc.$PARAM[itemid].title)</visible>
-                <visible>![String.IsEqual(Window(Home).Property(plexbmc.$PARAM[itemid].shared),true)]</visible>
-                <label>$INFO[Window(Home).Property(plexbmc.$PARAM[itemid].title)]</label>
-                <label2>$LOCALIZE[449]</label2>
-                <onclick>Skin.ToggleSetting(hide.plexbmc.$PARAM[itemid].title)</onclick>
-            </item>
-            <item id="$PARAM[itemid]" description="Disabled">
-                <visible>!String.IsEmpty(Window(Home).Property(plexbmc.$PARAM[itemid].title)) + Skin.HasSetting(hide.plexbmc.$PARAM[itemid].title)</visible>
-                <visible>![String.IsEqual(Window(Home).Property(plexbmc.$PARAM[itemid].shared),true)]</visible>
-                <label>[COLOR=Grey]$INFO[Window(Home).Property(plexbmc.$PARAM[itemid].title)][/COLOR]</label>
-                <label2>$LOCALIZE[1223]</label2>
-                <onclick>Skin.ToggleSetting(hide.plexbmc.$PARAM[itemid].title)</onclick>
-            </item>
-        </definition>
-    </include>
-
-    <include name="CustomHomeSettingItem">
-        <param name="itemid" />
-        <param name="customhomeid" />
-        <definition>
-            <item id="$PARAM[itemid]">
-                <visible>!String.IsEmpty(Skin.String(CustomHome.$PARAM[customhomeid].Path))</visible>
-                <label>$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Label)]</label>
-                <label2>$LOCALIZE[305]</label2>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Background)]</thumb>
-                <onclick condition="System.HasAddon(script.favourites)">RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
-                <onclick condition="!System.HasAddon(script.favourites)">InstallAddon(script.favourites)</onclick>
-                <visible>!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)</visible>
-            </item>
-            <item id="$PARAM[itemid]">
-                <visible>String.IsEmpty(Skin.String(CustomHome.$PARAM[customhomeid].Path))</visible>
-                <label>[COLOR=Grey]$LOCALIZE[504][/COLOR]</label>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome.$PARAM[customhomeid].Background)]</thumb>
-                <onclick condition="System.HasAddon(script.favourites)">RunScript(script.favourites,changetitle=true&amp;property=CustomHome.$PARAM[customhomeid])</onclick>
-                <onclick condition="!System.HasAddon(script.favourites)">InstallAddon(script.favourites)</onclick>
-                <visible>!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)</visible>
-            </item>
-            <item id="$PARAM[itemid]">
-                <visible>!String.IsEmpty(Skin.String(CustomHome2$PARAM[customhomeid]Path))</visible>
-                <label>$INFO[Skin.String(CustomHome2$PARAM[customhomeid]Label)]</label>
-                <label2>$LOCALIZE[305]</label2>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome2$PARAM[customhomeid].Background)]</thumb>
-                <onclick>RunScript(script.skinshortcuts,type=shortcuts&amp;custom=True&amp;showNone=True&amp;skinLabel=CustomHome2$PARAM[customhomeid]Label&amp;skinAction=CustomHome2$PARAM[customhomeid]Path&amp;skinList=CustomHome2$PARAM[customhomeid]List)</onclick>
-                <visible>System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)</visible>
-            </item>
-            <item id="$PARAM[itemid]">
-                <visible>String.IsEmpty(Skin.String(CustomHome2$PARAM[customhomeid]Path))</visible>
-                <label>[COLOR=Grey]$LOCALIZE[504][/COLOR]</label>
-                <thumb fallback="special://skin/backgrounds/Default.jpg">$INFO[Skin.String(CustomHome2$PARAM[customhomeid].Background)]</thumb>
-                <onclick>RunScript(script.skinshortcuts,type=shortcuts&amp;custom=True&amp;showNone=True&amp;skinLabel=CustomHome2$PARAM[customhomeid]Label&amp;skinAction=CustomHome2$PARAM[customhomeid]Path&amp;skinList=CustomHome2$PARAM[customhomeid]List)</onclick>
-                <visible>System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)</visible>
-            </item>
-        </definition>
-    </include>
-
-    <include name="HomeSettingItem">
-        <param name="itemid"/>
-        <param name="itemlabel"/>
-        <param name="area"/>
-        <param name="itemvisibility">true</param>
-        <definition>
-            <item id="$PARAM[itemid]">
-                <visible>$PARAM[itemvisibility]</visible>
-                <visible>!Skin.HasSetting($PARAM[area].Hide)</visible>
-                <label>$PARAM[itemlabel]</label>
-                <label2>$LOCALIZE[305]</label2>
-                <thumb fallback="special://skin/backgrounds/$PARAM[area].jpg">$INFO[Skin.String($PARAM[area].Background)]</thumb>
-                <onclick>Skin.ToggleSetting($PARAM[area].Hide)</onclick>
-            </item>
-            <item id="$PARAM[itemid]">
-                <visible>$PARAM[itemvisibility]</visible>            
-                <visible>Skin.HasSetting($PARAM[area].Hide)</visible>
-                <label>[COLOR=Grey]$PARAM[itemlabel][/COLOR]</label>
-                <label2>$LOCALIZE[1223]</label2>
-                <thumb fallback="special://skin/backgrounds/$PARAM[area].jpg">$INFO[Skin.String($PARAM[area].Background)]</thumb>
-                <onclick>Skin.ToggleSetting($PARAM[area].Hide)</onclick>
-            </item>
-        </definition>
-    </include>
-
-    <include name="SetBackgroundImage">
-        <param name="operation"/>
-        <definition>
-            <width>192</width>
-            <align>center</align>
-            <height>60</height>
-            <onclick condition="Container(9103).HasFocus(0)">Skin.$PARAM[operation](Default.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(1)">Skin.$PARAM[operation](Pictures.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(2)">Skin.$PARAM[operation](Addons.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(3)">Skin.$PARAM[operation](Videos.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(4)">Skin.$PARAM[operation](Movies.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(5)">Skin.$PARAM[operation](TVShows.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(6)">Skin.$PARAM[operation](Music.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(7)">Skin.$PARAM[operation](MusicVideos.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(8)">Skin.$PARAM[operation](TV.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(9)">Skin.$PARAM[operation](Radio.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(10)">Skin.$PARAM[operation](Favourites.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(11)">Skin.$PARAM[operation](Weather.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(12)">Skin.$PARAM[operation](DVD.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(13)">Skin.$PARAM[operation](Settings.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(14)">Skin.$PARAM[operation](Quit.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(16)">Skin.$PARAM[operation](Games.Background)</onclick>
-
-            <onclick condition="Container(9103).HasFocus(21) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.1.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(22) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.2.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(23) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.3.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(24) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.4.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(25) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.5.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(26) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.6.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(27) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.7.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(28) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.8.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(29) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.9.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(30) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.10.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(31) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.11.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(32) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.12.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(33) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.13.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(34) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.14.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(35) + [!System.HasAddon(script.skinshortcuts) | !Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome.15.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(21) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome21.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(22) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome22.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(23) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome23.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(24) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome24.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(25) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome25.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(26) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome26.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(27) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome27.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(28) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome28.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(29) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome29.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(30) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome210.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(31) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome211.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(32) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome212.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(33) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome213.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(34) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome214.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(35) + [System.HasAddon(script.skinshortcuts) + Skin.HasSetting(Enable.SkinShortcuts)]">Skin.$PARAM[operation](CustomHome215.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(60)">Skin.$PARAM[operation](Plexbmc.0.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(61)">Skin.$PARAM[operation](Plexbmc.1.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(62)">Skin.$PARAM[operation](Plexbmc.2.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(63)">Skin.$PARAM[operation](Plexbmc.3.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(64)">Skin.$PARAM[operation](Plexbmc.4.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(65)">Skin.$PARAM[operation](Plexbmc.5.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(66)">Skin.$PARAM[operation](Plexbmc.6.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(67)">Skin.$PARAM[operation](Plexbmc.7.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(68)">Skin.$PARAM[operation](Plexbmc.8.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(69)">Skin.$PARAM[operation](Plexbmc.9.Background)</onclick>
-            <onclick condition="Container(9103).HasFocus(70)">Skin.$PARAM[operation](Plexbmc.10.Background)</onclick>
-        </definition>
-    </include>
-
     <include name="PanelTemplate">
         <param name="lowpanel">false</param>
         <param name="top"></param>
@@ -1918,7 +1317,7 @@
                         <align>justify</align>
                         <label>[CR]$PARAM[plot]</label>
                         <font>InfoPlot</font>
-                        <autoscroll delay="3000" time="2000" repeat="10000"></autoscroll>
+                        <autoscroll delay="3000" time="2000" repeat="10000">Skin.HasSetting(AutoScroll)</autoscroll>
                     </control>
                     <control type="panel" id="4002">
                         <visible>$PARAM[subcontent_visible]</visible>
@@ -1981,6 +1380,158 @@
             </control>
         </definition>
     </include>
+
+    <include name="PanelTemplateTall">
+        <param name="top"></param>
+        <param name="left">60</param>
+        <param name="height"></param>
+        <param name="width">870</param>
+        <param name="heading"></param>
+        <param name="subheading"></param>
+        <param name="subheading2"></param>
+        <param name="subheading2_visible">false</param>
+        <param name="plotgrouptop"></param>
+        <param name="footertop">845</param>
+        <param name="flagstop"></param>
+        <param name="plot">$INFO[ListItem.Plot]</param>
+        <param name="subcontent_label">$INFO[ListItem.Label]$INFO[ListItem.Year,[COLOR Highlight]  (,)[/COLOR]]</param>
+        <param name="subcontent_path">$INFO[ListItem.Path]</param>
+        <param name="subcontent_sortby">year</param>
+        <param name="subcontent_sortorder">descending</param>
+        <param name="subcontent_visible">ListItem.IsCollection + String.IsEmpty(ListItem.Plot)</param>
+        <param name="subcontent_image_visible">true</param>
+        <param name="subcontent_image_texture">$VAR[Overlay]</param>
+        <param name="footer"></param>
+        <param name="visibility"></param>
+        <param name="showfooter">true</param>
+        <param name="showflags">true</param>
+        <definition>
+            <control type="group" id="4000" description="Media Info Panel">
+                <include>OpenClose</include>
+                <visible>$PARAM[visibility]</visible>
+                <visible>!Container.Content(files)</visible>
+                <posx>$PARAM[left]</posx>
+                <posy>$PARAM[top]</posy>
+                <width>$PARAM[width]</width>
+                <control type="label" description="Title Label">
+                    <top>0</top>
+                    <width>$PARAM[width]</width>
+                    <height>60</height>
+                    <aligny>center</aligny>
+                    <textcolor>Highlight</textcolor>
+                    <font>font20_title</font>
+                    <wrapmultiline>true</wrapmultiline>
+                    <label>$PARAM[heading]</label>
+                </control>
+                <control type="label" description="Subheading">
+                    <top>60</top>
+                    <height>80</height>
+                    <width>$PARAM[width]</width>
+                    <font>font20_title</font>
+                    <label>[B]$PARAM[subheading][/B]</label>
+                    <aligny>center</aligny>
+                    <wrapmultiline>true</wrapmultiline>
+                </control>
+                <control type="label" description="Subheading2">
+                    <top>140</top>
+                    <visible>$PARAM[subheading2_visible]</visible>
+                    <height>80</height>
+                    <width>$PARAM[width]</width>
+                    <font>ListDetails</font>
+                    <label>[B]$PARAM[subheading2][/B]</label>
+                    <aligny>center</aligny>
+                </control>
+                <control type="group">
+                    <width>$PARAM[width]</width>
+                    <height>$PARAM[height]</height>
+                    <top>$PARAM[plotgrouptop]</top>
+                    <control type="textbox" id="4001">
+                        <align>justify</align>
+                        <label>$PARAM[plot]</label>
+                        <font>InfoPlot</font>
+                        <autoscroll delay="3000" time="2000" repeat="10000">Skin.HasSetting(AutoScroll)</autoscroll>
+                    </control>
+                    <control type="panel" id="4002">
+                        <visible>$PARAM[subcontent_visible]</visible>
+                        <visible>!ListItem.IsParentFolder</visible>
+                        <orientation>vertical</orientation>
+                        <focusedlayout height="40" width="$PARAM[width]">
+                        </focusedlayout>
+                        <itemlayout height="40" width="$PARAM[width]">
+                            <control type="image">
+                                <top>5</top>
+                                <width>30</width>
+                                <height>30</height>
+                                <visible>$PARAM[subcontent_image_visible]</visible>
+                                <texture>$PARAM[subcontent_image_texture]</texture>
+                            </control>
+                            <control type="label">
+                                <left>40</left>
+                                <height>40</height>
+                                <width>$PARAM[width]</width>
+                                <aligny>center</aligny>
+                                <label>$PARAM[subcontent_label]</label>
+                                <font>ListDetails</font>
+                                <scrollspeed>25</scrollspeed>
+                                <visible>$PARAM[subcontent_image_visible]</visible>
+                            </control>
+                            <control type="label">
+                                <left>0</left>
+                                <height>40</height>
+                                <width>$PARAM[width]</width>
+                                <aligny>center</aligny>
+                                <label>$PARAM[subcontent_label]</label>
+                                <font>ListDetails</font>
+                                <scrollspeed>25</scrollspeed>
+                                <visible>!$PARAM[subcontent_image_visible]</visible>
+                            </control>
+                        </itemlayout>
+                        <content sortby="$PARAM[subcontent_sortby]" sortorder="$PARAM[subcontent_order]">$PARAM[subcontent_path]</content>
+                    </control>
+                </control>                
+                <control type="label" description="Footer">
+                    <top>$PARAM[footertop]</top>
+                    <visible>$PARAM[showfooter]</visible>
+                    <width>$PARAM[width]</width>
+                    <height>75</height>
+                    <font>ListDetails</font>
+                    <label>$PARAM[footer]</label>
+                    <wrapmultiline>true</wrapmultiline>
+                    <aligny>top</aligny>
+                </control>
+            </control>
+        </definition>
+    </include>
+    
+    <include name="MediaFlags">
+        <param name="top"></param>
+        <param name="left"></param>
+        <param name="height"></param>
+        <param name="width"></param>
+        <param name="visibility">true</param>
+        <param name="showratingbadge"></param>
+        <definition>
+            <control type="grouplist" description="Flags">
+                <top>$PARAM[top]</top>
+                <left>$PARAM[left]</left>
+                <visible>$PARAM[visibility]</visible>
+                <include>ContentFade</include>
+                <width>$PARAM[width]</width>
+                <height>$PARAM[height]</height>
+                <itemgap>20</itemgap>
+                <orientation>horizontal</orientation>
+                <align>center</align>
+                <include content="MediaFlagItems">
+                    <param name="diffuse">White</param>
+                    <param name="showratingbadge">$PARAM[showratingbadge]</param>
+                </include>
+            </control>
+        </definition>
+    </include>    
+
+
+
+
 
     <include name="HolidaySub">
         <param name="type">snow</param>
@@ -2250,7 +1801,6 @@
         </definition>
     </include>
 
-
     <include name="TVNextAiredPanelLayout">
         <left>500</left>
         <top>120</top>
@@ -2432,7 +1982,6 @@
         </focusedlayout>
     </include>
 
-
     <include name="TouchButtons">
         <control type="grouplist" id="700">
             <orientation>horizontal</orientation>
@@ -2473,9 +2022,6 @@
             </control>
         </control>
     </include>
-
-
-
 
     <!-- The following has been adapted from MikeSiLVO, to be able to have a custom onclick for cast items in DialogVideoInfo.xml -->
 
@@ -2692,5 +2238,220 @@
     </include>    
 
     <!-- End adaptations from MikeSiLVO -->    
+
+
+    <include name="ExtendedSet">
+        <control type="panel" id="90150">
+            <width>1180</width>
+            <height>410</height>
+            <onleft>90150</onleft>
+            <onright>90150</onright>
+            <onup>9000</onup>
+            <scrolltime>200</scrolltime>            
+            <orientation>horizontal</orientation>
+            <onclick>noop</onclick>
+            <oninfo>Dialog.Close(1127)</oninfo>
+            <include content="SetLayout">
+                <param name="viewid">90150</param>
+            </include>
+            <content sortby="year" target="videos">videodb://movies/sets/$INFO[ListItem.DBID]</content>
+        </control>
+    </include>
+
+
+<!-- The following also adapted from MikeSiLVO -->
+
+
+	<include name="FanartTitleHorizontal">
+		<control type="button">
+			<top>1045</top>
+			<width min="0" max="450">auto</width>
+			<font>font22</font>
+			<textcolor>FFDFDFDF</textcolor>
+			<shadowcolor />
+			<aligny>top</aligny>
+			<textoffsetx>30</textoffsetx>
+			<textoffsety>5</textoffsety>
+			<label>$VAR[FanartTitleVar]</label>
+			<texturenofocus border="30,0,30,30">text_shadow.png</texturenofocus>
+            <include>ContentFade</include>
+			<visible>[String.IsEqual(Container(300).ListItem.Property(background),playlistBackground) | String.EndsWith(Container(300).ListItem.Property(background),.Fanart)] + !String.IsEqual(Container(300).ListItem.Property(background),Weather.Fanart)</visible>
+		</control>
+	</include>
+    
+	<include name="FanartTitleVertical">
+		<control type="button">
+			<top>1045</top>
+            <left>1400</left>
+			<width min="0" max="450">auto</width>
+			<font>font22</font>
+			<textcolor>FFDFDFDF</textcolor>
+			<shadowcolor />
+			<aligny>top</aligny>
+			<textoffsetx>30</textoffsetx>
+			<textoffsety>5</textoffsety>
+			<label>$VAR[FanartTitleVar]</label>
+			<texturenofocus border="30,0,30,30">text_shadow.png</texturenofocus>
+            <include>ContentFade</include>
+			<visible>[String.IsEqual(Container(300).ListItem.Property(background),playlistBackground) | String.EndsWith(Container(300).ListItem.Property(background),.Fanart)] + !String.IsEqual(Container(300).ListItem.Property(background),Weather.Fanart)</visible>
+		</control>
+	</include>    
+
+	<!-- Fanart Time Per Image -->
+	<include name="FanartTimePerImage5">
+		<timeperimage>5000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage6">
+		<timeperimage>6000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage7">
+		<timeperimage>7000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage8">
+		<timeperimage>8000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage9">
+		<timeperimage>9000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage10">
+		<timeperimage>10000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage15">
+		<timeperimage>15000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage20">
+		<timeperimage>20000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage30">
+		<timeperimage>30000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage60">
+		<timeperimage>60000</timeperimage>
+	</include>
+	<include name="FanartTimePerImage90">
+		<timeperimage>90000</timeperimage>
+	</include>
+    
+	<include name="MultiImageTime">
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),5)">FanartTimePerImage5</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),6)">FanartTimePerImage6</include>
+		<include condition="String.IsEmpty(Skin.String(FanartTimePerImage))">FanartTimePerImage7</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),8)">FanartTimePerImage8</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),9)">FanartTimePerImage9</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),10)">FanartTimePerImage10</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),15)">FanartTimePerImage15</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),20)">FanartTimePerImage20</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),30)">FanartTimePerImage30</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),60)">FanartTimePerImage60</include>
+		<include condition="String.IsEqual(Skin.String(FanartTimePerImage),90)">FanartTimePerImage90</include>
+	</include>    
+
+	<include name="PlayListStatsList">
+		<control type="list" id="43260">
+			<visible>String.IsEqual(Container(300).ListItem.Property(InfoLine),movieplaylist) | String.IsEqual(Container(300).ListItem.Property(InfoLine),tvshowplaylist) | String.IsEqual(Container(300).ListItem.Property(InfoLine),episodeplaylist) | String.IsEqual(Container(300).ListItem.Property(InfoLine),musicvideoplaylist)</visible>
+			<width>1</width>
+			<height>1</height>
+			<focusedlayout />
+			<itemlayout />
+			<content>plugin://service.library.data.provider?type=playliststats&amp;id=$INFO[Container(300).ListItem.Property(Path)]</content>
+		</control>
+	</include>
+
+    <include name="ClearWidgetNavProperties1">
+        <onunload>ClearProperty(WidgetFocus1,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus2,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus3,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus4,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus5,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus6,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus7,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus8,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus9,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus10,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus11,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus12,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus13,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus14,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus15,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus16,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus17,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus18,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus19,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus20,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus21,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus22,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus23,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus24,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus25,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus26,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus27,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus28,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus29,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus30,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus31,Home)</onunload>
+        <onunload>ClearProperty(WidgetFocus32,Home)</onunload>
+    </include>
+    
+    <include name="ClearWidgetNavProperties2">
+        <onload>ClearProperty(WidgetFocus1)</onload>
+        <onload>ClearProperty(WidgetFocus2)</onload>
+        <onload>ClearProperty(WidgetFocus3)</onload>
+        <onload>ClearProperty(WidgetFocus4)</onload>
+        <onload>ClearProperty(WidgetFocus5)</onload>
+        <onload>ClearProperty(WidgetFocus6)</onload>
+        <onload>ClearProperty(WidgetFocus7)</onload>
+        <onload>ClearProperty(WidgetFocus8)</onload>
+        <onload>ClearProperty(WidgetFocus9)</onload>
+        <onload>ClearProperty(WidgetFocus10)</onload>
+        <onload>ClearProperty(WidgetFocus11)</onload>
+        <onload>ClearProperty(WidgetFocus12)</onload>
+        <onload>ClearProperty(WidgetFocus13)</onload>
+        <onload>ClearProperty(WidgetFocus14)</onload>
+        <onload>ClearProperty(WidgetFocus15)</onload>
+        <onload>ClearProperty(WidgetFocus16)</onload>
+        <onload>ClearProperty(WidgetFocus17)</onload>
+        <onload>ClearProperty(WidgetFocus18)</onload>
+        <onload>ClearProperty(WidgetFocus19)</onload>
+        <onload>ClearProperty(WidgetFocus20)</onload>
+        <onload>ClearProperty(WidgetFocus21)</onload>
+        <onload>ClearProperty(WidgetFocus22)</onload>
+        <onload>ClearProperty(WidgetFocus23)</onload>
+        <onload>ClearProperty(WidgetFocus24)</onload>
+        <onload>ClearProperty(WidgetFocus25)</onload>
+        <onload>ClearProperty(WidgetFocus26)</onload>
+        <onload>ClearProperty(WidgetFocus27)</onload>
+        <onload>ClearProperty(WidgetFocus28)</onload>
+        <onload>ClearProperty(WidgetFocus29)</onload>
+        <onload>ClearProperty(WidgetFocus30)</onload>
+        <onload>ClearProperty(WidgetFocus31)</onload>
+        <onload>ClearProperty(WidgetFocus32)</onload>
+    </include>    
+
+    <include name="UpDownArrows">
+        <param name="id" default="900031" />
+        <definition>
+            <control type="group">
+                <left>-20</left>
+                <posy>440</posy>
+                <align>center</align>
+                <visible>Container($PARAM[id]).HasNext</visible>
+                <control type="group">
+                    <width>22</width>
+                    <control type="image">
+                        <width>20</width>
+                        <height>20</height>
+                        <texture colordiffuse="Highlight" flipy="false">icons/arrowdown.png</texture>
+                    </control>
+                    <control type="image">
+                        <top>10</top>
+                        <width>20</width>
+                        <height>20</height>
+                        <texture colordiffuse="Highlight" flipy="false">icons/arrowdown.png</texture>
+                    </control>
+                </control>
+            </control>
+        </definition>
+    </include>
+
 
 </includes>
