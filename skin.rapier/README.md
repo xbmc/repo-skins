@@ -19,7 +19,7 @@ Can be installed through the official Kodi repository or Gade's Development Repo
 By installing Gade's Development Repository you will always automatically receive the newest and freshest development updates of Rapier and my other add-ons. You will still automatically get the official updates.  
 To install this repository, you must do so by following these steps:  
 
-1. [Download the zip file containing Gade's Add-on Repository from Github](https://github.com/gade01/repository.gade/raw/master/krypton/repository.gade/repository.gade-2.0.0.zip)   
+1. [Download the zip file containing Gade's Add-on Repository from Github](https://github.com/gade01/repository.gade/raw/master/leia/repository.gade/repository.gade-2.1.0.zip)   
 2. Start Kodi   
 3. Navigate to settings   
 4. Add-ons   

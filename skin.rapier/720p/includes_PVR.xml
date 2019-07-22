@@ -50,14 +50,15 @@
 
 	<variable name="LiveTVListInfoItemLabel">
 		<value condition="Window.IsActive(MyPVRChannels.xml)">$INFO[ListItem.ChannelNumberLabel]$INFO[ListItem.ChannelName,.  ]</value>
-		<value condition="Window.IsActive(MyPVRRecordings.xml) + !String.IsEmpty(ListItem.EpisodeName) + !String.IsEqual(ListItem.Season,0)">$INFO[ListItem.Label]$VAR[SeasonEpisodesNumberVar, (,. ]$INFO[ListItem.EpisodeName,,)]</value>
-		<value condition="Window.IsActive(MyPVRRecordings.xml) + !String.IsEqual(ListItem.Season,0)">$INFO[ListItem.Label]$VAR[SeasonEpisodesNumberVar, (,)]</value>
-		<value condition="Window.IsActive(MyPVRRecordings.xml) + String.IsEqual(ListItem.Season,0)">$INFO[ListItem.Label]</value>
+		<value condition="Window.IsActive(MyPVRRecordings.xml) + !String.IsEmpty(ListItem.EpisodeName) + ![String.IsEmpty(ListItem.Season) + String.IsEmpty(ListItem.Episode)]">$INFO[ListItem.Label]$VAR[SeasonEpisodesNumberVar, (,. ]$INFO[ListItem.EpisodeName,,)]</value>
+		<value condition="Window.IsActive(MyPVRRecordings.xml) + ![String.IsEmpty(ListItem.Season) + String.IsEmpty(ListItem.Episode)]">$INFO[ListItem.Label]$VAR[SeasonEpisodesNumberVar, (,)]</value>
+		<value condition="Window.IsActive(MyPVRRecordings.xml) + !String.IsEmpty(ListItem.EpisodeName)">$INFO[ListItem.Label]$INFO[ListItem.EpisodeName, (,)]</value>
+		<value condition="Window.IsActive(MyPVRRecordings.xml)">$INFO[ListItem.Label]</value>
 	</variable>
 
 	<variable name="LiveTVListInfoItemLabel2">
-		<value condition="Window.IsActive(MyPVRChannels.xml) + !String.IsEqual(ListItem.Season,0)">$INFO[ListItem.Title]$VAR[SeasonEpisodesNumberVar, (,)]</value>
-		<value condition="Window.IsActive(MyPVRChannels.xml) + String.IsEqual(ListItem.Season,0)">$INFO[ListItem.Title]</value>
+		<value condition="Window.IsActive(MyPVRChannels.xml) + ![String.IsEmpty(ListItem.Season) + String.IsEmpty(ListItem.Episode)]">$INFO[ListItem.Title]$VAR[SeasonEpisodesNumberVar, (,)]</value>
+		<value condition="Window.IsActive(MyPVRChannels.xml)">$INFO[ListItem.Title]</value>
 		<value condition="Window.IsActive(MyPVRRecordings.xml)">$INFO[ListItem.Label2]</value>
 	</variable>
 	
@@ -628,20 +629,20 @@
 						<aligny>center</aligny>
 						<font>FullMediaInfoFont</font>
 						<textcolor>MediaInfoItemColor</textcolor>
-						<label>$INFO[ListItem.Comment]$INFO[ListItem.Timertype,: ,]</label>
+						<label>$LOCALIZE[803]: $INFO[ListItem.Timertype]$INFO[ListItem.Comment, (,)]</label>
 					</control>
 				</control>
 
 				<control type="textbox">
-					<description>Timer</description>
+					<description>Plot</description>
 					<top>55</top>
 					<width>980</width>
-					<height>68</height>
+					<height>75</height>
 					<font>MediaInfoDescFont</font>
 					<textcolor>MediaInfoColor</textcolor>
 					<shadowcolor>ShadowColor</shadowcolor>
 					<align>justify</align>
-					<label>$INFO[PVR.NextTimer]</label>
+					<label fallback="31203">$INFO[ListItem.EpgEventTitle]$INFO[ListItem.EpisodeName, (,)][CR]$INFO[ListItem.Plot]</label>
 					<wrapmultiline>true</wrapmultiline>
 					<autoscroll time="2000" delay="6000" repeat="10000">!Skin.HasSetting(DoNotAutoScrollPlot)</autoscroll>
 					<visible>!Skin.HasSetting(HideLiveTVPlot) + !Container.OnNext + !Container.OnPrevious</visible>
@@ -661,6 +662,7 @@
 					<textcolor>MediaInfoTitleColor</textcolor>
 					<label>$LOCALIZE[19026]</label>
 				</control>
+				
 				<control type="textbox">
 					<description>Timer</description>
 					<top>55</top>
@@ -670,10 +672,10 @@
 					<textcolor>MediaInfoColor</textcolor>
 					<shadowcolor>ShadowColor</shadowcolor>
 					<align>justify</align>
-					<label fallback="31215">$INFO[PVR.NextTimer]</label>
+					<label>$LOCALIZE[31215]</label>
 					<wrapmultiline>true</wrapmultiline>
 					<autoscroll time="2000" delay="6000" repeat="10000">!Skin.HasSetting(DoNotAutoScrollPlot)</autoscroll>
-					<visible>!Skin.HasSetting(HideLiveTVPlot) + !Container.OnNext + !Container.OnPrevious</visible>
+					<visible>String.IsEmpty(PVR.NextTimer)</visible>
 				</control>
 			</control>
 		</control>
@@ -760,6 +762,33 @@
 			</control>
 		</control>
 	</include>
+	
+	<include name="LiveTVColumnChannelIcon">
+		<control type="group">
+			<visible>![String.IsEqual(ListItem.Label,$LOCALIZE[19026]) | String.IsEqual(ListItem.Label,$LOCALIZE[19140])]</visible>
+			
+			<control type="label">
+				<description>Channel Name</description>
+				<left>50</left>
+				<width>158</width>
+				<height>38</height>
+				<include>LiveTVColumnChannelLabel</include>
+				<label>$INFO[ListItem.ChannelName]</label>
+				<visible>![Skin.HasSetting(ShowPVRGuideChannelIcons) + !String.IsEmpty(ListItem.Icon)]</visible>
+			</control>
+			
+			<control type="image">
+				<description>Channel Icon</description>
+				<left>49</left>
+				<width>169</width>
+				<height>38</height>
+				<aspectratio aligny="center" align="left">keep</aspectratio>
+				<texture background="true">$INFO[ListItem.Icon]</texture>
+				<bordersize>2</bordersize>
+				<visible>Skin.HasSetting(ShowPVRGuideChannelIcons) + !String.IsEmpty(ListItem.Icon)</visible>
+			</control>
+		</control>
+	</include>
 
 	<include name="LiveTVColumnLayoutArea">
 		<!-- LiveTVSearchView -->
@@ -771,7 +800,6 @@
 			<height>22</height>
 			<texture>$VAR[PVRStatusIcon]</texture>
 			<colordiffuse>WhiteColor</colordiffuse>
-			<animation effect="slide" end="-271,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 			<visible>ListItem.HasTimer | ListItem.HasTimerSchedule | ListItem.IsRecording | ListItem.HasRecording</visible>
 		</control>
 		
@@ -784,32 +812,12 @@
 			<label>$INFO[ListItem.ChannelNumberLabel]</label>
 		</control>
 
-		<control type="label">
-			<description>Channel Name</description>
-			<left>50</left>
-			<width>158</width>
-			<height>38</height>
-			<include>LiveTVColumnChannelLabel</include>
-			<label>$INFO[ListItem.ChannelName]</label>
-			<visible>![Skin.HasSetting(ShowPVRGuideChannelIcons) + !String.IsEmpty(ListItem.Icon)]</visible>
-		</control>
-		
-		<control type="image">
-			<description>Channel Icon</description>
-			<left>49</left>
-			<width>169</width>
-			<height>38</height>
-			<aspectratio aligny="center" align="left">keep</aspectratio>
-			<texture background="true">$INFO[ListItem.Icon]</texture>
-			<bordersize>2</bordersize>
-			<visible>Skin.HasSetting(ShowPVRGuideChannelIcons) + !String.IsEmpty(ListItem.Icon)</visible>
-		</control>
+		<include>LiveTVColumnChannelIcon</include>
 
 		<control type="label">
 			<description>Title</description>
 			<left>230</left>
-			<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormalWidth3</include>
-			<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreenWidth3</include>
+			<width>475</width>
 			<height>38</height>
 			<include>LiveTVColumnItemLabel</include>
 			<label>$INFO[ListItem.Title]</label>
@@ -819,8 +827,7 @@
 		<control type="label">
 			<description>Title</description>
 			<left>230</left>
-			<include condition="String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideNormalWidth3</include>
-			<include condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">TVGuideFullscreenWidth3</include>
+			<width>475</width>
 			<height>38</height>
 			<include>LiveTVColumnItemLabel</include>
 			<label>$INFO[ListItem.Label]</label>
@@ -829,58 +836,40 @@
 
 		<control type="label">
 			<description>Time</description>
-			<left>772</left>
+			<left>776</left>
 			<width>195</width>
 			<height>38</height>
 			<include>LiveTVColumnItemLabel</include>
 			<label>$INFO[ListItem.StartTime]$INFO[ListItem.EndTime, - ]</label>
-			<animation effect="slide" end="-271,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 		</control>
 
 		<control type="label">
 			<description>Date</description>
-			<left>961</left>
+			<left>995</left>
 			<width>195</width>
 			<height>38</height>
 			<include>LiveTVColumnItemLabel</include>
 			<label>$INFO[ListItem.StartDate]</label>
-			<animation effect="slide" end="-271,0" condition="!String.IsEmpty(Window(home).Property(TVGuideFullscreen))">Conditional</animation>
 		</control>
 	</include>
+
+	<variable name="LiveTVTimerIcon">
+		<value condition="String.IsEqual(ListItem.Comment,$LOCALIZE[305])">pvr/status_enabled.png</value>
+		<value condition="String.IsEqual(ListItem.Comment,$LOCALIZE[19162])">pvr/status_recording_alt.png</value>
+		<value condition="String.IsEqual(ListItem.Comment,$LOCALIZE[19256])">pvr/status_none.png</value>
+		<value condition="String.IsEqual(ListItem.Comment,$LOCALIZE[13106])">pvr/status_error.png</value>
+	</variable>
 
 	<include name="LiveTVColumnLayoutArea3">
 		<!-- LiveTVTimersView -->
 		<control type="image">
-			<description>Disabled</description>
+			<description>Icon</description>
 			<left>730</left>
 			<top>8</top>
 			<width>22</width>
 			<height>22</height>
-			<texture>pvr/status_none.png</texture>
+			<texture>$VAR[LiveTVTimerIcon]</texture>
 			<colordiffuse>WhiteColor</colordiffuse>
-			<visible>!String.IsEqual(ListItem.Label,$LOCALIZE[19026]) + !String.IsEqual(ListItem.Comment,$LOCALIZE[305]) + !String.IsEqual(ListItem.Comment,$LOCALIZE[19162]) + ![Window.IsActive(TVTimerRules) | Window.IsActive(RadioTimerRules)]</visible>
-		</control>
-
-		<control type="image">
-			<description>Enabled</description>
-			<left>730</left>
-			<top>8</top>
-			<width>22</width>
-			<height>22</height>
-			<texture>pvr/status_enabled.png</texture>
-			<colordiffuse>WhiteColor</colordiffuse>
-			<visible>String.IsEqual(ListItem.Comment,$LOCALIZE[305])</visible>
-		</control>
-
-		<control type="image">
-			<description>Record</description>
-			<left>730</left>
-			<top>8</top>
-			<width>22</width>
-			<height>22</height>
-			<texture>pvr/status_recording.png</texture>
-			<colordiffuse>WhiteColor</colordiffuse>
-			<visible>String.IsEqual(ListItem.Comment,$LOCALIZE[19162])</visible>
 		</control>
 		
 		<control type="label">
@@ -892,14 +881,7 @@
 			<label>$INFO[ListItem.ChannelNumberLabel]</label>
 		</control>
 
-		<control type="label">
-			<description>Channel Name</description>
-			<left>50</left>
-			<width>158</width>
-			<height>38</height>
-			<include>LiveTVColumnChannelLabel</include>
-			<label>$INFO[ListItem.ChannelName]</label>
-		</control>
+		<include>LiveTVColumnChannelIcon</include>
 
 		<control type="label">
 			<description>Title</description>
@@ -987,6 +969,76 @@
 			<texture border="8" flipx="true">pvr/column-left.png</texture>
 			<colordiffuse>LiveTVColumnColor3</colordiffuse>
 			<include>LiveTVColumnFadeAnim</include>
+		</control>
+	</include>
+	
+	<include name="DialogPVRGroupManagerChannelsLayout">
+		<control type="group"> 
+			<left>$PARAM[left]</left>
+			
+			<control type="image">
+				<width>262</width>
+				<height>35</height>
+				<texture background="true" border="5">controls/button-nofocus.png</texture>
+			</control>
+
+			<control type="label">
+				<top>8</top>
+				<width>262</width>
+				<height>35</height>
+				<align>center</align>
+				<include>DialogHeadLabel</include>
+				<label>$PARAM[label]</label>
+			</control>
+
+			<control type="image">
+				<top>40</top>
+				<width>262</width>
+				<height>320</height>
+				<texture background="true" border="5">controls/button-nofocus.png</texture>
+			</control>
+
+			<control type="list" id="$PARAM[id]">
+				<top>40</top>
+				<width>262</width>
+				<height>320</height>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<scrolltime>200</scrolltime>
+				<itemlayout height="40">
+					<control type="label">
+						<left>15</left>
+						<width>262</width>
+						<height>40</height>
+						<include>DialogContentLabel</include>
+						<label>$PARAM[listlabel]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout height="40">
+					<control type="image">
+						<width>262</width>
+						<height>40</height>
+						<texture border="5">controls/button-focus.png</texture>
+						<visible>Control.HasFocus($PARAM[id])</visible>
+					</control>
+					<control type="image">
+						<width>262</width>
+						<height>40</height>
+						<texture border="5">controls/button-alt-focus.png</texture>
+						<visible>!Control.HasFocus($PARAM[id])</visible>
+					</control>
+					<control type="label">
+						<left>15</left>
+						<width>262</width>
+						<height>40</height>
+						<include>DialogContentLabel</include>
+						<label>$PARAM[listlabel]</label>
+						<textcolor>SelectedColor</textcolor>
+					</control>
+				</focusedlayout>
+			</control>
 		</control>
 	</include>
 </includes>
