@@ -518,8 +518,6 @@
 		<value condition="Window.IsVisible(skinsettings)">$LOCALIZE[31058]</value>
 		<value condition="Window.IsVisible(filemanager)">$LOCALIZE[7]</value>
 		<value condition="Window.IsVisible(MyPlaylist.xml)">$LOCALIZE[559]</value>
-		<!--<value condition="Window.IsVisible(musicplaylist)">$LOCALIZE[10500]</value>
-		<value condition="Window.IsVisible(videoplaylist)">$LOCALIZE[10028]</value>-->
 		<value condition="Window.IsVisible(videobookmarks)">$LOCALIZE[298]</value>
 		<value condition="Window.IsVisible(systeminfo)">$LOCALIZE[138]</value>
 		<value condition="Window.IsVisible(profiles)">$LOCALIZE[10130]</value>
@@ -535,7 +533,9 @@
 		<value condition="Window.IsVisible(1123)">$LOCALIZE[31251]</value>
 		<value condition="Window.IsVisible(1124)">$LOCALIZE[31252]</value>
 		<value condition="Window.IsVisible(1125)">$VAR[CustomHubHeadline]</value>
-		<value condition="!String.IsEmpty(Container.ShowTitle)">$INFO[Container.ShowTitle]</value>
+		<value condition="Window.IsVisible(1126) + String.IsEqual(Window(home).Property(RecommendedType),movie)">$LOCALIZE[31183]</value>
+		<value condition="Window.IsVisible(1126) + String.IsEqual(Window(home).Property(RecommendedType),tvshow)">$LOCALIZE[31182]</value>
+		<!--<value condition="!String.IsEmpty(Container.ShowTitle)">$INFO[Container.ShowTitle]</value>-->
 		<value condition="Window.IsVisible(MyPVRGuide.xml)">$LOCALIZE[19069]</value>
 		<value condition="Window.IsVisible(MyPVRRecordings.xml)">$LOCALIZE[19017]</value>
 		<value condition="Window.IsVisible(MyPVRSearch.xml)">$LOCALIZE[19142]</value>
@@ -609,6 +609,10 @@
 		<value condition="!Skin.HasSetting(BlurEnabled)">$VAR[BackgroundSource]</value>
 		<value>$INFO[Window(home).Property(listitem_blurred)]</value>
 	</variable>
+	<variable name="BackgroundBlurRadius">
+		<value condition="!String.IsEmpty(Skin.String(BlurRadius)) + !String.IsEqual(Skin.String(BlurRadius),2)">$INFO[Skin.String(BlurRadius)]</value>
+		<value>2 ($LOCALIZE[571])</value>
+	</variable>
 	<variable name="BackgroundImageColor">
 		<value condition="String.IsEqual(Skin.CurrentColourTheme,SKINDEFAULT) | String.StartsWith(Skin.CurrentColourTheme,Default)">ff000000</value>
 		<value>$INFO[Window(home).Property(listitem_color)]</value>
@@ -639,11 +643,7 @@
 		<!-- pvr -->
 		<value condition="String.StartsWith(ListItem.Path,pvr://)">$VAR[IconPVR]</value>
 		<!-- episodes -->
-		<value condition="Window.IsVisible(movieinformation) + String.IsEqual(ListItem.DBType,episode) + String.IsEqual(ListItem.Art(thumb),OverlaySpoiler.png)">special://skin/extras/themes/$VAR[SkinTheme]/unwatched.jpg</value>
-		<value condition="Window.IsVisible(movieinformation) + String.IsEqual(ListItem.DBType,episode) + !String.IsEqual(ListItem.Icon,Default)">$INFO[ListItem.Icon]</value>
-		<value condition="Window.IsVisible(1115) + String.IsEqual(ListItem.DBType,episode) + !String.StartsWith(ListItem.Art(thumb),Default)">$VAR[IconEpisodeThumb]</value>
-		<value condition="[Window.IsVisible(movieinformation) | Window.IsVisible(favourites)] + [String.IsEqual(ListItem.DBType,episode) | !String.IsEmpty(ListItem.Episode)] + !String.StartsWith(ListItem.Art(thumb),Default)">$VAR[IconEpisodeThumb]</value>
-		<value condition="[String.IsEqual(ListItem.DBType,episode) | Container.Content(episodes)] + Window.IsMedia + !String.StartsWith(ListItem.Art(thumb),Default)">$VAR[IconEpisodeThumb]</value>
+		<value condition="[String.IsEqual(ListItem.DBType,episode) | Container.Content(episodes)] + Window.IsMedia + !String.StartsWith(ListItem.Icon,Default)">$VAR[IconEpisodeThumb]</value>
 		<value condition="[String.IsEqual(ListItem.DBType,episode) | Container.Content(episodes)] + !String.IsEmpty(ListItem.Art(tvshow.landscape))">$INFO[ListItem.Art(tvshow.landscape)]</value>
 		<value condition="[String.IsEqual(ListItem.DBType,episode) | Container.Content(episodes)] + !String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
 		<value condition="[String.IsEqual(ListItem.DBType,episode) | Container.Content(episodes)] + !String.IsEmpty(ListItem.Art(tvshow.fanart))">$INFO[ListItem.Art(tvshow.fanart)]</value>
@@ -699,7 +699,7 @@
 	</variable>
 	<variable name="IconSquare">
 		<value condition="Window.IsVisible(MyPVRRecordings.xml) + !String.IsEqual(ListItem.ActualIcon,ListItem.Icon)">$INFO[ListItem.ActualIcon]</value>
-		<value condition="!String.IsEmpty(ListItem.Art(thumb)) + !String.StartsWith(ListItem.Art(thumb),Default)">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb)) + !String.StartsWith(ListItem.Icon,Default)">$INFO[ListItem.Art(thumb)]</value>
 		<value condition="!String.StartsWith(ListItem.Icon,Default)">$INFO[ListItem.Icon]</value>
 	</variable>
 	<variable name="PVRWidgetMainListLabel">
@@ -1204,7 +1204,7 @@
 		<value>$INFO[MusicPlayer.Title]</value>
 	</variable>
 	<variable name="PlayerTimeLabels">
-		<value condition="Window.IsVisible(fullscreeninfo)">$VAR[PlayerTime]$VAR[PlayerDuration, / ]</value>
+		<value condition="Window.IsVisible(fullscreeninfo) | [VideoPlayer.Content(livetv) + !VideoPlayer.HasEpg]">$VAR[PlayerTime]$VAR[PlayerDuration, / ]</value>
 		<value>$VAR[PlayerTime]$VAR[PlayerDuration, / ]$VAR[PlayerFinishTime,  -  $LOCALIZE[31037] ]</value>
 	</variable>
 	<variable name="PlayerIcon">
@@ -1692,5 +1692,213 @@
 	</variable>
 	<variable name="CWidgetDefaultIcon">
 		<value condition="!String.StartsWith(ListItem.Icon,Default)">$INFO[ListItem.Icon]</value>
+	</variable>
+	<variable name="GenrePath0">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(0).Folderpath)">$INFO[Container(2000).ListItemAbsolute(0).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath1">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(1).Folderpath)">$INFO[Container(2000).ListItemAbsolute(1).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath2">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(2).Folderpath)">$INFO[Container(2000).ListItemAbsolute(2).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath3">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(3).Folderpath)">$INFO[Container(2000).ListItemAbsolute(3).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath4">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(4).Folderpath)">$INFO[Container(2000).ListItemAbsolute(4).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath5">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(5).Folderpath)">$INFO[Container(2000).ListItemAbsolute(5).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath6">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(6).Folderpath)">$INFO[Container(2000).ListItemAbsolute(6).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath7">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(7).Folderpath)">$INFO[Container(2000).ListItemAbsolute(7).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath8">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(8).Folderpath)">$INFO[Container(2000).ListItemAbsolute(8).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath9">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(9).Folderpath)">$INFO[Container(2000).ListItemAbsolute(9).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath10">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(10).Folderpath)">$INFO[Container(2000).ListItemAbsolute(10).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath11">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(11).Folderpath)">$INFO[Container(2000).ListItemAbsolute(11).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath12">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(12).Folderpath)">$INFO[Container(2000).ListItemAbsolute(12).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath13">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(13).Folderpath)">$INFO[Container(2000).ListItemAbsolute(13).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath14">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(14).Folderpath)">$INFO[Container(2000).ListItemAbsolute(14).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath15">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(15).Folderpath)">$INFO[Container(2000).ListItemAbsolute(15).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath16">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(16).Folderpath)">$INFO[Container(2000).ListItemAbsolute(16).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath17">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(17).Folderpath)">$INFO[Container(2000).ListItemAbsolute(17).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath18">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(18).Folderpath)">$INFO[Container(2000).ListItemAbsolute(18).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath19">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(19).Folderpath)">$INFO[Container(2000).ListItemAbsolute(19).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath20">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(20).Folderpath)">$INFO[Container(2000).ListItemAbsolute(20).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath21">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(21).Folderpath)">$INFO[Container(2000).ListItemAbsolute(21).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath22">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(22).Folderpath)">$INFO[Container(2000).ListItemAbsolute(22).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath22">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(22).Folderpath)">$INFO[Container(2000).ListItemAbsolute(22).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath23">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(23).Folderpath)">$INFO[Container(2000).ListItemAbsolute(23).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath24">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(24).Folderpath)">$INFO[Container(2000).ListItemAbsolute(24).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath25">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(25).Folderpath)">$INFO[Container(2000).ListItemAbsolute(25).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath26">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(26).Folderpath)">$INFO[Container(2000).ListItemAbsolute(26).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath27">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(27).Folderpath)">$INFO[Container(2000).ListItemAbsolute(27).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath28">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(28).Folderpath)">$INFO[Container(2000).ListItemAbsolute(28).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath29">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(29).Folderpath)">$INFO[Container(2000).ListItemAbsolute(29).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath30">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(30).Folderpath)">$INFO[Container(2000).ListItemAbsolute(30).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath31">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(31).Folderpath)">$INFO[Container(2000).ListItemAbsolute(31).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath32">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(32).Folderpath)">$INFO[Container(2000).ListItemAbsolute(32).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath33">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(33).Folderpath)">$INFO[Container(2000).ListItemAbsolute(33).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath34">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(34).Folderpath)">$INFO[Container(2000).ListItemAbsolute(34).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath35">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(35).Folderpath)">$INFO[Container(2000).ListItemAbsolute(35).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath36">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(36).Folderpath)">$INFO[Container(2000).ListItemAbsolute(36).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath37">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(37).Folderpath)">$INFO[Container(2000).ListItemAbsolute(37).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath38">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(38).Folderpath)">$INFO[Container(2000).ListItemAbsolute(38).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath39">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(39).Folderpath)">$INFO[Container(2000).ListItemAbsolute(39).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath40">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(40).Folderpath)">$INFO[Container(2000).ListItemAbsolute(40).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath41">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(41).Folderpath)">$INFO[Container(2000).ListItemAbsolute(41).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath42">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(42).Folderpath)">$INFO[Container(2000).ListItemAbsolute(42).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath43">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(43).Folderpath)">$INFO[Container(2000).ListItemAbsolute(43).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath44">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(44).Folderpath)">$INFO[Container(2000).ListItemAbsolute(44).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath45">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(45).Folderpath)">$INFO[Container(2000).ListItemAbsolute(45).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath46">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(46).Folderpath)">$INFO[Container(2000).ListItemAbsolute(46).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath47">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(47).Folderpath)">$INFO[Container(2000).ListItemAbsolute(47).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath48">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(48).Folderpath)">$INFO[Container(2000).ListItemAbsolute(48).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="GenrePath49">
+		<value condition="!String.IsEmpty(Container(2000).ListItemAbsolute(49).Folderpath)">$INFO[Container(2000).ListItemAbsolute(49).Folderpath]</value>
+		<value>-</value>
+	</variable>
+	<variable name="PVRWidgetGroup">
+		<value condition="!Skin.HasSetting(HidePVRHubGroups)">pvr://channels/tv/</value>
+		<value>-</value>
 	</variable>
 </includes>
