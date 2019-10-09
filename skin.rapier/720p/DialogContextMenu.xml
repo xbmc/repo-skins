@@ -64,9 +64,10 @@
 					<description>Button Trailer</description>
 					<label>$VAR[TrailerButtonLabelVar]</label>
 					<onclick condition="!String.IsEmpty(ListItem.Trailer)">PlayMedia($ESCINFO[ListItem.Trailer],noresume)</onclick>
-					<onclick condition="System.hasAddon(script.extendedinfo) + String.IsEmpty(ListItem.Trailer) + !Container.Content(Episodes)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Label] trailer)</onclick>
-					<onclick condition="System.hasAddon(script.extendedinfo) + String.IsEmpty(ListItem.Trailer) + Container.Content(Episodes)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer)</onclick>
-					<onclick condition="!System.hasAddon(script.extendedinfo) + String.IsEmpty(ListItem.Trailer)">InstallAddon(script.extendedinfo)</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + String.IsEmpty(ListItem.Trailer) + !Container.Content(Episodes)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.Label] trailer)</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + String.IsEmpty(ListItem.Trailer) + Container.Content(Episodes)">RunScript(script.extendedinfo,info=youtubebrowser,id=$INFO[ListItem.TVShowTitle] $INFO[ListItem.Label] trailer)</onclick>
+					<onclick condition="!System.HasAddon(script.extendedinfo) + String.IsEmpty(ListItem.Trailer)">InstallAddon(script.extendedinfo)</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo) + String.IsEmpty(ListItem.Trailer)">EnableAddon(script.extendedinfo)</onclick>
 					<include>ContextMenuBtn</include>
 					<visible>[Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes)] + !Skin.HasSetting(ContextMenuTrailer)</visible>
 				</control>
@@ -85,20 +86,22 @@
 				<control type="button" id="2068">
 					<description>Set My Rating</description>
 					<label>$LOCALIZE[38023]</label>
-					<onclick condition="System.HasAddon(script.user.rating)">RunScript(script.user.rating)</onclick>
+					<onclick condition="System.AddonIsEnabled(script.user.rating)">RunScript(script.user.rating)</onclick>
 					<onclick condition="!System.HasAddon(script.user.rating)">InstallAddon(script.user.rating)</onclick>
+					<onclick condition="System.HasAddon(script.user.rating) + !System.AddonIsEnabled(script.user.rating)">EnableAddon(script.user.rating)</onclick>
 					<include>ContextMenuBtn</include>
 					<visible>!String.IsEmpty(ListItem.DBID) + !ListItem.IsCollection + Skin.HasSetting(ContextMenuSetMyRating) + [Container.Content(Movies) | Container.Content(TVShows) | Container.Content(Episodes)]</visible>
 				</control>
 				<control type="button" id="2001">
 					<description>ExtendedInfo</description>
 					<label>$VAR[ContextMenuLabel2001]</label>
-					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
-					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(Movies)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
-					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(TVShows)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
-					<onclick condition="System.HasAddon(script.extendedinfo) + Container.Content(Seasons) + !String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
-					<onclick condition="System.HasAddon(script.extendedinfo) + [[Container.Content(Seasons) + String.IsEmpty(ListItem.Season)] | Container.Content(Episodes)]">RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Container.ShowTitle])</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + Container.Content(Actors) | Container.Content(Directors) | Container.Content(Artists)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Label])</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + Container.Content(Movies)">RunScript(script.extendedinfo,info=extendedinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + Container.Content(TVShows)">RunScript(script.extendedinfo,info=extendedtvinfo,dbid=$INFO[ListItem.DBID],id=$INFO[ListItem.Property(id)])</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + Container.Content(Seasons) + !String.IsEmpty(ListItem.Season)">RunScript(script.extendedinfo,info=seasoninfo,tvshow=$INFO[ListItem.TVShowTitle],season=$INFO[ListItem.Season])</onclick>
+					<onclick condition="System.AddonIsEnabled(script.extendedinfo) + [[Container.Content(Seasons) + String.IsEmpty(ListItem.Season)] | Container.Content(Episodes)]">RunScript(script.extendedinfo,info=extendedtvinfo,name=$INFO[Container.ShowTitle])</onclick>
 					<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+					<onclick condition="System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 					<include>ContextMenuBtn</include>
 					<visible>[Container.Content(Artists) | [[Container.Content(Actors) | Container.Content(Directors) | [Container.Content(Movies) + !ListItem.IsCollection] | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes)] + !System.HasAddon(context.extendedinfo.dialog)]] + !Skin.HasSetting(ContextMenuExtendedInformation)</visible>
 				</control>
@@ -112,6 +115,7 @@
 				<control type="button" id="2069">
 					<description>Single Movie Set Information</description>
 					<label>$LOCALIZE[31040]</label>
+					<onclick condition="Window.IsActive(movieinformation)">Dialog.Close(movieinformation)</onclick>
 					<onclick>ActivateWindow(1117)</onclick>
 					<include>ContextMenuBtn</include>
 					<visible>[!String.IsEmpty(ListItem.SetID) | String.IsEqual(ListItem.DBTYPE,set)] + !Skin.HasSetting(ContextMenuMovieSetInformation) + !ListItem.IsCollection</visible>

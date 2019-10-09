@@ -45,13 +45,14 @@
 					</control>
 					
 					<control type="image">
-						<description>Movies / TV Show Poster Cover Image</description>
+						<description>Movies / TV Show Poster Cover / Actor Image</description>
 						<width>336</width>
 						<height>500</height>
-						<texture background="true">$VAR[PosterThumb]</texture>
+						<texture background="true">$VAR[DialogVideoInfoActorImage]</texture>
 						<bordertexture border="4">covers/cover-case2.png</bordertexture>
 						<bordersize>4</bordersize>
 						<aspectratio>scale</aspectratio>
+						<fadetime>IconCrossfadeTime</fadetime>
 						<include>FSMediaInfoOpenCloseAnim</include>
 						<visible>String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set) | [String.IsEqual(ListItem.DBTYPE,tvshow) + Skin.HasSetting(UseTVShowsPosterCover)]</visible>
 					</control>
@@ -68,7 +69,22 @@
 						<include>FSMediaInfoOpenCloseAnim</include>
 						<aspectratio align="center" aligny="bottom">keep</aspectratio>
 						<animation effect="fade" end="80" condition="String.IsEmpty(ListItem.Thumb)">Conditional</animation>
-						<visible>![String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set) | String.IsEqual(ListItem.DBTYPE,tvshow)]</visible>
+						<visible>![Control.HasFocus(50) + !String.IsEmpty(Container(50).ListItem.Thumb) + !System.HasAddon(script.extendedinfo)] + ![String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set) | String.IsEqual(ListItem.DBTYPE,tvshow)]</visible>
+					</control>
+					
+					<control type="image">
+						<description>Music Videos / Episodes Actor Image</description>
+						<top>-5</top>
+						<left>-40</left>
+						<width>416</width>
+						<height>314</height>
+						<texture background="true">$INFO[Container(50).ListItem.Thumb]</texture>
+						<bordertexture border="4">covers/cover-case2.png</bordertexture>
+						<bordersize>4</bordersize>
+						<aspectratio align="center" aligny="bottom">keep</aspectratio>
+						<fadetime>IconCrossfadeTime</fadetime>
+						<include>FSMediaInfoOpenCloseAnim</include>
+						<visible>Control.HasFocus(50) + !String.IsEmpty(Container(50).ListItem.Thumb) + [String.IsEqual(ListItem.DBTYPE,musicvideo) | String.IsEqual(ListItem.DBTYPE,episode)] + !System.HasAddon(script.extendedinfo)</visible>
 					</control>
 					
 					<control type="image">
@@ -107,6 +123,21 @@
 						<aspectratio>keep</aspectratio>
 						<visible>String.IsEqual(ListItem.DBTYPE,tvshow) + !Skin.HasSetting(UseTVShowsPosterCover) + String.IsEmpty(ListItem.Art(banner))</visible>
 						<animation effect="fade" end="85" condition="true">Conditional</animation>
+					</control>
+					
+					<control type="image">
+						<description>TV Show Banner Actor Image</description>
+						<top>267</top>
+						<right>52</right>
+						<width>158</width>
+						<height>230</height>
+						<texture background="true">$INFO[Container(50).ListItem.Icon]</texture>
+						<bordertexture border="4">covers/cover-case2.png</bordertexture>
+						<bordersize>4</bordersize>
+						<aspectratio align="center" aligny="center">scale</aspectratio>
+						<fadetime>IconCrossfadeTime</fadetime>
+						<include>FSMediaInfoOpenCloseAnim</include>
+						<visible>Control.IsVisible(50) + [String.IsEqual(ListItem.DBTYPE,tvshow) + !Skin.HasSetting(UseTVShowsPosterCover)] + !System.HasAddon(script.extendedinfo)</visible>
 					</control>
 					
 					<control type="image">
@@ -437,11 +468,12 @@
 								<description>Writer</description>
 								<label>$LOCALIZE[20417]</label>
 								<label2>$INFO[ListItem.Writer]</label2>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,writer)</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">ActivateWindow(1105)</onclick>
-								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=writer&amp;type=Movie)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,writer)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">ActivateWindow(1105)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + [!System.HasAddon(script.extendedinfo) | !System.AddonIsEnabled(script.extendedinfo)]">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=writer&amp;type=Movie)</onclick>
 								<onclick condition="!System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 							</item>
 							<item id="3">
 								<description>Studio</description>
@@ -479,8 +511,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[21801]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 							</item>
 						</content>
 					</control>
@@ -697,15 +730,17 @@
 									<description>Director</description>
 									<label>$LOCALIZE[20339]</label>
 									<label2>$INFO[Window(home).Property(SkinHelper.ListItem.Director)]</label2>
-									<onclick condition="System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[Window(home).Property(SkinHelper.ListItem.Director)])</onclick>
+									<onclick condition="System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[Window(home).Property(SkinHelper.ListItem.Director)])</onclick>
 									<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+									<onclick condition="System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 								</item>
 								<item id="3">
 									<description>Writer</description>
 									<label>$LOCALIZE[20417]</label>
 									<label2>$INFO[Window(home).Property(SkinHelper.ListItem.Writer)]</label2>
-									<onclick condition="System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[Window(home).Property(SkinHelper.ListItem.Writer)])</onclick>
+									<onclick condition="System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[Window(home).Property(SkinHelper.ListItem.Writer)])</onclick>
 									<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+									<onclick condition="System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 								</item>
 								<item id="4">
 									<description>Year</description>
@@ -990,11 +1025,12 @@
 								<description>Artist</description>
 								<label>$LOCALIZE[557]</label>
 								<label2>$INFO[ListItem.Artist]</label2>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,artist)</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">ActivateWindow(1105)</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=arr_artist&amp;type=MusicVideo)</onclick>
-								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Artist])</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,artist)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">ActivateWindow(1105)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + [!System.HasAddon(script.extendedinfo) | !System.AddonIsEnabled(script.extendedinfo)]">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=arr_artist&amp;type=MusicVideo)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Artist])</onclick>
 								<onclick condition="!System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 							</item>
 							<item id="2">
 								<description>Album</description>
@@ -1045,8 +1081,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[21801]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 							</item>
 						</content>
 					</control>
@@ -1060,24 +1097,7 @@
 						<texture>views/videoinfo-separator.png</texture>
 					</control>
 				
-					<control type="grouplist">
-						<description>Media Flags Area</description>
-						<left>510</left>
-						<top>650</top>
-						<width>580</width>
-						<height>60</height>
-						<itemgap>5</itemgap>
-						<align>left</align>
-						<orientation>horizontal</orientation>
-						<usecontrolcoords>true</usecontrolcoords>
-						<include>MediaFlagFadeAnim</include>
-						<include>VideoSourceMediaFlags</include>
-						<include>VideoCodecMediaFlags</include>
-						<include>AudioMediaFlags</include>
-						<include>AspectMediaFlags</include>
-						<include>SubtitleMediaFlags</include>
-						<include>StudioMediaFlag2</include>
-					</control>
+					<include>DialogVideoInfoMediaFlags</include>
 				</control>
 					
 				<control type="group">
@@ -1257,11 +1277,12 @@
 								<description>Writer</description>
 								<label>$LOCALIZE[20417]</label>
 								<label2>$INFO[ListItem.Writer]</label2>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,writer)</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">ActivateWindow(1105)</onclick>
-								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
-								<onclick condition="System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=writer&amp;type=Episode)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">Skin.SetString(DialogVideoInfoButtonMenu,writer)</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">ActivateWindow(1105)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
+								<onclick condition="System.HasAddon(script.libraryeditor) + [!System.HasAddon(script.extendedinfo) | !System.AddonIsEnabled(script.extendedinfo)]">RunScript(script.libraryeditor,DBID=$INFO[ListItem.DBID]&amp;tag=writer&amp;type=Episode)</onclick>
 								<onclick condition="!System.HasAddon(script.libraryeditor) + !System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+								<onclick condition="!System.HasAddon(script.libraryeditor) + System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 							</item>
 							<item id="5">
 								<description>Runtime</description>
@@ -1286,8 +1307,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[21801]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 							</item>
 						</content>
 					</control>
@@ -1300,25 +1322,8 @@
 						<animation effect="fade" end="30" condition="true">Conditional</animation>
 						<texture>views/videoinfo-separator.png</texture>
 					</control>
-				
-					<control type="grouplist">
-						<description>Media Flags Area</description>
-						<left>510</left>
-						<top>650</top>
-						<width>580</width>
-						<height>60</height>
-						<itemgap>5</itemgap>
-						<align>left</align>
-						<orientation>horizontal</orientation>
-						<usecontrolcoords>true</usecontrolcoords>
-						<include>MediaFlagFadeAnim</include>
-						<include>VideoSourceMediaFlags</include>
-						<include>VideoCodecMediaFlags</include>
-						<include>AudioMediaFlags</include>
-						<include>AspectMediaFlags</include>
-						<include>SubtitleMediaFlags</include>
-						<include>StudioMediaFlag2</include>
-					</control>
+					
+					<include>DialogVideoInfoMediaFlags</include>
 				</control>
 				
 				<control type="group">
@@ -1526,8 +1531,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[573]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 							</item>
 						</content>
 					</control>
@@ -1753,8 +1759,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[573]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 							</item>
 						</content>
 					</control>
@@ -1961,8 +1968,9 @@
 								<description>Writer</description>
 								<label>$LOCALIZE[20417]</label>
 								<label2>$INFO[ListItem.Writer]</label2>
-								<onclick condition="System.HasAddon(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.extendedinfo)">RunScript(script.extendedinfo,info=extendedactorinfo,name=$INFO[ListItem.Writer])</onclick>
 								<onclick condition="!System.HasAddon(script.extendedinfo)">InstallAddon(script.extendedinfo)</onclick>
+								<onclick condition="System.HasAddon(script.extendedinfo) + !System.AddonIsEnabled(script.extendedinfo)">EnableAddon(script.extendedinfo)</onclick>
 								<visible>!String.IsEmpty(ListItem.Writer)</visible>
 							</item>
 							<item id="5">
@@ -2013,8 +2021,9 @@
 								<description>File Path</description>
 								<label>$LOCALIZE[21801]</label>
 								<label2>$INFO[ListItem.FileNameAndPath]</label2>
-								<onclick condition="System.HasAddon(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
+								<onclick condition="System.AddonIsEnabled(script.skin.helper.service)">RunScript(script.skin.helper.service,action=textviewer,header=$LOCALIZE[573],message=$INFO[ListItem.FileNameAndPath])</onclick>
 								<onclick condition="!System.HasAddon(script.skin.helper.service)">InstallAddon(script.skin.helper.service)</onclick>
+								<onclick condition="System.HasAddon(script.skin.helper.service) + !System.AddonIsEnabled(script.skin.helper.service)">EnableAddon(script.skin.helper.service)</onclick>
 								<visible>!String.IsEmpty(ListItem.FileNameAndPath)</visible>
 							</item>
 						</content>
@@ -2029,24 +2038,7 @@
 						<texture>views/videoinfo-separator.png</texture>
 					</control>
 				
-					<control type="grouplist">
-						<description>Media Flags Area</description>
-						<left>510</left>
-						<top>650</top>
-						<width>580</width>
-						<height>60</height>
-						<itemgap>5</itemgap>
-						<align>left</align>
-						<orientation>horizontal</orientation>
-						<usecontrolcoords>true</usecontrolcoords>
-						<include>MediaFlagFadeAnim</include>
-						<include>VideoSourceMediaFlags</include>
-						<include>VideoCodecMediaFlags</include>
-						<include>AudioMediaFlags</include>
-						<include>AspectMediaFlags</include>
-						<include>SubtitleMediaFlags</include>
-						<include>StudioMediaFlag2</include>
-					</control>
+					<include>DialogVideoInfoMediaFlags</include>
 				</control>
 				
 				<control type="textbox" id="902">
@@ -2117,12 +2109,12 @@
 						<include>FSMediaInfoOpenCloseAnim</include>
 						<visible>String.IsEmpty(Skin.String(VideoInfoMenubar))</visible>
 						<include condition="[String.IsEqual(ListItem.DBTYPE,movie) | [String.IsEqual(ListItem.DBTYPE,tvshow) + Skin.HasSetting(UseTVShowsPosterCover)]] + !System.HasAddon(script.extendedinfo)">DialogVideoInfoActors1</include>
-						<include condition="String.IsEqual(ListItem.DBTYPE,set)">DialogVideoInfoSet</include>
-						<include condition="[String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,musicvideo)] + !System.HasAddon(script.extendedinfo)">DialogVideoInfoActors2</include>
-						<include condition="[String.IsEqual(ListItem.DBTYPE,tvshow) + !Skin.HasSetting(UseTVShowsPosterCover)] + !System.HasAddon(script.extendedinfo)">DialogVideoInfoActors3</include>
 						<include condition="[String.IsEqual(ListItem.DBTYPE,movie) | [String.IsEqual(ListItem.DBTYPE,tvshow) + Skin.HasSetting(UseTVShowsPosterCover)]] + System.HasAddon(script.extendedinfo)">DialogVideoInfoActors4</include>
-						<include condition="[String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,musicvideo)] + System.HasAddon(script.extendedinfo)">DialogVideoInfoActors5</include>
+						<include condition="String.IsEqual(ListItem.DBTYPE,set)">DialogVideoInfoSet</include>
+						<include condition="[String.IsEqual(ListItem.DBTYPE,tvshow) + !Skin.HasSetting(UseTVShowsPosterCover)] + !System.HasAddon(script.extendedinfo)">DialogVideoInfoActors3</include>
 						<include condition="[String.IsEqual(ListItem.DBTYPE,tvshow) + !Skin.HasSetting(UseTVShowsPosterCover)] + System.HasAddon(script.extendedinfo)">DialogVideoInfoActors6</include>
+						<include condition="[String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,musicvideo)] + !System.HasAddon(script.extendedinfo)">DialogVideoInfoActors2</include>
+						<include condition="[String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,musicvideo)] + System.HasAddon(script.extendedinfo)">DialogVideoInfoActors5</include>
 					</control>
 					
 					<control type="panel" id="966">
