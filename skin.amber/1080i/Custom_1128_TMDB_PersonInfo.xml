@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window type="window" id="1128">
+    <defaultcontrol always="true">9999</defaultcontrol>
+    <onload>RunScript(script.embuary.helper,action=resetposition,container=9009||9101||9102||9103||9104||9105)</onload>
+    <controls>
+
+        <control type="image">
+            <width>1920</width>
+            <height>1080</height>
+            <texture>img/BlackDot.png</texture>
+            <aspectratio>scale</aspectratio>
+        </control>
+        <control type="image">
+            <width>1920</width>
+            <height>1080</height>
+            <texture background="true">special://skin/backgrounds/default.jpg</texture>
+            <aspectratio>scale</aspectratio>
+        </control>
+        <include content="BackgroundOverlay">
+            <param name="parentid" value="9999"/>
+        </include>
+
+        <!-- Wait until plugin has populated person info.  If it is not a person, just show info. -->
+        <control type="list" id="9999">
+            <width>1</width>
+            <height>1</height>
+            <left>-1000</left>
+            <top>-1000</top>
+            <onfocus condition="!Integer.IsEqual(Container(9999).NumItems,0) + !Container(9999).IsUpdating + !String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current)) + !String.Contains(Window(Home).Property(TMDbHelper.Path.Current),type=person)">Action(Info)</onfocus>
+            <onfocus condition="!Integer.IsEqual(Container(9999).NumItems,0) + !Container(9999).IsUpdating + !String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current)) + String.Contains(Window(Home).Property(TMDbHelper.Path.Current),type=person)">SetFocus(9000)</onfocus>
+            <onfocus condition="[Integer.IsEqual(Container(9999).NumItems,0) | Container(9999).IsUpdating] + !String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current))">AlarmClock(doinfo,SetFocus(9999),00:01,silent)</onfocus>
+            <onfocus condition="String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current))">Action(Back)</onfocus>
+            <itemlayout />
+            <focusedlayout />
+            <content target="videos">$INFO[Window(Home).Property(TMDbHelper.Path.Current)]</content>
+        </control>
+
+        <!-- Please wait... -->
+        <control type="group">
+            <visible>[!String.Contains(Window(Home).Property(TMDbHelper.Path.Current),type=person) | Control.HasFocus(9999)] + !Window.IsVisible(DialogVideoInfo.xml)</visible>
+            <include>InfoLoading</include>
+        </control>
+
+        <!-- Person Info -->
+        <control type="group">
+            <top>0</top>
+            <left>0</left>
+            <visible>String.Contains(Window(Home).Property(TMDbHelper.Path.Current),type=person) + !Control.HasFocus(9999)</visible>
+            <!-- Person main image -->
+            <include content="ShadowedImage">
+                <param name="top">24</param>
+                <param name="left">24</param>
+                <param name="width">619</param>
+                <param name="height">960</param>
+                <param name="shadowoffset">16</param>
+                <param name="texture">$INFO[Container(9999).ListItemAbsolute(0).Art(poster)]</param>
+                <param name="visibility">true</param>
+            </include>
+            <!-- Person info details -->            
+            <control type="group" id="300">
+                <posx>700</posx>
+                <posy>0</posy>
+                <control type="label" description="Person name">
+                    <posy>10</posy>
+                    <width>950</width>
+                    <height>60</height>
+                    <font>InfoTitle</font>
+                    <textcolor>Highlight</textcolor>
+                    <align>left</align>
+                    <label>$INFO[Container(9999).ListItemAbsolute(0).Label]</label>
+                </control>
+                <control type="image" description="Powered by TMDb">
+                    <posy>8</posy>
+                    <left>995</left>
+                    <height>70</height>
+                    <width>177</width>
+                    <texture>badges/ratings/powered-by-tmdb.png</texture>
+                    <aspectratio>keep</aspectratio>
+                    <aligny>center</aligny>
+                </control>
+                <control type="image" description="Line Split">
+                    <posy>83</posy>
+                    <width>1180</width>
+                    <height>1</height>
+                    <texture>img/LineL.png</texture>
+                    <aspectratio>stretch</aspectratio>
+                </control>                
+                <control type="textbox" id="900031" description="Biography">
+                    <include>VisibleFadeEffectDelay</include>
+                    <posy>90</posy>
+                    <left>5</left>
+                    <width>620</width>
+                    <height>355</height>
+                    <align>justify</align>
+                    <font>InfoPlot</font>
+                    <textcolor>$VAR[InfoPlotTextColor]</textcolor>
+                    <shadowcolor>LiteShadow</shadowcolor>
+                    <label fallback="19055">$INFO[Container(9999).ListItemAbsolute(0).Property(biography)]</label>
+                </control>
+                <control type="radiobutton" id="90003">
+                    <posy>447</posy>
+                    <left>588.3</left>
+                    <ondown>9000</ondown>
+                    <onright>9009</onright>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <textureradioonfocus colordiffuse="Black">icons/dots7.png</textureradioonfocus>
+                    <textureradioonnofocus>icons/dots7.png</textureradioonnofocus>
+                    <texturefocus border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</texturefocus>
+                    <texturenofocus border="4">img/WhiteRoundedT.png</texturenofocus>
+                    <width>37</width>
+                    <height>17</height>
+                    <radiowidth>37</radiowidth>
+                    <radioheight>37</radioheight>
+                    <radioposx>0.1</radioposx>
+                    <radioposy>0</radioposy>
+                    <font></font>
+                    <selected>true</selected>
+                    <onclick>SetProperty(TextViewerHeader,$ESCINFO[Container(9999).ListItemAbsolute(0).Label],Home)</onclick>
+                    <onclick>SetProperty(TextViewerContent,$ESCINFO[Container(9999).ListItemAbsolute(0).Property(biography)],Home)</onclick>
+                    <onclick>ActivateWindow(1124)</onclick>
+                    <onback condition="!String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current))">RunScript(plugin.video.themoviedb.helper,del_path,call_id=1129)</onback>
+                </control>
+                <control type="image" description="Line Split">
+                    <posy>90</posy>
+                    <left>637</left>
+                    <width>1</width>
+                    <height>375</height>
+                    <texture>img/LineL.png</texture>
+                    <aspectratio>stretch</aspectratio>
+                </control>                
+                <control type="panel" id="9009">
+                    <include>VisibleFadeEffectDelay</include>
+                    <include>List_9009_Commons</include>
+                    <onup>9009</onup>
+                    <ondown>9009</ondown>
+                    <onleft>90003</onleft>
+                    <content>
+                        <item>
+                            <label>$LOCALIZE[32082]:</label>
+                            <label2>$INFO[Container(9999).ListItemAbsolute(0).Property(Birthday)]</label2>
+                            <onclick>noop</onclick>
+                            <visible>!String.IsEmpty(Container(9999).ListItemAbsolute(0).Property(Birthday))</visible>
+                        </item>
+                        <item>
+                            <label>$LOCALIZE[32083]:</label>
+                            <label2>$INFO[Container(9999).ListItemAbsolute(0).Property(Born)]</label2>
+                            <onclick>noop</onclick>
+                            <visible>!String.IsEmpty(Container(9999).ListItemAbsolute(0).Property(Born))</visible>
+                        </item>
+                        <item>
+                            <label>$VAR[AgeLabel]:</label>
+                            <label2>$INFO[Container(9999).ListItemAbsolute(0).Property(Age)]</label2>
+                            <onclick>noop</onclick>
+                            <visible>!String.IsEmpty(Container(9999).ListItemAbsolute(0).Property(Age))</visible>
+                        </item>
+                        <item>
+                            <label>$LOCALIZE[32085]:</label>
+                            <label2>$INFO[Container(9999).ListItemAbsolute(0).Property(Deathday)]</label2>
+                            <onclick>noop</onclick>
+                            <visible>!String.IsEmpty(Container(9999).ListItemAbsolute(0).Property(Deathday))</visible>
+                        </item>
+                        <item>
+                            <label>$LOCALIZE[32086]:</label>
+                            <label2>$INFO[Container(9999).ListItemAbsolute(0).Property(aliases)]</label2>
+                            <onclick>noop</onclick>
+                            <visible>!String.IsEmpty(Container(9999).ListItemAbsolute(0).Property(aliases))</visible>
+                        </item>
+                    </content>
+                </control>
+            </control>
+            <!-- Buttons -->
+            <control type="grouplist" id="9000">
+                <left>700</left>
+                <posy>527</posy>
+                <width>1180</width>
+                <height>90</height>
+                <align>center</align>
+                <onup>90003</onup>
+                <ondown>91001</ondown>
+                <orientation>horizontal</orientation>
+                <defaultcontrol>9001</defaultcontrol>
+                <itemgap>16</itemgap>
+                <control type="button" id="9001" description="Close">
+                    <height>90</height>
+                    <width min="220">auto</width>
+                    <align>center</align>
+                    <font>Details</font>
+                    <label>$LOCALIZE[15067]</label>
+					<onclick>Action(Close)</onclick>
+                </control>
+            </control>
+            <!-- Info Lists for person -->   
+            <control type="group" id="9100">
+                <posx>700</posx>
+                <posy>622</posy>
+                <width>1180</width>
+                <height>450</height>
+                <control type="grouplist" id="91001">
+                    <scrolltime tween="quadratic">400</scrolltime>
+                    <onup>9000</onup>
+                    <height>450</height>
+                    <orientation>vertical</orientation>
+                    <itemgap>10</itemgap>
+                    <defaultcontrol always="true">9101</defaultcontrol>
+                    <usecontrolcoords>true</usecontrolcoords>
+                    <!-- Cast in Movies-->
+                    <include content="VideoInfoPosterWidget">
+                        <param name="id">9101</param>
+                        <param name="headinglabel">$LOCALIZE[32087]</param>
+                        <param name="onup">9000</param>
+                        <param name="ondown">9102</param>
+                        <param name="belowdoublelabel2">[I]$INFO[ListItem.Property(character)][/I]</param>
+                        <param name="prevent_del">noop</param>
+                        <param name="content">$VAR[InfoCastList01]</param>
+                        <param name="sortby">year</param>
+                        <param name="sortorder">descending</param>
+                    </include>
+                    <!-- Cast in TV Shows -->
+                    <include content="VideoInfoPosterWidget">
+                        <param name="id">9102</param>
+                        <param name="headinglabel">$LOCALIZE[32088]</param>
+                        <param name="onup">9101</param>
+                        <param name="ondown">9103</param>
+                        <param name="belowdoublelabel2">[I]$INFO[ListItem.Property(character)][/I]</param>
+                        <param name="prevent_del">noop</param>
+                        <param name="content">$VAR[InfoCastList02]</param>
+                        <param name="sortby">year</param>
+                        <param name="sortorder">descending</param>
+                    </include>
+                    <!-- Crew in Movies -->
+                    <include content="VideoInfoPosterWidget">
+                        <param name="id">9103</param>
+                        <param name="headinglabel">$LOCALIZE[32089]</param>
+                        <param name="onup">9102</param>
+                        <param name="ondown">9104</param>
+                        <param name="belowdoublelabel2">[I]$INFO[ListItem.Property(job)][/I]</param>
+                        <param name="prevent_del">noop</param>
+                        <param name="content">$VAR[InfoCastList03]</param>
+                        <param name="sortby">year</param>
+                        <param name="sortorder">descending</param>
+                    </include>                    
+                    <!-- Crew in TV Shows -->
+                    <include content="VideoInfoPosterWidget">
+                        <param name="id">9104</param>
+                        <param name="headinglabel">$LOCALIZE[32090]</param>
+                        <param name="onup">9103</param>
+                        <param name="ondown">9105</param>
+                        <param name="belowdoublelabel2">[I]$INFO[ListItem.Property(job)][/I]</param>
+                        <param name="prevent_del">noop</param>
+                        <param name="content">$VAR[InfoCastList04]</param>
+                        <param name="sortby">year</param>
+                        <param name="sortorder">descending</param>
+                    </include>
+                    <!-- Pictures -->
+                    <include content="VideoInfoPosterWidget">
+                        <param name="id">9105</param>
+                        <param name="headinglabel">$LOCALIZE[1]</param>
+                        <param name="onup">9104</param>
+                        <param name="ondown">9101</param>
+                        <param name="belowdoublelabelvisibility">false</param>
+                        <param name="belowlabelvisibility">true</param>
+                        <param name="onclickinclude">InfoList_OnClickPictures</param>
+                        <param name="content">$VAR[InfoCastList05]</param>
+                    </include>            
+
+                </control>   
+            </control>
+
+            <!-- Provide slideshow for person pictures -->
+            <control type="button" id="91506">
+                <include>HiddenButton</include>
+                <onleft>Control.Move(9105,-1)</onleft>
+                <onright>Control.Move(9105,1)</onright>
+                <onback>9105</onback>
+            </control>
+            <control type="group">
+                <animation effect="fade" start="0" end="100" time="350" tween="cubic" easing="inout">Visible</animation>
+                <animation effect="fade" start="100" end="0" time="350" tween="cubic" easing="inout">Hidden</animation>
+                <control type="image">
+                    <width>1920</width>
+                    <height>1080</height>
+                    <texture>img/BlackDot.png</texture>
+                    <aspectratio>scale</aspectratio>
+                </control>
+                <visible>Control.HasFocus(91506)</visible>
+                <control type="image">
+                    <aspectratio>keep</aspectratio>
+                    <texture background="true">$INFO[Container(9105).ListItem.Art(poster)]</texture>
+                </control>
+            </control>
+
+        </control>
+    </controls>
+</window>
