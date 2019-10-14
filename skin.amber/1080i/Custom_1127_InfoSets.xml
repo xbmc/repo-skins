@@ -3,6 +3,7 @@
 	<defaultcontrol always="true">8</defaultcontrol>
 	<animation effect="fade" time="200">WindowOpen</animation>
 	<animation effect="fade" time="150">WindowClose</animation>
+    <onload>RunScript(script.embuary.helper,action=resetposition,container=9009||90150)</onload>
 	<controls>
     
 		<control type="image">
@@ -30,7 +31,7 @@
             <param name="visibility">true</param>
 		</include>
 		<control type="grouplist" description="Ratings">
-			<top>93</top>
+			<top>83</top>
 			<left>705</left>
 			<width>1200</width>
 			<height>40</height>
@@ -47,6 +48,7 @@
                     <width>83</width>
                     <aligny>center</aligny>
                     <align>center</align>
+                    <aspectratio>keep</aspectratio>
       		        <texture>badges/ratings/imdb2.png</texture>
 		        </control>
 			    <control type="label" description="IMDb Rating and Votes">
@@ -78,19 +80,70 @@
 			    </control>                
             </control>
 		</control>
+        
+        <!-- Certification Flag for sets, flag for first movie MPAA only -->        
+        <control type="group">
+            <visible>String.IsEqual(ListItem.DBType,set) + String.IsEmpty(ListItem.MPAA) + !String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA))</visible>
+            <control type="image" description="Certification flag USA">
+                <top>70</top>
+                <left>1738</left>
+                <height>65</height>
+                <width>85</width>
+                <aspectratio>keep</aspectratio>
+                <align>center</align>
+                <texture fallback="badges/mpaa/NR.png">$VAR[SetsCertFlag]</texture>
+                <visible>!String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Brazil) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),UK) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),United Kingdom) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),classificação) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),France) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Germany) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Australia) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Netherlands) + 
+                         !String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),NL) + !String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA))</visible>
+            </control>
+            <control type="image" description="Certification flag non-USA">
+                <top>81</top>
+                <left>1750</left>
+                <height>45</height>
+                <width>59</width>
+                <aspectratio>keep</aspectratio>
+                <texture fallback="badges/mpaa/NR.png">$VAR[SetsCertFlag]</texture>
+                <visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA)) + [String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Brazil) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),UK) |  
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),United Kingdom) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),classificação) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),France) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Germany) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Australia) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),Netherlands) | 
+                         String.Contains(Window(Home).Property(SkinInfo.Set.Movie.1.MPAA),NL)]</visible>
+            </control>
+        </control>
+        
 		<control type="group" description="Media Info">
 			<control type="group" description="top">
 				<posx>700</posx>
-				<posy>60</posy>
+				<posy>50</posy>
 				<control type="label" description="Main Label - Sets">
-					<posy>-45</posy>
+					<posy>-51</posy>
 					<width>950</width>
-					<height>60</height>
+					<height>75</height>
 					<font>InfoTitle</font>
 					<textcolor>Highlight</textcolor>
 					<align>left</align>
-					<label>$INFO[ListItem.Title,[B],[/B]] $INFO[Window(Home).Property(Set.Movies.Years),(,)]</label>
-				</control>                
+					<label>$INFO[ListItem.Title,[B],[/B]] $INFO[Window(Home).Property(SkinInfo.Set.Movies.Years),(,)]</label>
+				</control>
+                <control type="image" description="1st. Studio - Sets">
+                    <posy>-51</posy>
+                    <left>1000</left>
+                    <height>75</height>
+                    <width>160</width>
+                    <texture>$VAR[InfoStudiosSets]</texture>
+                    <aspectratio>keep</aspectratio>
+                    <aligny>center</aligny>
+                    <visible>String.IsEqual(ListItem.DBType,set) + !String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Single.Studio)) + !String.IsEmpty(Skin.String(studiosResource.path))</visible>
+                </control>                
 				<control type="image" description="Line Split">
 					<posy>23</posy>
 					<width>1180</width>
@@ -115,7 +168,7 @@
 					<font>InfoPlot</font>
                     <textcolor>$VAR[InfoPlotTextColor]</textcolor>
                     <shadowcolor>LiteShadow</shadowcolor>
-					<label>$VAR[Plots]</label>
+					<label fallback="19055">$VAR[Plots]</label>
 				</control>
 				<control type="radiobutton" id="90003">
 					<posy>447</posy>
@@ -137,7 +190,7 @@
                     <font></font>
                     <selected>true</selected>
 					<onclick>SetProperty(TextViewerHeader,$ESCVAR[panelheading],Home)</onclick>
-                    <onclick condition="!String.IsEmpty(Window(Home).Property(Set.Movies.Years))">SetProperty(TextViewerSubHeader,$ESCINFO[Window(Home).Property(Set.Movies.Years),[I],[/I]],Home)</onclick>
+                    <onclick condition="!String.IsEmpty(Window(Home).Property(Set.Movies.Years))">SetProperty(TextViewerSubHeader,$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Years),[I],[/I]],Home)</onclick>
 					<onclick>SetProperty(TextViewerContent,$ESCVAR[Plots],Home)</onclick>
 					<onclick>ActivateWindow(1124)</onclick>
 				</control>                
@@ -154,36 +207,59 @@
 					<include>List_9009_Commons</include>
                     <onup>9009</onup>
                     <ondown>9009</ondown>
-                    <onleft condition="Control.IsVisible(90003)">90003</onleft>
-                    <onleft condition="!Control.IsVisible(90003)">9000</onleft>
+                    <onleft>90003</onleft>
 					<content>
 						<item>
 							<label>$LOCALIZE[20339](s):</label>
-							<label2>$INFO[Window(Home).Property(Set.Movies.Director)]</label2>
-                            <visible>!String.IsEmpty(Window(Home).Property(Set.Movies.Director)) + String.IsEqual(ListItem.DBType,set)</visible>
+							<label2>$INFO[Window(Home).Property(SkinInfo.Set.Movies.Director)]</label2>
+                            <onclick>SetProperty(Dialog.1.Label,$LOCALIZE[32018])</onclick>
+                            <onclick>SetProperty(Dialog.1.BuiltIn,RunScript(plugin.video.themoviedb.helper,add_query=$INFO[Window(Home).Property(SkinInfo.Set.Movies.Director)],type=person,call_id=1129,prevent_del))</onclick>
+			                <onclick>SetProperty(Dialog.2.Label,$LOCALIZE[32017])</onclick>
+			                <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Director), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(Dialog.Builtin,Skin.SetString(CustomSearchTerm,???)++Dialog.Close(all)++ActivateWindow(1122))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32110]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Director)]',seperator='" / "',splitby='"++"'))</onclick>
+			                <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Director), / )">SetProperty(Dialog.2.BuiltIn,Skin.SetString(CustomSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Director)])||Dialog.Close(all)||ActivateWindow(1122))</onclick>
+                            <onclick>RunScript(script.embuary.helper,action=createselect,header=$LOCALIZE[137])</onclick>
+                            <visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Director)) + String.IsEqual(ListItem.DBType,set)</visible>
 						</item>                        
 						<item>
 							<label>$LOCALIZE[20417](s):</label>
-							<label2>$INFO[Window(Home).Property(Set.Movies.Writer)]</label2>
-							<visible>!String.IsEmpty(Window(Home).Property(Set.Movies.Writer)) + String.IsEqual(ListItem.DBType,set)</visible>
+							<label2>$INFO[Window(Home).Property(SkinInfo.Set.Movies.Writer)]</label2>
+                            <onclick>SetProperty(Dialog.1.Label,$LOCALIZE[32018])</onclick>
+                            <onclick>SetProperty(Dialog.1.BuiltIn,RunScript(plugin.video.themoviedb.helper,add_query=$INFO[Window(Home).Property(SkinInfo.Set.Movies.Writer)],type=person,call_id=1129,prevent_del))</onclick>
+			                <onclick>SetProperty(Dialog.2.Label,$LOCALIZE[32017])</onclick>
+			                <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Writer), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(Dialog.Builtin,Skin.SetString(CustomSearchTerm,???)++Dialog.Close(all)++ActivateWindow(1122))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32113]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Writer)]',seperator='" / "',splitby='"++"'))</onclick>
+			                <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Writer), / )">SetProperty(Dialog.2.BuiltIn,Skin.SetString(CustomSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Writer)])||Dialog.Close(all)||ActivateWindow(1122))</onclick>
+                            <onclick>RunScript(script.embuary.helper,action=createselect,header=$LOCALIZE[137])</onclick>
+							<visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Writer)) + String.IsEqual(ListItem.DBType,set)</visible>
 						</item>                        
 						<item>
 							<label>$LOCALIZE[515](s):</label>
-							<label2>$INFO[Window(Home).Property(Set.Movies.Genre)]</label2>
-							<onclick>noop</onclick>
-							<visible>!String.IsEmpty(Window(Home).Property(Set.Movies.Genre)) + String.IsEqual(ListItem.DBType,set)</visible>
+							<label2>$INFO[Window(Home).Property(SkinInfo.Set.Movies.Genre)]</label2>
+							<onclick>SetProperty(Dialog.1.Label,$LOCALIZE[32018])</onclick>
+                            <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Genre), / )">SetProperty(Dialog.1.BuiltIn,SetProperty(Dialog.Builtin,SetProperty(SingleSearchType,Online,Home)++Skin.SetString(SingleSearchTerm,???)++Skin.SetString(OnlineCallType,with_genres)++Skin.SetString(OnlineMediaType,$VAR[TMDbMediaType])++Skin.SetString(SingleSearchHeader,$VAR[GenreOnlineHeaderVar])++Dialog.Close(all)++ActivateWindow(1131))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32108]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Genre)]',seperator='" / "',splitby='"++"'))</onclick>
+                            <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Genre), / )">SetProperty(Dialog.1.BuiltIn,SetProperty(SingleSearchType,Online,Home)||Skin.SetString(SingleSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Genre)])||Skin.SetString(OnlineCallType,with_genres)||Skin.SetString(OnlineMediaType,$VAR[TMDbMediaType])||Skin.SetString(SingleSearchHeader,$VAR[GenreOnlineHeaderVar])||Dialog.Close(all)||ActivateWindow(1131))</onclick>
+			                <onclick>SetProperty(Dialog.2.Label,$LOCALIZE[32017])</onclick>
+			                <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Genre), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(Dialog.Builtin,SetProperty(SingleSearchType,LocalMovieGenre,Home)++Skin.SetString(SingleSearchTerm,???)++Skin.SetString(SingleSearchHeader,$VAR[GenreOnlineHeaderVar])++Dialog.Close(all)++ActivateWindow(1131))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32108]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Genre)]',seperator='" / "',splitby='"++"'))</onclick>
+                            <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Genre), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(SingleSearchType,LocalMovieGenre,Home)||Skin.SetString(SingleSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Genre)])||Skin.SetString(SingleSearchHeader,$VAR[GenreOnlineHeaderVar])||Dialog.Close(all)||ActivateWindow(1131))</onclick>
+			                <onclick>RunScript(script.embuary.helper,action=createselect,header=$LOCALIZE[137])</onclick>
+							<visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Genre)) + String.IsEqual(ListItem.DBType,set)</visible>
 						</item>                        
 						<item>
 							<label>$LOCALIZE[20161] $LOCALIZE[2050]:</label>
-							<label2>$INFO[Window(Home).Property(Set.Movies.Runtime)] $LOCALIZE[12391]</label2>
+							<label2>$INFO[Window(Home).Property(SkinInfo.Set.Movies.Runtime)] $LOCALIZE[12391]</label2>
 							<onclick>noop</onclick>
-							<visible>!String.IsEmpty(Window(Home).Property(Set.Movies.Runtime)) + String.IsEqual(ListItem.DBType,set)</visible>
+							<visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Runtime)) + String.IsEqual(ListItem.DBType,set)</visible>
 						</item>
 						<item>
 							<label>$LOCALIZE[29909](s):</label>
-							<label2>$INFO[Window(Home).Property(Set.Movies.Studio)]</label2>
-							<onclick>noop</onclick>
-							<visible>!String.IsEmpty(Window(Home).Property(Set.Movies.Studio)) + String.IsEqual(ListItem.DBType,set)</visible>
+							<label2>$INFO[Window(Home).Property(SkinInfo.Set.Movies.Studio)]</label2>
+							<onclick>SetProperty(Dialog.1.Label,$LOCALIZE[32018])</onclick>
+                            <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Studio), / )">SetProperty(Dialog.1.BuiltIn,SetProperty(Dialog.Builtin,SetProperty(SingleSearchType,Online,Home)++Skin.SetString(SingleSearchTerm,???)++Skin.SetString(OnlineCallType,$VAR[TMDbStudioCall])++Skin.SetString(OnlineMediaType,$VAR[TMDbMediaType])++Skin.SetString(SingleSearchHeader,$VAR[StudioOnlineHeaderVar])++Dialog.Close(all)++ActivateWindow(1131))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32109]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Studio)]',seperator='" / "',splitby='"++"'))</onclick>
+                            <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Studio), / )">SetProperty(Dialog.1.BuiltIn,SetProperty(SingleSearchType,Online,Home)||Skin.SetString(SingleSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Studio)])||Skin.SetString(OnlineCallType,$VAR[TMDbStudioCall])||Skin.SetString(OnlineMediaType,$VAR[TMDbMediaType])||Skin.SetString(SingleSearchHeader,$VAR[StudioOnlineHeaderVar])||Dialog.Close(all)||ActivateWindow(1131))</onclick>
+			                <onclick>SetProperty(Dialog.2.Label,$LOCALIZE[32017])</onclick>
+			                <onclick condition="String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Studio), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(Dialog.Builtin,SetProperty(SingleSearchType,LocalMovieStudio,Home)++Skin.SetString(SingleSearchTerm,???)++Skin.SetString(SingleSearchHeader,$VAR[StudioOnlineHeaderVar])++Dialog.Close(all)++ActivateWindow(1131))||RunScript(script.embuary.helper,action=splitandcreateselect,header='"$LOCALIZE[32109]"',items='$ESCINFO[Window(Home).Property(SkinInfo.Set.Movies.Studio)]',seperator='" / "',splitby='"++"'))</onclick>
+                            <onclick condition="!String.Contains(Window(Home).Property(SkinInfo.Set.Movies.Studio), / )">SetProperty(Dialog.2.BuiltIn,SetProperty(SingleSearchType,LocalMovieStudio,Home)||Skin.SetString(SingleSearchTerm,$INFO[Window(Home).Property(SkinInfo.Set.Movies.Studio)])||Skin.SetString(SingleSearchHeader,$VAR[StudioOnlineHeaderVar])||Dialog.Close(all)||ActivateWindow(1131))</onclick>
+			                <onclick>RunScript(script.embuary.helper,action=createselect,header=$LOCALIZE[137])</onclick>
+							<visible>!String.IsEmpty(Window(Home).Property(SkinInfo.Set.Movies.Studio)) + String.IsEqual(ListItem.DBType,set)</visible>
 						</item>                        
 						<item>
 							<label>$LOCALIZE[20459]:</label>
@@ -209,13 +285,13 @@
 		</control>
 		<control type="grouplist" id="9000">
 			<left>700</left>
-			<posy>540</posy>
+			<posy>527</posy>
 			<width>1180</width>
 			<height>90</height>
 			<align>center</align>
-			<onup condition="Control.IsVisible(90003)">90003</onup>
-            <onup condition="!Control.IsVisible(90003)">9009</onup>
-            <ondown condition="String.IsEqual(ListItem.DBType,set)">SetFocus(90150)</ondown>
+			<onup>90003</onup>
+            <defaultcontrol>8</defaultcontrol>
+            <ondown>SetFocus(90150)</ondown>
 			<orientation>horizontal</orientation>
 			<itemgap>16</itemgap>
 			<control type="button" id="8" description="Browse">
@@ -227,26 +303,6 @@
                 <onclick>Dialog.Close(all,true)</onclick>
 			    <onclick>ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.DBID]/?setid=$INFO[ListItem.DBID])</onclick>
 			</control>
-<!--			<control type="button" id="297" description="AB: Choose Art">
-				<height>90</height>
-				<width min="220">auto</width>
-				<align>center</align>
-				<font>Details</font>
-				<label>$LOCALIZE[32005]</label>
-                <visible>system.hasaddon(script.artwork.beef)</visible>
-                <onclick>XBMC.RunScript(script.artwork.beef, mode=gui, mediatype=set, dbid=$INFO[ListItem.DBID])</onclick>
-                <visible>!Skin.HasSetting(KioskMode.Enabled)</visible>
-			</control>
-			<control type="button" id="298" description="AB: All Art">
-				<height>90</height>
-				<width min="220">auto</width>
-				<align>center</align>
-				<font>Details</font>
-				<label>$LOCALIZE[32006]</label>
-                <visible>system.hasaddon(script.artwork.beef)</visible>
-                <onclick>XBMC.RunScript(script.artwork.beef, mode=auto, mediatype=set, dbid=$INFO[ListItem.DBID])</onclick>
-                <visible>!Skin.HasSetting(KioskMode.Enabled)</visible>				
-			</control> -->
 			<control type="button" id="296" description="Show Fanart">
 				<height>90</height>
 				<width min="220">auto</width>
@@ -254,23 +310,40 @@
 				<font>Details</font>
 				<label>$LOCALIZE[32068]</label>
                 <onclick>SetProperty(fanart,$ESCINFO[ListItem.Art(fanart)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart1,$ESCINFO[ListItem.Art(fanart1)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart2,$ESCINFO[ListItem.Art(fanart2)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart3,$ESCINFO[ListItem.Art(fanart3)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart4,$ESCINFO[ListItem.Art(fanart4)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart5,$ESCINFO[ListItem.Art(fanart5)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart6,$ESCINFO[ListItem.Art(fanart6)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart7,$ESCINFO[ListItem.Art(fanart7)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart8,$ESCINFO[ListItem.Art(fanart8)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart9,$ESCINFO[ListItem.Art(fanart9)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart10,$ESCINFO[ListItem.Art(fanart10)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart11,$ESCINFO[ListItem.Art(fanart11)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart12,$ESCINFO[ListItem.Art(fanart12)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart13,$ESCINFO[ListItem.Art(fanart13)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart14,$ESCINFO[ListItem.Art(fanart14)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart15,$ESCINFO[ListItem.Art(fanart15)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart16,$ESCINFO[ListItem.Art(fanart16)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart17,$ESCINFO[ListItem.Art(fanart17)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart18,$ESCINFO[ListItem.Art(fanart18)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart19,$ESCINFO[ListItem.Art(fanart19)],home)</onclick>
+                <onclick condition="Skin.HasSetting(SkinHelper.EnableExtraFanart)">SetProperty(fanart20,$ESCINFO[ListItem.Art(fanart20)],home)</onclick>
                 <onclick>ActivateWindow(1126)</onclick>
                 <visible>!String.IsEmpty(ListItem.Art(fanart))</visible>
 			</control>			
 		</control>
 
-<!-- The use of two different cast panels, depending on whether ExtendedInfo is enabled in the skin has been adapted from MikeSiLVO's code.
-     Many thanks to him -->
-		
         <control type="group">
 			<posx>700</posx>
-			<posy>640</posy>
+			<posy>622</posy>
 			<width>1180</width>
-			<height>410</height>
+			<height>450</height>
 			<onup>9000</onup>
             <ondown>noop</ondown>
             <visible>!Control.HasFocus(10)</visible>
-			<include condition="String.IsEqual(ListItem.DBType,set)">ExtendedSet</include>
+			<include>ExtendedSet</include>
         </control>
         
 		<control type="group">
