@@ -196,6 +196,7 @@
 					<label>31523</label>
 					<enable>no</enable>
 					<disabledcolor>$VAR[ThemeLabelColor]</disabledcolor>
+					<visible>!Skin.HasSetting(Disable.PVRChannels) | !Skin.HasSetting(Disable.PVRGuide) | !Skin.HasSetting(Disable.PVRRecordings) | !Skin.HasSetting(Disable.PVRTimer) | !Skin.HasSetting(Disable.PVRSearch)</visible>
 				</control>
 				<control type="button" id="100">
 					<description>Channels</description>
@@ -205,7 +206,7 @@
 					<onclick>ClearProperty(MediaMenu,Home)</onclick>
 					<onclick condition="String.IsEmpty(Window.Property(IsRadio))">ActivateWindow(TVChannels)</onclick>
 					<onclick condition="!String.IsEmpty(Window.Property(IsRadio))">ActivateWindow(RadioChannels)</onclick>
-					<visible>!Window.IsActive(tvchannels)</visible>
+					<visible>!Skin.HasSetting(Disable.PVRChannels) + ![Window.IsActive(tvchannels) | Window.IsActive(radiochannels)]</visible>
 				</control>
 				<control type="button" id="101">
 					<description>Guide</description>
@@ -313,11 +314,11 @@
 					<onclick>ActivateWindow(1150)</onclick>
 				</control>
 			</control>
-			<control type="button" id="10">
-				<description>Watched toggle</description>
-				<include>HiddenObject</include>
-			</control>
 			<include>MediaMenuPlayerControls</include>
+		</control>
+		<control type="button" id="10">
+			<description>Watched toggle</description>
+			<include>HiddenObject</include>
 		</control>
 	</include>
 	<include name="NoMediaMenu">
@@ -385,6 +386,16 @@
 			<onback>ClearProperty(MediaMenu,Home)</onback>
 			<onback>50</onback>
 			<visible>Player.HasMedia + !String.IsEmpty(Window(Home).Property(MediaMenu)) + !Window.IsVisible(1128) + !Window.IsVisible(1130) + !Window.IsVisible(1131) + !Window.IsVisible(1132)</visible>
+			<control type="button" id="9958">
+				<texturefocus>osd/buttons/OSDChannelUpFO.png</texturefocus>
+				<texturenofocus>osd/buttons/OSDChannelUpNF.png</texturenofocus>
+				<label />
+				<width>67</width>
+				<height>67</height>
+				<font />
+				<onclick>PlayerControl(Previous)</onclick>
+				<visible>VideoPlayer.Content(livetv)</visible>
+			</control>
 			<control type="button" id="9951">
 				<texturefocus>osd/buttons/OSDPrevTrackFO.png</texturefocus>
 				<texturenofocus>osd/buttons/OSDPrevTrackNF.png</texturenofocus>
@@ -393,6 +404,7 @@
 				<height>67</height>
 				<font />
 				<onclick>PlayerControl(Previous)</onclick>
+				<visible>!VideoPlayer.Content(livetv)</visible>
 			</control>
 			<control type="button" id="9952">
 				<texturefocus>osd/buttons/OSDRewindFO.png</texturefocus>
@@ -411,6 +423,8 @@
 				<height>67</height>
 				<font />
 				<onclick>PlayerControl(Stop)</onclick>
+				<onclick>ClearProperty(MediaMenu,Home)</onclick>
+				<onclick>SetFocus(50)</onclick>
 			</control>
 			<control type="button" id="9957">
 				<texturefocus>osd/buttons/OSDChannelListFO.png</texturefocus>
@@ -451,6 +465,17 @@
 				<height>67</height>
 				<font />
 				<onclick>PlayerControl(Next)</onclick>
+				<visible>!VideoPlayer.Content(livetv)</visible>
+			</control>
+			<control type="button" id="9959">
+				<texturefocus>osd/buttons/OSDChannelDownFO.png</texturefocus>
+				<texturenofocus>osd/buttons/OSDChannelDownNF.png</texturenofocus>
+				<label />
+				<width>67</width>
+				<height>67</height>
+				<font />
+				<onclick>PlayerControl(Previous)</onclick>
+				<visible>VideoPlayer.Content(livetv)</visible>
 			</control>
 		</control>
 	</include>
@@ -628,7 +653,7 @@
 					<orientation>horizontal</orientation>
 					<align>center</align>
 					<itemgap>5</itemgap>
-					<visible>!Window.IsActive(script-globalsearch.xml) + ![String.IsEqual(Container.NumItems,0) | String.IsEmpty(Container.NumItems)]</visible>
+					<visible>![String.IsEqual(Container.NumItems,0) | String.IsEmpty(Container.NumItems)]</visible>
 					<include>VisibleFadeAnimation</include>
 					<control type="label">
 						<width>auto</width>
@@ -957,8 +982,7 @@
 	<include name="ExtendedMovieSetPanel">
 		<control type="panel" id="90017">
 			<onclick>Dialog.Close(all,true)</onclick>
-			<onclick condition="!System.HasAddon(script.embuary.helper)">ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId])</onclick>
-			<onclick condition="System.HasAddon(script.embuary.helper)">RunScript(script.embuary.helper,action=goto,path='"videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId]"',target=videos)</onclick>
+			<onclick>ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId],return)</onclick>
 			<visible>!String.IsEqual(Container(90017).NumItems,1)</visible>
 			<include content="ExtendedInfoListLayout">
 				<param name="PanelID">90017</param>
@@ -2725,11 +2749,28 @@
 			<animation effect="fade" start="100" end="0" time="500" delay="500" condition="[!Control.HasFocus(95360) + !Container.Scrolling]">Conditional</animation>
 			<visible>Control.IsVisible(53)</visible>
 		</control>
+		<control type="scrollbar" id="95461">
+			<left>120</left>
+			<top>1068</top>
+			<width>1680</width>
+			<height>12</height>
+			<onup>54</onup>
+			<ondown condition="Control.IsVisible(614) + Integer.IsGreaterOrEqual(Container(54).NumPages,5)">614</ondown>
+			<ondown condition="Control.IsVisible(615) + Integer.IsGreaterOrEqual(Container(54).NumPages,5)">616</ondown>
+			<ondown condition="!Integer.IsGreaterOrEqual(Container(54).NumPages,5) | Integer.IsGreaterOrEqual(Container(54).NumPages,5) + !Control.IsVisible(614) + !Control.IsVisible(615)">4400</ondown>
+			<texturesliderbackground />
+			<texturesliderbar colordiffuse="40FFFFFF">colors/white.png</texturesliderbar>
+			<texturesliderbarfocus colordiffuse="$VAR[ThemeLabelColor]">colors/white.png</texturesliderbarfocus>
+			<showonepage>false</showonepage>
+			<orientation>horizontal</orientation>
+			<animation effect="fade" start="100" end="0" time="500" delay="500" condition="[!Control.HasFocus(95461) + !Container.Scrolling]">Conditional</animation>
+			<visible>Control.IsVisible(54)</visible>
+		</control>
 		<control type="scrollbar" id="95660">
 			<top>1068</top>
 			<width>100%</width>
 			<height>12</height>
-			<onup>57</onup>
+			<onup>56</onup>
 			<ondown condition="Control.IsVisible(614) + Integer.IsGreaterOrEqual(Container(56).NumPages,5)">614</ondown>
 			<ondown condition="Control.IsVisible(615) + Integer.IsGreaterOrEqual(Container(56).NumPages,5)">616</ondown>
 			<ondown condition="!Integer.IsGreaterOrEqual(Container(56).NumPages,5) | Integer.IsGreaterOrEqual(Container(56).NumPages,5) + !Control.IsVisible(614) + !Control.IsVisible(615)">4400</ondown>
@@ -2745,7 +2786,7 @@
 			<top>1068</top>
 			<width>100%</width>
 			<height>12</height>
-			<onup>50</onup>
+			<onup>57</onup>
 			<ondown condition="Control.IsVisible(614) + Integer.IsGreaterOrEqual(Container(57).NumPages,5)">614</ondown>
 			<ondown condition="Control.IsVisible(615) + Integer.IsGreaterOrEqual(Container(57).NumPages,5)">616</ondown>
 			<ondown condition="!Integer.IsGreaterOrEqual(Container(57).NumPages,5) | Integer.IsGreaterOrEqual(Container(57).NumPages,5) + !Control.IsVisible(614) + !Control.IsVisible(615)">4400</ondown>
@@ -2778,7 +2819,7 @@
 			<top>1068</top>
 			<width>1850</width>
 			<height>12</height>
-			<onup>53</onup>
+			<onup>509</onup>
 			<ondown condition="Control.IsVisible(614) + Integer.IsGreaterOrEqual(Container(509).NumPages,5)">614</ondown>
 			<ondown condition="Control.IsVisible(615) + Integer.IsGreaterOrEqual(Container(509).NumPages,5)">616</ondown>
 			<ondown condition="!Integer.IsGreaterOrEqual(Container(509).NumPages,5) | Integer.IsGreaterOrEqual(Container(509).NumPages,5) + !Control.IsVisible(614) + !Control.IsVisible(615)">4400</ondown>
@@ -3041,7 +3082,7 @@
 								</control>
 								<control type="grouplist">
 									<visible>!String.IsEmpty(VideoPlayer.Top250)</visible>
-									<width>155</width>
+									<width>165</width>
 									<itemgap>5</itemgap>
 									<orientation>horizontal</orientation>
 									<control type="image">
@@ -3594,7 +3635,7 @@
 				<onback>SetFocus(50)</onback>
 				<orientation>horizontal</orientation>
 				<visible>System.HasAddon(script.embuary.helper)</visible>
-				<visible>String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561])</visible>
+				<visible>[[Container.HasNext | Container.HasPrevious] + String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561])]</visible>
 				<itemlayout height="60" width="66">
 					<control type="label">
 						<height>60</height>
