@@ -3,6 +3,7 @@
 	<defaultcontrol always="true">50</defaultcontrol>
 	<onload>SetProperty(Window.HasSettings,True,Home)</onload>
 	<onload>ClearProperty(MediaMenu,Home)</onload>
+	<onload condition="System.HasAddon(script.skin.info.service) + String.IsEmpty(Window(home).Property(skininfos_daemon_running))">RunScript(script.skin.info.service)</onload>
 	<onunload>ClearProperty(MediaMenu,Home)</onunload>
 	<onunload>ClearProperty(Window.HasSettings,Home)</onunload>
 	<views>50,51,52,54,55,57,59,500,501,503,506,609,507,508,592,603</views>
@@ -20,11 +21,15 @@
 		</control>
 		<control type="button" id="4401">
 			<include>HiddenObject</include>
-			<onfocus>SetProperty(MediaMenu,True,Home)</onfocus>
-			<onfocus>SetFocus(9050)</onfocus>
+			<onfocus condition="[!Skin.HasSetting(Enable.ManualInfoPanel) | String.IsEmpty(Control.GetLabel(4420))] + !Control.IsVisible(95462)">SetProperty(MediaMenu,True,Home)</onfocus>
+			<onfocus condition="[!Skin.HasSetting(Enable.ManualInfoPanel) | String.IsEmpty(Control.GetLabel(4420))] + !Control.IsVisible(95462)">SetFocus(9050)</onfocus>
+			<onup condition="Control.IsVisible(95462)">SetFocus(95462)</onup>
+			<onup condition="!Control.IsVisible(95462)">SetProperty(MediaMenu,True,Home)</onup>
+			<onup condition="!Control.IsVisible(95462)">SetFocus(9050)</onup>
 			<ondown>50</ondown>
 			<onleft>50</onleft>
 			<onright>50</onright>
+			<visible>Skin.HasSetting(Enable.ManualInfoPanel)</visible>
 		</control>
 		<control type="fadelabel" id="4410">
 			<top>-100</top>
@@ -174,6 +179,12 @@
 			<visible>Control.IsVisible(52) | Control.IsVisible(54)</visible>
 			<include condition="!String.IsEmpty(Skin.String(InfoPanel.Delay))">InfoPanelDelayAnimation</include>
 		</control>
+		<control type="list" id="4500">
+			<include>HiddenList</include>
+			<content>$VAR[ArtistInfoPathVar]</content>
+			<visible>Container.Content(artists)</visible>
+ 		</control>
+ 		<!-- $INFO[Container(4500).NumItems] -->
 		<include>CommonBackground</include>
 		<control type="group">
 			<visible>Control.IsVisible(52) | Control.IsVisible(54)</visible>
@@ -217,9 +228,7 @@
 		<control type="group">
 			<visible>Control.IsVisible(54) | Control.IsVisible(52) | Control.IsVisible(500) | Control.IsVisible(503) | Control.IsVisible(57)</visible>
 			<visible>!Window.IsActive(addoninformation)</visible>
-			<animation effect="slide" tween="cubic" time="720" start="0,806" end="0,0">VisibleChange</animation>
-			<animation effect="slide" tween="cubic" time="720" start="0,806" end="0,0">WindowOpen</animation>
-			<animation effect="slide" tween="cubic" time="720" end="0,806" start="0,0">WindowClose</animation>
+			<include>ViewAnimation</include>
 			<top>-30</top>
 			<control type="group">
 				<visible>Control.IsVisible(54) | Control.IsVisible(52) | [Control.IsVisible(503) + Skin.HasSetting(Enable.Wall.AlbumLabels)]</visible>
@@ -272,9 +281,9 @@
 				</control>
 			</control>
 			<control type="group">
-				<visible>Control.IsVisible(500) | Control.IsVisible(57)</visible>
-				<animation effect="slide" start="0" end="40" time="720" tween="cubic" easing="inout" condition="Control.IsVisible(57)">Conditional</animation>
-				<animation effect="slide" tween="cubic" time="720" start="0,806" end="0,0">VisibleChange</animation>
+				<visible>Control.IsVisible(500) | Control.IsVisible(57) + ![Container.Content(genres) + !Skin.HasSetting(Enable.Shift.GenreLabels)]</visible>
+				<animation effect="slide" start="0" end="40" condition="Control.IsVisible(57)">Conditional</animation>
+				<include>ViewAnimation</include>
 				<control type="group">
 					<left>90</left>
 					<top>1010</top>
@@ -330,6 +339,8 @@
 			<texture border="1">gradient_floor.png</texture>
 			<visible>Control.IsVisible(52) | Control.IsVisible(54) | Control.IsVisible(57) | Control.IsVisible(500)</visible>
 		</control>
+		<!-- Scrollbars -->
+		<include>BottomScrollbars</include>
 		<include condition="!Skin.HasSetting(Disable.ScrollLabel)">ScrollOffsetLabel</include>
 		<include>Topbar</include>
 		<control type="group">
@@ -347,6 +358,15 @@
 					<onclick condition="Control.IsVisible(54)">$VAR[54MusicInfoPanelVar]</onclick>
 					<visible>Control.IsVisible(52) | Control.IsVisible(54)</visible>
 					<visible>Container.Content(albums) | Container.Content(artists)</visible>
+				</control>
+				<control type="radiobutton" id="6052">
+					<textwidth>352</textwidth>
+					<include>ButtonCommonValues</include>
+					<label>   - $LOCALIZE[413]</label>
+					<onclick>Skin.ToggleSetting(Enable.ManualInfoPanel)</onclick>
+					<onclick condition="!Skin.HasSetting(Enable.ManualInfoPanel)">Skin.Reset(InfoPanel.Delay)</onclick>
+					<selected>Skin.HasSetting(Enable.ManualInfoPanel)</selected>
+					<visible>!Container.Content(genres) + Window.IsActive(music) + Control.IsVisible(6051) + !String.IsEmpty(Control.GetLabel(4420))</visible>
 				</control>
 				<control type="button" id="201">
 					<description>View options</description>
@@ -435,6 +455,8 @@
 			</control>
 			<include>MediaMenuPlayerControls</include>
 		</control>
+		<include condition="!System.HasAddon(script.embuary.helper)">DefaultLetterJump</include>
+		<include condition="System.HasAddon(script.embuary.helper)">ScriptLetterJump</include>
 		<!-- Fullscreen Fanart -->
 		<control type="group">
 			<visible>!String.IsEmpty(Window(Home).Property(Enable.FullscreenFanart))</visible>
