@@ -3,6 +3,11 @@
 
 <!-- Search functionality adapted from sualfred's embuary and jurialmunkey's arctic.zephyr.2 -->
 
+    <variable name="SearchBelowLabel2">
+	    <value condition="!String.IsEmpty(Container.ListItem.Property(Character))">$INFO[Container.ListItem.Property(Character)]</value>
+		<value condition="!String.IsEmpty(Container.ListItem.Property(Job))">$INFO[Container.ListItem.Property(Job)]</value>
+	</variable>
+
 	<include name="BackgroundOverlaySearch">
 		<param name="overlaywidth">1920</param>
 		<param name="overlayheight">1120</param>
@@ -40,170 +45,189 @@
 
 	<!-- Landscape -->
 	<include name="SearchWideList">
-		<param name="visible">true</param>
-		<param name="content_visible">true</param>
 		<param name="headline">$LOCALIZE[416]</param>
-		<param name="height">420</param>
+		<param name="height">350</param>
         <param name="contenttype">videos</param>
         <param name="id"></param>
+		<param name="labelid"></param>
 		<definition>
-			<control type="group">
-				<visible>$PARAM[visible]</visible>
-				<visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
-				<width>100%</width>
-				<height>$PARAM[height]</height>
+		    <control type="group" id="$PARAM[labelid]">
+			    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+				<top>40</top>
+				<height>40</height>
 				<control type="group">
-		            <top>30</top>
-		            <left>65</left>
-				    <control type="label">
-					    <width>auto</width>
-                        <height>30</height>
-					    <font>font16</font>
-					    <align>left</align>
-					    <aligny>center</aligny>
-					    <label>$PARAM[headline]</label>
-					    <textcolor>Highlight</textcolor>
-				    </control>
-					<control type="fixedlist" id="$PARAM[id]">
-						<visible>$PARAM[content_visible]</visible>
-						<movement>6</movement>
-						<top>60</top>
-						<width>100%</width>
-						<scrolltime>300</scrolltime>
-						<orientation>horizontal</orientation>
-						<preloaditems>4</preloaditems>
-						<ondown>$PARAM[ondown]</ondown>
-						<onup>$PARAM[onup]</onup>
-						<viewtype label="$PARAM[list_name]">list</viewtype>
-                        <itemlayout height="226" width="310">
-				            <include content="GenericEpisodeIconBig">
-					            <param name="isFocused">false</param>
-				            </include>
-			            </itemlayout>
-			            <focusedlayout height="226" width="310">
-				            <include content="GenericEpisodeIconBig">
-					            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
-				            </include>
-			            </focusedlayout>
-                        <content target="$PARAM[contenttype]">$PARAM[content]</content>
-					</control>
+			        <top>40</top>
+				    <height>$PARAM[height]</height>
+                    <visible>Container($PARAM[id]).IsUpdating</visible>
+                    <include>InfoLoading</include>
+                </control>
+				<control type="group">
+				    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+		            <control type="label">
+	                    <top>0</top>
+	                    <left>10</left>
+			            <width>auto</width>
+                        <height>40</height>
+    		            <font>font16</font>
+			            <align>left</align>
+			            <aligny>center</aligny>
+			            <label>$PARAM[headline]</label>
+			            <textcolor>$VAR[HighlightColor]</textcolor>
+		            </control>
 				</control>
+            </control>				
+			<control type="panel" id="$PARAM[id]">
+			    <height>$PARAM[height]</height>
+				<visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+				<movement>6</movement>
+				<top>40</top>
+				<left>10</left>
+				<width>100%</width>
+                <scrolltime>200</scrolltime>
+                <orientation>horizontal</orientation>
+				<onclick condition="System.HasAddon(plugin.video.themoviedb.helper)">Dialog.Close(1122)</onclick>
+				<onclick condition="System.HasAddon(plugin.video.themoviedb.helper) + [String.IsEmpty(Container.ListItem.DBID) | String.IsEqual(Container.ListItem.DBType,musicvideo)]">RunScript(plugin.video.themoviedb.helper,close_dialog=1134,playmedia=$INFO[Container.ListItem.FileNameAndPath])</onclick>
+                <onclick condition="System.HasAddon(plugin.video.themoviedb.helper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,episode)">RunScript(plugin.video.themoviedb.helper,add_path=videodb://tvshows/titles/-1/-1/-1/-1/?xsp=%7b%22rules%22%3a%7b%22and%22%3a%5b%7b%22field%22%3a%22tvshow%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.TvShowTitle]%22%5d%7d%2c%7b%22field%22%3a%22season%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.Season]%22%5d%7d%2c%7b%22field%22%3a%22episode%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.Episode]%22%5d%7d%5d%7d%2c%22type%22%3a%22episodes%22%7d,call_auto=1134)</onclick>
+				<onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + !String.IsEmpty(Container.ListItem.DBID)">Action(Info)</onclick>
+				<viewtype label="$PARAM[list_name]">list</viewtype>
+                <itemlayout height="226" width="310">
+		            <include content="GenericEpisodeIconBig">
+			            <param name="isFocused">false</param>
+		            </include>
+	            </itemlayout>
+	            <focusedlayout height="226" width="310">
+		            <include content="GenericEpisodeIconBig">
+			            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
+		            </include>
+	            </focusedlayout>
+                <content sortby="year" sortorder="descending" target="$PARAM[contenttype]">$PARAM[content]</content>
 			</control>
 		</definition>
 	</include>
     
 	<!-- Poster -->
 	<include name="SearchPosterList">
-		<param name="visible">true</param>
-		<param name="content_visible">true</param>
 		<param name="headline">$LOCALIZE[416]</param>
-		<param name="height">420</param>
+		<param name="height">350</param>
         <param name="contenttype">videos</param>
         <param name="id"></param>
+		<param name="labelid"></param>
         <param name="minnumitems">0</param>
         <param name="content"></param>
 		<definition>
-			<control type="group">
-				<visible>$PARAM[visible]</visible>
-				<visible>Control.IsVisible($PARAM[id])</visible>
-				<width>100%</width>
-				<height>$PARAM[height]</height>
+		    <control type="group" id="$PARAM[labelid]">
+			    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+				<top>40</top>
+				<height>40</height>
 				<control type="group">
-		            <top>30</top>
-		            <left>65</left>
-                    <control type="group">
-                        <visible>Container($PARAM[id]).IsUpdating</visible>
-                        <include>InfoLoading</include>
-                    </control>
-				    <control type="label">
-					    <width>auto</width>
-                        <height>30</height>
-					    <font>font16</font>
-					    <align>left</align>
-					    <aligny>center</aligny>
-					    <label>$PARAM[headline]</label>
-					    <textcolor>Highlight</textcolor>
-				    </control>
-					<control type="panel" id="$PARAM[id]">
-						<visible>$PARAM[content_visible]</visible>
-						<movement>6</movement>
-						<top>60</top>
-						<width>100%</width>
-						<onleft>$PARAM[id]</onleft>
-                        <onright>$PARAM[id]</onright>
-                        <scrolltime>200</scrolltime>
-                        <orientation>horizontal</orientation>
-						<ondown>$PARAM[ondown]</ondown>
-						<onup>$PARAM[onup]</onup>
-                        <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,$PARAM[minnumitems]) | Container($PARAM[id]).IsUpdating</visible>
-                        <animation effect="fade" start="100" end="0" condition="!Integer.IsGreater(Container($PARAM[id]).NumItems,$PARAM[minnumitems]) | Container($PARAM[id]).IsUpdating">Conditional</animation>
-                        <itemlayout height="326" width="232.5">
-				            <include content="GenericPosterIconSmall">
-					            <param name="isFocused">false</param>
-				            </include>
-			            </itemlayout>
-			            <focusedlayout height="326" width="232.5">
-				            <include content="GenericPosterIconSmall">
-					            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
-				            </include>
-			            </focusedlayout>
-                        <content target="$PARAM[contenttype]">$PARAM[content]</content>
-					</control>
+			        <top>40</top>
+				    <height>$PARAM[height]</height>
+                    <visible>Container($PARAM[id]).IsUpdating</visible>
+                    <include>InfoLoading</include>
+                </control>
+				<control type="group">
+				    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+		            <control type="label">
+	                    <top>0</top>
+	                    <left>10</left>
+			            <width>auto</width>
+                        <height>40</height>
+    		            <font>font16</font>
+			            <align>left</align>
+			            <aligny>center</aligny>
+			            <label>$PARAM[headline]</label>
+			            <textcolor>$VAR[HighlightColor]</textcolor>
+		            </control>
 				</control>
+            </control>
+			<control type="panel" id="$PARAM[id]">
+			    <height>$PARAM[height]</height>
+				<movement>6</movement>
+				<top>40</top>
+				<left>10</left>
+				<width>100%</width>
+                <scrolltime>200</scrolltime>
+                <orientation>horizontal</orientation>
+                <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,$PARAM[minnumitems]) | Container($PARAM[id]).IsUpdating</visible>
+				<onclick condition="System.HasAddon(plugin.video.themoviedb.helper)">Dialog.Close(1122)</onclick>
+				<onclick condition="System.HasAddon(plugin.video.themoviedb.helper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,movie)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.Label,videodb://movies/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%5B%22,%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D],call_auto=1134)</onclick>
+                <onclick condition="System.HasAddon(plugin.video.themoviedb.helper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,tvshow)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.Label,videodb://tvshows/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%5B%22,%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D],call_auto=1134)</onclick>
+				<onclick condition="!System.HasAddon(plugin.video.themoviedb.helper) + !String.IsEmpty(Container.ListItem.DBID)">Action(Info)</onclick>
+				<itemlayout height="326" width="232.5">
+    	            <include content="GenericPosterIconSmall">
+			            <param name="isFocused">false</param>
+						<param name="isSearch">true</param>
+						<param name="aspect">stretch</param>
+		            </include>
+	            </itemlayout>
+	            <focusedlayout height="326" width="232.5">
+		            <include content="GenericPosterIconSmall">
+			            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
+						<param name="isSearch">true</param>
+						<param name="aspect">stretch</param>
+		            </include>
+	            </focusedlayout>
+                <content sortby="year" sortorder="descending" target="$PARAM[contenttype]">$PARAM[content]</content>
 			</control>
 		</definition>
 	</include>
     
 	<!-- Square -->
 	<include name="SearchSquareList">
-		<param name="visible">true</param>
-		<param name="content_visible">true</param>
 		<param name="headline">$LOCALIZE[416]</param>
-		<param name="height">420</param>
+		<param name="height">350</param>
         <param name="contenttype">music</param>
         <param name="id"></param>
+		<param name="labelid"></param>
 		<definition>
-			<control type="group">
-				<visible>$PARAM[visible]</visible>
-				<visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+		    <control type="group" id="$PARAM[labelid]">
+			    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+				<top>40</top>
+				<height>40</height>
+				<control type="group">
+			        <top>40</top>
+				    <height>$PARAM[height]</height>
+                    <visible>Container($PARAM[id]).IsUpdating</visible>
+                    <include>InfoLoading</include>
+                </control>
+				<control type="group">
+				    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+		            <control type="label">
+	                    <top>0</top>
+	                    <left>10</left>
+			            <width>auto</width>
+                        <height>40</height>
+    		            <font>font16</font>
+			            <align>left</align>
+			            <aligny>center</aligny>
+			            <label>$PARAM[headline]</label>
+			            <textcolor>$VAR[HighlightColor]</textcolor>
+		            </control>
+				</control>
+            </control>
+			<control type="fixedlist" id="$PARAM[id]">
+			    <visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0) | Container($PARAM[id]).IsUpdating</visible>
+				<movement>6</movement>
+				<top>40</top>
+				<left>10</left>
 				<width>100%</width>
 				<height>$PARAM[height]</height>
-				<control type="group">
-		            <top>30</top>
-		            <left>65</left>
-				    <control type="label">
-					    <width>auto</width>
-                        <height>30</height>
-					    <font>font16</font>
-					    <align>left</align>
-					    <aligny>center</aligny>
-					    <label>$PARAM[headline]</label>
-					    <textcolor>Highlight</textcolor>
-				    </control>
-					<control type="fixedlist" id="$PARAM[id]">
-						<visible>$PARAM[content_visible]</visible>
-						<movement>6</movement>
-						<top>60</top>
-						<width>100%</width>
-						<scrolltime>300</scrolltime>
-						<orientation>horizontal</orientation>
-						<preloaditems>4</preloaditems>
-						<ondown>$PARAM[ondown]</ondown>
-						<onup>$PARAM[onup]</onup>
-						<viewtype label="$PARAM[list_name]">list</viewtype>
-			            <itemlayout height="310" width="310">
-				            <include content="GenericMusicIconSearch">
-					            <param name="isFocused">false</param>
-				            </include>
-			            </itemlayout>
-			            <focusedlayout height="310" width="310">
-				            <include content="GenericMusicIconSearch">
-					            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
-				            </include>
-			            </focusedlayout>
-                        <content target="$PARAM[contenttype]">$PARAM[content]</content>
-					</control>
-				</control>
+				<scrolltime>300</scrolltime>
+				<orientation>horizontal</orientation>
+				<preloaditems>4</preloaditems>
+				<onclick condition="!String.IsEmpty(Container.ListItem.DBID) + [String.IsEqual(Container.ListItem.DBType,artist) | String.IsEqual(Container.ListItem.DBType,album)]">Action(Info)</onclick>
+				<viewtype label="$PARAM[list_name]">list</viewtype>
+	            <itemlayout height="310" width="310">
+		            <include content="GenericMusicIconSearch">
+			            <param name="isFocused">false</param>
+		            </include>
+	            </itemlayout>
+	            <focusedlayout height="310" width="310">
+		            <include content="GenericMusicIconSearch">
+			            <param name="isFocused">Control.HasFocus($PARAM[id])</param>
+		            </include>
+	            </focusedlayout>
+                <content target="$PARAM[contenttype]">$PARAM[content]</content>
 			</control>
 		</definition>
 	</include>
