@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
+	
 	<include name="View_51_Panel">
 		<include content="BackgroundOverlay">
 			<param name="parentid" value="51"/>
@@ -11,7 +12,7 @@
 			<include>ContentFade</include>
 
 			<control type="panel" id="51" description="Grid">
-				<viewtype label="$LOCALIZE[31963]">info</viewtype>
+				<viewtype label="$LOCALIZE[31963]">list</viewtype>
 				<posx>950</posx>
 				<posy>351</posy>
 				<width>930</width>
@@ -20,13 +21,14 @@
 				<onleft condition="!Skin.HasSetting(KioskMode.Enabled)">9000</onleft>
                 <onleft condition="Skin.HasSetting(KioskMode.Enabled)">noop</onleft>
                 <oninfo condition="ListItem.IsCollection + !String.Contains(System.BuildVersion,19.0)">ActivateWindow(1127)</oninfo>
-                <onright>61</onright>
+                <onright condition="!Control.IsVisible(615)">61</onright>
+				<onright condition="Control.IsVisible(615)">615</onright>
 				<onup>51</onup>
 				<ondown>51</ondown>
 				<preloaditems>12</preloaditems>
 				<pagecontrol>61</pagecontrol>
 				<scrolltime>400</scrolltime>
-				<visible>!Skin.HasSetting(hide.panelview)</visible>
+				<visible>[$EXP[Exp_View_51] + Skin.HasSetting(Enable.NewViewSelector)] | [!Skin.HasSetting(hide.panelview) + !Skin.HasSetting(Enable.NewViewSelector)]</visible>
 
 				<include content="BannerLayout">
 					<param name="viewid">51</param>
@@ -55,33 +57,40 @@
 				<include content="GenericLayout">
 					<param name="viewid">51</param>
 				</include>
+				
+				<include content="VideoLayout">
+                    <param name="viewid">51</param>
+                </include>
+				
 			</control>
 
 			<include content="PanelTemplate">
 				<param name="top">345</param>
-				<param name="height">415</param>
+				<param name="height">440</param>
                 <param name="width">860</param>
 				<param name="heading">$VAR[panelheading]</param>
 				<param name="subheading">$VAR[panelsubheading]</param>
+				<param name="subheading2">$VAR[panelsubheading2]</param>
+                <param name="subheading2_visible">[Container.content(movies) | Container.content(episodes)] + [Skin.HasSetting(ShowAudioSub) + ![String.IsEmpty(ListItem.Property(AudioLanguage.1)) + String.IsEmpty(ListItem.Property(SubtitleLanguage.1))]]</param>                
 				<param name="plot">$VAR[Plots]</param>
 				<param name="footer">$VAR[panelfooter]</param>
 				<param name="visibility">![Container.Content(artists) | Container.Content(albums) | Container.Content(images) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons)]</param>
 			</include>
 			<include content="PanelTemplate">
 				<param name="top">345</param>
-				<param name="height">385</param>
+				<param name="height">405</param>
                 <param name="width">860</param>
 				<param name="heading">$VAR[panelheading]</param>
 				<param name="subheading">$VAR[panelsubheading]</param>
                 <param name="subheading2">$VAR[panelsubheading2]</param>
-                <param name="subheading2_visible">!String.IsEmpty(Window(Home).Property(NextAired.NextDate))</param>                
+                <param name="subheading2_visible">!String.IsEmpty(Window(Home).Property(TMDbHelper.ListItem.Next_Aired))</param>                
 				<param name="plot">$VAR[Plots]</param>
 				<param name="footer">$VAR[panelfooter]</param>
 				<param name="visibility">[Container.Content(tvshows) | Container.Content(seasons)]</param>
 			</include>            
 			<include content="PanelTemplate">
 				<param name="top">345</param>
-				<param name="height">415</param>
+				<param name="height">445</param>
                 <param name="width">860</param>
 				<param name="heading">$VAR[panelheading]</param>
 				<param name="subheading">$VAR[panelsubheading]</param>
@@ -100,7 +109,7 @@
 			</include>
 			<include content="PanelTemplate">
 				<param name="top">345</param>
-				<param name="height">415</param>
+				<param name="height">440</param>
                 <param name="width">860</param>
 				<param name="heading">$VAR[panelheading]</param>
 				<param name="subheading">$VAR[panelsubheading]</param>
@@ -114,13 +123,13 @@
 			</include>
 			<include content="PanelTemplate">
 				<param name="top">345</param>
-				<param name="height">415</param>
+				<param name="height">440</param>
                 <param name="width">860</param>
 				<param name="heading">$VAR[panelheading]</param>
 				<param name="subheading">$VAR[panelsubheading]</param>
 				<param name="plot">$VAR[Plots]</param>
-				<param name="subcontent_label1">$INFO[ListItem.Label]$INFO[ListItem.Duration, • (,)]</param>
-                <param name="subcontent_label2">$INFO[ListItem.Label]$VAR[ItemDurationHrMins, • (,)]</param>
+				<param name="subcontent_label1">$INFO[ListItem.TrackNumber,,. ]$INFO[ListItem.Label]$INFO[ListItem.Duration, • (,)]</param>
+                <param name="subcontent_label2">$INFO[ListItem.TrackNumber,,. ]$INFO[ListItem.Label]$VAR[ItemDurationHrMins, • (,)]</param>
 				<param name="subcontent_path">$INFO[ListItem.FolderPath]</param>
 				<param name="subcontent_visible">String.IsEmpty(ListItem.Property(Album_Description))</param>
 				<param name="subcontent_image_visible">false</param>
@@ -139,7 +148,7 @@
 				<texturesliderbar></texturesliderbar>
 				<texturesliderbarfocus></texturesliderbarfocus>
 				<textureslidernib border="18">OSD/ScrollbarNibNF.png</textureslidernib>
-				<textureslidernibfocus border="18">OSD/ScrollbarNibFO.png</textureslidernibfocus>
+				<textureslidernibfocus border="18" colordiffuse="$VAR[HighlightColor]">OSD/ScrollbarNibFO.png</textureslidernibfocus>
 				<showonepage>false</showonepage>
 				<orientation>vertical</orientation>
 				<onleft>51</onleft>
@@ -148,8 +157,8 @@
 			</control>
 
             <control type="button" id="61">
-                <visible>String.IsEqual(Container.ViewMode,Panel)</visible>
-                <visible>Skin.HasSetting(Show.JumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
+                <visible>Control.IsVisible(51)</visible>
+                <visible>Skin.HasSetting(Show.JumpToLetter) + !Skin.HasSetting(Show.EHJumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
                 <font />
                 <texturefocus />
                 <texturenofocus />
@@ -199,8 +208,8 @@
                 <include content="AlphabetLetter"><param name="label" value="N" /></include>
                 <include content="AlphabetLetter"><param name="label" value="O" /></include>
                 <animation effect="fade" start="100" end="0" condition="[String.IsEqual(ListItem.SortLetter,O) | String.IsEqual(ListItem.SortLetter,P) | String.IsEqual(ListItem.SortLetter,Q) | String.IsEqual(ListItem.SortLetter,R) | String.IsEqual(ListItem.SortLetter,S) | String.IsEqual(ListItem.SortLetter,T) | String.IsEqual(ListItem.SortLetter,U) | String.IsEqual(ListItem.SortLetter,V) | String.IsEqual(ListItem.SortLetter,W) | String.IsEqual(ListItem.SortLetter,X) | String.IsEqual(ListItem.SortLetter,Y) | String.IsEqual(ListItem.SortLetter,Z)]">Conditional</animation>
-                <visible>String.IsEqual(Container.ViewMode,Panel)</visible>
-                <visible>Skin.HasSetting(Show.JumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
+                <visible>Control.IsVisible(51)</visible>
+                <visible>Skin.HasSetting(Show.JumpToLetter) + !Skin.HasSetting(Show.EHJumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
             </control>
 
             <control type="grouplist" id="61512">
@@ -228,10 +237,27 @@
                 <include content="AlphabetLetter"><param name="label" value="Y" /></include>
                 <include content="AlphabetLetter"><param name="label" value="Z" /></include>
                 <animation effect="fade" start="100" end="0" condition="![String.IsEqual(ListItem.SortLetter,O) | String.IsEqual(ListItem.SortLetter,P) | String.IsEqual(ListItem.SortLetter,Q) | String.IsEqual(ListItem.SortLetter,R) | String.IsEqual(ListItem.SortLetter,S) | String.IsEqual(ListItem.SortLetter,T) | String.IsEqual(ListItem.SortLetter,U) | String.IsEqual(ListItem.SortLetter,V) | String.IsEqual(ListItem.SortLetter,W) | String.IsEqual(ListItem.SortLetter,X) | String.IsEqual(ListItem.SortLetter,Y) | String.IsEqual(ListItem.SortLetter,Z)]">Conditional</animation>
-                <visible>String.IsEqual(Container.ViewMode,Panel)</visible>
-                <visible>Skin.HasSetting(Show.JumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
+                <visible>Control.IsVisible(51)</visible>
+                <visible>Skin.HasSetting(Show.JumpToLetter) + !Skin.HasSetting(Show.EHJumpToLetter) + [String.IsEqual(Container.SortMethod,$LOCALIZE[551]) | String.IsEqual(Container.SortMethod,$LOCALIZE[556]) | String.IsEqual(Container.SortMethod,$LOCALIZE[561]) | String.IsEqual(Container.SortMethod,$LOCALIZE[558]) | String.IsEqual(Container.SortMethod,$LOCALIZE[557])]</visible>
             </control>            
             
+			<include condition="!Skin.String(MediaViewsExtraArt,none)" content="ShowMediaViewsExtraArt">
+			    <param name="logoleft">1380</param>
+				<param name="logotop">40</param>
+				<param name="logowidth">500</param>
+				<param name="logoheight">290</param>
+				<param name="discleft">1600</param>
+				<param name="disctop">51</param>
+				<param name="discheight">260</param>
+				<param name="characterleft">1640</param>
+				<param name="charactertop">41</param>
+				<param name="characterheight">280</param>
+				<param name="clearartleft">1457</param>
+				<param name="cleararttop">64</param>
+				<param name="clearartwidth">463</param>
+				<param name="clearartheight">260</param>
+			</include>
+			
 		</control>
 	</include>
 </includes>
