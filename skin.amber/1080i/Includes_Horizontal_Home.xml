@@ -1,10 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
 	<include name="Horizontal_Home_Layout">
+		
+		<!-- Now Playing -->
+		<control type="group">
+			<visible>Player.HasMedia + ![Skin.HasSetting(Hide.NowPlaying) | Window.Next(musicplaylist) | Window.Next(visualisation)]</visible>
+			<include>AnimationVisibleFade</include>
+			<include content="AnimationSlideBottomWindow">
+				<param name="slide">540</param>
+			</include>
+			<include content="AnimationSlideBottomVisible">
+				<param name="slide">540</param>
+			</include>
+			<include>HomeNowPlaying</include>
+		</control>
+		
+		<!-- Widgets -->
 		<control type="group" id="700">
             <visible>!Skin.HasSetting(Hide.AllShelves)</visible>
-            <animation effect="fade" start="100" end="0" condition="!String.IsEmpty(Container(300).ListItem.Property(widgetsHide)) + !ControlGroup(700).HasFocus">Conditional</animation>            
+            <animation effect="fade" start="100" end="0" time="480" condition="[!Skin.HasSetting(Hide.NowPlaying) + Player.HasAudio + !ControlGroup(700).HasFocus] | 
+			                                                                   [!Skin.HasSetting(Hide.NowPlaying) + Player.HasVideo + !ControlGroup(700).HasFocus] | 
+																			   [!String.IsEmpty(Container(300).ListItem.Property(widgetsHide)) + !ControlGroup(700).HasFocus]">Conditional</animation>
 			<include>skinshortcuts-template-shelfgroup2shelvesbackground</include>
+			<include>skinshortcuts-template-shelfgroup3shelvesbackground</include>
 			<include>skinshortcuts-template-shelfgroup1</include>
 			<include>skinshortcuts-template-shelfgroup2</include>
 			<include>skinshortcuts-template-shelfgroup3</include>
@@ -15,31 +33,35 @@
             <control type="group">
                 <include>PVRRecordingWidgets</include>
 			</control>
-         </control>
+        </control>
+		
+        <!-- Main Menu/Submenu -->		
 		<control type="group">
 			<posy>220</posy>
+			<!-- Main menu bar textures -->
 			<control type="group" description="Furniture">
 				<control type="image" description="Top glass border">
 					<animation effect="zoom" start="100,100" end="100,50" time="100" condition="true">Conditional</animation>
 					<posy>651</posy>
 					<width>1920</width>
 					<height>87</height>
-					<texture border="0,0,0,12">home/NavbarGlass.png</texture>
+					<texture border="0,0,0,12" colordiffuse="$VAR[GlowBarsColor]">home/NavbarGlass.png</texture>
 				</control>
 				<control type="image" description="Bottom glass border">
 					<animation effect="zoom" start="100,100" end="100,50" time="100" condition="!Integer.IsGreater(Container(9001).NumItems,0)">Conditional</animation>
 					<posy>787</posy>
 					<width>1920</width>
 					<height>87</height>
-					<texture flipy="true" border="0,10,0,0">home/NavbarGlass2.png</texture>
+					<texture flipy="true" border="0,10,0,0" colordiffuse="$VAR[GlowBarsColor]">home/NavbarGlass2.png</texture>
 				</control>
 				<control type="image">
 					<posy>625</posy>
 					<width>1920</width>
 					<height>225</height>
-					<texture flipy="true">home/HomeMenuBack3.png</texture>
+					<texture flipy="true" colordiffuse="$VAR[MenuBarColor]">home/HomeMenuBack3.png</texture>
 				</control>
 			</control>
+			<!-- Main menu content -->
 			<control type="fixedlist" id="300" description="Main Bar">
 				<animation effect="fade" time="200" start="100" end="25" reversible="true" condition="!Control.HasFocus(300)">Conditional</animation>
 				<posx>-338</posx>
@@ -50,14 +72,13 @@
 				<onright>300</onright>
 				<ondown>9001</ondown>
                 <include condition="!Skin.HasSetting(Hide.AllShelves)">skinshortcuts-template-ShelfOnUpMainMenu</include>
-<!--				<onup condition="!Skin.HasSetting(Hide.AllShelves)">700</onup> -->
 				<pagecontrol></pagecontrol>
 				<focusposition>2</focusposition>
 				<orientation>horizontal</orientation>
 				<itemlayout height="70" width="519">
 					<control type="label">
 						<width>519</width>
-						<textcolor>Grey</textcolor>
+						<textcolor>$VAR[LabelTextColor]</textcolor>
 						<shadowcolor>ShadowDark</shadowcolor>
 						<height>70</height>
 						<align>center</align>
@@ -71,7 +92,7 @@
 				<focusedlayout height="70" width="519">
 					<control type="label">
 						<width>519</width>
-						<textcolor>Highlight</textcolor>
+						<textcolor>$VAR[HighlightColor]</textcolor>
 						<shadowcolor>ShadowDark</shadowcolor>
 						<height>70</height>
 						<align>center</align>
@@ -85,6 +106,9 @@
                     <include>skinshortcuts-mainmenu</include>
 				</content>
 			</control>
+			<!-- Info Line -->
+			<include condition="Skin.HasSetting(ShowInfoLine) + !Skin.HasSetting(ShowInfoLineShelf)">Library_Count</include>
+			<!-- Submenu content -->
 			<control type="fixedlist" id="9001" description="Submenu Bar">
 				<animation effect="slide" start="0,0" end="-128,0" time="0" condition="String.IsEqual(Container(9001).NumItems,2) | String.IsEqual(Container(9001).NumItems,4) | String.IsEqual(Container(9001).NumItems,6)">conditional</animation>
 				<include>VisibleFadeEffect</include>
@@ -113,7 +137,7 @@
 						<font>Details</font>
 						<scroll>false</scroll>
 						<label>$INFO[ListItem.Label]</label>
-						<textcolor>Black</textcolor>
+						<textcolor>$VAR[FocusedTextColor]</textcolor>
 						<shadowcolor></shadowcolor>
 					</control>
 					<control type="label">
@@ -125,7 +149,6 @@
 						<font>Details</font>
 						<scroll>false</scroll>
 						<label>$INFO[ListItem.Label]</label>
-						<textcolor>Details</textcolor>
 						<shadowcolor></shadowcolor>
 					</control>
 				</itemlayout>
@@ -136,7 +159,7 @@
 						<posy>8</posy>
 						<width>250</width>
 						<height>36</height>
-						<texture border="4" colordiffuse="Highlight">img/WhiteRoundedST2.png</texture>
+						<texture border="4" colordiffuse="$VAR[HighlightColor]">img/WhiteRoundedST2.png</texture>
 					</control>
 					<control type="label">
 						<visible>!Control.HasFocus(9001)</visible>
@@ -147,7 +170,6 @@
 						<aligny>center</aligny>
 						<font>Details</font>
 						<label>$INFO[ListItem.Label]</label>
-						<textcolor>Details</textcolor>
 						<shadowcolor></shadowcolor>
 					</control>
 					<control type="label">
@@ -159,7 +181,7 @@
 						<aligny>center</aligny>
 						<font>Details</font>
 						<label>$INFO[ListItem.Label]</label>
-						<textcolor>Black</textcolor>
+						<textcolor>$VAR[FocusedTextColor]</textcolor>
 						<shadowcolor></shadowcolor>
 					</control>
 				</focusedlayout>
