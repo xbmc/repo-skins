@@ -9,7 +9,7 @@
 			<include>ListInfoViewContentPanel</include>
 			
 			<control type="group">
-				<visible>Container.Content(Movies) | Container.Content(Sets)</visible>
+				<visible>Container.Content(Movies) | Container.Content(Sets) | [Container.Content(Actors) + System.AddonIsEnabled(plugin.video.themoviedb.helper)]</visible>
 				<include condition="Window.IsActive(Videos)">MoviesListInfo</include>
 			</control>
 			
@@ -35,15 +35,15 @@
 				<ondown>58</ondown>
 				<onleft>850</onleft>
 				<onright>150</onright>
-				<visible>Container.Content(Movies) | Container.Content(Sets) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes) | $EXP[AlbumsSongsArtists] | Container.Content(Addons) | Container.Content(Games)</visible>
-				<itemlayout height="37" condition="Container.Content(Movies) | Container.Content(Sets)">
+				<visible>Container.Content(Movies) | Container.Content(Sets) | Container.Content(TVShows) | Container.Content(Seasons) | Container.Content(Episodes) | [Container.Content(Actors) + System.AddonIsEnabled(plugin.video.themoviedb.helper)] | $EXP[AlbumsSongsArtists] | Container.Content(Addons) | Container.Content(Games)</visible>
+				<itemlayout height="37" condition="Container.Content(Movies) | Container.Content(Sets) | Container.Content(Actors)">
 					<include content="ListInfoItemlayoutContent">
 						<param name="visible" value="String.IsEmpty(ListItem.Title)" />
 					</include>
 					<include content="ListInfoLabel2">
 						<param name="textcolor" value="ListColor3" />
 						<param name="label" value="$INFO[ListItem.Label2]" />
-						<param name="visible" value="Skin.HasSetting(DoNotUseStarRatingMovies)" />
+						<param name="visible" value="Container.Content(Actors) | [!Container.Content(Actors) + Skin.HasSetting(DoNotUseStarRatingMovies)]" />
 					</include>
 					<control type="group">
 						<visible>!String.IsEmpty(ListItem.Title)</visible>
@@ -58,14 +58,14 @@
 						</include>
 					</control>
 				</itemlayout>
-				<focusedlayout height="37" condition="Container.Content(Movies) | Container.Content(Sets)">
+				<focusedlayout height="37" condition="Container.Content(Movies) | Container.Content(Sets) | Container.Content(Actors)">
 					<include content="ListInfoFocusedlayoutContent">
 						<param name="visible" value="String.IsEmpty(ListItem.Title)" />
 					</include>
 					<include content="ListInfoLabel2">
 						<param name="textcolor" value="ListColor3" />
 						<param name="label" value="$INFO[ListItem.Label2]" />
-						<param name="visible" value="Skin.HasSetting(DoNotUseStarRatingMovies)" />
+						<param name="visible" value="Container.Content(Actors) | [!Container.Content(Actors) + Skin.HasSetting(DoNotUseStarRatingMovies)]" />
 					</include>
 					<control type="group">
 						<visible>!String.IsEmpty(ListItem.Title)</visible>
@@ -348,9 +348,19 @@
 		</control>
 	</include>
 	
+	<include name="ListInfoTheMovieDBHelperActors">
+		<control type="list" id="5053">
+			<left>2000</left>
+			<visible>Container.Content(Actors) + Control.IsVisible(58)</visible>
+			<itemlayout />
+			<focusedlayout />
+			<content>plugin://plugin.video.themoviedb.helper/?info=details&amp;type=person&amp;query=$INFO[ListItem.Label]</content>
+		</control>
+	</include>
+	
 	<include name="MoviesListInfo">
 		<control type="group">
-			<visible>!ListItem.IsParentFolder</visible>
+			<visible>!ListItem.IsParentFolder + !Container.Content(Actors)</visible>
 			
 			<include content="ListInfoCommon">
 				<param name="width" value="177" />
@@ -431,6 +441,99 @@
 					<param name="maxwidth" value="110" />
 					<param name="info" value="$VAR[RatingType]" />
 					<param name="visible" value="true" />
+				</include>
+			</control>
+		</control>
+		
+		<control type="group">
+			<visible>!ListItem.IsParentFolder + Container.Content(Actors)</visible>
+			<include condition="System.AddonIsEnabled(plugin.video.themoviedb.helper)">ListInfoTheMovieDBHelperActors</include>
+			
+			<include content="ListInfoCommon">
+				<param name="width" value="177" />
+				<param name="height" value="250" />
+				<param name="icon" value="$INFO[ListItem.ActualIcon]" />
+				<param name="bordersize" value="30" />
+				<param name="diffuse" value="covers/list-info-poster-diffuse.png" />
+				<param name="image" value="$VAR[PosterThumb]" />
+			</include>
+			
+			<include content="ListInfoGenre">
+				<param name="left" value="227" />
+				<param name="width" value="476" />
+				<param name="label" value="$VAR[ListViewLabel2]" />
+			</include>
+			
+			<include content="ListInfoPlot">
+				<param name="left" value="227" />
+				<param name="top" value="376" />
+				<param name="width" value="476" />
+				<param name="height" value="208" />
+				<param name="fallback" value="31203" />
+				<param name="label" value="$INFO[Container(5053).ListItem.Property(Biography)]" />
+			</include>
+			
+			<control type="grouplist">
+				<description>Media Info</description>
+				<left>44</left>
+				<top>585</top>
+				<width>660</width>
+				<align>center</align>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="ListInfoGrouplistContent">
+					<param name="label" value="$LOCALIZE[31489]:" />
+					<param name="maxwidth" value="120" />
+					<param name="info" value="$INFO[Container(5053).ListItem.Property(Birthday)]" />
+					<param name="visible" value="!String.IsEmpty(Container(5053).ListItem.Property(Birthday))" />
+				</include>
+				<control type="label">
+					<height>45</height>
+					<width>26</width>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>MediaInfoFont</font>
+					<textcolor>GreyColor3</textcolor>
+					<label>&#x2022;</label>
+					<visible>!String.IsEmpty(Container(5053).ListItem.Property(Age))</visible>
+				</control>
+				<include content="ListInfoGrouplistContent">
+					<param name="label" value="$LOCALIZE[31485]:" />
+					<param name="maxwidth" value="100" />
+					<param name="info" value="$INFO[Container(5053).ListItem.Property(Age)]" />
+					<param name="visible" value="!String.IsEmpty(Container(5053).ListItem.Property(Age))" />
+				</include>
+				<control type="label">
+					<height>45</height>
+					<width>26</width>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>MediaInfoFont</font>
+					<textcolor>GreyColor3</textcolor>
+					<label>&#x2022;</label>
+					<visible>!String.IsEmpty(Container(5053).ListItem.Property(Deathday))</visible>
+				</control>
+				<include content="ListInfoGrouplistContent">
+					<param name="label" value="$LOCALIZE[21897]:" />
+					<param name="maxwidth" value="120" />
+					<param name="info" value="$INFO[Container(5053).ListItem.Property(Deathday)]" />
+					<param name="visible" value="!String.IsEmpty(Container(5053).ListItem.Property(Deathday))" />
+				</include>
+				<control type="label">
+					<height>45</height>
+					<width>26</width>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>MediaInfoFont</font>
+					<textcolor>GreyColor3</textcolor>
+					<label>&#x2022;</label>
+					<visible>!String.IsEmpty(Container(5053).ListItem.Property(Born))</visible>
+				</control>
+				<include content="ListInfoGrouplistContent">
+					<param name="label" value="$LOCALIZE[21893]:" />
+					<param name="maxwidth" value="190" />
+					<param name="info" value="$INFO[Container(5053).ListItem.Property(Born)]" />
+					<param name="visible" value="!String.IsEmpty(Container(5053).ListItem.Property(Born))" />
 				</include>
 			</control>
 		</control>
@@ -626,7 +729,7 @@
 	
 	<include name="SeasonsEpisodesListInfo">
 		<control type="group">
-			<visible>Container.Content(Seasons)</visible>
+			<visible>!ListItem.IsParentFolder + Container.Content(Seasons)</visible>
 			
 			<include content="ListInfoCommon">
 				<param name="width" value="177" />
@@ -640,7 +743,7 @@
 			<include content="ListInfoGenre">
 				<param name="left" value="227" />
 				<param name="width" value="476" />
-				<param name="label" value="$VAR[SeasonGenre]" />
+				<param name="label" value="$INFO[ListItem.Genre]" />
 			</include>
 			
 			<control type="group">
@@ -695,14 +798,14 @@
 				<include content="ListInfoGrouplistContent">
 					<param name="label" value="$LOCALIZE[572]:" />
 					<param name="maxwidth" value="200" />
-					<param name="info" value="$VAR[SeasonStudio]" />
+					<param name="info" value="$INFO[ListItem.Studio]" />
 					<param name="visible" value="true" />
 				</include>
 				<include>ListInfoViewDot</include>
 				<include content="ListInfoGrouplistContent">
 					<param name="label" value="$LOCALIZE[31936]:" />
 					<param name="maxwidth" value="110" />
-					<param name="info" value="$VAR[SeasonPremiered]" />
+					<param name="info" value="$INFO[ListItem.Premiered]" />
 					<param name="visible" value="true" />
 				</include>
 				<include>ListInfoViewDot</include>
@@ -719,15 +822,14 @@
 			<visible>!ListItem.IsParentFolder + Container.Content(Episodes)</visible>
 			
 			<control type="image">
-				<description>Cover Case</description>
+				<description>Cover Background</description>
 				<left>39</left>
 				<top>372</top>
 				<width>334</width>
 				<height>215</height>
-				<texture border="4">covers/cover-case2.png</texture>
+				<texture background="true" border="4">panels/panel3.png</texture>
 				<aspectratio>stretch</aspectratio>
-				<fadetime>IconCrossfadeTime</fadetime>
-				<animation effect="fade" end="60" condition="true">Conditional</animation>
+				<include>ListInfoViewMediaInfoBackgroundFadeAnim</include>
 			</control>
 			
 			<control type="image">
@@ -750,13 +852,12 @@
 				<top>372</top>
 				<width>334</width>
 				<height>215</height>
-				<texture background="true">$INFO[ListItem.Thumb]</texture>
-				<bordersize>4</bordersize>
+				<texture background="true" diffuse="covers/list-info-2-fanart-diffuse.png">$INFO[ListItem.Thumb]</texture>
+				<bordersize>1</bordersize>
 				<aspectratio>keep</aspectratio>
 				<fadetime>IconCrossfadeTime</fadetime>
-				<visible>!String.IsEmpty(ListItem.Thumb)</visible>
 			</control>
-		
+			
 			<control type="label">
 				<description>TV Show</description>
 				<left>44</left>
@@ -872,13 +973,19 @@
 					<param name="label" value="$LOCALIZE[21899]:" />
 					<param name="maxwidth" value="200" />
 					<param name="info" value="$INFO[ListItem.Property(Album_Label)]" />
-					<param name="visible" value="true" />
+					<param name="visible" value="String.IsEmpty(ListItem.Duration)" />
+				</include>
+				<include content="ListInfoGrouplistContent">
+					<param name="label" value="$LOCALIZE[180]:" />
+					<param name="maxwidth" value="200" />
+					<param name="info" value="$VAR[MusicDurationVar]" />
+					<param name="visible" value="!String.IsEmpty(ListItem.Duration)" />
 				</include>
 				<include>ListInfoViewDot</include>
 				<include content="ListInfoGrouplistContent">
 					<param name="label" value="$LOCALIZE[345]:" />
-					<param name="maxwidth" value="110" />
-					<param name="info" value="$INFO[ListItem.Year]" />
+					<param name="maxwidth" value="150" />
+					<param name="info" value="$VAR[MusicYearVar]" />
 					<param name="visible" value="true" />
 				</include>
 				<control type="label">
@@ -970,29 +1077,15 @@
 					<description>Born</description>
 					<width min="0" max="150">auto</width>
 					<include>ListInfoViewCatLabel</include>
-					<label>$LOCALIZE[21893]:</label>
-					<visible>!String.IsEmpty(ListItem.Property(Artist_Born))</visible>
-				</control>
-				<control type="label">
-					<description>Formed</description>
-					<width min="0" max="150">auto</width>
-					<include>ListInfoViewCatLabel</include>
-					<label>$LOCALIZE[21894]:</label>
-					<visible>!String.IsEmpty(ListItem.Property(Artist_Formed))</visible>
+					<label>$VAR[ArtistBornFormedLabel]:</label>
+					<visible>![String.IsEmpty(ListItem.Property(Artist_Born)) + String.IsEmpty(ListItem.Property(Artist_Formed))]</visible>
 				</control>
 				<control type="label">
 					<description>Born Value</description>
 					<width min="0" max="300">auto</width>
 					<include>ListInfoViewCatValueLabel</include>
-					<label>$INFO[ListItem.Property(Artist_Born)]</label>
-					<visible>!String.IsEmpty(ListItem.Property(Artist_Born))</visible>
-				</control>
-				<control type="label">
-					<description>Formed Value</description>
-					<width min="0" max="300">auto</width>
-					<include>ListInfoViewCatValueLabel</include>
-					<label>$INFO[ListItem.Property(Artist_Formed)]</label>
-					<visible>!String.IsEmpty(ListItem.Property(Artist_Formed))</visible>
+					<label>$VAR[ArtistBornFormedValue]</label>
+					<visible>![String.IsEmpty(ListItem.Property(Artist_Born)) + String.IsEmpty(ListItem.Property(Artist_Formed))]</visible>
 				</control>
 				<control type="label">
 					<description>No Value</description>
@@ -1020,6 +1113,7 @@
 	
 	<include name="AddonsListInfo">
 		<control type="group">
+			<visible>![Container.Content(TVShows) | Container.Content(Movies) | Container.Content(Seasons) | Container.Content(Episodes)]</visible>
 			
 			<include content="ListInfoCommon">
 				<param name="width" value="250" />
@@ -1031,7 +1125,7 @@
 			</include>
 			
 			<control type="group">
-				<visible>!String.IsEmpty(ListItem.AddonBroken)</visible>
+				<visible>$EXP[AddonLifecycleType]</visible>
 				<include>MediaInfoOpenCloseAnim</include>
 				<left>39</left>
 				<top>337</top>
@@ -1050,7 +1144,7 @@
 					<height>228</height>
 					<align>center</align>
 					<aligny>center</aligny>
-					<label>$LOCALIZE[24096]</label>
+					<label>$VAR[AddonLifecycleType]</label>
 					<font>FullMediaInfoFont</font>
 					<textcolor>MediaInfoItemColor2</textcolor>
 					<shadowcolor>ShadowColor</shadowcolor>
