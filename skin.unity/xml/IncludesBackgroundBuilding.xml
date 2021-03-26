@@ -12,6 +12,8 @@
 		<value condition="!Skin.HasSetting(HideBackGroundFanart) + !String.IsEmpty(ListItem.Property(Fanart_Image))">$INFO[ListItem.Property(Fanart_Image)]</value>
 		<value condition="!Skin.HasSetting(HideBackGroundFanart) + !String.IsEmpty(ListItem.Property(Fanart))">$INFO[ListItem.Property(Fanart)]</value>
 		<value condition="!Skin.HasSetting(HideBackGroundFanart) + !String.IsEmpty(Window(Home).Property(SkinHelper.ListItem.Art.Fanart))">$INFO[Window(Home).Property(SkinHelper.ListItem.Art.Fanart)]</value>
+		<value condition="!String.IsEmpty(Container(9000).ListItem.Property(background))">$INFO[Container(9000).ListItem.Property(background)]</value>
+		<value condition="!Window.IsActive(Home) + !String.IsEmpty(Skin.String(SkinShortcut.BackgroundPath))">$INFO[Skin.String(SkinShortcut.BackgroundPath)]</value>
 		<value condition="Skin.HasSetting(UseCustomBackground) + Skin.String(CustomBackgroundPath)">$INFO[Skin.String(CustomBackgroundPath)]</value>
 		<!-- global background -->
 		<value>$INFO[Skin.CurrentTheme,special://skin/extras/backgrounds/,.jpg]</value>
@@ -113,5 +115,50 @@
 			<include>backgroundfade</include>
 			<include>Window_OpenClose_Animation</include>
 		</control>
+	</include>
+	<include name="MaskedBackground">
+		<include condition="![String.IsEqual(Skin.AspectRatio,4:3) | String.IsEqual(Skin.AspectRatio,3:2) | String.IsEqual(Skin.AspectRatio,16:10)]" content="DynamicMaskedBackground">
+			<param name="diffuse-image" value="home-mask.png" />
+		</include>
+		<include condition="String.IsEqual(Skin.AspectRatio,4:3)" content="DynamicMaskedBackground">
+			<param name="diffuse-image" value="home-mask-4-3.png" />
+		</include>
+		<include condition="String.IsEqual(Skin.AspectRatio,3:2)" content="DynamicMaskedBackground">
+			<param name="diffuse-image" value="home-mask-3-2.png" />
+		</include>
+		<include condition="String.IsEqual(Skin.AspectRatio,16:10)" content="DynamicMaskedBackground">
+			<param name="diffuse-image" value="home-mask-16-10.png" />
+		</include>
+	</include>
+	<include name="DynamicMaskedBackground">
+		<param name="diffuse-image" default="home-mask.png" />
+		<definition>
+			<control type="group">
+				<animation effect="fade" time="0" delay="300">VisibleChange</animation>
+				<animation effect="fade" time="0" delay="300">WindowOpen</animation>
+				<animation effect="fade" time="0" delay="300">WindowClose</animation>
+				<visible>![Player.HasVideo + !Skin.HasSetting(ShowBackgroundVideo)] | [Window.IsVisible(MovieInformation) + !Skin.HasSetting(HideWindowedTrailer)] | Window.IsActive(TVChannels)</visible>
+				<control type="multiimage">
+					<left>0</left>
+					<top>0</top>
+					<width>100%</width>
+					<height>100%</height>
+					<imagepath background="true" diffuse="backgrounds/$PARAM[diffuse-image]" fallback="special://skin/extras/backgrounds/SKINDEFAULT.jpg">$VAR[BackgroundVar]</imagepath>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<fadetime>450</fadetime>
+					<loop>yes</loop>
+					<include>fanartSpeed</include>
+					<include condition="Skin.HasSetting(RandomizeBackground)">RandomizeImages</include>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>100%</width>
+					<height>100%</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<texture background="true" diffuse="backgrounds/$PARAM[diffuse-image]" colordiffuse="bg.overlay">backgrounds/white.png</texture>
+				</control>
+			</control>
+		</definition>
 	</include>
 </includes>
