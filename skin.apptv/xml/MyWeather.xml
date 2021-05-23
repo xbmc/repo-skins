@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">6000</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<visible>!System.ScreenSaverActive + Window.IsTopMost(weather)</visible>
+	<controls>
+		<control type="image"><!-- Use Skin default background as a base layer for backdrops -->
+			<include>fullscreenimage</include>
+			<texture>background.png</texture>
+			<aspectratio>scale</aspectratio>
+		</control>
+		<control type="multiimage">
+			<include>fullscreenimage</include>
+			<randomize>true</randomize>
+			<timeperimage>6000</timeperimage>
+			<fadetime>400</fadetime>
+			<imagepath background="false">$VAR[BackgndWeatherImage]</imagepath>
+			<aspectratio>stretch</aspectratio>
+			<colordiffuse>$VAR[BackgndImageVisibity]</colordiffuse>
+			<visible>![Skin.HasSetting(background-playingmedia) + Player.HasVideo]</visible>
+		</control>
+		<control type="group">
+			<visible>Skin.HasSetting(background-playingmedia)</visible>
+			<control type="videowindow">
+				<include>fullscreenimage</include>
+				<visible>Player.HasVideo</visible>
+			</control>
+			<control type="visualisation">
+				<include>fullscreenimage</include>
+				<animation effect="fade" time="200">VisibleChange</animation>
+				<visible>Player.HasAudio + String.IsEmpty(Window(videos).Property(PlayingBackgroundMedia))</visible>
+			</control>
+			<control type="image"><!-- Use mask background to fade video or visualisation -->
+				<include>fullscreenimage</include>
+				<texture>background-mask.png</texture>
+				<colordiffuse>$VAR[BackgndMaskVisibity]</colordiffuse>
+				<aspectratio>scale</aspectratio>
+			</control>
+		</control>
+		<control type="button" id="6000"><!-- Fake button to steal focus, don't show if Open weather map screen is showing -->
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<texturefocus>blank.png</texturefocus>
+			<texturenofocus>blank.png</texturenofocus>
+			<onclick>noop</onclick>
+			<visible>![String.IsEqual(Skin.String(weather-view),$LOCALIZE[33035]) + [String.Contains(Weather.plugin,weather.openweathermap.extended) | String.Contains(Weather.plugin,weather.gismeteo)]]</visible>
+		</control>
+		<control type="label"><!-- Weather heading -->
+			<left>1400</left>
+			<top>30</top>
+			<width>476</width>
+			<height>48</height>
+			<label>$LOCALIZE[31032]</label>
+			<font>apptv30</font>
+		</control>
+		<control type="group">
+			<visible>Weather.IsFetched</visible>
+			<control type="group">
+				<visible>!String.IsEmpty(Window(weather).Property(WeatherProviderLogo))</visible>
+				<control type="image"><!-- Weather provider logo -->
+					<left>27</left>
+					<top>4</top>
+					<width>270</width>
+					<height>68</height>
+					<colordiffuse>DropShadow</colordiffuse>
+					<aspectratio>keep</aspectratio>
+					<texture>$INFO[Window(weather).Property(WeatherProviderLogo)]</texture>
+				</control>
+				<control type="image"><!-- Weather provider logo (shadow) -->
+					<left>26</left>
+					<top>3</top>
+					<width>270</width>
+					<height>68</height>
+					<aspectratio>keep</aspectratio>
+					<texture>$INFO[Window(weather).Property(WeatherProviderLogo)]</texture>
+				</control>
+			</control>
+			<control type="label"><!-- Weather provider -->
+				<left>26</left>
+				<top>3</top>
+				<width>954</width>
+				<height>30</height>
+				<font>apptv22</font>
+				<label>$INFO[Window(weather).Property(WeatherProvider),$LOCALIZE[31536] - ]</label>
+				<visible>String.IsEmpty(Window(weather).Property(WeatherProviderLogo))</visible>
+			</control>
+			<control type="label"><!-- Weather location -->
+				<left>26</left>
+				<top>75</top>
+				<width>954</width>
+				<height>56</height>
+				<font>apptv25</font>
+				<label>$INFO[Window(weather).Property(Location)]</label>
+			</control>
+		</control>
+		<include file="Includes_Weather.xml">standardweather</include>
+		<include condition="String.Contains(Weather.plugin,weather.ozweather)" file="Includes_Weather.xml">ozweather</include>
+		<include condition="String.Contains(Weather.plugin,weather.openweathermap.extended) | String.Contains(Weather.plugin,weather.gismeteo)" file="Includes_Weather.xml">openweatherextended</include>
+		<control type="label"><!-- Updated -->
+			<left>1350</left>
+			<top>1028</top>
+			<width>555</width>
+			<height>38</height>
+			<font>apptv20</font>
+			<align>right</align>
+			<label>$LOCALIZE[31531] $INFO[Window(weather).Property(Updated)]</label>
+			<visible>!String.IsEmpty(Window(weather).Property(Updated))</visible>
+		</control>
+		<include>touch-controls</include>
+		<control type="group"><!-- Screen Settings Menu -->
+			<left>0</left>
+			<top>1080</top>
+			<include>screen-settings</include>
+			<include>fadebackground</include>
+			<control type="image"><!-- Dialog background -->
+				<left>585</left>
+				<top>180</top>
+				<width>744</width>
+				<height>621</height>
+				<texture border="14">button-menu-background.png</texture>
+			</control>
+			<control type="label"><!-- Dialog heading -->
+				<left>600</left>
+				<top>195</top>
+				<width>714</width>
+				<height>51</height>
+				<font>apptv23</font>
+				<label>$LOCALIZE[31557]$INFO[Container(9000).NumItems, (,)]</label>
+				<align>center</align>
+			</control>
+			<control type="button"><!-- Touch Close button -->
+				<left>1298</left>
+				<top>164</top>
+				<width>48</width>
+				<height>48</height>
+				<texturefocus>touch-close.png</texturefocus>
+				<texturenofocus>touch-close.png</texturenofocus>
+				<onclick condition="!String.IsEqual(Window(home).Property(ShowScreenSettings),show)">SetProperty(ShowScreenSettings,show,home)</onclick>
+				<onclick condition="String.IsEqual(Window(home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,home)</onclick>
+				<visible>$EXP[isEnabledTouch]</visible>
+			</control>
+			<control type="image">
+				<left>600</left>
+				<top>249</top>
+				<width>714</width>
+				<height>6</height>
+				<texture>separator.png</texture>
+			</control>
+			<control type="grouplist" id="9000">
+				<defaultcontrol>200</defaultcontrol>
+				<left>600</left>
+				<top>258</top>
+				<width>714</width>
+				<height>525</height>
+				<itemgap>0</itemgap>
+				<onright>ClearProperty(ShowScreenSettings,home)</onright>
+				<onright>6000</onright>
+				<onleft>ClearProperty(ShowScreenSettings,home)</onleft>
+				<onleft>6000</onleft>
+				<control type="button" id="200"><!-- View (types of forecasts) -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[31562] $VAR[WeatherView]</label>
+					<font>apptv22</font>
+					<onclick>$VAR[WeatherViewAction]</onclick>
+				</control>
+				<control type="spincontrolex" id="3"><!-- Change location -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[21873] - </label>
+					<font>apptv22</font>
+				</control>
+				<control type="button" id="2"><!-- Refresh -->
+					<width>714</width>
+					<height>75</height>
+					<font>apptv22</font>
+				</control>
+				<control type="button" id="208"><!-- Custom Weather Backgrounds -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[31866]</label>
+					<font>apptv22</font>
+					<onclick condition="!System.HasAddon(script.image.resource.select)">InstallAddon(script.image.resource.select)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">SetFocus(6000)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">
+						RunScript(script.image.resource.select,type=resource.images.weatherfanart&amp;property=background-customweather)</onclick>
+				</control>
+				<control type="button" id="209"><!-- Custom Weather Icons -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[31873]</label>
+					<font>apptv22</font>
+					<onclick condition="!System.HasAddon(script.image.resource.select)">InstallAddon(script.image.resource.select)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">SetFocus(6000)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">
+						RunScript(script.image.resource.select,type=resource.images.weathericons&amp;property=custom-weathericons)</onclick>
+				</control>
+				<control type="radiobutton" id="210"><!-- Alerts  -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[33050]</label>
+					<font>apptv22</font>
+					<onclick>Skin.ToggleSetting(weather-alerts)</onclick>
+					<selected>Skin.HasSetting(weather-alerts)</selected>
+					<radioposx>660</radioposx>
+					<enable>String.Contains(Weather.plugin,weather.openweathermap.extended)</enable>
+				</control>
+				<control type="button" id="4"><!-- Settings -->
+					<width>714</width>
+					<height>75</height>
+					<label>$LOCALIZE[1390]</label>
+					<font>apptv22</font>
+					<onclick>ActivateWindow(servicesettings,weather)</onclick>
+					<onclick>Skin.SetString(weather-view,$LOCALIZE[10508])</onclick><!-- Reset to standard weather view just in case provider changes -->
+				</control>
+			</control>
+		</control>
+		<!-- Show a iOS style page indicator to show which focus group has the current focus -->
+		<!-- Focus group can be hidden or shown but is potentially focusable, that is it has not be disabled -->
+		<control type="group">
+			<visible>Weather.IsFetched | !String.EndsWith(Window(weather).Property(Current.ConditionIcon),na.png)</visible><!-- Don't show markers if no forecast shown -->
+			<control type="group">
+				<include content="page-indicator">
+					<param name="indicatorleft" value="864" />
+					<param name="indicatortop" value="0" />
+					<param name="indicatorwidth" value="192" />
+					<param name="indicatorheight" value="48" />
+					<param name="indicatororientation" value="horizontal" />
+					<param name="grp1indicate" value="[ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp1visible" value="[!Skin.HasSetting(lock-screensettings)]" />
+					<param name="grp2indicate" value="![ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp2visible" value="[true]" />
+				</include>
+			</control>
+		</control>	
+	</controls>
+</window>

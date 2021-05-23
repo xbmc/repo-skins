@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<views>50,51,52,54,57,58</views>
+	<onload>ClearProperty(ShowScreenSettings,home)</onload>
+	<onload>ClearProperty(EditViews,home)</onload>
+	<onunload>ClearProperty(ShowScreenSettings,home)</onunload>
+	<onunload>ClearProperty(EditViews,home)</onunload>
+	<visible>!System.ScreenSaverActive</visible>
+	<controls>
+		<include>background</include>
+		<include>fake-overlay</include>
+		<include content="screen-name">
+			<param name="screenlabel" value="$VAR[MusicHeadings]"/>
+			<param name="listitems" value="Container.NumItems"/>
+		</include>
+		<control type="group"><!-- Various Views of Music library node -->
+			<visible>![String.IsEmpty(ListItem.Label) + String.IsEmpty(ListItem(1).Label)]</visible>
+			<include file="View-Music.xml">AlbumListView</include>
+			<include file="View-Music.xml" condition="!Skin.HasSetting(musicviewicon)">AlbumIconView</include>
+			<include file="View-Music.xml" condition="!Skin.HasSetting(musicviewwrap)">AlbumWrapView</include>
+			<include file="View-Music.xml" condition="!Skin.HasSetting(musicviewcoverflow)">AlbumCoverflow</include>
+			<include file="View-Music.xml" condition="!Skin.HasSetting(musicviewwall)">AudioWallView</include>
+		</control>
+		<control type="group"><!-- No Label tag means music addon is busy pulling in content, so show a busy animation -->
+			<visible>String.IsEmpty(ListItem.Label) + String.IsEmpty(ListItem(1).Label) + System.IdleTime(1) + !Window.IsVisible(busydialog)</visible>
+			<include>fadebackground</include>
+			<control type="image"><!-- Busy animation -->
+				<left>864</left>
+				<top>435</top>
+				<width>192</width>
+				<height>192</height>
+				<texture>busy.png</texture>
+				<aspectratio>keep</aspectratio>
+				<include>busy-spin</include>
+			</control>
+		</control>
+		<include>touch-controls</include>
+		<control type="group"><!-- Screen Settings Menu -->
+			<left>0</left>
+			<top>1080</top>
+			<include>screen-settings</include>
+			<include>fadebackground</include>
+			<control type="image"><!-- Button background -->
+				<left>622</left>
+				<top>114</top>
+				<width>672</width>
+				<height>820</height>
+				<texture border="14">button-menu-background.png</texture>
+			</control>
+			<control type="label"><!-- Dialog heading -->
+				<left>638</left>
+				<top>126</top>
+				<width>639</width>
+				<height>51</height>
+				<font>apptv23</font>
+				<label>$LOCALIZE[31557]$INFO[Container(9000).NumItems, (,)]</label>
+				<align>center</align>
+			</control>
+			<control type="button"><!-- Touch Close button -->
+				<left>1262</left>
+				<top>98</top>
+				<width>48</width>
+				<height>48</height>
+				<texturefocus>touch-close.png</texturefocus>
+				<texturenofocus>touch-close.png</texturenofocus>
+				<onclick condition="!String.IsEqual(Window(home).Property(ShowScreenSettings),show)">SetProperty(ShowScreenSettings,show,home)</onclick>
+				<onclick condition="String.IsEqual(Window(home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,home)</onclick>
+				<visible>$EXP[isEnabledTouch]</visible>
+			</control>
+			<control type="image">
+				<left>638</left>
+				<top>180</top>
+				<width>639</width>
+				<height>6</height>
+				<texture>separator.png</texture>
+			</control>
+			<include content="page-offscreen-vertical">
+				<param name="indicator1left" value="942"/>
+				<param name="indicator1top" value="180"/>
+				<param name="indicator2left" value="942"/>
+				<param name="indicator2top" value="898"/>
+				<param name="indicatorsize" value="32"/>
+				<param name="indicatorcontainer" value="9000"/>
+			</include>
+			<control type="grouplist" id="9000">
+				<defaultcontrol>2</defaultcontrol>
+				<left>638</left>
+				<top>206</top>
+				<width>640</width>
+				<height>700</height>
+				<itemgap>0</itemgap>
+				<onright>ClearProperty(ShowScreenSettings,home)</onright>
+				<onright>50</onright>
+				<onleft>ClearProperty(ShowScreenSettings,home)</onleft>
+				<onleft>50</onleft>
+				<control type="button" id="2"><!-- View type -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[100]</label>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="button" id="1194"><!-- Remove unused views -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[31895]</label>
+					<textoffsetx>15</textoffsetx>
+					<onclick>SetProperty(EditViews,Music,home)</onclick>
+					<onclick>ActivateWindow(1161)</onclick>
+				</control>
+				<control type="radiobutton" id="208"><!-- Use Media case Toggle -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[31869]</label>
+					<onclick>Skin.ToggleSetting(media-case)</onclick>
+					<selected>Skin.HasSetting(media-case)</selected>
+					<radioposx>495</radioposx>
+					<textoffsetx>15</textoffsetx>
+					<visible>Container.Content(albums) | Container.Content(songs)</visible>
+				</control>
+				<control type="button" id="3"><!-- Sort by -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[103]</label>
+					<textoffsetx>15</textoffsetx>
+					<visible>Control.IsEnabled(3)</visible>
+				</control>
+				<control type="togglebutton" id="4"><!-- Sort direction -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[21429]: $LOCALIZE[21430]</label>
+					<altlabel>$LOCALIZE[21429]: $LOCALIZE[21431]</altlabel>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="button" id="211"><!-- Custom Genre Icons Button -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[31879]</label>
+					<onclick condition="!System.HasAddon(script.image.resource.select)">InstallAddon(script.image.resource.select)</onclick>
+					<onclick condition="System.HasAddon(script.image.resource.select)">RunScript(script.image.resource.select,type=resource.images.musicgenreicons&amp;property=custom-musicgenresicons)</onclick>
+					<textoffsetx>15</textoffsetx>
+					<visible>Container.Content(genres) + [String.Contains(Control.GetLabel(2),$LOCALIZE[31941]) | String.Contains(Control.GetLabel(2),$LOCALIZE[31945])]</visible>
+				</control>
+				<control type="button" id="8"><!-- Search -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[137]</label>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="edit" id="19"><!-- Filter -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[587]</label>
+					<textwidth>510</textwidth>
+					<textoffsetx>15</textoffsetx>
+					<visible>!Container.CanFilterAdvanced</visible>
+				</control>
+				<control type="radiobutton" id="98"><!-- Advanced filter -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[587]</label>
+					<selected>Container.Filtered</selected>
+					<onclick>Filter</onclick>
+					<textoffsetx>15</textoffsetx>
+					<radioposx>495</radioposx>
+					<visible>Container.CanFilterAdvanced</visible>
+				</control>
+				<control type="button" id="16"><!-- Party mode -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[589]</label>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="button" id="200"><!-- Clean library button -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[334]</label>
+					<onclick>CleanLibrary(music)</onclick>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="togglebutton" id="20"><!-- Update library -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[653]</label>
+					<altlabel>$LOCALIZE[13353]</altlabel>
+					<usealttexture>library.isscanningmusic</usealttexture>
+					<textoffsetx>15</textoffsetx>
+				</control>
+				<control type="button" id="1200"><!-- Player controls -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[16003] $LOCALIZE[478]</label>
+					<onclick>SetFocus(50)</onclick>
+					<onclick condition="String.IsEqual(Window(home).Property(ShowScreenSettings),show)">ClearProperty(ShowScreenSettings,home)</onclick>
+					<onclick>ActivateWindow(playercontrols)</onclick>
+					<textoffsetx>15</textoffsetx>
+					<visible>Player.HasMedia</visible>
+				</control>
+				<control type="button" id="22"><!-- Now playing -->
+					<include>settings-screen-common</include>
+					<label>$LOCALIZE[13350]</label>
+					<onclick>ActivateWindow(musicplaylist)</onclick>
+					<textoffsetx>15</textoffsetx>
+					<visible>!String.IsEqual(Playlist.Length(music),0)</visible>
+				</control>
+			</control>
+		</control>
+		<control type="group">
+			<visible>![String.IsEmpty(Container().ListItem.Label) + String.IsEmpty(Container().ListItem(1).Label)]</visible>
+			<control type="group">
+				<visible>Control.IsVisible(50) | Control.IsVisible(52) | Control.IsVisible(58)</visible>
+				<include content="page-indicator">
+					<param name="indicatorleft" value="864" />
+					<param name="indicatortop" value="0" />
+					<param name="indicatorwidth" value="192" />
+					<param name="indicatorheight" value="48" />
+					<param name="indicatororientation" value="horizontal" />
+					<param name="grp1indicate" value="[ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp1visible" value="[!Skin.HasSetting(lock-screensettings)]" />
+					<param name="grp2indicate" value="[Control.HasFocus(50)|Control.HasFocus(52)|Control.HasFocus(58)]" />
+					<param name="grp2visible" value="[Control.IsVisible(50)|Control.IsVisible(52)|Control.IsVisible(58)]+[!Skin.HasSetting(lock-screensettings)|$EXP[isEnabledScrollbar]]" />
+					<param name="grp3indicate" value="[Control.HasFocus(1240)|Control.HasFocus(1242)|Control.HasFocus(1248)|Control.HasFocus(1260)|Control.HasFocus(1262)|Control.HasFocus(1268)]" />
+					<param name="grp3visible" value="[Skin.HasSetting(show-letterbar)+[$EXP[isContentArtists]|$EXP[isContentAlbums]|$EXP[isContentMusicvideos]]]" />
+					<param name="grp4indicate" value="[Control.HasFocus(1250)|Control.HasFocus(1252)|Control.HasFocus(1253)|Control.HasFocus(1258)]" />
+					<param name="grp4visible" value="[$EXP[isEnabledScrollbar]]" />
+				</include>
+			</control>
+			<control type="group">
+				<visible>Control.IsVisible(54) | Control.IsVisible(57)</visible>
+				<include content="page-indicator">
+					<param name="indicatorleft" value="0" />
+					<param name="indicatortop" value="225" />
+					<param name="indicatorwidth" value="48" />
+					<param name="indicatorheight" value="192" />
+					<param name="indicatororientation" value="vertical" />
+					<param name="grp1indicate" value="[ControlGroup(9000).HasFocus()|String.IsEqual(Window(home).Property(ShowScreenSettings),show)]" />
+					<param name="grp1visible" value="[!Skin.HasSetting(lock-screensettings)]" />
+					<param name="grp2indicate" value="[Control.HasFocus(54)|Control.HasFocus(57)]" />
+					<param name="grp2visible" value="[Control.IsVisible(54)|Control.IsVisible(57)]+[!Skin.HasSetting(lock-screensettings)|$EXP[isEnabledScrollbar]]" />
+					<param name="grp3indicate" value="[Control.HasFocus(1244)|Control.HasFocus(1247)|Control.HasFocus(1264)|Control.HasFocus(1267)]" />
+					<param name="grp3visible" value="[Skin.HasSetting(show-letterbar)+[$EXP[isContentArtists]|$EXP[isContentAlbums]|$EXP[isContentMusicvideos]]]" />
+					<param name="grp4indicate" value="[Control.HasFocus(1254)|Control.HasFocus(1257)]" />
+					<param name="grp4visible" value="[$EXP[isEnabledScrollbar]]" />
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>
