@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+
+	<expression name="isTVGenre">
+		[
+			[
+				String.StartsWith(ListItem.FolderPath,videodb://tvshows/)
+			]
+			+ [
+				String.IsEqual(ListItem.DBTYPE,source)
+				| String.IsEqual(ListItem.DBTYPE,genre)
+				| String.IsEqual(ListItem.DBTYPE,tag)
+			]
+		]
+	</expression>
+
+	<expression name="isMovieGenre">
+		[
+			[
+				String.StartsWith(ListItem.FolderPath,videodb://movies/)
+				| String.StartsWith(ListItem.FolderPath,videodb://playlists/video/)
+			]
+			+ [
+				String.IsEqual(ListItem.DBTYPE,source)
+				| String.IsEqual(ListItem.DBTYPE,genre)
+				| String.IsEqual(ListItem.DBTYPE,tag)
+			]
+		]
+	</expression>
+
+	<expression name="isMusicGenre">
+	 	[
+			String.IsEqual(ListItem.Path,/music/)
+			| [
+				[
+					String.StartsWith(ListItem.FolderPath,musicdb:/)
+				]
+				+ [
+					String.IsEqual(ListItem.DBTYPE,source)
+					| String.IsEqual(ListItem.DBTYPE,tag)
+					| String.IsEqual(ListItem.DBTYPE,genre)
+				]
+			]
+		]
+	</expression>
+
+	<expression name="externalGenreIcon">
+		 [ $EXP[isMovieGenre] | $EXP[isTVGenre] | $EXP[isMusicGenre] ]
+	</expression>
+
+	<variable name="ResourceIcon">
+		<value condition="$EXP[isMovieGenre] + !String.isEmpty(Skin.String(MovieGenreIcons.path))">$INFO[Skin.String(MovieGenreIcons.path)]$INFO[ListItem.Label]$INFO[Skin.String(MovieGenreIcons.ext)]</value>
+		<value condition="$EXP[isTVGenre]    + !String.isEmpty(Skin.String(TVGenreIcons.path))">$INFO[Skin.String(TVGenreIcons.path)]$INFO[ListItem.Label]$INFO[Skin.String(TVGenreIcons.ext)]</value>
+		<value condition="$EXP[isMusicGenre] + !String.isEmpty(Skin.String(MusicGenreIcons.path))">$INFO[Skin.String(MusicGenreIcons.path)]$INFO[ListItem.Label]$INFO[Skin.String(MusicGenreIcons.ext)]</value>
+		<value condition="$EXP[isMovieGenre]|$EXP[isTVGenre]">$INFO[ListItem.Label,special://skin/extras/videogenre/,.png]</value>
+	</variable>
+	<variable name="CustomIconPath">
+		<value condition="$EXP[isMovieGenre] + !String.isEmpty(Skin.String(CustomMovieGenreIcons.path))">$INFO[Skin.String(CustomMovieGenreIcons.path)]$INFO[ListItem.Label]</value>
+		<value condition="$EXP[isTVGenre]    + !String.isEmpty(Skin.String(CustomTVGenreIcons.path))">$INFO[Skin.String(CustomTVGenreIcons.path)]$INFO[ListItem.Label]</value>
+		<value condition="$EXP[isMusicGenre] + !String.isEmpty(Skin.String(CustomMusicGenreIcons.path))">$INFO[Skin.String(CustomMusicGenreIcons.path)]$INFO[ListItem.Label]</value>
+	</variable>
+
+	<include name="external-genre-icon">
+		<param name="left" />
+		<param name="top" />
+		<param name="width" />
+		<param name="height" />
+		<definition>
+
+
+			<control type="group">
+				<description>render for external movie icons</description>
+				<visible>
+				[$EXP[isMovieGenre] + Skin.HasSetting(Enable.ExternalMovieGenreIcons)]
+				| [$EXP[isTVGenre] + Skin.HasSetting(Enable.ExternalTVGenreIcons)]
+				| [$EXP[isMusicGenre] + Skin.HasSetting(Enable.ExternalMusicGenreIcons)]
+				</visible>
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<include content="external-genre-icon-image">
+					<param name="width">$PARAM[width]"</param>
+					<param name="height">$PARAM[height]</param>
+					<param name="icon">$VAR[CustomIconPath]</param>
+				</include>
+			</control>
+
+
+<!--  			<control type="label"> -->
+<!--     			<description>Dummy label to for custom actor-role image path</description> -->
+<!--     			<label>$VAR[CustomIconPath]</label> -->
+<!-- 			</control> -->
+
+			<control type="group">
+				<description>Render for internal movie icons</description>
+				<visible>
+				[$EXP[isMovieGenre] + !Skin.HasSetting(Enable.ExternalMovieGenreIcons)]
+				| [$EXP[isTVGenre] + !Skin.HasSetting(Enable.ExternalTVGenreIcons)]
+				| [$EXP[isMusicGenre] + !Skin.HasSetting(Enable.ExternalMusicGenreIcons)]
+				</visible>
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>$PARAM[height]</height>
+					<aspectratio scalediffuse="false" align="center" aligny="center">keep</aspectratio>
+					<texture background="true">$VAR[ResourceIcon]</texture>
+				</control>
+			</control>
+
+<!-- 			<control type="group"> -->
+<!-- 				<visible>$EXP[movievis]</visible> -->
+<!-- 				<left>$PARAM[left]</left> -->
+<!-- 				<top>$PARAM[top]</top> -->
+<!-- 				<include content="external-genre-icon-image"> -->
+<!-- 					<param name="width">$PARAM[width]"</param> -->
+<!-- 					<param name="height">$PARAM[height]</param> -->
+<!-- 					<param name="visible">$EXP[movievis]</param> -->
+<!-- 					<param name="icon">special://profile/icons/movies/$INFO[ListItem.Label]</param> -->
+<!-- 				</include> -->
+<!-- 			</control> -->
+
+
+<!-- 			<control type="group"> -->
+<!-- 				<visible>$EXP[tvvis]</visible> -->
+<!-- 				<left>$PARAM[left]</left> -->
+<!-- 				<top>$PARAM[top]</top> -->
+<!-- 				<include content="external-genre-icon-image"> -->
+<!-- 					<param name="width">$PARAM[width]"</param> -->
+<!-- 					<param name="height">$PARAM[height]</param> -->
+<!-- 					<param name="visible">$EXP[tvvis]</param> -->
+<!-- 					<param name="icon">special://profile/icons/tvshows/$INFO[ListItem.Label]</param> -->
+<!-- 				</include> -->
+<!-- 			</control> -->
+
+
+<!-- 			<control type="group"> -->
+<!-- 				<visible>$EXP[musicvis]</visible> -->
+<!-- 				<left>$PARAM[left]</left> -->
+<!-- 				<top>$PARAM[top]</top> -->
+<!-- 				<include content="external-genre-icon-image"> -->
+<!-- 					<param name="width">$PARAM[width]"</param> -->
+<!-- 					<param name="height">$PARAM[height]</param> -->
+<!-- 					<param name="visible">$EXP[musicvis]</param> -->
+<!-- 					<param name="icon">special://profile/icons/music/$INFO[ListItem.Label]</param> -->
+<!-- 				</include> -->
+<!-- 			</control> -->
+
+		</definition>
+	</include>
+
+	<include name="external-genre-icon-image">
+		<param name="width" />
+		<param name="height" />
+		<param name="icon" />
+		<param name="visible" />
+		<definition>
+			<control type="image">
+				<visible>$PARAM[visible]</visible>
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<aspectratio scalediffuse="false" align="center" aligny="center">keep</aspectratio>
+				<texture background="true">$PARAM[icon].jpg</texture>
+			</control>
+			<control type="image">
+				<visible>$PARAM[visible]</visible>
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<aspectratio scalediffuse="false" align="center" aligny="center">keep</aspectratio>
+				<texture background="true">$PARAM[icon].png</texture>
+			</control>
+			<control type="image">
+				<visible>$PARAM[visible]</visible>
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<aspectratio scalediffuse="false" align="center" aligny="center">keep</aspectratio>
+				<texture background="true">$PARAM[icon].gif</texture>
+			</control>
+		</definition>
+	</include>
+
+
+</includes>
