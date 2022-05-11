@@ -13,6 +13,7 @@
 				<animation effect="fade" end="85" condition="true">Conditional</animation>
 			</control>
 			<control type="image">
+				<visible>!ListItem.IsParentFolder</visible>
 				<animation effect="slide" end="680,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
 				<visible>![Player.Playing + System.Idletime(15)]</visible>
 				<animation effect="fade" end="0" time="4000">Hidden</animation>
@@ -63,13 +64,15 @@
 						<animation effect="slide" end="50,0" time="150" condition="Control.HasFocus(5919)">Conditional</animation>
 						<animation effect="slide" end="0,300" time="150" tween="cubic" easing="inout" condition="Integer.IsGreater(Container(5850).Row,0) + Integer.IsGreater(Container(5850).NumItems,12)">Conditional</animation>
 						<viewtype label="$LOCALIZE[21888]">list</viewtype>
+						<visible>Container.Content(artists)</visible>
+						<visible>!Container.Content(musicvideos) + !String.StartsWith(container.folderpath,library://video/musicvideos/) + !String.StartsWith(container.folderpath,videodb://musicvideos)</visible>
 						<width>520</width>
 						<height>1050</height>
 						<pagecontrol>80</pagecontrol>
 						<scrolltime tween="cubic" easing="out">500</scrolltime>
 						<orientation>vertical</orientation>
 						<focusposition>7</focusposition>
-						<onleft condition="String.Contains(Container.SortMethod,$LOCALIZE[369]) | String.Contains(Container.SortMethod,$LOCALIZE[557])">5919</onleft>
+						<onleft condition="[String.Contains(Container.SortMethod,$LOCALIZE[369]) | String.Contains(Container.SortMethod,$LOCALIZE[557])] + !ListItem.IsParentFolder">5919</onleft>
 						<onleft>80</onleft>
 						<onright>ClearProperty(MoveArtist,Home)</onright>
 						<onright>5850</onright>
@@ -110,22 +113,22 @@
 					</control>
 				</control>
 				<control type="list" id="6822">
-					<content target="music">$INFO[Container(585).ListItem(-1).FolderPath]</content>
+					<content target="music">$VAR[Source_Parent-1]</content>
 					<itemlayout/>
 					<focusedlayout/>
 				</control>
 				<control type="list" id="6823">
-					<content target="music">$INFO[Container(585).ListItem.FolderPath]</content>
+					<content target="music">$VAR[Source_Parent]</content>
 					<itemlayout/>
 					<focusedlayout/>
 				</control>
 				<control type="list" id="6824">
-					<content target="music">$INFO[Container(585).ListItem(1).FolderPath]</content>
+					<content target="music">$VAR[Source_Parent1]</content>
 					<itemlayout/>
 					<focusedlayout/>
 				</control>
 				<control type="list" id="6825">
-					<content target="music">$INFO[Container(585).ListItem(2).FolderPath]</content>
+					<content target="music">$VAR[Source_Parent2]</content>
 					<itemlayout/>
 					<focusedlayout/>
 				</control>
@@ -193,13 +196,23 @@
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5289),..)</visible>
 									<fadetime>400</fadetime>
 									<top>15</top>
 									<left>15</left>
 									<width>260</width>
 									<height>260</height>
 									<texture fallback="tajo/DefaultArtist.png" diffuse="tajo/mask_circle.png" background="true">$INFO[Control.GetLabel(5290)]</texture>
+									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+								</control>
+								<control type="image">
+									<visible>String.Contains(ListItem.Label2,singer) + String.IsEqual(Control.GetLabel(5289),..)</visible>
+									<fadetime>400</fadetime>
+									<top>15</top>
+									<left>15</left>
+									<width>260</width>
+									<height>260</height>
+									<texture diffuse="tajo/mask_circle.png" background="true">DefaultFolderBack.png</texture>
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
@@ -224,7 +237,7 @@
 									<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
 								</control>
 								<control type="textbox">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5289),..)</visible>
 									<top>165</top>
 									<width>300</width>
 									<height>105</height>
@@ -243,7 +256,7 @@
 								<label2>singer</label2>
 							</item>
 						</content>
-						<content target="music" sortby="year" sortorder="ascending">$INFO[Container(585).ListItem(-1).FolderPath]</content>
+						<content target="music" sortby="year" sortorder="ascending">$VAR[Source_Parent-1]</content>
 					</control>
 				</control>
 				<control type="group">
@@ -281,9 +294,11 @@
 						<onup>Control.Move(585,-1)</onup>
 						<onup>585</onup>
 						<onright>Control.Move(5850,1)</onright>
-						<onclick condition="String.IsEqual(Container(5850).CurrentItem,1)">SetProperty(PlayArtist,True,home)</onclick>
-						<onclick condition="!String.Contains(ListItem.Label2,singer)">SetFocus(5852,0,absolute)</onclick>
-						<onclick condition="String.IsEqual(Container(5850).CurrentItem,1)">RunScript(script.embuary.helper,action=playall,id=5822,method=shuffle)</onclick>
+						<onclick condition="String.IsEqual(Control.GetLabel(5487),..)">SetProperty(MediaMenu,True,home)</onclick>
+						<onclick condition="String.IsEqual(Control.GetLabel(5487),..)">SetFocus(9050)</onclick>
+						<onclick condition="!String.IsEqual(Control.GetLabel(5487),..) + String.IsEqual(Container(5850).CurrentItem,1)">SetProperty(PlayArtist,True,home)</onclick>
+						<onclick condition="!String.IsEqual(Control.GetLabel(5487),..) + !String.Contains(ListItem.Label2,singer)">SetFocus(5852,0,absolute)</onclick>
+						<onclick condition="!String.IsEqual(Control.GetLabel(5487),..) + String.IsEqual(Container(5850).CurrentItem,1)">RunScript(script.embuary.helper,action=playall,id=5822,method=shuffle)</onclick>
 						<focusedlayout width="300" height="300">
 							<include>Button_Disc</include>
 							<control type="button" id="5329">
@@ -325,12 +340,21 @@
 									<aspectratio align="center">scale</aspectratio>
 								</control>
 								<control type="image">
-									<visible>String.IsEqual(Container(5850).CurrentItem,1)</visible>
+									<visible>String.IsEqual(Container(5850).CurrentItem,1) + !String.IsEqual(Control.GetLabel(5487),..)</visible>
 									<top>15</top>
 									<left>15</left>
 									<width>260</width>
 									<height>260</height>
 									<texture fallback="tajo/DefaultArtist.png" diffuse="tajo/mask_circle.png" background="true">$INFO[Control.GetLabel(5388)]</texture>
+									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+								</control>
+								<control type="image">
+									<visible>String.IsEqual(Container(5850).CurrentItem,1) + String.IsEqual(Control.GetLabel(5487),..)</visible>
+									<top>15</top>
+									<left>15</left>
+									<width>260</width>
+									<height>260</height>
+									<texture diffuse="tajo/mask_circle.png" background="true">DefaultFolderBack.png</texture>
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
@@ -344,7 +368,7 @@
 									<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
 								</control>
 								<control type="textbox">
-									<visible>String.IsEqual(Container(5850).CurrentItem,1)</visible>
+									<visible>String.IsEqual(Container(5850).CurrentItem,1) + !String.IsEqual(Control.GetLabel(5487),..)</visible>
 									<top>165</top>
 									<width>300</width>
 									<height>105</height>
@@ -398,7 +422,7 @@
 									<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
 								</control>
 								<control type="textbox">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5487),..)</visible>
 									<top>165</top>
 									<width>300</width>
 									<height>105</height>
@@ -416,7 +440,7 @@
 								<label2>singer</label2>
 							</item>
 						</content>
-						<content target="music" sortby="year" sortorder="ascending">$INFO[Container(585).ListItem.FolderPath]</content>
+						<content target="music" sortby="year" sortorder="ascending">$VAR[Source_Parent]</content>
 					</control>
 				</control>
 				<control type="group">
@@ -487,13 +511,23 @@
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5488),..)</visible>
 									<top>15</top>
 									<left>15</left>
 									<width>260</width>
 									<height>260</height>
 									<fadetime>400</fadetime>
 									<texture fallback="tajo/DefaultArtist.png" diffuse="tajo/mask_circle.png" background="true">$INFO[Control.GetLabel(5389)]</texture>
+									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+								</control>
+								<control type="image">
+									<visible>String.Contains(ListItem.Label2,singer) + String.IsEqual(Control.GetLabel(5488),..)</visible>
+									<top>15</top>
+									<left>15</left>
+									<width>260</width>
+									<height>260</height>
+									<fadetime>400</fadetime>
+									<texture diffuse="tajo/mask_circle.png" background="true">DefaultFolderBack.png</texture>
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
@@ -518,7 +552,7 @@
 									<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
 								</control>
 								<control type="textbox">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5488),..)</visible>
 									<top>165</top>
 									<width>300</width>
 									<height>105</height>
@@ -537,7 +571,7 @@
 								<label2>singer</label2>
 							</item>
 						</content>
-						<content target="music" sortby="year" sortorder="ascending">$INFO[Container(585).ListItem(1).FolderPath]</content>
+						<content target="music" sortby="year" sortorder="ascending">$VAR[Source_Parent1]</content>
 					</control>
 				</control>
 				<control type="group">
@@ -611,13 +645,23 @@
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5489),..)</visible>
 									<fadetime>400</fadetime>
 									<top>15</top>
 									<left>15</left>
 									<width>260</width>
 									<height>260</height>
 									<texture fallback="tajo/DefaultArtist.png" diffuse="tajo/mask_circle.png" background="true">$INFO[Control.GetLabel(5390)]</texture>
+									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+								</control>
+								<control type="image">
+									<visible>String.Contains(ListItem.Label2,singer) + String.IsEqual(Control.GetLabel(5489),..)</visible>
+									<fadetime>400</fadetime>
+									<top>15</top>
+									<left>15</left>
+									<width>260</width>
+									<height>260</height>
+									<texture diffuse="tajo/mask_circle.png" background="true">DefaultFolderBack.png</texture>
 									<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
 								</control>
 								<control type="image">
@@ -642,7 +686,7 @@
 									<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
 								</control>
 								<control type="textbox">
-									<visible>String.Contains(ListItem.Label2,singer)</visible>
+									<visible>String.Contains(ListItem.Label2,singer) + !String.IsEqual(Control.GetLabel(5489),..)</visible>
 									<top>165</top>
 									<width>300</width>
 									<height>105</height>
@@ -661,7 +705,7 @@
 								<label2>singer</label2>
 							</item>
 						</content>
-						<content target="music" sortby="year" sortorder="ascending">$INFO[Container(585).ListItem(2).FolderPath]</content>
+						<content target="music" sortby="year" sortorder="ascending">$VAR[Source_Parent2]</content>
 					</control>
 				</control>
 			</control>
@@ -689,9 +733,10 @@
 						<texture background="true">$INFO[ListItem.Icon]</texture>
 					</control>
 				</itemlayout>
-				<content target="music" sortby="year" sortorder="ascending">$INFO[Container(585).ListItem(3).FolderPath]</content>
+				<content target="music" sortby="year" sortorder="ascending">$VAR[Source_Parent2]</content>
 			</control>
 			<control type="group">
+				<visible>!ListItem.IsParentFolder</visible>
 				<top>25</top>
 				<left>-5</left>
 				<animation effect="slide" end="630,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
@@ -825,8 +870,8 @@
 						<width>620</width>
 						<height>605</height>
 						<orientation>vertical</orientation>
-						<scrolltime tween="sine" easing="out">3000</scrolltime>
-						<autoscroll>true</autoscroll>
+						<scrolltime>1500</scrolltime>
+						<autoscroll time="600">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
 						<itemlayout width="620" height="50">
 							<control type="textbox">
 								<width>620</width>
@@ -959,7 +1004,7 @@
 					<height>20</height>
 					<align>right</align>
 					<font>font13c</font>
-					<label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.DiscNumber, - $LOCALIZE[427]: ,]$INFO[MusicPlayer.Year, (,)]</label>
+					<label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year, (,)]</label>
 					<textcolor>white</textcolor>
 					<shadowcolor>black</shadowcolor>
 					<scroll>true</scroll>
@@ -990,6 +1035,29 @@
 					<scrollsuffix>  -  </scrollsuffix>
 					<label>[LOWERCASE][COLOR white]$INFO[MusicPlayer.Genre,, · ][/COLOR]$VAR[Spot_ify,,[COLOR white] ·[/COLOR]][COLOR white]$INFO[MusicPlayer.Bitrate, , [/COLOR]kbps[COLOR white] ·[/COLOR]][/LOWERCASE][COLOR white]$INFO[MusicPlayer.Samplerate, ,[/COLOR]  kHz]</label>
 				</control>
+				<control type="group">
+					<left>15</left>
+					<top>330</top>
+					<control type="image">
+						<animation effect="slide" end="-2,20" condition="true">Conditional</animation>
+						<width>30</width>
+						<height>30</height>
+						<aspectratio>keep</aspectratio>
+						<texture colordiffuse="$VAR[Player_Colour_UserRating]">star.png</texture>
+						<visible>!String.IsEmpty(MusicPlayer.UserRating)</visible>
+					</control>
+					<control type="label">
+						<animation effect="slide" end="34,13" condition="true">Conditional</animation>
+						<width>40</width>
+						<visible>!String.IsEmpty(MusicPlayer.UserRating)</visible>
+						<align>left</align>
+						<aligny>bottom</aligny>
+						<font>font13_bold</font>
+						<label>[COLOR white][B]$INFO[MusicPlayer.UserRating][/B][/COLOR]</label>
+						<textcolor>FFFFFAF0</textcolor>
+						<shadowcolor>black</shadowcolor>
+					</control>
+				</control>
 			</control>
 			<control type="group">
 				<left>1210</left>
@@ -1004,7 +1072,7 @@
 					<width>585</width>
 					<height>210</height>
 					<font>font28b</font>
-					<align>justify</align>
+					<align>center</align>
 					<label>$INFO[ListItem.Property(Artist_Description)]</label>
 					<autoscroll delay="6000" time="2000" repeat="6000">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
 				</control>
@@ -1014,15 +1082,73 @@
 					<animation effect="fade" start="0" end="100" time="1250" reversible="false">Visible</animation>
 					<animation effect="slide" end="630,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
 					<left>90</left>
-					<top>521</top>
+					<top>527</top>
 					<width>585</width>
-					<height>210</height>
+					<height>175</height>
 					<font>font28b</font>
-					<align>justify</align>
+					<align>center</align>
 					<label>$INFO[Container(5850).ListItem.Property(Album_Description)]</label>
 					<autoscroll delay="6000" time="2000" repeat="6000">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
 				</control>
 				<control type="group">
+					<visible>!Player.Playing</visible>
+					<visible>!String.Contains(Container(5850).ListItem.Label2,singer) + [Control.HasFocus(5850) | Control.HasFocus(5852)]</visible>
+					<animation effect="fade" start="0" end="100" time="1250" reversible="false">Visible</animation>
+					<animation effect="slide" end="630,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
+					<left>180</left>
+					<top>710</top>
+					<control type="image">
+						<animation effect="slide" end="-2,20" condition="true">Conditional</animation>
+						<width>30</width>
+						<height>30</height>
+						<aspectratio>keep</aspectratio>
+						<texture colordiffuse="$VAR[Colour_UserRating_Discog]">star.png</texture>
+						<visible>!String.IsEmpty(Container(5850).ListItem.UserRating)</visible>
+					</control>
+					<control type="label">
+						<animation effect="slide" end="34,13" condition="true">Conditional</animation>
+						<width>40</width>
+						<visible>!String.IsEmpty(Container(5850).ListItem.UserRating)</visible>
+						<align>left</align>
+						<aligny>bottom</aligny>
+						<font>font13_bold</font>
+						<label>[COLOR white][B]$INFO[Container(5850).ListItem.UserRating][/B][/COLOR]</label>
+						<textcolor>FFFFFAF0</textcolor>
+						<shadowcolor>black</shadowcolor>
+					</control>
+				</control>
+				<control type="group">
+					<visible>!Player.Playing</visible>
+					<visible>!String.Contains(Container(5850).ListItem.Label2,singer) + [Control.HasFocus(5850) | Control.HasFocus(5852)]</visible>
+					<animation effect="fade" start="0" end="100" time="1250" reversible="false">Visible</animation>
+					<animation effect="slide" end="630,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
+					<left>-20</left>
+					<top>-292</top>
+					<control type="image" id="4527">
+						<width>120</width>
+						<height>45</height>
+						<left>370</left>
+						<top>1015</top>
+						<aspectratio>keep</aspectratio>
+						<colordiffuse>99FFFFFF</colordiffuse>
+						<texture>$INFO[Container(6774).ListItem.Icon]</texture>
+					</control>
+					<control type="label">
+						<top>1017</top>
+						<left>370</left>
+						<width>130</width>
+						<height>45</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<label>[B]$INFO[Container(5850).ListItem.Property(Album_Label)][/B]</label>
+						<font>font10t</font>
+						<textcolor>grey</textcolor>
+						<wrapmultiline>true</wrapmultiline>
+						<visible>String.IsEmpty(Control.GetLabel(4527))</visible>
+					</control>
+				</control>
+				<control type="group">
+					<visible>!String.IsEqual(Control.GetLabel(5487),..)</visible>
 					<animation effect="slide" end="0,125" time="0" condition="String.IsEmpty(ListItem.Property(Artist_Description)) + String.IsEmpty(Container(585).ListItem.Art(clearlogo))">Conditional</animation>
 					<top>35</top>
 					<control type="group">
@@ -1040,7 +1166,7 @@
 							<width>570</width>
 							<height>120</height>
 							<aligny>center</aligny>
-							<align>right</align>
+							<align>center</align>
 							<font>titlemove</font>
 							<label>$VAR[value_title]</label>
 							<shadowcolor>black</shadowcolor>
@@ -1053,7 +1179,7 @@
 							<width>570</width>
 							<height>120</height>
 							<aligny>center</aligny>
-							<align>right</align>
+							<align>center</align>
 							<font>titleshelf2</font>
 							<label>$VAR[value_title]</label>
 							<shadowcolor>black</shadowcolor>
@@ -1066,7 +1192,7 @@
 							<width>570</width>
 							<height>120</height>
 							<aligny>center</aligny>
-							<align>right</align>
+							<align>center</align>
 							<font>titlewall</font>
 							<label>$VAR[value_title]</label>
 							<autoscroll delay="1500" time="2000" repeat="2000">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
@@ -1091,7 +1217,7 @@
 						<width>570</width>
 						<height>120</height>
 						<aligny>center</aligny>
-						<align>right</align>
+						<align>center</align>
 						<font>titlemove</font>
 						<label>$INFO[Container(5850).ListItem.Label] $INFO[Container(5850).ListItem.Year,(,)]</label>
 						<shadowcolor>black</shadowcolor>
@@ -1104,7 +1230,7 @@
 						<width>570</width>
 						<height>120</height>
 						<aligny>center</aligny>
-						<align>right</align>
+						<align>center</align>
 						<font>titleshelf2</font>
 						<label>$INFO[Container(5850).ListItem.Label] $INFO[Container(5850).ListItem.Year,(,)]</label>
 						<shadowcolor>black</shadowcolor>
@@ -1117,7 +1243,7 @@
 						<width>570</width>
 						<height>120</height>
 						<aligny>center</aligny>
-						<align>right</align>
+						<align>center</align>
 						<font>titlewall</font>
 						<label>$INFO[Container(5850).ListItem.Label] $INFO[Container(5850).ListItem.Year,(,)]</label>
 						<autoscroll delay="1500" time="2000" repeat="2000">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
@@ -1131,10 +1257,10 @@
 				<animation effect="slide" end="630,0" time="300" condition="!String.IsEmpty(Window(Home).Property(MoveArtist))">Conditional</animation>
 				<animation effect="fade" end="45" condition="true">Conditional</animation>
 				<fadetime>200</fadetime>
-				<left>1420</left>
+				<left>1440</left>
 				<top>820</top>
-				<width>350</width>
-				<height>200</height>
+				<width>320</width>
+				<height>180</height>
 				<aspectratio aligny="bottom" align="center">keep</aspectratio>
 				<texture background="true">$INFO[Container(585).ListItem.Art(clearlogo)]</texture>
 			</control>

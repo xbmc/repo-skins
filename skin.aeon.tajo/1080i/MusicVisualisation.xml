@@ -4,12 +4,6 @@
 	<controls>
 		<control type="group">
 			<visible>String.IsEmpty(Window(home).Property(melodiesPlaying))</visible>
-			<!-- FIX ME Music Visualization needs to have an id of 2 in this window to be able to lock or change preset -->
-			<control type="visualisation" id="2">
-				<description>visualisation</description>
-				<include>FullscreenDimensions</include>
-				<visible>Player.HasAudio + ![String.IsEqual(Visualisation.Name,waveform) | String.Contains(Visualisation.Name,spectrum)]</visible>
-			</control>
 			<!-- Fanart -->
 			<control type="fadelabel" id="5785">
 				<top>-1000</top>
@@ -32,12 +26,37 @@
 				<resetonlabelchange>true</resetonlabelchange>
 			</control>
 			<control type="image">
+				<visible>Skin.HasSetting(Cust_Backg)</visible>
+				<include>FullscreenDimensions</include>
+				<texture>black.png</texture>
+			</control>
+			<control type="image">
+				<include>FullscreenDimensions</include>
+				<fadetime>800</fadetime>
+				<texture background="true">$INFO[Skin.String(Custom_BG)]</texture>
+				<visible>Skin.HasSetting(Cust_Backg) + !String.IsEmpty(Skin.String(Custom_BG)) + !Skin.HasSetting(BlurredAlbum)</visible>
+			</control>
+			<control type="multiimage">
+				<visible>Skin.HasSetting(Cust_Backg) + !String.IsEmpty(Skin.String(Custom_BG_Path)) + !Skin.HasSetting(BlurredAlbum)</visible>
+				<include>FullscreenDimensions</include>
+				<fadetime>800</fadetime>
+				<imagepath background="true">$INFO[Skin.String(Custom_BG_Path)]</imagepath>
+			</control>
+			<control type="image">
+				<include>FullscreenDimensions</include>
+				<fadetime>800</fadetime>
+				<texture background="true">$INFO[Window(Home).Property(TMDbHelper.ListItem.BlurImage)]</texture>
+				<visible>Skin.HasSetting(BlurredAlbum)</visible>
+			</control>
+			<control type="image">
 				<include>FullscreenDimensions</include>
 				<texture background="true">$INFO[Player.Art(artist.fanart)]</texture>
 				<visible>String.IsEmpty(Player.Art(artist.fanart1))</visible>
+				<visible>!Skin.HasSetting(Cust_Backg) + !Skin.HasSetting(BlurredAlbum)</visible>
 			</control>
 			<control type="multiimage">
 				<visible>!String.IsEmpty(Player.Art(artist.fanart1))</visible>
+				<visible>!Skin.HasSetting(Cust_Backg) + !Skin.HasSetting(BlurredAlbum)</visible>
 				<include>FullscreenDimensions</include>
 				<fadetime>800</fadetime>
 				<imagepath background="true">$INFO[Control.GetLabel(5785)]</imagepath>
@@ -50,6 +69,7 @@
 				<texture background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow.Image)]</texture>
 				<visible>!String.IsEmpty(Window(Visualisation).Property(ArtistSlideshow.Image))</visible>
 				<visible>String.IsEmpty(Player.Art(artist.fanart))</visible>
+				<visible>!Skin.HasSetting(Cust_Backg) + !Skin.HasSetting(BlurredAlbum)</visible>
 			</control>
 			<control type="multiimage">
 				<include>FullscreenDimensions</include>
@@ -61,6 +81,7 @@
 				<imagepath background="true">$INFO[Window(Visualisation).Property(ArtistSlideshow)]</imagepath>
 				<visible>!String.IsEmpty(Window(Visualisation).Property(ArtistSlideshow.ArtworkReady))</visible>
 				<visible>String.IsEmpty(Player.Art(artist.fanart))</visible>
+				<visible>!Skin.HasSetting(Cust_Backg) + !Skin.HasSetting(BlurredAlbum)</visible>
 			</control>
 			<control type="group">
 				<animation type="conditional" reversible="false" condition="Skin.HasSetting(3D) + !Skin.HasSetting(onlyBackground)">
@@ -69,21 +90,17 @@
 					<effect type="slide" end="0,-20"/>
 				</animation>
 				<control type="image">
-					<animation effect="fade" end="60" condition="true">Conditional</animation>
-					<left>-15</left>
-					<top>-15</top>
-					<width>1950</width>
-					<height>1310</height>
-					<texture background="true">tajo/background.png</texture>
-					<aspectratio>stretch</aspectratio>
-				</control>
-				<control type="image">
 					<visible>!Skin.HasSetting(onlyBackground)</visible>
 					<left>-15</left>
 					<width>1950</width>
 					<height>1190</height>
 					<texture background="true">tajo/osd_black_bg.png</texture>
 					<aspectratio>stretch</aspectratio>
+				</control>
+				<control type="visualisation" id="2">
+					<description>visualisation</description>
+					<include>FullscreenDimensions</include>
+					<visible>Player.HasAudio</visible>
 				</control>
 				<control type="group">
 					<top>520</top>
@@ -266,19 +283,9 @@
 							<top>-20</top>
 							<width>350</width>
 							<height>240</height>
-							<colordiffuse>ff000000</colordiffuse>
+							<colordiffuse>ddffffff</colordiffuse>
 							<aspectratio aligny="bottom" align="left">keep</aspectratio>
-							<texture background="true">$INFO[Player.Art(artist.clearart)]</texture>
-						</control>
-						<control type="image">
-							<visible>!Skin.HasSetting(noClearart)</visible>
-							<left>-5</left>
-							<top>-20</top>
-							<width>350</width>
-							<height>240</height>
-							<colordiffuse>99ffffff</colordiffuse>
-							<aspectratio aligny="bottom" align="left">keep</aspectratio>
-							<texture background="true">$INFO[Player.Art(artist.clearart)]</texture>
+							<texture background="true" diffuse="tajo/osd_black_bg3.png">$INFO[Player.Art(artist.clearart)]</texture>
 						</control>
 						<control type="label">
 							<visible>!Skin.HasSetting(SimpleView)</visible>
@@ -336,16 +343,30 @@
 							<scrollsuffix>  -  </scrollsuffix>
 							<label>[LOWERCASE][COLOR white]$INFO[MusicPlayer.Genre,, · ][/COLOR]$VAR[Spot_ify,,[COLOR white] ·[/COLOR]][COLOR white]$INFO[MusicPlayer.Bitrate, , [/COLOR]kbps[COLOR white] ·[/COLOR]][COLOR white]$INFO[MusicPlayer.BitsPerSample, ,[/COLOR] $LOCALIZE[612][COLOR white] ·[/COLOR]][/LOWERCASE][COLOR white]$INFO[MusicPlayer.Samplerate, ,[/COLOR]  kHz]</label>
 						</control>
-						<control type="image">
+						<control type="group">
 							<visible>!Skin.HasSetting(noRating)</visible>
-							<left>-60</left>
-							<top>303</top>
-							<width>200</width>
-							<height>30</height>
-							<colordiffuse>themecolor</colordiffuse>
-							<texture fallback="rating0.png">$INFO[MusicPlayer.UserRating,flags/rating/,.png]</texture>
-							<aspectratio align="right" aligny="bottom">keep</aspectratio>
 							<visible>!Player.IsInternetStream</visible>
+							<left>1</left>
+							<top>287</top>
+							<control type="image">
+								<animation effect="slide" end="-2,20" condition="true">Conditional</animation>
+								<width>30</width>
+								<height>30</height>
+								<aspectratio>keep</aspectratio>
+								<texture colordiffuse="$VAR[Player_Colour_UserRating]">star.png</texture>
+								<visible>!String.IsEmpty(MusicPlayer.UserRating)</visible>
+							</control>
+							<control type="label">
+								<animation effect="slide" end="34,13" condition="true">Conditional</animation>
+								<width>40</width>
+								<visible>!String.IsEmpty(MusicPlayer.UserRating)</visible>
+								<align>left</align>
+								<aligny>bottom</aligny>
+								<font>font13_bold</font>
+								<label>[COLOR white][B]$INFO[MusicPlayer.UserRating][/B][/COLOR]</label>
+								<textcolor>FFFFFAF0</textcolor>
+								<shadowcolor>black</shadowcolor>
+							</control>
 						</control>
 					</control>
 					<control type="group">
