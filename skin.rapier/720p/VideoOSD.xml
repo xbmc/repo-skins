@@ -12,7 +12,7 @@
 
 	<controls>
 		<control type="group">
-			<visible>![Window.IsActive(OSDVideoSettings) | Window.IsActive(OSDAudioSettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(VideoBookmarks) | Window.IsActive(SliderDialog) | Window.IsActive(osdcmssettings) | Window.IsActive(playerprocessinfo) | Window.IsActive(1121)]</visible>
+			<visible>![Window.IsActive(OSDVideoSettings) | Window.IsActive(OSDAudioSettings) | Window.IsActive(OSDSubtitleSettings) | Window.IsActive(VideoBookmarks) | Window.IsActive(SliderDialog) | Window.IsActive(osdcmssettings) | Window.IsActive(playerprocessinfo) | Window.IsActive(1121)]</visible>
 			<top>655</top>
 			<include>BottomPaneOpenCloseAnim</include>
 			<include>PlayerControlsPanel</include>
@@ -36,11 +36,13 @@
 				<include condition="!VideoPlayer.Content(LiveTV)">VideoOSDItemgap1</include>
 				<include condition="VideoPlayer.Content(LiveTV)">VideoOSDItemgap2</include>
 				<orientation>horizontal</orientation>
-				<onup>noop</onup>
-				<ondown>noop</ondown>
-				<onleft condition="Control.IsVisible(110)">110</onleft>
-				<onleft>109</onleft>
-				<onright>99</onright>
+				<onleft condition="Control.IsEnabled(109)">109</onleft>
+				<onleft condition="!Control.IsEnabled(109) + Control.IsEnabled(108)">108</onleft>
+				<onleft condition="!Control.IsEnabled(109) + !Control.IsEnabled(108) + Control.IsEnabled(107)">107</onleft>
+				<onleft condition="!Control.IsEnabled(109) + !Control.IsEnabled(108) + !Control.IsEnabled(107)">95</onleft>
+				<onright condition="Control.IsEnabled(99)">99</onright>
+				<onright condition="!Control.IsEnabled(99) + Control.IsEnabled(98)">98</onright>
+				<onright condition="!Control.IsEnabled(99) + !Control.IsEnabled(98)">95</onright>
 				<control type="button" id="100">
 					<description>Exit Fullscreen</description>
 					<include content="OSDButton">
@@ -99,7 +101,7 @@
 					<label>$LOCALIZE[287]</label>
 					<texturefocus>osd/osd-subtitles-focus.png</texturefocus>
 					<texturenofocus>osd/osd-subtitles-nofocus.png</texturenofocus>
-					<onclick>ActivateWindow(osdsubtitlesettings)</onclick>
+					<onclick>ActivateWindow(OSDSubtitleSettings)</onclick>
 				</control>
 				<control type="button" id="105">
 					<description>Teletext</description>
@@ -183,8 +185,6 @@
 				<itemgap>10</itemgap>
 				<usecontrolcoords>true</usecontrolcoords>
 				<orientation>horizontal</orientation>
-				<onup>noop</onup>
-				<ondown>noop</ondown>
 				<onleft condition="Control.IsVisible(115)">115</onleft>
 				<onleft condition="!Control.IsVisible(115)">114</onleft>
 				<onleft>103</onleft>
@@ -198,6 +198,8 @@
 					<texturefocus>osd/osd-skip-prev-focus.png</texturefocus>
 					<texturenofocus>osd/osd-skip-prev-nofocus.png</texturenofocus>
 					<onclick>PlayerControl(Previous)</onclick>
+					<enable>Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1)</enable>
+					<animation effect="fade" start="100" end="60" time="100" condition="![Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1)]">Conditional</animation>
 				</control>
 				<control type="button" id="98">
 					<description>Rewind</description>
@@ -254,6 +256,8 @@
 					<texturefocus>osd/osd-skip-next-focus.png</texturefocus>
 					<texturenofocus>osd/osd-skip-next-nofocus.png</texturenofocus>
 					<onclick>PlayerControl(Next)</onclick>
+					<enable>Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1)</enable>
+					<animation effect="fade" start="100" end="60" time="100" condition="![Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1)]">Conditional</animation>
 				</control>
 			</control>
 			
@@ -267,8 +271,6 @@
 				<itemgap>6</itemgap>
 				<usecontrolcoords>true</usecontrolcoords>
 				<orientation>horizontal</orientation>
-				<onup>noop</onup>
-				<ondown>noop</ondown>
 				<onleft condition="Control.IsVisible(115)">115</onleft>
 				<onleft condition="!Control.IsVisible(115)">114</onleft>
 				<onleft>103</onleft>
@@ -301,6 +303,7 @@
 					<texturenofocus>osd/osd-epg-nofocus.png</texturenofocus>
 					<onclick>ActivateWindow(pvrchannelguide)</onclick>
 					<onclick>Dialog.Close(VideoOSD)</onclick>
+					<visible>VideoPlayer.HasEPG</visible>
 				</control>
 				<control type="button" id="97">
 					<description>Channels</description>
@@ -312,6 +315,18 @@
 					<texturenofocus>osd/osd-channel-list-nofocus.png</texturenofocus>
 					<onclick>ActivateWindow(PVROSDChannels)</onclick>
 					<onclick>Dialog.Close(VideoOSD)</onclick>
+				</control>
+				<control type="button" id="110">
+					<description>Skip Prev</description>
+					<top>5</top>
+					<include content="OSDButton">
+						<param name="size" value="40" />
+					</include>
+					<texturefocus>osd/osd-skip-prev-focus.png</texturefocus>
+					<texturenofocus>osd/osd-skip-prev-nofocus.png</texturenofocus>
+					<onclick>PlayerControl(Previous)</onclick>
+					<enable>Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1) | [Player.SeekEnabled + VideoPlayer.Content(livetv)]</enable>
+					<animation effect="fade" start="100" end="60" time="100" condition="![Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1) | [Player.SeekEnabled + VideoPlayer.Content(livetv)]]">Conditional</animation>
 				</control>
 				<control type="button" id="96">
 					<description>Rewind</description>
@@ -365,24 +380,16 @@
 					<animation effect="fade" start="100" end="60" time="100" condition="!Player.SeekEnabled">Conditional</animation>
 				</control>
 				<control type="button" id="109">
-					<description>Next Channel</description>
+					<description>Skip Next</description>
 					<top>5</top>
 					<include content="OSDButton">
 						<param name="size" value="40" />
 					</include>
-					<texturefocus>osd/osd-channel-up-focus.png</texturefocus>
-					<texturenofocus>osd/osd-channel-up-nofocus.png</texturenofocus>
+					<texturefocus>osd/osd-skip-next-focus.png</texturefocus>
+					<texturenofocus>osd/osd-skip-next-nofocus.png</texturenofocus>
 					<onclick>PlayerControl(Next)</onclick>
-				</control>
-				<control type="button" id="110">
-					<description>Previous Channel</description>
-					<top>5</top>
-					<include content="OSDButton">
-						<param name="size" value="40" />
-					</include>
-					<texturefocus>osd/osd-channel-down-focus.png</texturefocus>
-					<texturenofocus>osd/osd-channel-down-nofocus.png</texturenofocus>
-					<onclick>PlayerControl(Previous)</onclick>
+					<enable>Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1) | PVR.IsTimeShift</enable>
+					<animation effect="fade" start="100" end="60" time="100" condition="![Player.HasSceneMarkers | Player.ChapterCount | Integer.IsGreater(Playlist.Length(video),1) | PVR.IsTimeShift]">Conditional</animation>
 				</control>
 			</control>
 		
@@ -467,7 +474,15 @@
 					<lefttexture>white4.png</lefttexture>
 					<midtexture colordiffuse="FFFF0000">white4.png</midtexture>
 					<righttexture>white2.png</righttexture>
-					<info>Player.Cutlist</info>
+					<info>Player.Editlist</info>
+				</control>
+				
+				<control type="ranges">
+					<left>29</left>
+					<top>44</top>
+					<height>10</height>
+					<righttexture colordiffuse="ffff0000">white2.png</righttexture>
+					<info>Player.Cuts</info>
 				</control>
 				
 				<control type="ranges">
@@ -476,6 +491,14 @@
 					<height>10</height>
 					<righttexture colordiffuse="aaffffff">white2.png</righttexture>
 					<info>Player.Chapters</info>
+				</control>
+				
+				<control type="ranges">
+					<left>29</left>
+					<top>47</top>
+					<height>12</height>
+					<righttexture colordiffuse="ffff0000">white2.png</righttexture>
+					<info>Player.SceneMarkers</info>
 				</control>
 
 				<control type="grouplist">
@@ -580,7 +603,7 @@
 		</control>
 		
 		<control type="group">
-			<visible>![Window.IsActive(playerprocessinfo) | Window.IsActive(selectdialog) | Window.IsActive(OSDVideoSettings) | Window.IsActive(OSDAudioSettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(VideoBookmarks) | Window.IsActive(SliderDialog) | Window.IsActive(osdcmssettings) | Window.IsActive(1121)]</visible>
+			<visible>![Window.IsActive(playerprocessinfo) | Window.IsActive(selectdialog) | Window.IsActive(OSDVideoSettings) | Window.IsActive(OSDAudioSettings) | Window.IsActive(OSDSubtitleSettings) | Window.IsActive(VideoBookmarks) | Window.IsActive(SliderDialog) | Window.IsActive(osdcmssettings) | Window.IsActive(1121)]</visible>
 			<left>22</left>
 			<include>DialogOpenCloseAnim</include>
 
