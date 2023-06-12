@@ -16,6 +16,25 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 
+**1.1.1**
+- Option for thumb or tv show artwork on widgets containing episodes
+- New widget settings screen with ability to easily reorder widgets
+- cropped clearlogo window properties are cleared each time a widget is unfocused to avoid issue where clearlogo from previous widget would sometimes be shown momentarily before updating
+
+**1.1.0**
+- Dependency added back in for resource.fonts.copacetic.
+- Fixed colour of notification label when light theme is selected and background slideshow is visible on.container-less screens in myvideonav/mymusicnav.
+- Fixed colour of notification/volume label when light theme is selected but trailer is auto-playing.
+- Fix to prevent view-specific notification widget showing on top of video window when trailer is auto-playing.
+- Fixed center alignment of clearlogo on fullscreen info / pause screen during video playback
+- Fixed order of priority for HDR type flag and label. Now both will only fallback to filenames if there is no value for ListItem.HDRType
+- Added multiart to background slideshows
+- Added kiosk mode in skin settings to lock hidden view menu customisations
+- Visualisation window will now hide artwork/info about currently playing song according to standard Player.ShowInfo boolean
+
+**1.0.7**
+- Depdency on resource.fonts.copacetic removed while awaiting its approval into Kodi Nexus resources repo.
+
 **1.0.6**
 - Keyart will now only show in place of posters if 'Prefer keyart for poster views' is selected in skin settings. Previously it would show whenever a clearlogo was present, regardless of this setting.
 
