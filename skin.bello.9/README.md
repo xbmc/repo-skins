@@ -16,10 +16,22 @@ Any redistribution of this software (or modifications / derivatives of it) must 
 ## IMPORTANT LEGAL NOTICE
 **Bello 9 IS STRICTLY FOR PERSONAL OR HOUSEHOLD USE. THEREFORE YOU MAY NOT RIPP-OFF, COPY, MODIFY OR USE THIS WORK OR ANY PART OF IT IN ANY WAY FOR COMMERCIAL OR BUSINESS PURPOSES. THIS ALSO APPLIES TO ALL KODI BOX SELLERS. YOU ARE NOT ALLOWED TO SELL PRODUCTS WITH Bello 9 PRE-INSTALLED WITHOUT MY PRIOR WRITTEN CONSENT!.**
 
+**PLEASE RESPECT DEVELOPER'S WORK!!!**
+<br><br>
 
 ## About
 This is the 9th generation of Bello for Kodi (Nexus) Home Theater Software. Bello is a Graphical User Interface (GUI) for Kodi, an award-winning free and Open Source Home Theater Software available on [Windows](https://kodi.tv/download/849), [OSX](https://kodi.tv/download/851), [Linux](https://kodi.tv/download/850), [Android](https://kodi.tv/download/852), [iOS](https://kodi.tv/download/854) and [Raspberry Pi](https://kodi.tv/download/853). Bello 9 is aiming to maximize your Kodi entertainment experience with its NEW Unique, Clean and Elegant interface while providing users a highly customization level and lots of cool features!
 <br><br>
+
+## Release Notes
+<ul><li>Added HUB sections for Movies, TV Shows, Music, Addons & Live TV. You can hide/unhide any section in any HUB.</li>
+<li>AutoPlay Trailers with custom delay for Movies & TV Shows globally (Disabled by default).</li>
+<li>Added more home widgets options via skinshortcuts add-on and now are fully customizable including sort by, limit number etc.</li>
+<li>Cleaned/Refreshed the Trailers section.</li>
+<li>Added option to skin settings to change Bello logo to Kodi logo or user profile picture.</li>
+<li>Increased font size in all small labels and textboxes for better readability.</li>
+<li>Major rewrite & clean in whole skin code according to the latest skin engine features (There were some parts even from first version of Bello).</li></ul>
+<br>
 
 ## Compatibility
 Bello 9 is compatible only with [Kodi 20.xx Nexus](https://kodi.tv/download).
@@ -51,7 +63,7 @@ These add-ons are not required for the installation but are needed for certain s
 <li><a href="http://mirrors.xbmc.org/addons/nexus/resource.images.weathericons.outline-hd/">resource.images.weathericons.outline-hd</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/resource.images.musicgenreicons.text/">resource.images.musicgenreicons.text</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/resource.images.languageflags.colour/">resource.images.languageflags.colour</a></li>
-<br>
+<br><br>
 
 ## F.A.Q
 **Q: Where is my mouse pointer ?**
@@ -84,8 +96,7 @@ These add-ons are not required for the installation but are needed for certain s
 
 ## Translations
 If you want to help on translating Bello in your native language please sing up to [kodi.weblate.cloud](https://kodi.weblate.cloud/) select your language as interface language and you will get notified and assign that language as a team.
-
-<br>
+<br><br>
 
 ## Disclaimer
 <ul><li>No mouse support</li>
@@ -96,7 +107,7 @@ If you want to help on translating Bello in your native language please sing up 
 <li>No BluRay/DVD cases options</li>
 <li>No moving stuff in home menu from old Bello</li>
 <li>and most importantly... NO COMMERCIAL USE!!!</li></ul>
-<br>
+<br><br>
 
 ## Credits
 To my donors group and their appreciation to this skin, to all addons developers used in this skin and of course, to Kodi/XBMC Team for creating and developing this beautiful piece of software.
