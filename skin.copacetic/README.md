@@ -16,6 +16,24 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 
+**1.1.4**
+- Added studio flag for Neon
+- Changed navigation on home menu to wrap on additional direction press so at the end of the list if you press right again, it will take you back to the list. And at the start, pressing left will take you to the end.
+- Widgets will also wrap around on second press if there is more than one item in the container.
+- Optimised screenshots and icons in /resources and /extras/skinsettings folders.
+- Fixed several infoscreen widgets that weren't working correctly when the source of the list item was a plugin and themoviedbhelper was installed and being used to populate the plugin.
+
+**1.1.3**
+- Fixed issue introduced in 1.1.1 with wrong multiart displaying on some widgets
+- Fixed issue introduced in 1.1.2 where disabled/empty widgets could not be changed in skinsettings 
+
+**1.1.2**
+- Fixed issue affecting wrong artwork sometimes being shown in widgets using grid and fanart layout when scrolling backwards.
+- Fixed multiart behaviour on list/billboard view when main container loses focus
+- Fixed artwork displayed on secondary lists for list/billboard view when multiart visible
+- Refined user experience of widget settings screen. It should now be easier to see how to configure widgets
+- Removed inactive icons from dialogselect window when accessed via skinsettings
+
 **1.1.1**
 - Option for thumb or tv show artwork on widgets containing episodes
 - New widget settings screen with ability to easily reorder widgets
@@ -69,3 +87,9 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 **1.0.0** 
 - Initial release.
+
+
+### To do
+- widgets 10-30
+- More from studio on plugins - use with_separator AND: https://github.com/jurialmunkey/plugin.video.themoviedb.helper/wiki/Lists-Discover
+- Improved infoscreen path-tracing for widgets populated by plugin sources
