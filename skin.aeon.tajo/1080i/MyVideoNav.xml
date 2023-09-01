@@ -5,6 +5,7 @@
 	<menucontrol>9051</menucontrol>
 	<onload>ClearProperty(MediaMenu,Home)</onload>
 	<onload>ClearProperty(HideWall,home)</onload>
+	<onload>ClearProperty(Similar,Home)</onload>
 	<onload condition="Skin.HasSetting(playTheme)">ClearProperty(PlayingOST,Home)</onload>
 	<onload condition="Skin.HasSetting(playTheme)">ClearProperty(theme_ready,home)</onload>
 	<onload>AlarmClock(AnimMulti2,SetProperty(AnimWall2,True,home),00:03,silent)</onload>
@@ -17,6 +18,8 @@
 	<onload condition="Container.Content(movies)">SetProperty(MediaMovie8,True,home)</onload>
 	<onload condition="String.Contains(Container.Viewmode,RightList) + !Integer.IsGreater(Container.CurrentItem,1) + String.IsEmpty(Window(home).Property(MediaMovie6))">Control.Move(596,2)</onload>
 	<onload condition="Container.Content(movies)">SetProperty(MediaMovie6,True,home)</onload>
+	<onload condition="Container.Content(movies) | Container.Content(sets)">SetProperty(TripleType,movie,home)</onload>
+	<onload condition="Container.Content(tvshows)">SetProperty(TripleType,tvshow,home)</onload>
 	<onload>ClearProperty(TMDbHelper.WidgetContainer,Home)</onload>
 	<onunload condition="Skin.HasSetting(OnlineRating) + !String.IsEqual(Container.CurrentItem,Window(Home).Property(CurrPos))">SetProperty(FirstOscar,$VAR[Label_Oscars],home)</onunload>
 	<onunload condition="Skin.HasSetting(OnlineRating) + !String.IsEqual(Container.CurrentItem,Window(Home).Property(CurrPos))">SetProperty(FirstEmmy,$VAR[Label_Emmys],home)</onunload>
@@ -42,7 +45,7 @@
 			<left>-1000</left>
 			<width>1</width>
 			<height>1</height>
-			<texture fallback="resources/mpaa/NR.png">$VAR[mpaa]</texture>
+			<texture>$VAR[mpaa]</texture>
 		</control>
 		<include condition="!Skin.HasSetting(Coloured.icons)">NotColouredIcons</include>
 		<include condition="Skin.HasSetting(Coloured.icons)">ColouredIcons</include>
@@ -68,6 +71,12 @@
 		</control>
 		<control type="list" id="59631">
 			<visible>ListItem.IsCollection</visible>
+			<content sortby="year" sortorder="ascending">$INFO[ListItem.FolderPath]</content>
+			<itemlayout/>
+			<focusedlayout/>
+		</control>
+		<control type="list" id="59632">
+			<visible>Container.Content(tvshows)</visible>
 			<content sortby="year" sortorder="ascending">$INFO[ListItem.FolderPath]</content>
 			<itemlayout/>
 			<focusedlayout/>
@@ -109,7 +118,7 @@
 			<label>$INFO[Container(59631).ListItemAbsolute(9).Path]</label>
 		</control>
 		<control type="fadelabel" id="4410">
-			<visible>Control.IsVisible(590) | Control.IsVisible(594) | Control.IsVisible(595) | Control.IsVisible(596) | Control.IsVisible(597) | Control.IsVisible(587)</visible>
+			<visible>Control.IsVisible(590) | Control.IsVisible(594) | Control.IsVisible(595) | Control.IsVisible(596) | Control.IsVisible(597) | Control.IsVisible(587) | Control.IsVisible(50)</visible>
 			<top>-100</top>
 			<width>2560</width>
 			<height>0</height>
@@ -130,20 +139,22 @@
 			<label>$INFO[ListItem.Art(fanart7)]</label>
 			<label>$INFO[ListItem.Art(fanart8)]</label>
 			<label>$INFO[ListItem.Art(fanart9)]</label>
+			<label>$INFO[ListItem.Art(fanart10)]</label>
+			<label>$INFO[ListItem.Art(fanart11)]</label>
+			<label>$INFO[ListItem.Art(fanart12)]</label>
+			<label>$INFO[ListItem.Art(fanart13)]</label>
+			<label>$INFO[ListItem.Art(fanart14)]</label>
+			<label>$INFO[ListItem.Art(fanart15)]</label>
+			<label>$INFO[ListItem.Art(fanart16)]</label>
+			<label>$INFO[ListItem.Art(fanart17)]</label>
+			<label>$INFO[ListItem.Art(fanart18)]</label>
+			<label>$INFO[ListItem.Art(fanart19)]</label>
 		</control>
 		<include condition="Skin.HasSetting(extraposters)">Extra_posters</include>
+		<include>DisplayChar</include>
+		<include condition="Skin.HasSetting(showCast) | Skin.HasSetting(similars)">DisplayCast</include>
+		<include condition="Skin.HasSetting(showCast) + System.HasAddon(resource.images.actorart)">DisplayPngCast</include>
 		<control type="group">
-			<visible>[!Control.IsVisible(593) + !Control.IsVisible(586) + !Control.IsVisible(50)] | [Control.IsVisible(586) + System.IdleTime(4)]</visible>
-			<include>DisplayChar</include>
-			<control type="group">
-				<include condition="Skin.HasSetting(showCast) + System.HasAddon(script.embuary.helper)">DisplayCast</include>
-			</control>
-			<control type="group">
-				<include condition="Skin.HasSetting(showCast) + System.HasAddon(script.embuary.helper) + System.HasAddon(resource.images.actorart)">DisplayPngCast</include>
-			</control>
-		</control>
-		<control type="group">
-			<include>WindowOpenCloseAnimation</include>
 			<include>VideoList</include>
 			<!-- view id = 50 -->
 			<include>ViewTriple</include>
@@ -164,6 +175,7 @@
 			<!-- view id = 597 -->
 			<include>ViewMultiWall</include>
 			<!-- view id = 586 -->
+			<include>WindowOpenAnimation2</include>
 		</control>
 		<control type="group">
 			<left>-440</left>
@@ -172,17 +184,45 @@
 				<include>MediaMenuTop</include>
 				<control type="togglebutton" id="6053">
 					<description>3D Toggle</description>
-					<textwidth>352</textwidth>
+					<textwidth>400</textwidth>
 					<include>ButtonCommonValues</include>
 					<label>$VAR[Label_Shelf]</label>
+					<onclick>SetProperty(ChangeLayout,True,home)</onclick>
 					<onclick>Skin.ToggleSetting(Sh3D)</onclick>
 					<onclick>ReplaceWindow(home)</onclick>
 					<onclick>ActivateWindow(videos)</onclick>
+					<onclick>ClearProperty(ChangeLayout,Home)</onclick>
 					<visible>Control.IsVisible(595)</visible>
+				</control>
+				<control type="togglebutton" id="6059">
+					<description>Banner Toggle</description>
+					<textwidth>400</textwidth>
+					<include>ButtonCommonValues</include>
+					<label>$VAR[Label_Triple]</label>
+					<onclick>SetProperty(ChangeLayout,True,home)</onclick>
+					<onclick>Skin.ToggleSetting(BannerTriple)</onclick>
+					<onclick>ReplaceWindow(home)</onclick>
+					<onclick>ActivateWindow(videos)</onclick>
+					<onclick>ClearProperty(ChangeLayout,Home)</onclick>
+					<visible>Control.IsVisible(590)</visible>
+					<visible>Container.Content(tvshows)</visible>
+				</control>
+				<control type="togglebutton" id="6089">
+					<description>Banner Toggle</description>
+					<textwidth>400</textwidth>
+					<include>ButtonCommonValues</include>
+					<label>$VAR[Label_Triple_Movie]</label>
+					<onclick>SetProperty(ChangeLayout,True,home)</onclick>
+					<onclick>Skin.ToggleSetting(BannerTripleMovie)</onclick>
+					<onclick>ReplaceWindow(home)</onclick>
+					<onclick>ActivateWindow(videos)</onclick>
+					<onclick>ClearProperty(ChangeLayout,Home)</onclick>
+					<visible>Control.IsVisible(590)</visible>
+					<visible>Container.Content(movies) | Container.Content(sets)</visible>
 				</control>
 				<control type="togglebutton" id="6054">
 					<description>Actors Thumbs</description>
-					<textwidth>352</textwidth>
+					<textwidth>400</textwidth>
 					<include>ButtonCommonValues</include>
 					<label>$VAR[Label_Sh2_actors]</label>
 					<onclick>Skin.ToggleSetting(Sh2)</onclick>
@@ -190,20 +230,28 @@
 				</control>
 				<control type="togglebutton" id="6055">
 					<description>3D Toggle</description>
-					<textwidth>352</textwidth>
+					<textwidth>400</textwidth>
 					<include>ButtonCommonValues</include>
 					<label>$VAR[Label_List]</label>
 					<onclick>Skin.ToggleSetting(Li3D)</onclick>
 					<visible>Control.IsVisible(596) + !Container.Content(episodes)</visible>
 				</control>
+				<control type="togglebutton" id="6057">
+					<description>Show Browser</description>
+					<textwidth>400</textwidth>
+					<include>ButtonCommonValues</include>
+					<label>$VAR[Label_Fanarts]</label>
+					<onclick>Skin.ToggleSetting(NavFanartView)</onclick>
+					<visible>Control.IsVisible(593)</visible>
+				</control>
 				<control type="button" id="201">
 					<description>View options</description>
-					<textwidth>352</textwidth>
+					<textwidth>400</textwidth>
 					<font>font13_title</font>
 					<include>ButtonCommonValues</include>
 					<label>31026</label>
 					<enable>no</enable>
-					<disabledcolor>themecolor</disabledcolor>
+					<disabledcolor>Skin.String(theme_text)</disabledcolor>
 				</control>
 				<control type="button" id="10">
 					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)</visible>
@@ -211,7 +259,7 @@
 					<textwidth>255</textwidth>
 					<include>ButtonCommonValues</include>
 					<label>20367</label>
-					<label2>[COLOR themecolor]$INFO[Container.NumItems][/COLOR]</label2>
+					<label2>[COLOR $INFO[Skin.String(theme_text)]]$INFO[Container.NumItems][/COLOR]</label2>
 				</control>
 				<control type="button" id="8">
 					<description>Search</description>
@@ -254,12 +302,12 @@
 				</control>
 				<control type="button" id="203">
 					<description>View options</description>
-					<textwidth>352</textwidth>
+					<textwidth>400</textwidth>
 					<font>font13_title</font>
 					<include>ButtonCommonValues</include>
 					<label>31039</label>
 					<enable>no</enable>
-					<disabledcolor>themecolor</disabledcolor>
+					<disabledcolor>Skin.String(theme_text)</disabledcolor>
 				</control>
 				<control type="button" id="616">
 					<description>Go to playercontrols</description>
@@ -410,20 +458,25 @@
 		<control type="group">
 			<visible>Control.IsVisible(589) | Control.IsVisible(590) | Control.IsVisible(594) | Control.IsVisible(597) | Control.IsVisible(596) | Control.IsVisible(50)</visible>
 			<visible allowhiddenfocus="true">Control.HasFocus(5919)</visible>
-			<animation effect="fade" start="0" end="90" time="1200">Visible</animation>
-			<animation effect="slide" end="2,-110" time="0" condition="Control.IsVisible(590)">Conditional</animation>
+			<animation effect="fade" start="0" end="90" time="600">Visible</animation>
+			<animation effect="slide" end="2,-54" time="0" condition="Control.IsVisible(590)">Conditional</animation>
 			<animation effect="slide" end="1,300" time="0" condition="Control.IsVisible(589)">Conditional</animation>
-			<animation effect="slide" end="1869,0" time="0" condition="Control.IsVisible(597) | Control.IsVisible(596)">Conditional</animation>
+			<animation effect="slide" end="1869,0" time="0" condition="Control.IsVisible(597)">Conditional</animation>
+			<animation effect="slide" end="1879,0" time="0" condition="Control.IsVisible(596)">Conditional</animation>
 			<animation effect="slide" end="1860,5" time="0" condition="Control.IsVisible(50)">Conditional</animation>
 			<animation effect="slide" end="1869,12" time="0" condition="Control.IsVisible(594)">Conditional</animation>
 			<left>-5</left>
 			<top>470</top>
 			<control type="button" id="5919">
 				<include>HiddenObject</include>
-				<onleft condition="!Control.IsVisible(596) + !Control.IsVisible(50)">80</onleft>
-				<onright condition="!Control.IsVisible(596) + !Control.IsVisible(50) + !Control.IsVisible(597) + !Control.IsVisible(594)">50</onright>
-				<onleft condition="Control.IsVisible(596) | Control.IsVisible(50)">50</onleft>
-				<onright condition="Control.IsVisible(596) | Control.IsVisible(50) | Control.IsVisible(597) | Control.IsVisible(594)">80</onright>
+				<onleft condition="Control.IsVisible(50) | Control.IsVisible(594) | Control.IsVisible(596) | Control.IsVisible(597)">50</onleft>
+				<onleft condition="Control.IsVisible(589)">58960</onleft>
+				<onleft condition="Control.IsVisible(590)">59060</onleft>
+				<onright condition="Control.IsVisible(50)">5060</onright>
+				<onright condition="Control.IsVisible(589) | Control.IsVisible(590)">50</onright>
+				<onright condition="Control.IsVisible(594)">59460</onright>
+				<onright condition="Control.IsVisible(596)">59660</onright>
+				<onright condition="Control.IsVisible(597)">59760</onright>
 				<onup>SetFocus(50)</onup>
 				<onup>Action(prevletter)</onup>
 				<onup>SetFocus(5919)</onup>
@@ -471,13 +524,13 @@
 				<align>center</align>
 				<label>$INFO[ListItem.SortLetter]</label>
 				<textcolor>white</textcolor>
-				<font>font_MainMenu2</font>
+				<font>titlemove</font>
 			</control>
 		</control>
 		<control type="group">
 			<visible>Control.IsVisible(595) | Control.IsVisible(593) | Control.IsVisible(587)</visible>
 			<visible allowhiddenfocus="true">Control.HasFocus(5929)</visible>
-			<animation effect="fade" start="0" end="90" time="1200">Visible</animation>
+			<animation effect="fade" start="0" end="90" time="600">Visible</animation>
 			<animation effect="slide" end="1225,0" time="0" condition="Control.IsVisible(593)">Conditional</animation>
 			<animation effect="slide" end="80,0" time="0" condition="Control.IsVisible(587)">Conditional</animation>
 			<animation effect="slide" end="1360,0" time="0" condition="Control.IsVisible(587)">Conditional</animation>
@@ -486,7 +539,9 @@
 			<top>980</top>
 			<control type="button" id="5929">
 				<include>HiddenObject</include>
-				<ondown>86</ondown>
+				<ondown condition="Control.IsVisible(587)">58760</ondown>
+				<ondown condition="Control.IsVisible(593)">59360</ondown>
+				<ondown condition="Control.IsVisible(595)">59560</ondown>
 				<onup>50</onup>
 				<onleft>SetFocus(50)</onleft>
 				<onleft>Action(prevletter)</onleft>
@@ -530,7 +585,7 @@
 				<align>center</align>
 				<label>$INFO[ListItem.SortLetter]</label>
 				<textcolor>white</textcolor>
-				<font>font_MainMenu2</font>
+				<font>titlemove</font>
 			</control>
 		</control>
 		<control type="image">
