@@ -43,14 +43,14 @@ Bello 9 is available for download on Kodi's official repository. Please refer to
 <br><br>
 
 ## Required Add-ons
-These Add-ons are required by Bello 9 so the skin to work properly. If you are missing one or more, Kodi will display a "Dependencies not met" error message when attempting to install. The versions numbers mentioning here are the minimum required, but any higher version should work fine. If you are installing a release from Kodi's official repository of Bello 9, these add-ons should be installed automatically by Kodi.
+These Add-ons are required by Bello 9 so the skin to work properly. If you are missing one or more, Kodi will display a "Dependencies not met" error message when attempting to install. The versions numbers mentioning here are the minimum required, but any higher version should work fine. When you are installing Bello 9 from Kodi's official repository, these add-ons should be installed automatically by Kodi.
 <ul><li><a href="http://mirrors.xbmc.org/addons/nexus/script.skinshortcuts/">script.skinshortcuts v2.0.3</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/plugin.video.themoviedb.helper/">plugin.video.themoviedb.helper v4.4.14</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/script.embuary.helper/">script.embuary.helper v2.0.8</a></li></ul>
 <br>
 
 ## Supported Add-ons
-These add-ons are not required for the installation but are needed for certain skin features. Certain skin features will not be available or work properly if one or more of these add-ons are not installed on your system. To get the most out of Bello 9 please install these add-ons first. Keep in mind that some of them should be installed automatically when you install the skin or you will be prompted to install them when you select such a feature. If they are not, then install them manually using the links below.
+These add-ons are not required for the installation but are needed for certain skin features. Certain skin features will not be available or work properly if one or more of these add-ons are not installed on your system. Keep in mind that some of them should be installed automatically when you install the skin or you will be prompted to install them when you select such a feature. If they are not, then install them manually from "Skin Settings>Supported Add-ons" or by using the links below.
 <ul><li><a href="http://mirrors.xbmc.org/addons/nexus/script.metadata.editor/">script.metadata.editor</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/script.artistslideshow/">script.artistslideshow</a></li>
 <li><a href="http://mirrors.xbmc.org/addons/nexus/script.globalsearch/">script.globalsearch</a></li>
