@@ -2,7 +2,7 @@
 <includes>
 	<include name="seekbar_Video">
 		<control type="group">
-			<visible>!Window.IsVisible(playerprocessinfo) + !Window.IsVisible(videobookmarks) + !Window.IsVisible(shutdownmenu)</visible>
+			<visible>!Window.IsVisible(playerprocessinfo) + !Window.IsVisible(videobookmarks) + !$EXP[PanelDialog_IsVisible] + !Window.IsVisible(shutdownmenu)</visible>
 			<include content="Visible_Fade_Delayed_Animation" />
 			<control type="image">
 				<visible>Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog)</visible>
@@ -19,9 +19,10 @@
 				<param name="height" value="32" />
 				<param name="progress_id" value="1" />
 				<param name="progress_bar_padding" value="120" />
-				<param name="left_label" value="$INFO[Player.Time]" />
+				<param name="left_label" value="$VAR[seekbar_Left_Label]" />
 				<param name="right_label" value="$INFO[Player.Duration]" />
 				<param name="text_color" value="$VAR[Light_Color]" />
+				<param name="include_ranges" value="true" />
 				<visible>Player.Seeking | Player.Rewinding | Player.Forwarding | Player.HasPerformedSeek(3) | [Window.IsVisible(videoosd) + !System.IdleTime(3)] | [Player.Paused + !System.IdleTime(5)] | Window.IsVisible(fullscreeninfo)</visible>
 				<include content="Visible_Fade_Delayed_Animation" />
 			</include>
@@ -38,15 +39,17 @@
 			</control>
 		</control>
 	</include>
+
 	<include name="seekbar_Music">
 		<control type="group">
 			<visible>!Window.IsVisible(shutdownmenu)</visible>
 			<include content="Visible_Fade_Delayed_Animation" />
 			<include content="Player_Status_Icons">
 				<param name="large_label" value="true" />
+				<animation effect="slide" end="-600,290" time="0" condition="!Skin.String(visualisation_Layout,Large)">Conditional</animation>
 				<visible>!Window.IsVisible(musicosd)</visible>
 			</include>
-			<include content="Player_Progress">
+			<include content="Player_Progress" condition="Skin.String(visualisation_Layout,Large)">
 				<param name="left" value="60" />
 				<param name="right" value="60" />
 				<param name="bottom" value="14" />
@@ -57,21 +60,37 @@
 				<param name="right_label" value="$INFO[Player.Duration]" />
 				<param name="text_color" value="$VAR[Primary_Color]" />
 			</include>
+			<include content="Player_Progress" condition="!Skin.String(visualisation_Layout,Large)">
+				<param name="left" value="600" />
+				<param name="right" value="360" />
+				<param name="bottom" value="14" />
+				<param name="height" value="32" />
+				<param name="progress_bar_padding" value="120" />
+				<param name="progress_id" value="1" />
+				<param name="left_label" value="$INFO[Player.Time]" />
+				<param name="right_label" value="$INFO[Player.Duration]" />
+				<param name="text_color" value="$VAR[Primary_Color]" />
+			</include>
+			<nested />
 		</control>
 	</include>
+
 	<include name="OSD_Template">
 		<param name="windowname" />
-		<param name="visible" default="!$EXP[Hidden_Focus_Setter] + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(playerprocessinfo) + !Window.IsVisible(videobookmarks)" />
+		<param name="visible" default="!$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(playerprocessinfo) + !Window.IsVisible(videobookmarks)" />
 		<param name="breadcrumb_color" />
 		<definition>
 			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
 				<visible>$PARAM[visible]</visible>
 				<include content="VisibleHidden_Fade_Animation" />
 				<include content="Breadcrumb_Label">
 					<param name="label_color" value="$PARAM[breadcrumb_color]" />
 					<param name="title_label" value="$VAR[OSD_Label]" />
+					<param name="info_label_visible" value="true" />
 				</include>
 				<control type="group">
+					<animation effect="slide" end="-600,290" time="0" condition="Window.Is(musicosd) + !Skin.String(visualisation_Layout,Large)">Conditional</animation>
 					<centerleft>50%</centerleft>
 					<centertop>50%</centertop>
 					<width>300</width>
@@ -93,23 +112,14 @@
 						<include content="$PARAM[windowname]_Bottom_Row_Content" />
 					</control>
 				</control>
-				<include content="Player_Status_Icons">
+				<include content="Player_Status_Icons" condition="!Window.Is(visualisation)">
 					<param name="large_label" value="true" />
 				</include>
-				<control type="slider" id="60">
-					<visible allowhiddenfocus="true">Control.HasFocus(60) + !VideoPlayer.Content(LiveTV)</visible>
-					<bottom>20</bottom>
-					<centerleft>50%</centerleft>
-					<width>1560</width>
-					<height>20</height>
-					<texturesliderbar colordiffuse="$VAR[Light_Color]">dialogs/dialogseekbar_background.png</texturesliderbar>
-					<textureslidernibfocus colordiffuse="$VAR[Accent_Color]">dialogs/dialogslider_nib_20.png</textureslidernibfocus>
-					<info>Player.Progress</info>
-					<onup>3100</onup>
-					<ondown>3000</ondown>
-					<action>seek</action>
-					<orientation>horizontal</orientation>
-				</control>
+				<include content="musicosd_Slider" condition="[Window.Is(musicosd) + Skin.String(visualisation_Layout,Large)] | Window.Is(videoosd)" />
+				<include content="musicosd_Slider" condition="Window.Is(musicosd) + !Skin.String(visualisation_Layout,Large)">
+					<param name="left" value="720" />
+					<param name="width" value="720" />
+				</include>
 				<nested />
 			</control>
 		</definition>
