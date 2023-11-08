@@ -16,6 +16,7 @@
 				<include content="addoninformation_Menu_Content" condition="Window.Is(addoninformation)" />
 				<include content="movieinformation_Menu_Content" condition="Window.Is(movieinformation)" />
 				<include content="musicinformation_Menu_Content" condition="Window.Is(musicinformation) | Window.Is(songinformation)" />
+				<include content="pvrinformation_Menu_Content" condition="Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)" />
 			</control>
 		</definition>
 	</include>
@@ -45,6 +46,7 @@
 
 	<include name="Infoscreen_Flags_Layout">
 		<control type="grouplist">
+			<visible>![String.IsEqual(Control.GetLabel(6303),flags/blank.png) + String.IsEqual(Control.GetLabel(6304),flags/blank.png)]</visible>
 			<nested />
 			<width>100%</width>
 			<height>180</height>
@@ -83,6 +85,7 @@
 				<height>30</height>
 				<orientation>horizontal</orientation>
 				<align>$PARAM[align]</align>
+				<nested />
 				<control type="image">
 					<width>182</width>
 					<aspectratio>keep</aspectratio>
@@ -143,7 +146,17 @@
 					<label>$VAR[Info_Infoscreens_Label]</label>
 					<align>$PARAM[align]</align>
 				</control>
-				<include content="Infoscreen_Stars_Layout" condition="!Window.Is(addoninformation) + !String.IsEqual(ListItem.DBType,set) + !String.IsEqual(ListItem.DBType,artist)">
+				<include content="Common_Details_Textbox" condition="Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)">
+					<param name="visible" value="!String.IsEmpty(ListItem.Plot)" />
+					<param name="gap" value="60" />
+					<param name="maxheight" value="300" />
+					<param name="font" value="Plot_Panel" />
+					<param name="color" value="$VAR[Light_Color]" />
+					<param name="label" value="$INFO[ListItem.Plot]" />
+					<param name="align" value="center" />
+					<param name="scroll" value="true" />
+				</include>
+				<include content="Infoscreen_Stars_Layout" condition="!Window.Is(addoninformation) + !String.IsEqual(ListItem.DBType,set) + !String.IsEqual(ListItem.DBType,artist) + ![String.IsEmpty(ListItem.UserRating) + String.IsEmpty(ListItem.Rating)] + !Skin.HasSetting(Star_Ratings_Disabled)">
 					<param name="align" value="$PARAM[align]" />
 				</include>
 				<include content="Infoscreen_Flags_Layout" condition="Window.Is(movieinformation)">
@@ -355,70 +368,6 @@
 			</include>
 			<include content="Infoscreen_Artwork_Layout" condition="!String.IsEqual(ListItem.DBType,episode) + ![String.IsEmpty(ListItem.Art(fanart)) + String.IsEmpty(ListItem.Art(poster))]" />
 		</control>
-	</include>
-
-	<include name="Fullscreen_Info">
-		<param name="color" default="$VAR[Light_Color]" />
-		<param name="show_logo" default="![String.IsEmpty(VideoPlayer.Art(clearlogo-billboard)) + String.IsEmpty(VideoPlayer.Art(clearlogo-aligned)) + String.IsEmpty(VideoPlayer.Art(clearlogo))]" />
-		<param name="plot_label" default="$VAR[Plot_Label]" />
-		<param name="align" default="center" />
-		<definition>
-			<include content="Hidden_Components">
-				<control type="label" id="6003">
-					<label>$PARAM[plot_label]</label>
-				</control>
-			</include>
-			<control type="grouplist">
-				<visible>!$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(playerprocessinfo)</visible>
-				<include content="Visible_Fade_Delayed_Animation" />
-				<nested />
-				<width>1560</width>
-				<centerleft>50%</centerleft>
-				<height>100%</height>
-				<orientation>vertical</orientation>
-				<align>center</align>
-				<itemgap>0</itemgap>
-				<usecontrolcoords>true</usecontrolcoords>
-				<include content="Common_Details_Logo" condition="$PARAM[show_logo]">
-					<param name="align" value="center" />
-					<centerleft>50%</centerleft>
-				</include>
-				<include content="Common_Details_Textbox" condition="!$PARAM[show_logo]">
-					<param name="font" value="Billboard_Title" />
-					<param name="color" value="$PARAM[color]" />
-					<param name="label" value="$VAR[Title_Label]" />
-					<param name="align" value="$PARAM[align]" />
-				</include>
-				<include content="Common_Details_Info">
-					<param name="maxheight" value="35" />
-					<param name="font" value="Billboard_Info" />
-					<param name="color" value="$PARAM[color]" />
-					<param name="label" value="$VAR[Info_Label_FullscreenVideo]" />
-					<param name="align" value="$PARAM[align]" />
-				</include>
-				<include content="Common_Details_Textbox">
-					<param name="visible" value="!String.IsEmpty(Control.GetLabel(6003))" />
-					<param name="maxheight" value="103" />
-					<param name="gap" value="60" />
-					<param name="font" value="Body" />
-					<param name="color" value="$PARAM[color]" />
-					<param name="label" value="$PARAM[plot_label]" />
-					<param name="scroll" value="true" />
-					<param name="align" value="$PARAM[align]" />
-				</include>
-				<include content="Infoscreen_Flags_Layout">
-					<param name="VideoSource_condition" value="true" />
-					<param name="VideoCodec_condition" value="true" />
-					<param name="AudioCodec_condition" value="true" />
-					<top>90</top>
-				</include>
-			</control>
-			<include content="Infoscreen_Flag_Checkers">
-				<param name="VideoSource_condition" value="true" />
-				<param name="VideoCodec_condition" value="true" />
-				<param name="AudioCodec_condition" value="true" />
-			</include>
-		</definition>
 	</include>
 
 </includes>

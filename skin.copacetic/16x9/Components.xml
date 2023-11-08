@@ -23,7 +23,7 @@
 	<include name="Busy_Spinner">
 		<param name="visible" />
 		<param name="size" default="90" />
-		<param name="color" default="$VAR[Primary_Color]" />
+		<param name="color" default="$VAR[Light_Color]" />
 		<definition>
 			<control type="image">
 				<visible>$PARAM[visible]</visible>
@@ -47,7 +47,6 @@
 			<control type="button" id="$PARAM[id]">
 				<visible allowhiddenfocus="true">false</visible>
 				<animation effect="slide" end="0,0" time="$PARAM[time]" reversible="false">Focus</animation>
-				<nested />
 				<onfocus>$PARAM[target_id]</onfocus>
 				<onright>$PARAM[target_id]</onright>
 				<onleft>$PARAM[target_id]</onleft>
@@ -63,11 +62,12 @@
 		<param name="include_animation" default="true" />
 		<definition>
 			<control type="group">
-				<nested />
-				<visible>Skin.String(Theme,Light)</visible>
-				<visible>$PARAM[visible]</visible>
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
 				<include content="Dialog_Over_Light_Background_Fadediffuse_Animation" />
 				<include content="Light_Theme_Background_Fade_Animation" condition="$PARAM[include_animation]" />
+				<visible>Skin.String(Theme,Light)</visible>
+				<visible>$PARAM[visible]</visible>
+				<nested />
 				<control type="image">
 					<texture colordiffuse="$VAR[Light_Background_Color]">views/white_100.png</texture>
 				</control>
@@ -100,7 +100,7 @@
 		</include>
 	</include>
 
-	<include name="Background_Backing">
+	<!-- <include name="Background_Backing">
 		<param name="visible" default="Skin.String(Theme,Light)" />
 		<param name="animation_delay" default="1800" />
 		<param name="color_diffuse" default="$VAR[Dark_Color]" />
@@ -111,13 +111,14 @@
 				<texture colordiffuse="$PARAM[color_diffuse]">views/white_100.png</texture>
 			</control>
 		</definition>
-	</include>
+	</include> -->
 
 	<include name="Background_Multiart">
 		<param name="animate_slideshow" default="false" />
 		<param name="time" default="10000" />
 		<definition>
 			<control type="multiimage">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" condition="!$EXP[Window_IsSettings]" />
 				<include content="Ken_Burns_Effect_Animation" condition="$PARAM[animate_slideshow]" />
 				<imagepath>$PARAM[texture_path]</imagepath>
 				<colordiffuse>$PARAM[colordiffuse]</colordiffuse>
@@ -126,7 +127,7 @@
 				<timeperimage>$PARAM[time]</timeperimage>
 				<randomize>true</randomize>
 			</control>
-			<include content="Background_Multiart_Fadelabel">
+			<include content="Background_Multiart_Template">
 				<param name="transition_time" value="$PARAM[time]" />
 			</include>
 		</definition>
@@ -134,7 +135,7 @@
 
 	<include name="Background_Multiart_Home">
 		<include content="Background_Multiart">
-			<param name="animate_slideshow" value="true" />
+			<param name="animate_slideshow" value="Skin.HasSetting(Home_Ken_Burns_Effect)" />
 			<param name="colordiffuse" value="$VAR[Home_Artwork_Diffuse]" />
 			<param name="texture_path" value="$VAR[Background_Home_Texture]" />
 			<param name="fadetime" value="360" />
@@ -189,16 +190,14 @@
 		<param name="visible" default="true" />
 		<param name="content_source" default="Global" />
 		<param name="texture_path" default="$VAR[Background_Global_Texture]" />
-		<param name="animate_slideshow" default="true" />
+		<param name="animate_slideshow" default="Skin.HasSetting(Global_Ken_Burns_Effect)" />
 		<definition>
 			<control type="group">
-				<visible>!VideoPlayer.IsFullscreen + !Skin.HasSetting(Background_Disabled)</visible>
-				<visible>$PARAM[visible]</visible>
+				<visible>!VideoPlayer.IsFullscreen + $PARAM[visible]</visible>
 				<include content="VisibleHidden_Fade_Animation" />
 				<control type="videowindow">
 					<include content="Hidden_Control" />
 				</control>
-				<include content="Background_Backing" />
 				<include content="Background_Multiart" condition="$EXP[Settings_IsVisible]">
 					<param name="colordiffuse" value="$VAR[Dialogs_Artwork_Diffuse]" />
 					<param name="texture_path" value="$PARAM[texture_path]" />
@@ -217,7 +216,7 @@
 
 	<include name="Background_Media">
 		<include content="Background_Global">
-			<param name="visible" value="$EXP[Containers_Background] | Container.Content()" />
+			<param name="visible" value="[$EXP[Containers_Background] | Container.Content()] + !$EXP[ListView_Display_IsThumbnails] + !$EXP[GridView_IsVisible]" />
 			<param name="local_list_content" value="true" />
 			<param name="content_source" value="Media" />
 		</include>
@@ -235,12 +234,87 @@
 		</control>
 		<include content="Common_Details_Logo" condition="Skin.HasSetting(Home_Screensaver_Clearlogo_Enabled)">
 			<param name="texture" value="$VAR[Background_Home_Clearlogo_Texture]" />
-			<param name="visible" value="Control.HasFocus(4300) + !$EXP[TransparentDialog_IsVisible] + [String.IsEmpty(Container(3000).ListItem.Property(background)) | [Skin.HasSetting(Home_Background_Override_Enabled) + Skin.String(Home_Background_Override_Path)]]" />
+			<param name="visible" value="Control.HasFocus(4300) + !$EXP[TransparentDialog_IsVisible]" />
 			<left>60</left>
 			<bottom>60</bottom>
 			<fadetime>360</fadetime>
 		</include>
 	</include>
 
+	<include name="Embedded_VideoPlayer">
+		<definition>
+			<control type="group">
+				<include content="Visible_Fade_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<control type="videowindow" />
+				<!-- Playback mask -->
+				<control type="image">
+					<include content="WindowOpenClose_Fade_Delayed_Animation" />
+					<texture colordiffuse="80000000">views/white_100.png</texture>
+					<visible>$PARAM[visible]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Visualisation">
+		<control type="group">
+			<!-- visualisation -->
+			<control type="visualisation" id="2">
+				<visible>Skin.TimerIsRunning(music_visualisation) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(music_visualisation),1)</visible>
+				<visible>Player.HasAudio</visible>
+			</control>
+			<!-- diffuse layer - solid to 50% opacity -->
+			<control type="image">
+				<visible>Window.IsVisible(shutdownmenu)</visible>
+				<animation effect="fadediffuse" end="80000000" time="360" condition="Skin.TimerIsRunning(music_visualisation) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(music_visualisation),1)" reversible="true">Conditional</animation>
+				<texture colordiffuse="$VAR[visualisation_Mask]">views/white_100.png</texture>
+				<width>1920</width>
+				<height>1080</height>
+			</control>
+		</control>
+	</include>
+
+	<include name="visualisation_Title_and_Info">
+		<param name="top" default="360" />
+		<param name="width" default="420" />
+		<param name="height" default="360" />
+		<param name="align" default="center" />
+		<param name="textalign" default="left" />
+		<param name="textcolor" default="$VAR[Light_Color]" />
+		<param name="title_font" default="MusicPlayer_Title" />
+		<param name="title_height" default="80" />
+		<param name="info_font" default="MusicPlayer_Info" />
+		<param name="info_height" default="280" />
+		<definition>
+			<control type="grouplist">
+				<visible>$PARAM[visible]</visible>
+				<include content="VisibleHidden_Fade_Delayed_Animation" />
+				<height>$PARAM[height]</height>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<left>$PARAM[left]</left>
+				<orientation>vertical</orientation>
+				<align>$PARAM[align]</align>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="textbox">
+					<height max="$PARAM[title_height]">auto</height>
+					<label>$PARAM[title]</label>
+					<font>$PARAM[title_font]</font>
+					<textcolor>$PARAM[textcolor]</textcolor>
+					<align>$PARAM[textalign]</align>
+				</control>
+				<control type="textbox">
+					<height max="$PARAM[info_height]">auto</height>
+					<label>$PARAM[info]</label>
+					<font>$PARAM[info_font]</font>
+					<textcolor>$PARAM[textcolor]</textcolor>
+					<align>$PARAM[textalign]</align>
+				</control>
+				<nested />
+			</control>
+		</definition>
+	</include>
 
 </includes>
