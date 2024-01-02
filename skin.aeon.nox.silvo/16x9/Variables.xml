@@ -39,7 +39,6 @@
 		<value condition="!String.IsEmpty(Window(Home).Property(SetSiLVOSkinColors)) | !String.IsEmpty(Window(Home).Property(SetBlueSkinColors)) | !String.IsEmpty(Window(Home).Property(SetOrangeSkinColors)) | !String.IsEmpty(Window(Home).Property(SetRedSkinColors))">$LOCALIZE[31525]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(ResetSkinColors))">$LOCALIZE[31495]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(ResetSkinSettings))">$LOCALIZE[31398]</value>
-		<value condition="!String.IsEmpty(Window(Home).Property(MissingDependency))">$LOCALIZE[31315]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(OfferReloadAfterConfirm))">$LOCALIZE[31316]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(NotWarnedOnHidingViz))">$LOCALIZE[31322]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(Notify)) + !String.IsEmpty(Window(Home).Property(NotifyFileManager))">$LOCALIZE[31323]</value>
@@ -49,12 +48,11 @@
 		<value condition="!String.IsEmpty(Window(Home).Property(Notify)) + !String.IsEmpty(Window(Home).Property(NotWarnedOnFullscreenInfo))">$LOCALIZE[31466]</value>
 	</variable>
 	<variable name="CustomConfirmYesLabelVar">
-		<value condition="!String.IsEmpty(Window(Home).Property(MissingDependency))">$LOCALIZE[24038]</value>
 		<value condition="!String.IsEmpty(Window(Home).Property(OfferReloadAfterConfirm))">$LOCALIZE[20183]</value>
 		<value>$LOCALIZE[107]</value>
 	</variable>
 	<variable name="CustomConfirmNoLabelVar">
-		<value condition="!String.IsEmpty(Window(Home).Property(MissingDependency)) | !String.IsEmpty(Window(Home).Property(OfferReloadAfterConfirm))">$LOCALIZE[222]</value>
+		<value condition="!String.IsEmpty(Window(Home).Property(OfferReloadAfterConfirm))">$LOCALIZE[222]</value>
 		<value>$LOCALIZE[106]</value>
 	</variable>
 	<variable name="FanartTimePerImageLabelVar">
@@ -259,13 +257,18 @@
 		<value condition="!Skin.HasSetting(Disable.OverlayWatched) + String.IsEqual(ListItem.Overlay,OverlayWatched.png)">overlays/OverlayWatched.png</value>
 	</variable>
 	<variable name="ListItemOverlay">
-		<value condition="ListItem.IsResumable">overlays/list/resumable.png</value>
-		<value>$INFO[ListItem.Overlay,overlays/list/]</value>
+		<value condition="String.IsEqual(ListItem.Property(WatchedEpisodePercent),100)">overlays/list/OverlayWatched.png</value>
+		<value condition="ListItem.IsResumable + ![String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + !String.IsEqual(Container.SortMethod,$LOCALIZE[20360])">overlays/list/resumable.png</value>
+		<value condition="!String.IsEmpty(ListItem.Overlay)">$INFO[ListItem.Overlay,overlays/list/]</value>
+		<value condition="!ListItem.IsParentFolder">overlays/list/OverlayUnWatched.png</value>
 	</variable>
 	<variable name="ListItemOverlayShowsVar">
-		<value condition="String.IsEqual(ListItem.Property(WatchedEpisodePercent),100)">overlays/list/OverlayWatched.png</value>
-		<value condition="!String.IsEqual(ListItem.Property(WatchedEpisodePercent),0)">overlays/list/resumable.png</value>
-		<value>overlays/list/OverlayUnWatched.png</value>
+		<value condition="[String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),99) + !String.IsEqual(ListItem.Property(TotalEpisodes),ListItem.Property(UnWatchedEpisodes))">   99 +</value>
+		<value condition="[String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + !String.IsEqual(ListItem.Property(TotalEpisodes),ListItem.Property(UnWatchedEpisodes)) + !String.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">$INFO[ListItem.Property(UnWatchedEpisodes)]</value>
+	</variable>
+	<variable name="RightListItemOverlayShowsVar">
+		<value condition="String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),99)">   99 +</value>
+		<value condition="[String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + !String.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">$INFO[ListItem.Property(UnWatchedEpisodes)]</value>
 	</variable>
 	<variable name="PlayerProgressIconVar">
 		<value condition="Player.Playing + Player.HasVideo + VideoPlayer.Content(movies)"> </value>
@@ -345,16 +348,27 @@
 	</variable>
 	<!-- List Label Vars -->
 	<variable name="VideoListLabelVar">
-		<value condition="Skin.HasSetting(Enable.HideRatings) + String.IsEqual(ListItem.Label2,ListItem.Rating) + !String.IsEqual(Container.SortMethod,$LOCALIZE[563]) + !String.IsEmpty(ListItem.Year) + !String.IsEqual(ListItem.DBTYPE,episode)">$INFO[ListItem.Year]</value>
-		<value condition="!Skin.HasSetting(Enable.HideRatings) + String.IsEqual(ListItem.Label2,ListItem.Rating) + !String.IsEmpty(ListItem.Label2)">$INFO[ListItem.Label2]</value>
-		<value>$INFO[ListItem.Duration]</value>
+		<value condition="Container.Content(movies) + String.IsEqual(Container.SortMethod,$LOCALIZE[345])">$INFO[ListItem.Year]</value>
+		<value condition="!Skin.HasSetting(Enable.HideRatings) + String.IsEqual(ListItem.Label2,ListItem.Rating) | Skin.HasSetting(Enable.HideRatings) + String.IsEqual(ListItem.Label2,ListItem.Rating) + String.IsEqual(Container.SortMethod,$LOCALIZE[563]) + !String.IsEmpty(ListItem.Label2)">$INFO[ListItem.Label2]</value>
+		<value condition="Container.Content(movies) + String.IsEqual(Container.SortMethod,$LOCALIZE[180]) | Container.Content(movies) + [String.IsEqual(ListItem.Label2,ListItem.Rating) + Skin.HasSetting(Enable.HideRatings)]">$VAR[VideoListDurationVar]</value>
+		<value condition="[Container.Content(movies) | Container.Content(episodes)] + String.IsEqual(Container.SortMethod,$LOCALIZE[38018]) + !String.IsEmpty(ListItem.UserRating)">$INFO[ListItem.UserRating,,*]</value>
+		<value condition="[Container.Content(movies) | Container.Content(episodes)] + String.IsEqual(Container.SortMethod,$LOCALIZE[20074]) + !String.IsEmpty(ListItem.MPAA)">$INFO[ListItem.MPAA]</value>
+		<value condition="Container.Content(movies) + String.IsEqual(Container.SortMethod,$LOCALIZE[570])">$INFO[ListItem.DateAdded]</value>
+		<value condition="[Container.Content(movies) | Container.Content(tvshows) | Container.Content(episodes)] + String.IsEqual(Container.SortMethod,$LOCALIZE[568]) + !String.IsEmpty(ListItem.LastPlayed)">$INFO[ListItem.LastPlayed]</value>
+		<value condition="Container.Content(movies) + String.IsEqual(Container.SortMethod,$LOCALIZE[567])">$INFO[ListItem.PlayCount,, $LOCALIZE[31488]]</value>
+		<value condition="Container.Content(episodes)">$VAR[VideoListDurationVar]</value>
 	</variable>
 	<variable name="VideoListLabel2Var">
-		<value condition="Container.Content(episodes)">$INFO[ListItem.Premiered]</value>
-		<value condition="!String.IsEqual(Container.SortMethod,$LOCALIZE[345]) + !ListItem.IsCollection + !String.IsEmpty(ListItem.Genre)">$INFO[ListItem.Year,, • ]$INFO[ListItem.Genre]</value>
-		<value condition="!String.IsEmpty(ListItem.Genre)">$INFO[ListItem.Genre]</value>
-		<value condition="!String.IsEqual(Container.SortMethod,$LOCALIZE[345]) + !ListItem.IsCollection + !String.IsEmpty(ListItem.Year)">$INFO[ListItem.Year]</value>
-		<value condition="[!ListItem.IsCollection + !Container.Content(studios)] + String.IsEmpty(Container.PluginName)">[I]$INFO[ListItem.FolderPath][/I]</value>
+		<value condition="Container.Content(episodes) + Skin.HasSetting(Enable.HideRatings) + ![String.IsEqual(Container.SortMethod,$LOCALIZE[563]) | String.IsEqual(Container.SortMethod,$LOCALIZE[38018]) | String.IsEqual(Container.SortMethod,$LOCALIZE[20074])]">$INFO[ListItem.Premiered]</value>
+		<value condition="Container.Content(episodes)">$VAR[DialogSelectLabel2RuntimeVar,, • ]$INFO[ListItem.Premiered]</value>
+		<value condition="![String.IsEqual(Container.SortMethod,$LOCALIZE[345]) + !Container.Content(tvshows)] + !String.IsEqual(Container.SortMethod,$LOCALIZE[180]) + !ListItem.IsCollection + !String.IsEmpty(ListItem.Genre) + !Skin.HasSetting(Enable.HideRatings)">$VAR[DialogSelectLabel2RuntimeVar,, • ]$INFO[ListItem.Year]$INFO[ListItem.Genre, • ]</value>
+		<value condition="String.IsEqual(Container.SortMethod,$LOCALIZE[345]) + !String.IsEmpty(ListItem.Genre)">$VAR[DialogSelectLabel2RuntimeVar,, • ]$INFO[ListItem.Genre]</value>
+		<value condition="!ListItem.IsCollection + !String.IsEmpty(ListItem.Year)">$INFO[ListItem.Year]$INFO[ListItem.Genre, • ]</value>
+		<value condition="!ListItem.IsCollection + !Container.Content(studios) + String.IsEmpty(Container.PluginName)">[I]$INFO[ListItem.FolderPath][/I]</value>
+	</variable>
+	<variable name="VideoListDurationVar">
+		<value condition="Integer.IsLess(ListItem.Duration(mins),60)">$INFO[ListItem.Duration(mm:ss)]</value>
+		<value condition="Integer.IsGreaterOrEqual(ListItem.Duration(mins),60)">$INFO[ListItem.Duration(h:mm:ss)]</value>
 	</variable>
 	<variable name="MusicListLabel3Var">
 		<value condition="Container.Content(songs) + !String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
@@ -981,11 +995,13 @@
 		<value condition="Control.HasFocus(201)">$LOCALIZE[31415][CR]$LOCALIZE[31411]</value>
 		<value condition="Control.HasFocus(202)">$LOCALIZE[31416]</value>
 		<value condition="Control.HasFocus(203)">$LOCALIZE[31418]</value>
-		<value condition="Control.HasFocus(204)">$LOCALIZE[31420]</value>
 		<value condition="Control.HasFocus(100)">$LOCALIZE[31417][CR]$LOCALIZE[31411]</value>
 		<value condition="Control.HasFocus(102) | Control.HasFocus(103) | Control.HasFocus(104) | Control.HasFocus(105) | Control.HasFocus(106) | Control.HasFocus(107) | Control.HasFocus(108) | Control.HasFocus(109) | Control.HasFocus(110) | Control.HasFocus(111) | Control.HasFocus(112)">$LOCALIZE[31425]</value>
 		<value condition="Control.HasFocus(300)">$LOCALIZE[31422][CR]$LOCALIZE[31423]</value>
 		<value condition="Control.HasFocus(301)">$LOCALIZE[31424]</value>
+		<value condition="Control.HasFocus(500)">$LOCALIZE[31420]</value>
+		<value condition="Control.HasFocus(501)">$LOCALIZE[31627][CR]$LOCALIZE[31411]</value>
+		<value condition="Control.HasFocus(502)">$LOCALIZE[31627]</value>
 	</variable>
 	<variable name="AddonStatusDescriptionVar">
 		<value condition="Control.HasFocus(100) | Control.HasFocus(101)">$LOCALIZE[31427]</value>
@@ -1628,7 +1644,7 @@
 		<value condition="String.IsEqual(Control.GetLabel(1),$LOCALIZE[25006])">$INFO[ListItem.Duration(mins),, [LOWERCASE]$LOCALIZE[12391][/LOWERCASE]]</value>
 		<value condition="!String.IsEmpty(ListItem.Label2)">$INFO[ListItem.Label2]</value>
 		<value condition="!String.IsEmpty(ListItem.AddonVersion)">$INFO[ListItem.AddonVersion]</value>
-		<value condition="!String.IsEmpty(Container(6).ListItem.Icon) + !Window.IsVisible(script-skinshortcuts.xml) + String.IsEmpty(Window(Home).Property(NoArtworkReadyIndicator)) + String.IsEmpty(Container.PluginName)">[COLOR FF00991F]•[/COLOR]</value>
+		<value condition="!String.IsEmpty(Container(6).ListItem.Icon) + String.IsEqual(Control.GetLabel(1),$LOCALIZE[13511])">[COLOR FF00991F]•[/COLOR]</value>
 	</variable>
 	<variable name="EpisodeCountVar">
 		<value condition="!Integer.IsGreater(ListItem.Season,9) + !Integer.IsGreater(ListItem.Episode,9)">$INFO[ListItem.Season,S0]$INFO[ListItem.Episode,E0]</value>
@@ -1934,7 +1950,7 @@
 		<value>$INFO[PVR.EpgEventRemainingTime(ss)]s</value>
 	</variable>
 	<variable name="ItemDurationVar">
-		<value condition="[String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + !String.IsEmpty(Window(Home).Property(NextAired.Runtime))">$INFO[Window(Home).Property(NextAired.Runtime),,m]</value>
+		<value condition="[String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season)] + !String.IsEmpty(Container(9143).ListItem.Property(Duration))">$INFO[Container(9143).ListItem.Property(Duration),,m]</value>
 		<value condition="Integer.IsEqual(ListItem.Duration(mins),60) | Integer.IsEqual(ListItem.Duration(mins),120) | Integer.IsEqual(ListItem.Duration(mins),180) | Integer.IsEqual(ListItem.Duration(mins),240) | Integer.IsEqual(ListItem.Duration(mins),300) | Integer.IsEqual(ListItem.Duration(mins),360) | Integer.IsEqual(ListItem.Duration(mins),420) | Integer.IsEqual(ListItem.Duration(mins),480) | Integer.IsEqual(ListItem.Duration(mins),540) | Integer.IsEqual(ListItem.Duration(mins),600)">$INFO[ListItem.Duration(hours),,h]</value>
 		<value condition="Integer.IsLess(ListItem.Duration(mins),60)">$INFO[ListItem.Duration(m),,m]</value>
 		<value condition="Integer.IsLess(ListItem.Duration(mins),1)">$INFO[ListItem.Duration(ss),,$LOCALIZE[31090]]</value>
@@ -2223,9 +2239,18 @@
 		<value condition="!String.IsEmpty(Skin.String(UnWatchedEpColor)) + !String.IsEqual(Skin.String(UnWatchedEpColor),None)">$INFO[Skin.String(UnWatchedEpColor)]</value>
 		<value>white</value>
 	</variable>
+	<!-- OSD -->
 	<variable name="ThemeOSDProgressColor">
 		<value condition="!String.IsEmpty(Skin.String(ThemeOSDProgressColor)) + !String.IsEqual(Skin.String(ThemeOSDProgressColor),None)">$INFO[Skin.String(ThemeOSDProgressColor)]</value>
 		<value condition="!String.IsEmpty(Skin.String(ThemeLabelColor)) + !String.IsEqual(Skin.String(ThemeLabelColor),None)">$INFO[Skin.String(ThemeLabelColor)]</value>
 		<value>FF6DB9E5</value>
+	</variable>
+	<variable name="FocusedOSDButtonsColor">
+		<value condition="!String.IsEmpty(Skin.String(FocusedOSDButtonsColor)) + !String.IsEqual(Skin.String(FocusedOSDButtonsColor),None)">$INFO[Skin.String(FocusedOSDButtonsColor)]</value>
+		<value>$VAR[ThemeLabelColor]</value>
+	</variable>
+	<variable name="UnfocusedOSDButtonsColor">
+		<value condition="!String.IsEmpty(Skin.String(UnfocusedOSDButtonsColor)) + !String.IsEqual(Skin.String(UnfocusedOSDButtonsColor),None)">$INFO[Skin.String(UnfocusedOSDButtonsColor)]</value>
+		<value>white</value>
 	</variable>
 </includes>
