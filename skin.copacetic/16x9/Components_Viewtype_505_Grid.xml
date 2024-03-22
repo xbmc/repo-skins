@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <includes>
 
-	<include name="Grid_Check">
+	<include name="Grid_Icon">
+		<param name="icon" default="Check_focused" />
+		<param name="visible" default="String.IsEqual(ListItem.Overlay,OverlayWatched.png)" />
 		<param name="width" default="30" />
 		<param name="left" default="0" />
 		<param name="backing_visible" default="true" />
 		<param name="color" default="$VAR[Progress_Grid_Text_Color]" />
 		<definition>
 			<control type="group">
-				<visible>String.IsEqual(ListItem.Overlay,OverlayWatched.png)</visible>
+				<visible>$PARAM[visible]</visible>
 				<visible>!$EXP[TransparentDialog_IsVisible] + !$EXP[Scrollbar_HasFocus]</visible>
 				<include content="Visible_Fade_Animation" />
 				<height>$PARAM[width]</height>
@@ -19,7 +21,7 @@
 					<texture colordiffuse="$VAR[Accent_Color]">views/white_100.png</texture>
 					<visible>$PARAM[backing_visible]</visible>
 				</control>
-				<include content="Check_focused">
+				<include content="$PARAM[icon]">
 					<param name="color" value="$PARAM[color]" />
 					<param name="width" value="$PARAM[width]" />
 				</include>
@@ -33,13 +35,19 @@
 			<param name="left" value="10" />
 			<param name="art_icon" value="$PARAM[art_icon]" />
 			<param name="fallback" value="views/dark_grey_100.png" />
-			<param name="watched_diffuse" value="Skin.HasSetting(GridView_WatchedStatus_Enabled) + String.IsEqual(ListItem.Overlay,OverlayWatched.png)" />
+			<param name="watched_diffuse" value="[Skin.HasSetting(GridView_WatchedStatus_Enabled) + String.IsEqual(ListItem.Overlay,OverlayWatched.png)] | [Container.Content(addons) + !ListItem.Property(Addon.IsEnabled)]" />
 			<param name="now_playing" value="$EXP[ListItem(0)_NowPlaying]" />
 			<include content="Visible_Fade_Animation" />
 			<animation effect="slide" end="12,0" time="0" condition="$EXP[GridView_Display_IsFanart]" reversible="false">Conditional</animation>
-			<include content="Grid_Check" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled)">
+			<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + Window.Is(videos)">
 				<param name="backing_visible" value="false" />
 				<param name="color" value="$VAR[Light_Color]" />
+			</include>
+			<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + [Window.Is(addonbrowser) | Window.Is(programs)]">
+				<param name="backing_visible" value="false" />
+				<param name="color" value="$VAR[Light_Color]" />
+				<param name="icon" value="Special_Addonbrowser_focused" />
+				<param name="visible" value="[!String.Contains(Container.FolderPath,/user/) + [ListItem.Property(Addon.IsInstalled) | String.Contains(ListItem.Label,Copacetic)]] | [$EXP[Container_Addons_NonRepo] + String.Contains(Container.FolderPath,/user/) + ListItem.Property(Addon.IsInstalled) + !ListItem.Property(Addon.IsEnabled)]" />
 			</include>
 		</include>
 	</include>
@@ -207,7 +215,11 @@
 					<param name="slides" value="$PARAM[progress_slides]" />
 				</include>
 				<!-- Check -->
-				<include content="Grid_Check" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled)" />
+				<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + Window.Is(videos)" />
+				<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + [Window.Is(addonbrowser) | Window.Is(programs)]">
+					<param name="icon" value="Special_Addonbrowser_focused" />
+					<param name="visible" value="[!String.Contains(Container.FolderPath,/user/) + [ListItem.Property(Addon.IsInstalled) | String.Contains(ListItem.Label,Copacetic)]] | [$EXP[Container_Addons_NonRepo] + String.Contains(Container.FolderPath,/user/) + ListItem.Property(Addon.IsInstalled) + !ListItem.Property(Addon.IsEnabled)]" />
+				</include>
 			</control>
 		</definition>
 	</include>
