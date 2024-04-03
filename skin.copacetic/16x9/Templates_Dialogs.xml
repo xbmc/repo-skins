@@ -3,7 +3,8 @@
 
 	<include name="Infoscreen_Header_Template">
 		<param name="windowname" />
-		<param name="visible" default="!$EXP[Infoscreen_Widget_HasFocus]" />
+		<param name="background_visible" default="true" />
+		<param name="content_visible" default="true" />
 		<param name="window_animation_background" default="WindowOpenClose_Fade_Delayed_Animation" />
 		<param name="visible_animation_background" default="VisibleHidden_Fade_Animation" />
 		<param name="window_animation_content" default="WindowOpenClose_Fade_Delayed_Long_Animation" />
@@ -19,27 +20,30 @@
 				<param name="window" value="musicinformation" />
 			</include>
 			<include content="MyViews_Multiart_Labels">
-			<param name="include_type_label" value="false" />
-			<param name="template" value="Infoscreen_Multiart" />
+				<param name="include_type_label" value="false" />
+				<param name="template" value="Infoscreen_Multiart" />
 			</include>
+			<!-- Background -->
+			<include content="Simple_ListIcon" condition="Window.Is(movieinformation) | Window.Is(musicinformation) | Window.Is(addoninformation)">
+				<param name="visible" value="!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[background_visible]" />
+				<param name="texture" value="$VAR[Infoscreen_Background_Texture]" />
+				<param name="fade_diffuse_override" value="true" />
+				<param name="fadetime" value="720" />
+				<include content="$PARAM[visible_animation_background]" />
+				<include content="$PARAM[window_animation_background]" />
+				<animation effect="fadediffuse" end="ff404040" time="0" condition="true">Conditional</animation> <!-- 25% alpha -->
+				<animation effect="fadediffuse" end="ff9a9a9a" time="360" tween="sine" easing="inout" reversible="true" condition="String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[207]) | String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[21887])">Conditional</animation> <!-- 15% alpha: 60% of 25% -->
+				<include content="Ken_Burns_Effect_Animation" condition="Skin.HasSetting(Global_Ken_Burns_Effect)" />
+			</include>
+			<!-- Artwork -->
 			<control type="group">
 				<include content="$PARAM[window_animation_background]" />
-				<visible>$PARAM[visible]</visible>
+				<visible>!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[content_visible]</visible>
 				<include content="$PARAM[visible_animation_background]" />
-				<!-- Background -->
-				<include content="Simple_ListIcon" condition="Window.Is(movieinformation) | Window.Is(musicinformation)">
-					<param name="visible" value="![String.IsEqual(ListItem.DBType,album) + !ControlGroup(3000).HasFocus(12)]" />
-					<param name="texture" value="$VAR[Infoscreen_Background_Texture]" />
-					<param name="fallback" value="views/dark_grey_100.png" />
-					<param name="fadetime" value="720" />
-					<include content="VisibleHidden_Fade_Delayed_Animation" />
-					<animation effect="fadediffuse" end="ff404040" time="0" condition="true">Conditional</animation> <!-- 25% alpha -->
-					<animation effect="fadediffuse" end="ff9a9a9a" time="360" tween="sine" easing="inout" reversible="true" condition="String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[207]) | String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[21887])">Conditional</animation> <!-- 15% alpha: 60% of 25% -->
-					<include content="Ken_Burns_Effect_Animation" condition="Skin.HasSetting(Global_Ken_Burns_Effect)" />
-				</include>		
 				<include content="Transparent_Dialog_Panel" condition="[Window.Is(musicinformation) + String.IsEqual(ListItem.DBType,album)] | Window.Is(songinformation) | Window.Is(addoninformation) | Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)">
 					<param name="visible" value="[!ControlGroup(3000).HasFocus(10) + !ControlGroup(3000).HasFocus(12) + !Window.Is(addoninformation)] | [Window.Is(addoninformation) + !ControlGroup(3000).HasFocus(99)] | Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)" />
 					<param name="left" value="720" />
+					<param name="colordiffuse" value="$VAR[Dark_Grey_Color]" />
 					<include content="VisibleHidden_Fade_Delayed_Animation" />
 					<animation effect="zoom" end="60,180,1800,720" time="0" condition="Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)">Conditional</animation>
 				</include>
@@ -69,12 +73,12 @@
 			<!-- Content -->
 			<control type="group">
 				<include content="$PARAM[window_animation_content]" />
-				<visible>$PARAM[visible] + !$EXP[TransparentDialog_IsVisible]</visible>
+				<visible>!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[content_visible] + !$EXP[TransparentDialog_IsVisible]</visible>
 				<include content="$PARAM[visible_animation_content]" />
 				<include content="Breadcrumb_Label">
 					<param name="bar" value="false" />
 					<param name="title_label" value="$VAR[Copacetic_Chevron_Left] $INFO[Window($PARAM[windowname]).Property(Focused_Button)] $VAR[Copacetic_Chevron_Right]" />
-					<param name="label_color" value="$VAR[Breadcrumb_Label_Color]" />
+					<param name="textcolor" value="$VAR[Breadcrumb_Label_Color]" />
 				</include>
 				<nested />
 			</control>
@@ -102,6 +106,7 @@
 		<param name="color" default="$VAR[Light_Color]" />
 		<param name="show_logo" default="![String.IsEmpty(VideoPlayer.Art(clearlogo-billboard)) + String.IsEmpty(VideoPlayer.Art(clearlogo-aligned)) + String.IsEmpty(VideoPlayer.Art(clearlogo))]" />
 		<param name="info_label" default="$VAR[Info_Label_FullscreenVideo]" />
+		<param name="info_label_max_height" default="70" />
 		<param name="plot_label" default="$VAR[Plot_Label]" />
 		<param name="align" default="center" />
 		<definition>
@@ -139,7 +144,7 @@
 					<param name="scroll" default="false" />
 				</include>
 				<include content="Common_Details_Info">
-					<param name="maxheight" value="70" />
+					<param name="maxheight" value="$PARAM[info_label_max_height]" />
 					<param name="font" value="Billboard_Info" />
 					<param name="color" value="$PARAM[color]" />
 					<param name="label" value="$PARAM[info_label]" />

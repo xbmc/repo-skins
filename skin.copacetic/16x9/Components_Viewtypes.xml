@@ -61,6 +61,9 @@
 				<!-- Trailer Autoplay -->
 				<onunfocus condition="String.IsEqual(Window(home).Property(Trailer_Autoplay),true) + Player.HasVideo">PlayerControl(Stop)</onunfocus>
 				<onunfocus condition="String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onunfocus>
+				<!-- Settings transition from addonbrowser -->
+				<onfocus condition="Window.Is(addonbrowser) + $EXP[Container_Addons_NonRepo]">SetProperty(Container_Addons_NonRepo,true,home)</onfocus>
+				<onfocus condition="Window.Is(addonbrowser) + !$EXP[Container_Addons_NonRepo]">ClearProperty(Container_Addons_NonRepo,home)</onfocus>
 			</control>
 		</definition>
 	</include>
@@ -180,7 +183,7 @@
 	<include name="Music_Rating">
 		<param name="visible" default="!String.IsEmpty(ListItem.UserRating) + Integer.IsGreaterOrEqual(ListItem.UserRating,Skin.Numeric(Music_Rating_Like_Threshold))" />
 		<definition>
-			<include content="$PARAM[like_texture]" condition="Integer.IsGreater(Skin.Numeric(Music_Rating_Like_Threshold,0))">
+			<include content="$PARAM[like_texture]" condition="Skin.String(Music_Rating_Like_Threshold)">
 				<param name="visible" value="String.IsEqual(ListItem.DBType,song) + $PARAM[visible]" />
 				<param name="color" value="$PARAM[color]" />
 				<animation effect="slide" end="$PARAM[slide],8" time="0" condition="true">Conditional</animation>
@@ -192,7 +195,7 @@
 		<param name="visible" default="true" />
 		<param name="icon_color" default="$VAR[Light_Color]" />
 		<param name="now_playing_icon" default="true" />
-		<param name="list_icon" default="String.IsEqual(ListItem.Overlay,OverlayWatched.png)" />
+		<param name="list_icon" default="String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !$EXP[ListItem(0)_NowPlaying]" />
 		<param name="list_icon_texture" default="Check_unfocused" />
 		<param name="music_rating_like_texture" default="Like_unfocused" />
 		<param name="music_rating_color" default="$VAR[Accent_Color]" />
@@ -211,8 +214,8 @@
 					<animation effect="slide" end="$PARAM[icon_slide],0" time="0" condition="true">Conditional</animation>
 					<animation effect="slide" end="0,5" time="0" condition="Player.Paused">Conditional</animation>
 				</include>
-				<include content="$PARAM[list_icon_texture]" condition="Window.Is(videos) | Window.Is(videoplaylist)">
-					<param name="visible" value="$PARAM[list_icon] + !$EXP[ListItem(0)_NowPlaying]" />
+				<include content="$PARAM[list_icon_texture]" condition="Window.Is(videos) | Window.Is(videoplaylist) | Window.Is(addonbrowser) | Window.Is(programs)">
+					<param name="visible" value="$PARAM[list_icon]" />
 					<param name="color" value="$PARAM[icon_color]" />
 					<animation effect="slide" end="$PARAM[icon_slide],0" time="0" condition="true">Conditional</animation>
 				</include>
@@ -227,6 +230,7 @@
 					<param name="color" value="$PARAM[music_rating_color]" />
 					<param name="slide" value="$PARAM[music_rating_slide]" />
 				</include>
+				<include content="PVR_Progress" condition="Window.Is(tvsearch)" />
 				<control type="label">
 					<height>100%</height>
 					<left>$PARAM[label_left]</left>
@@ -245,6 +249,8 @@
 
 	<include name="Common_List_Unfocused">
 		<param name="icon_slide" default="-525" />
+		<param name="list_icon" default="String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !$EXP[ListItem(0)_NowPlaying]" />
+		<param name="list_icon_texture" default="Check_unfocused" />
 		<param name="music_rating_slide" default="525" />
 		<param name="music_rating_color" default="$VAR[Accent_Color]" />
 		<param name="label_left" default="90" />
@@ -254,7 +260,8 @@
 			<param name="selectedcolor" />
 			<include content="Common_List_Layout">
 				<param name="icon_slide" value="$PARAM[icon_slide]" />
-				<param name="list_icon_texture" value="Check_unfocused" />
+				<param name="list_icon" value="$PARAM[list_icon]" />
+				<param name="list_icon_texture" value="$PARAM[list_icon_texture]" />
 				<param name="music_rating_like_texture" value="Like_focused" />
 				<param name="music_rating_color" value="$PARAM[music_rating_color]" />
 				<param name="music_rating_slide" value="$PARAM[music_rating_slide]" />
@@ -268,6 +275,8 @@
 
 	<include name="Common_List_Focused">
 		<param name="icon_slide" default="-525" />
+		<param name="list_icon" default="String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !$EXP[ListItem(0)_NowPlaying]" />
+		<param name="list_icon_texture" default="Check_focused" />
 		<param name="music_rating_slide" default="525" />
 		<param name="music_rating_color" default="$VAR[Accent_Color]" />
 		<param name="label_left" default="90" />
@@ -279,7 +288,8 @@
 			<include content="Multiart_Setter" condition="Skin.HasSetting(Multiart_Slideshow)" />
 			<include content="Common_List_Layout">
 				<param name="icon_slide" value="$PARAM[icon_slide]" />
-				<param name="list_icon_texture" value="Check_focused" />
+				<param name="list_icon" value="$PARAM[list_icon]" />
+				<param name="list_icon_texture" value="$PARAM[list_icon_texture]" />
 				<param name="music_rating_like_texture" value="Like_focused" />
 				<param name="music_rating_color" value="$PARAM[music_rating_color]" />
 				<param name="music_rating_slide" value="$PARAM[music_rating_slide]" />
@@ -294,13 +304,13 @@
 	</include>
 
 	<include name="Common_List_Info_Label">
-		<param name="visible" default="$EXP[$PARAM[viewtype_label]View_Display_IsBackground] + $EXP[$PARAM[viewtype_label]View_Details_Info_IsVisible]" />
+		<param name="visible" />
+		<param name="infolabel_visible" />
 		<param name="width" default="1680" />
 		<param name="left" default="120" />
 		<param name="hiddenlabel" default="$VAR[Title_Label]" />
 		<param name="hiddenlabelmaxwidth" default="1200" />
 		<param name="infolabel" default="$VAR[ListView_Info_Label_Divider,, ]$VAR[Info_Label]" />
-		<param name="infolabel_visible" default="true" />
 		<param name="infolabelwidth" default="180" />
 		<definition>
 			<include content="Secondary_List_Icons" condition="Skin.HasSetting(Secondary_List_Enabled)">
@@ -445,13 +455,14 @@
 
 	<include name="Common_Details_Logo">
 		<param name="visible" />
+		<param name="id" default="6310" />
 		<param name="texture" default="$VAR[Cropped_Clearlogo]" />
 		<param name="width" default="640" />
 		<param name="maxheight" default="240" />
 		<param name="align" default="left" />
 		<param name="aligny" default="bottom" />
 		<definition>
-			<control type="image">
+			<control type="image" id="$PARAM[id]">
 				<visible>$PARAM[visible]</visible>
 				<width>$PARAM[width]</width>
 				<height max="$PARAM[maxheight]">auto</height>
@@ -480,6 +491,7 @@
 				<textcolor>$PARAM[color]</textcolor>
 				<label>$PARAM[label]</label>
 				<align>$PARAM[align]</align>
+				<nested />
 			</control>
 		</definition>
 	</include>
@@ -647,6 +659,7 @@
 		<param name="width" default="1200" />
 		<param name="bottom" default="45" />
 		<param name="height" default="90" />
+		<param name="textcolor" default="$VAR[visualisation_Label_Color]" />
 		<param name="font_large" default="Strip_Title" />
 		<param name="font_medium" default="Title_Breadcrumb_Label" />
 		<param name="font_small" default="MusicPlayer_Title" />
@@ -699,7 +712,7 @@
 				<control type="label">
 					<visible>!Container(6005).HasNext</visible>
 					<font>$PARAM[font_large]</font>
-					<textcolor>$VAR[Primary_Color]</textcolor>
+					<textcolor>$PARAM[textcolor]</textcolor>
 					<label>$PARAM[label]</label>
 					<align>center</align>
 					<aligny>center</aligny>
@@ -708,7 +721,7 @@
 				<control type="label">
 					<visible>Container(6005).HasNext + !Container(6006).HasNext</visible>
 					<font>$PARAM[font_medium]</font>
-					<textcolor>$VAR[Primary_Color]</textcolor>
+					<textcolor>$PARAM[textcolor]</textcolor>
 					<label>$PARAM[label]</label>
 					<wrapmultiline>true</wrapmultiline>
 					<align>center</align>
@@ -718,7 +731,7 @@
 				<control type="label">
 					<visible>Container(6005).HasNext + Container(6006).HasNext + !Container(6007).HasNext</visible>
 					<font>$PARAM[font_small]</font>
-					<textcolor>$VAR[Primary_Color]</textcolor>
+					<textcolor>$PARAM[textcolor]</textcolor>
 					<label>$PARAM[label]</label>
 					<wrapmultiline>true</wrapmultiline>
 					<align>center</align>
@@ -732,30 +745,33 @@
 	<include name="Breadcrumb_Label">
 		<param name="visible" default="true" />
 		<param name="animation" default="Visible_Fade_Animation" />
+		<param name="align" default="left" />
 		<param name="bar" default="true" />
 		<param name="left" default="60" />
 		<param name="right" default="60" />
 		<param name="top" default="60" />
 		<param name="title_label_id" default="6308" />
 		<param name="title_label" default="$VAR[Title_Breadcrumb_Label]" />
+		<param name="title_font" default="Title_Breadcrumb_Label" />
 		<param name="maxtitlelabelwidth" default="900" />
 		<param name="haspath" default="false" />
-		<param name="label_color" default="$VAR[Light_Color]" />
+		<param name="textcolor" default="$VAR[Light_Color]" />
 		<param name="info_label" default="$VAR[Info_Breadcrumb_Label]" />
 		<param name="info_label_visible" default="false" />
+		<param name="info_font" default="Info_Breadcrumb_Label" />
 		<param name="maxinfolabelwidth" default="900" />
 		<definition>
 			<control type="group">
 				<visible>$PARAM[visible]</visible>
 				<include content="$PARAM[animation]" />
 				<nested />
+				<left>$PARAM[left]</left>
+				<right>$PARAM[right]</right>
+				<top>$PARAM[top]</top>
+				<height>60</height>
 				<control type="grouplist">
-					<left>$PARAM[left]</left>
-					<right>$PARAM[right]</right>
-					<top>$PARAM[top]</top>
-					<height>60</height>
 					<orientation>horizontal</orientation>
-					<align>left</align>
+					<align>$PARAM[align]</align>
 					<itemgap>12</itemgap>
 					<usecontrolcoords>true</usecontrolcoords>
 					<control type="image">
@@ -770,8 +786,8 @@
 						<height>60</height>
 						<width max="$PARAM[maxtitlelabelwidth]">auto</width>
 						<label>$PARAM[title_label]</label>
-						<font>Title_Breadcrumb_Label</font>
-						<textcolor>$PARAM[label_color]</textcolor>
+						<font>$PARAM[title_font]</font>
+						<textcolor>$PARAM[textcolor]</textcolor>
 						<haspath>$PARAM[haspath]</haspath>
 					</control>
 					<control type="label">
@@ -779,8 +795,8 @@
 						<height>35</height>
 						<top>16</top>
 						<label>$PARAM[info_label]</label>
-						<font>Info_Breadcrumb_Label</font>
-						<textcolor>$PARAM[label_color]</textcolor>
+						<font>$PARAM[info_font]</font>
+						<textcolor>$PARAM[textcolor]</textcolor>
 						<visible>$PARAM[info_label_visible]</visible>
 						<visible>!String.IsEmpty(Control.GetLabel($PARAM[title_label_id]))</visible>
 					</control>
@@ -794,6 +810,7 @@
 		<param name="type" default="label" />
 		<param name="visible" default="true" />
 		<param name="textcolor" default="$VAR[Breadcrumb_Label_Color]" />
+		<param name="font" default="Description" />
 		<param name="label" default="" />
 		<param name="left" default="150" />
 		<param name="right" default="240" />
@@ -813,7 +830,7 @@
 				<label>$PARAM[label]</label>
 				<align>$PARAM[align]</align>
 				<aligny>$PARAM[aligny]</aligny>
-				<font>Description</font>
+				<font>$PARAM[font]</font>
 				<textcolor>$PARAM[textcolor]</textcolor>
 				<haspath>$PARAM[haspath]</haspath>
 				<nested />
