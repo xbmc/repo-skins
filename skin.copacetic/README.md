@@ -6,6 +6,10 @@ All designs contained in this work are licensed under the Creative Commons Attri
 To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/
 or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
 
+### Credit
+---
+* __Dodi Achmad on Unsplash__ for image used in addon [fanart.jpg](https://unsplash.com/photos/3qaojaP-6cE). Free for use under Unsplash licence.
+
 ### Special thanks
 ---
 * __Hitcher__ for inspiring this project and kickstarting my hopeless mockups into a working codebase. For supporting through the initial designs and providing loads of support and advice.
@@ -16,6 +20,98 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 ---
+**1.1.27**
+- Fixed filename case mismatch causing some OSD buttons not to show on Linux-based devices https://github.com/realcopacetic/skin.copacetic/issues/128
+- Fixed background slideshow timer stuck on 10 seconds regardless of what was set in skin settings https://github.com/realcopacetic/skin.copacetic/issues/136
+- Added a limit of 40 to the container that fetches artwork for home screen menu items when global slideshows or custom playlists not set. Hope is that this will speed up how long it takes to fetch artwork https://forum.kodi.tv/showthread.php?tid=376861&pid=3190882#pid3190882
+- Effects sped up slightly (effects slow down reduced from 0.8 to 0.7)
+
+**1.1.26**
+- Added fix to prevent multiple volume bars showing when audio is muted and scrolling through home screen widgets
+- Cleaned up Now_Playing expressions
+- Added Now_Playing for current set using window property from script.copacetic.helper added in 1.0.13 https://github.com/realcopacetic/skin.copacetic/issues/132
+
+**1.1.25**
+- Fixed label to show on homescreen screensaver when no clearlogo present
+- Added option to make artwork label presistent all the time on all background screens.
+- Fixed typo causing wrong localised label to display for genre on infosceen https://github.com/realcopacetic/skin.copacetic/issues/116
+- Added always available background label to show name of currently displayed fanart. Enable it in Settings > Copacetic > Background. If disabled, the label will be shown as a fallback during home screensaver if option to show clearlogos is enabled, but clearlogo for current listitem is not present https://github.com/realcopacetic/skin.copacetic/issues/124 https://github.com/realcopacetic/skin.copacetic/issues/120
+- Updated paths for remote fontsets served by resources.fonts.copacetic due to change in folder structure in 1.0.5 https://github.com/realcopacetic/resource.fonts.copacetic/issues/4
+- Bumped dependency for resources.fonts.copacetic to 1.0.5 due to above issue.
+- Bumped dependency for script.copacetic.helper to latest version (1.0.12)
+- Fixed OSD issues https://github.com/realcopacetic/skin.copacetic/issues/133
+- Fixed undiscovered issue with infolabel on List views
+- Made some fixes to notification widgets
+- Made some fixes to videoplaylist/musicplaylist
+- Made some fixes to visualisation window https://github.com/realcopacetic/skin.copacetic/issues/130
+- Added support for artist fanart multiart to visualisation slideshow https://github.com/realcopacetic/skin.copacetic/issues/47
+
+Still to do:
+- OSD : (still to update --> Buttons, Settings, Stars, icon_Player)
+- login background
+- Create radio station button
+
+
+**1.1.24**
+- Disabled debugging flag
+
+**1.1.23**
+- Fixed alignment bug and missing scrollbar on smartplaylisteditor window that could cause list of rules to exceed the sie of the panel https://github.com/realcopacetic/skin.copacetic/issues/129
+- Added star rating widget to videoosd controls allowing user to view/set a userrating from videosd screen
+- Added language and subtitle quick toggles to videoosd screen 
+
+**1.1.22**
+- Added navigation from new infoscreen extra details pane. Pressing down will navigate to widgets.
+- Removed conditions on home background requiring library to have content as this was preventing people using plugins for their content from setting backgrounds for home menu items via skinshortcuts https://forum.kodi.tv/showthread.php?tid=373114&pid=3189521#pid3189521
+- Refined skinsettings for global slideshow picker. Now you will only be able to select options from the Slider that are supported by your local library. You can use a Custom plugin path and, if no local library found, Custom will be the default option selected.
+- Added skin support for new script.copacetic.helper feature (1.0.11) to fetch fanarts from plugin sources for global background slideshows https://github.com/realcopacetic/skin.copacetic/issues/108
+- Choices in Global background slider now locked based on library status. If no local library present, only 'Custom path' option will be available
+- Fixed bug in now_playing expressions causing artwork from plugins without a DBID to be coonsidered playing and dimmed.
+- Fixed missing now-playing icon from Billboard view
+- Updated OSD controls https://github.com/realcopacetic/skin.copacetic/issues/110 https://github.com/realcopacetic/skin.copacetic/issues/105 
+
+**1.1.21**
+- Added a fallback label for when clearlogo is not present in home screen background slideshow https://github.com/realcopacetic/skin.copacetic/issues/120
+- Refined now playing expressions to make for better matching of currently displayed tv show/ season list item to videoplayer tvshowdibid. This will avoid two shows with the same name both showing as playing now when an episode from one is played https://github.com/realcopacetic/skin.copacetic/issues/100
+- Added studio flag for Mubi https://github.com/realcopacetic/skin.copacetic/issues/119
+- Added extra condition preventing windowopen animation on Home screen background artwork when returning to the homescreen immediately after ending playback of a video (Window.Previous(fullscreenvideo) + !Player.HasVideo). The reason for this is that, for an unknown reason, the window open animation was not triggering in this particular instance, causing the homescreen background not to load until navigating to another window and back to home.
+- Cleaned up some naming conventions between script.copacetic.helper and skin.copacetic
+
+**1.1.20**
+- Added additional details to info screens for local movies and episodes. Access 'Details' tab by pressing left on the infoscreen menu.
+https://github.com/realcopacetic/skin.copacetic/issues/116
+https://github.com/realcopacetic/skin.copacetic/issues/115
+- Added option to disable hardcoded shutdownmenu items (Home, Light/Night, LibreELEC) in skin settings under Copacetic > General > Menus https://github.com/realcopacetic/skin.copacetic/issues/121
+- Added new LibreELEC shortcut in skin settings under Copacetic > General > Menus https://github.com/realcopacetic/skin.copacetic/issues/121
+- New studio flags for Ascot Elite Entertainment, Gravitas Ventures, Hanway Films, IM Global, Open Road, RankinBass, Screen Media, Toei, Toei Animation, Vertical, Well Go USA https://github.com/realcopacetic/skin.copacetic/issues/119
+
+**1.1.18-19**
+- Fixed rogue mask that was visible during Auto trailer playback https://github.com/realcopacetic/skin.copacetic/issues/105
+- Container Content change transition added when navigating files view seasons > episodes
+- Changed folder structure of secondary fontset to avoid '+' for Linux **resource.fonts.copacetic v1.0.4 required** https://github.com/realcopacetic/resource.fonts.copacetic/issues/2
+- Added support for Simplified Chinese (Inter + Notos Sans SC) **resource.fonts.copacetic v1.0.4 required** https://github.com/realcopacetic/resource.fonts.copacetic/issues/3
+- New BFI studio flag
+- Fixed logic of actor credits widget, so that it will display even if they only have 1 credit that is NOT the item currently being viewed.
+- New studio flags for American International Pictures (AIP), Shudder, Toho, Filmnation, New World Pictures, The Ladd Company, Hammer, Animax as per request from @"loki00" https://forum.kodi.tv/showthread.php?tid=373114&page=10#:~:text=Warning%20Level%3A%200%25-,%23145,-2024%2D03%2D12
+- Simplified transitions between Windows when sharing global backgrounds to create a smoother UX feel
+- Fixed widget scrollbars not appearing on first window load for home screen or info screens
+- Simplified container transition expressions and extended transitions to addons so there is a transition between list levels (e.g. add-on browser > my add-ons > look and feel, etc)
+
+**1.1.17**
+- Fixed bug causing dialogaddoninformation to lose focus on opening for some addons
+- Added fade effect to infoscreen thumbnail when shutdownmenu visible on top
+- Added optional shutdown menu shortcut to hidden views menu https://github.com/realcopacetic/skin.copacetic/issues/90
+- Fixed error in in skinshortcuts management window - non-existent control 309
+- Moved custom playlist background slideshow from homescreen to global via script.copacetic.helper 1.0.9
+- Rearranged skin settings to consolidate all background settings in one screen
+- When global background slideshow is showing or live tv is playing, removed fade in/out transitions between home, addonbrowser, settings screens, tvguide and tv/radio search for a smoother experience. This required removing Ken Burns effect from these background slideshows.
+- Removed some of the unnecessary transitions between different views when navigating through addonbrowser menus
+- Fixed multiart bug breaking artwork for billboard view in programs
+- Fixed typo breaking fix for previous issue https://github.com/realcopacetic/skin.copacetic/issues/60
+- Fixed colour of volume indicator on home screen widgets when light theme selected
+- Added disabled indicator to addonbrowser for disabled addons in List and Grid views, plus installed indicator for installed addons when browsing repos
+- Redesigned script-upnext widget and added options to skinsettings to enable/disable addon and choose art type. https://github.com/realcopacetic/skin.copacetic/issues/102
+
 **1.1.16**
 - Bug fix: removed unmatched parenthesis causing log errors
 - Updated MGM, MGM+ and HBO Max flags 
@@ -88,7 +184,6 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 - Added support for Youtube and other plugins using container.content(videos) for multiple views in myvideonav.xml and for home screen widgets
 - Added missing default value for Skin.String(Widget6_Display) so the label isn't missing from the slider in skin settings when configuring Widget 6
 - Added dummy PVR windows as potential fix for issue where switching to Copacetic is resetting PVR settings in other skins
-
 
 **1.1.5**
 - Removed visualisation.waveform dependency as this addon is not available on Linux

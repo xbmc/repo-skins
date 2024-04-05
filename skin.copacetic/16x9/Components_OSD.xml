@@ -98,7 +98,7 @@
 		<param name="width" default="1560" />
 		<definition>
 			<control type="slider" id="60">
-				<visible allowhiddenfocus="true">Control.HasFocus(60) + !VideoPlayer.Content(LiveTV)</visible>
+				<visible allowhiddenfocus="true">Control.HasFocus(60)</visible>
 				<bottom>20</bottom>
 				<left>$PARAM[left]</left>
 				<width>$PARAM[width]</width>
@@ -106,7 +106,8 @@
 				<texturesliderbar colordiffuse="$VAR[Light_Color]">dialogs/dialogseekbar_background.png</texturesliderbar>
 				<textureslidernibfocus colordiffuse="$VAR[Accent_Color]">dialogs/dialogslider_nib_20.png</textureslidernibfocus>
 				<info>Player.Progress</info>
-				<onup>3100</onup>
+				<onup condition="Window.Is(musicosd) | [VideoPlayer.IsFullscreen + VideoPlayer.Content(livetv)]">3010</onup>
+				<onup condition="VideoPlayer.IsFullscreen + !VideoPlayer.Content(livetv)">3020</onup>
 				<ondown>3000</ondown>
 				<action>seek</action>
 				<orientation>horizontal</orientation>
@@ -259,14 +260,14 @@
 	<include name="Player_Status_Icons_Label">
 		<control type="label">
 			<visible>Player.Rewinding | Player.Forwarding | Player.HasPerformedSeek(2)</visible>
-			<animation effect="fade" start="100" end="0" time="360" delay="540" tween="sine" easing="inout" reversible="false">Hidden</animation>
-			<top>$PARAM[top]</top>
-			<width>auto</width>
+			<include content="PlayerSeekLabel_Fade_Delayed_Animation" />
+			<width>100%</width>
 			<align>center</align>
 			<aligny>center</aligny>
 			<textcolor>$PARAM[color]</textcolor>
 			<font>$PARAM[font]</font>
 			<label>$VAR[Player_Status_Label]</label>
+			<nested />
 		</control>
 	</include>
 
@@ -313,57 +314,53 @@
 				<visible>$PARAM[visible]</visible>
 				<nested />
 				<include content="Visible_Fade_Delayed_Animation" />
-				<animation effect="slide" start="0" end="0,300" time="0" condition="Window.IsVisible(videoosd)">Conditional</animation>
-				<animation effect="slide" start="0" end="0,180" reversible="true" condition="Window.IsVisible(musicosd)">Conditional</animation>
-				<width>360</width>
+				<animation effect="slide" end="0,330" time="0" condition="Window.IsVisible(videoosd)">Conditional</animation>
+				<animation effect="slide" end="0,180" reversible="true" condition="Window.IsVisible(musicosd) + Skin.String(visualisation_Layout,Large)">Conditional</animation>
+				<animation effect="slide" end="720,120" reversible="true" condition="Window.IsVisible(musicosd) + !Skin.String(visualisation_Layout,Large)">Conditional</animation>
+				<width>120</width>
 				<height>120</height>
 				<centerleft>50%</centerleft>
 				<centertop>50%</centertop>
+				<!-- Paused / Playing -->
 				<control type="group">
-					<width>120</width>
-					<centerleft>50%</centerleft>
-					<!-- Paused -->
+					<visible>Window.IsVisible(visualisation) | VideoPlayer.IsFullscreen</visible>
+					<visible>!Window.IsVisible(videoosd) + !Window.IsVisible(musicosd)</visible>
+					<control type="image">
+						<visible>Player.Paused + ![VideoPlayer.IsFullscreen + Skin.HasSetting(Pause_Screen_Info_Enabled)]</visible>
+						<include content="Visible_Fade_Delayed_Animation" />
+						<texture colordiffuse="$PARAM[color]">osd/icon_Player.Paused_$PARAM[icon_type].png</texture>
+					</control>
 					<control type="group">
-						<visible>Window.IsVisible(visualisation) | VideoPlayer.IsFullscreen</visible>
-						<visible>!Window.IsVisible(videoosd) + !Window.IsVisible(musicosd)</visible>
+						<visible>$PARAM[playicon]</visible>
+						<visible>Player.Paused</visible>
+						<animation effect="fade" start="100" end="0" time="360" delay="540" tween="sine" easing="inout">Hidden</animation>
 						<control type="image">
-							<visible>Player.Paused + ![VideoPlayer.IsFullscreen + Skin.HasSetting(Pause_Screen_Info_Enabled)]</visible>
-							<include content="Visible_Fade_Delayed_Animation" />
-							<texture colordiffuse="$PARAM[color]">osd/icon_Player.Paused_$PARAM[icon_type].png</texture>
-						</control>
-						<!-- Playing -->
-						<control type="group">
-							<visible>$PARAM[playicon]</visible>
-							<visible>Player.Paused</visible>
-							<animation effect="fade" start="100" end="0" time="360" delay="540" tween="sine" easing="inout">Hidden</animation>
-							<control type="image">
-								<visible>Player.Playing</visible>
-								<texture colordiffuse="$PARAM[color]">osd/icon_Player.Playing_$PARAM[icon_type].png</texture>
-							</control>
+							<visible>Player.Playing</visible>
+							<texture colordiffuse="$PARAM[color]">osd/icon_Player.Playing_$PARAM[icon_type].png</texture>
 						</control>
 					</control>
-					<!-- Rewinding / Forwarding -->
-					<include content="Player_Status_Icons_Array">
-						<param name="direction" value="Rewinding" />
-						<param name="icon_type" value="$PARAM[icon_type]" />
-						<param name="flipx" value="true" />
-						<param name="color" value="$PARAM[color]" />
-					</include>
-					<include content="Player_Status_Icons_Array">
-						<param name="direction" value="Forwarding" />
-						<param name="icon_type" value="$PARAM[icon_type]" />
-						<param name="color" value="$PARAM[color]" />
-					</include>
 				</control>
+				<!-- Rewinding / Forwarding -->
+				<include content="Player_Status_Icons_Array">
+					<param name="direction" value="Rewinding" />
+					<param name="icon_type" value="$PARAM[icon_type]" />
+					<param name="flipx" value="true" />
+					<param name="color" value="$PARAM[color]" />
+				</include>
+				<include content="Player_Status_Icons_Array">
+					<param name="direction" value="Forwarding" />
+					<param name="icon_type" value="$PARAM[icon_type]" />
+					<param name="color" value="$PARAM[color]" />
+				</include>
 				<include content="Player_Status_Icons_Label" condition="$PARAM[large_label]">
-					<param name="top" value="90" />
 					<param name="color" value="$PARAM[color]" />
 					<param name="font" value="Player_Status" />
+					<animation effect="slide" end="0,60" condition="true">Conditional</animation>
 				</include>
 				<include content="Player_Status_Icons_Label" condition="$PARAM[small_label]">
-					<param name="top" value="50" />
 					<param name="color" value="$PARAM[color]" />
 					<param name="font" value="Body" />
+					<animation effect="slide" end="0,50" condition="true">Conditional</animation>
 				</include>
 			</control>
 		</definition>

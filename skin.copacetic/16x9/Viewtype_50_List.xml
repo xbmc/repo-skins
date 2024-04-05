@@ -10,7 +10,7 @@
 				<include content="Visible_Fade_Delayed_Animation" />
 				<control type="fixedlist" id="50">
 					<animation effect="slide" end="720,0" time="0" condition="$EXP[ListView_Display_IsThumbnails]">Conditional</animation>
-					<animation effect="slide" end="60,0" time="0" condition="[Window.Is(addonbrowser) | Window.Is(programs)] + !Container.Content(addons)">Conditional</animation>
+					<animation effect="slide" end="30,0" time="0" condition="[Window.Is(addonbrowser) | Window.Is(programs)] + !$EXP[Container_Addons_NonRepo]">Conditional</animation>
 					<viewtype label="List">list</viewtype>
 					<centertop>50%</centertop>
 					<height>660</height>
@@ -21,10 +21,12 @@
 					<include content="List_Navigation" />
 					<onfocus>ClearProperty(Widget_DBID,home)</onfocus>
 					<scrolltime tween="sine" easing="inout">360</scrolltime>
+					<include content="ListView_Layout_addonbrowser" condition="Window.Is(addonbrowser) | Window.Is(programs)" />
 					<include content="ListView_Layout_videos" condition="Window.Is(videos)" />
 					<include content="ListView_Layout_music" condition="Window.Is(music) | Window.Is(musicplaylist)" />
-					<include content="ListView_Layout_pictures" condition="!Window.Is(videos) + !Window.Is(music) + !Window.Is(videoplaylist) + !Window.Is(musicplaylist)" />
 					<include content="ListView_Layout_videoplaylist" condition="Window.Is(videoplaylist)" />
+					<include content="ListView_Layout_tvsearch" condition="Window.Is(tvsearch)" />
+					<include content="ListView_Layout_pictures" condition="!Window.Is(videos) + !Window.Is(music) + !Window.Is(videoplaylist) + !Window.Is(musicplaylist) + !Window.Is(tvsearch) + !Window.Is(addonbrowser) + !Window.Is(programs)" />
 				</control>
 			</control>
 		</include>
@@ -42,7 +44,7 @@
 					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + !$EXP[PanelDialog_IsVisible] + !Window.Is(videoplaylist)" />
 					<param name="colordiffuse" value="$VAR[Dark_Grey_Color]" />
 					<include content="Visible_Fade_Animation" />
-					<animation effect="zoom" start="60,180,1800,720" end="720,180,1140,720" time="0" condition="$EXP[Containers_Posters] | $EXP[Containers_Square]">Conditional</animation>
+					<animation effect="zoom" start="60,180,1800,720" end="720,180,1140,720" time="0" condition="$EXP[Containers_Posters] | [!Window.Is(addonbrowser) + $EXP[Containers_Square]]">Conditional</animation>
 				</include>
 				<include content="Artwork_Transition_Fade" condition="Window.Is(videos) | Window.Is(programs)">
 					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + $EXP[Containers_Posters]" />
@@ -51,12 +53,21 @@
 					<param name="art_icon" value="$PARAM[art_icon]" />
 					<param name="has_progress" value="true" />
 				</include>
-				<include content="Artwork_Transition_Fade" condition="Window.Is(videos) | Window.Is(music) | Window.Is(addonbrowser) | Window.Is(musicplaylist) | Window.Is(pictures)">
+				<include content="Artwork_Transition_Fade" condition="Window.Is(videos) | Window.Is(music) | Window.Is(musicplaylist) | Window.Is(pictures)">
 					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + $EXP[Containers_Square]" />
 					<param name="width" value="720" />
 					<param name="height" value="720" />
 					<param name="target_id" value="$PARAM[id]" />
 					<param name="art_icon" value="$PARAM[art_icon]" />
+				</include>
+				<include content="Artwork_Transition_Fade" condition="Window.Is(addonbrowser)">
+					<animation effect="slide" end="194,0" time="0" condition="true">Conditional</animation>
+					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + $EXP[Containers_Square]" />
+					<param name="width" value="512" />
+					<param name="height" value="512" />
+					<param name="target_id" value="$PARAM[id]" />
+					<param name="art_icon" value="$PARAM[art_icon]" />
+					<param name="aspectratio" value="center" />
 				</include>
 				<include content="Artwork_Transition_Fade" condition="Window.Is(videos)">
 					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + Container.Content(videos)" />
@@ -78,6 +89,7 @@
 					<param name="visible" value="[$EXP[ListView_Display_IsBackground] + !$EXP[Containers_Background] + !Container.Content()] | Window.Is(videoplaylist)" />
 					<param name="target_id" value="$PARAM[id]" />
 					<param name="art_icon" value="$PARAM[art_icon]" />
+					<param name="ken_burns" value="true" />
 				</include>
 			</include>
 		</definition>
@@ -92,29 +104,30 @@
 					<param name="id" value="$PARAM[id]" />
 					<animation effect="slide" end="-600,0" time="0" condition="$EXP[ListView_Display_IsThumbnails]">Conditional</animation>
 				</include>
-				<include content="Common_List_Info_Label" condition="!Window.Is(videoplaylist)">
-					<param name="visible" value="[$EXP[ListView_Display_IsBackground] + $EXP[ListView_Details_Info]]" />
+				<include content="Common_List_Info_Label">
+					<param name="visible" value="$EXP[ListView_Display_IsBackground] | Window.Is(tvsearch) | Window.Is(videoplaylist)" />
 					<param name="left" value="120" />
 					<param name="width" value="1680" />
 					<param name="hiddenlabelmaxwidth" value="1200" />
+					<param name="infolabel_visible" value="$EXP[ListView_Details_Info]" />
 					<param name="infolabelwidth" value="480" />
 				</include>
 				<include content="Common_List_Info_Label" condition="Window.Is(videos) | Window.Is(music) | Window.Is(musicplaylist)">
-					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + [[$EXP[ListView_Details_Info] + Container.Content(songs)] | Control.HasFocus(3100)]" />
+					<param name="visible" value="$EXP[ListView_Display_IsThumbnails]" />
 					<param name="left" value="810" />
 					<param name="width" value="960" />
 					<param name="hiddenlabelmaxwidth" value="840" />
 					<param name="infolabelwidth" value="120" />
-					<param name="infolabel_visible" value="!Control.HasFocus(3100)" />
+					<param name="infolabel_visible" value="$EXP[ListView_Details_Info] + Container.Content(songs)" />
 				</include>
 			</include>
 			<include content="Viewtype_Details_Including_Content_Switching_Template">
 				<param name="viewtype_label" value="List" />
 				<include content="Breadcrumb_Label">
-					<param name="visible" value="!Container.Content(sets) + !Container.Content(movies) + !Container.Content(tvshows) + ![Container.Content(seasons) + $EXP[ListView_Details_Info_Seasons]] + ![Container.Content(actors) + String.IsEmpty(ListItem.Appearances)] + ![Container.Content(files) + !String.IsEmpty(ListItem.Art(poster))] + ![$EXP[ListView_Display_IsBackground] + $EXP[Notification_Widget_IsVisible]]" />
+					<param name="visible" value="!Container.Content(sets) + !Container.Content(movies) + !Container.Content(tvshows) + ![Container.Content(seasons) + $EXP[ListView_Details_Info_Seasons]] + ![Container.Content(actors) + String.IsEmpty(ListItem.Appearances)] + ![Container.Content(files) + !Window.Is(videoplaylist) + !String.IsEmpty(ListItem.Art(poster))] + ![$EXP[ListView_Display_IsBackground] + $EXP[Notification_Widget_IsVisible]]" />
 					<param name="animation" value="VisibleHidden_Fade_Delayed_Animation" />
 					<param name="info_label_visible" value="true" />
-					<param name="label_color" value="$VAR[Breadcrumb_Label_Color]" />
+					<param name="textcolor" value="$VAR[Breadcrumb_Label_Color]" />
 				</include>
 			</include>
 		</definition>
