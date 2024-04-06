@@ -20,6 +20,9 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 ---
+**1.1.28**
+- Removed test label
+
 **1.1.27**
 - Fixed filename case mismatch causing some OSD buttons not to show on Linux-based devices https://github.com/realcopacetic/skin.copacetic/issues/128
 - Fixed background slideshow timer stuck on 10 seconds regardless of what was set in skin settings https://github.com/realcopacetic/skin.copacetic/issues/136
