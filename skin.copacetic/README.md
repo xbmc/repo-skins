@@ -20,8 +20,20 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 ---
+**1.2.2**
+- Non-breaking changes to keep code in sync with Omega
+- Cleaned some expressions governing Light theme and artwork backgrounds to simplify complex scenarios when several transparent windows are open on top of each other
+- Removed flash of light background when transitioning from fullscreen artwork background to fullscreen artwork infoscreen.
+- Removed some obsolete parameters
+- Fixed some instances when the primary colour was incorrectly used instead of the secondary colour on light background views when Light theme selected, causing things like scrollbars to be shown as white on white instead of black on white
+- Fixed a fadediffuse bug in the embedded list artwork mask used on Strip view
+- Fixed the missing Ken Burns effect from Billboard and List views with fullscreen artwork
+
+**1.2.0**
+- Branching 'nexus' from master to accommodate for 'omega' development
+
 **1.1.28**
-- Removed test label
+- Remove test label
 
 **1.1.27**
 - Fixed filename case mismatch causing some OSD buttons not to show on Linux-based devices https://github.com/realcopacetic/skin.copacetic/issues/128
