@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+	<include name="Widget_Container_Content">
+		<param name="limit" default="20" />
+		<definition>
+			<content target="$PARAM[target]" sortby="$PARAM[sortby]" sortorder="$PARAM[sortorder]" limit="$PARAM[limit]" browse="never">$PARAM[content]</content>
+		</definition>
+	</include>
+
+	<include name="Widget_Container_Content_InProgress">
+		<param name="limit" default="20" />
+		<definition>
+			<content target="videos" sortby="lastplayed" sortorder="descending" limit="$PARAM[limit]">special://skin/extras/playlists/inprogress_movies.xsp</content>
+			<content target="videos" sortby="lastplayed" sortorder="descending" limit="$PARAM[limit]">special://skin/extras/playlists/inprogress_episodes.xsp</content>
+		</definition>
+	</include>
+
+	<include name="Widget_List">
+		<param name="min_items" />
+		<param name="bypass_min_items" default="false" />
+		<param name="widget_type" />
+		<param name="id" />
+		<param name="use_custom_content" default="true" />
+		<param name="content_path" default="Widget_Container_Content" />
+		<param name="use_custom_click" default="false" />
+		<param name="click_action" default="Blank" />
+		<definition>
+			<control type="fixedlist" id="$PARAM[id]">
+				<visible>Integer.IsGreaterOrEqual(Container($PARAM[id]).NumItems,$PARAM[min_items]) | Container($PARAM[id]).IsUpdating | $PARAM[bypass_min_items]</visible>
+				<onfocus condition="Window.Is(home)">SetProperty(Home_Widget,$PARAM[id],home)</onfocus>
+				<onfocus condition="Window.Is(movieinformation) | Window.Is(musicinformation) | Window.Is(songinformation) | Window.Is(addoninformation)">SetProperty(Infoscreen_Widget,$PARAM[id],home)</onfocus>
+				<onfocus>ClearProperty(Focused_Button,movieinformation)</onfocus>
+				<onfocus>ClearProperty(Focused_Button,musicinformation)</onfocus>
+				<onfocus>ClearProperty(Focused_Button,addoninformation)</onfocus>
+				<onunfocus>ClearProperty(Widget_DBID,home)</onunfocus>
+				<onunfocus>ClearProperty(Widget_DBType,home)</onunfocus>
+				<onunfocus>ClearProperty(Widget_Genre,home)</onunfocus>
+				<onunfocus>ClearProperty(billboard_cropped,home)</onunfocus>
+				<onunfocus>ClearProperty(clearlogo-alt_cropped,home)</onunfocus>
+				<onunfocus>ClearProperty(clearlogo_cropped,home)</onunfocus>
+				<viewtype label="widgetlist">list</viewtype>
+				<preloaditems>2</preloaditems>
+				<orientation>horizontal</orientation>
+				<scrolltime tween="sine" easing="inout">360</scrolltime>
+				<include content="ClickAction_$PARAM[click_action]" condition="$PARAM[use_custom_click]" />
+				<include content="$PARAM[widget_type]_Navigation" />
+				<focusedlayout>
+					<control type="button">
+						<visible allowhiddenfocus="true">false</visible>
+						<onfocus condition="!String.IsEmpty(Container($PARAM[id]).ListItem.DBID)">SetProperty(Widget_DBID,$INFO[Container($PARAM[id]).ListItem.DBID],home)</onfocus>
+						<onfocus condition="!String.IsEmpty(Container($PARAM[id]).ListItem.DBType)">SetProperty(Widget_DBType,$INFO[Container($PARAM[id]).ListItem.DBType],home)</onfocus>
+						<onfocus condition="!String.IsEmpty(Container($PARAM[id]).ListItem.Genre)">SetProperty(Widget_Genre,$INFO[Container($PARAM[id]).ListItem.Genre],home)</onfocus>
+					</control>
+					<include content="HiddenFocusButton" />
+					<include content="Multiart_Resetter" condition="Skin.HasSetting(Multiart_Slideshow)" />
+					<include content="Multiart_Setter" condition="Skin.HasSetting(Multiart_Slideshow)" />
+				</focusedlayout>
+				<itemlayout />
+				<include content="$PARAM[content_path]" condition="$PARAM[use_custom_content]">
+					<param name="target" value="$PARAM[target]" />
+					<param name="sortby" value="$PARAM[sortby]" />
+					<param name="sortorder" value="$PARAM[sortorder]" />
+					<param name="content" value="$PARAM[content]" />
+					<param name="limit" value="$PARAM[limit]" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Widget_Template">
+		<param name="use_custom_content" default="true" />
+		<param name="content_path" default="Widget_Container_Content" />
+		<param name="use_custom_click" default="false" />
+		<param name="click_action" default="Blank" />
+		<param name="widget_position" default="0" />
+		<definition>
+			<include content="Widget_List">
+				<param name="min_items" value="1" />
+				<param name="widget_type" value="Widget" />
+				<param name="id" value="$PARAM[id]" />
+				<param name="widget_position" value="$PARAM[widget_position]" />
+				<param name="use_custom_content" value="$PARAM[use_custom_content]" />
+				<param name="content_path" value="$PARAM[content_path]" />
+				<param name="use_custom_click" value="$PARAM[use_custom_click]" />
+				<param name="click_action" value="$PARAM[click_action]" />
+				<param name="target" value="$PARAM[target]" />
+				<param name="sortby" value="$PARAM[sortby]" />
+				<param name="sortorder" value="$PARAM[sortorder]" />
+				<param name="content" value="$PARAM[content]" />
+				<param name="limit" value="$PARAM[limit]" />
+			</include>
+			<control type="group">
+				<visible>Control.HasFocus(320$PARAM[widget_position])</visible>
+				<animation effect="slide" start="0" end="0,660" time="0" condition="Control.HasFocus(320$PARAM[widget_position])">Conditional</animation>
+				<animation effect="slide" start="0" end="0,-660" time="180" tween="sine" easing="inout" reversible="false" condition="Control.HasFocus(320$PARAM[widget_position])">Conditional</animation>
+				<animation effect="fade" start="0" end="100" time="180" tween="sine" easing="inout" reversible="false" condition="Control.HasFocus(320$PARAM[widget_position])">Conditional</animation>
+				<include content="BillboardView_Display" condition="Skin.String(Widget$PARAM[widget_position]_View,Billboard)">
+					<param name="id" value="$PARAM[id]" />
+					<param name="art_icon" value="Widget$PARAM[widget_position]_Thumbnail" />
+					<param name="media_view" value="false" />
+					<param name="widget_view" value="true" />
+					<param name="widget_position" value="$PARAM[widget_position]" />
+				</include>
+				<include content="ShowcaseView_Display" condition="Skin.String(Widget$PARAM[widget_position]_View,Showcase)">
+					<param name="id" value="$PARAM[id]" />
+					<param name="art_icon" value="Widget$PARAM[widget_position]_Thumbnail" />
+					<param name="media_view" value="false" />
+					<param name="widget_view" value="true" />
+					<param name="widget_position" value="$PARAM[widget_position]" />
+				</include>
+				<include content="StripView_Display" condition="Skin.String(Widget$PARAM[widget_position]_View,Strip)">
+					<param name="id" value="$PARAM[id]" />
+					<param name="art_icon" value="Widget$PARAM[widget_position]_Thumbnail" />
+					<param name="media_view" value="false" />
+					<param name="widget_view" value="true" />
+					<param name="widget_position" value="$PARAM[widget_position]" />
+				</include>
+				<include content="GridView_Display" condition="Skin.String(Widget$PARAM[widget_position]_View,Grid)">
+					<param name="id" value="$PARAM[id]" />
+					<param name="art_icon" value="Widget$PARAM[widget_position]_Thumbnail" />
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="gridview_details_fade" value="Control.HasFocus(320$PARAM[widget_position])" />
+				</include>
+			</control>
+			<!-- Details -->
+			<control type="group">
+				<visible>!$EXP[TransparentDialog_IsVisible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<control type="group">
+					<visible>Control.HasFocus(320$PARAM[widget_position])</visible>
+					<include content="Visible_Fade_Delayed_Animation" />
+					<include content="BillboardView_Details" condition="Skin.String(Widget$PARAM[widget_position]_View,Billboard)">
+						<param name="id" value="$PARAM[id]" />
+					</include>
+					<include content="ShowcaseView_Details" condition="Skin.String(Widget$PARAM[widget_position]_View,Showcase)">
+						<param name="media_view" value="false" />
+						<param name="id" value="$PARAM[id]" />
+					</include>
+					<include content="StripView_Details" condition="Skin.String(Widget$PARAM[widget_position]_View,Strip)">
+						<param name="id" value="$PARAM[id]" />
+					</include>
+					<include content="GridView_Details" condition="Skin.String(Widget$PARAM[widget_position]_View,Grid)">
+						<param name="id" value="$PARAM[id]" />
+						<param name="widget_position" value="$PARAM[widget_position]" />
+					</include>
+				</control>
+				<!-- Breadcrumb -->
+				<include content="Breadcrumb_Label">
+					<param name="visible" value="Control.HasFocus(320$PARAM[widget_position])" />
+					<param name="animation" value="Widget_Breadcrumb_Animation" />
+					<param name="title_label" value="$PARAM[widget_header]" />
+					<param name="info_label_visible" value="true" />
+					<param name="info_label" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(320$PARAM[widget_position]).CurrentItem]$INFO[Container(320$PARAM[widget_position]).NumItems,/]" />
+					<param name="textcolor" value="$VAR[Breadcrumb_Label_Color]" />
+				</include>
+				<nested />
+				<!-- Busy spinner -->
+				<include content="Busy_Spinner">
+					<param name="visible" value="Control.HasFocus(320$PARAM[widget_position]) + Container(320$PARAM[widget_position]).IsUpdating + !Window.IsVisible(busydialog) + !Skin.String(Trailer_Autoplay_Home_Enabled,true)" />
+					<param name="color" value="$VAR[Volume_Focused_Color]" />
+					<include content="Trailer_Autoplay_Fade_Delayed_Animation" condition="Skin.HasSetting(Trailer_Autoplay)" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Widget_InProgress">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31200]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="content" value="plugin://script.copacetic.helper/?info=in_progress" />
+			<param name="sortby" value="lastplayed" />
+			<param name="sortorder" value="descending" />
+		</include>
+	</include>
+
+	<include name="Widget_NextUp">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31201]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="content" value="plugin://script.copacetic.helper/?info=next_up" />
+		</include>
+	</include>
+
+
+	<include name="Widget_LatestMovies">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31202]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="dateadded" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="videodb://movies/titles/?xsp=%7B%22group%22%3A%7B%22mixed%22%3Afalse%2C%22type%22%3A%22none%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22playcount%22%2C%22operator%22%3A%22lessthan%22%2C%22value%22%3A%5B%221%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D" />
+		</include>
+	</include>
+
+	<include name="Widget_RandomMovies">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31204]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="videodb://movies/titles/" />
+		</include>
+	</include>
+
+	<include name="Widget_LatestTVShows">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31203]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="dateadded" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="videodb://tvshows/titles/?xsp=%7B%22group%22%3A%7B%22mixed%22%3Afalse%2C%22type%22%3A%22none%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22playcount%22%2C%22operator%22%3A%22lessthan%22%2C%22value%22%3A%5B%221%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D" />
+		</include>
+	</include>
+
+	<include name="Widget_RandomTVShows">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31205]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="videodb://tvshows/titles/" />
+		</include>
+	</include>
+
+	<include name="Widget_LatestAlbums">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31206]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="music" />
+			<param name="sortby" value="dateadded" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="musicdb://recentlyaddedalbums/" />
+			<param name="use_custom_click" value="true" />
+			<param name="click_action" value="Home_Open_Album" />
+		</include>
+	</include>
+
+	<include name="Widget_RecentAlbums">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31207]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="music" />
+			<param name="sortby" value="lastplayed" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="musicdb://recentlyplayedalbums/" />
+			<param name="use_custom_click" value="true" />
+			<param name="click_action" value="Home_Open_Album" />
+		</include>
+	</include>
+
+	<include name="Widget_RandomAlbums">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31208]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="music" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="musicdb://albums/" />
+		</include>
+	</include>
+
+	<include name="Widget_LikedSongs">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[31209]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="music" />
+			<param name="sortby" value="lastplayed" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="musicdb://songs/?xsp=%7B%22group%22%3A%7B%22mixed%22%3Afalse%2C%22type%22%3A%22none%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22userrating%22%2C%22operator%22%3A%22greaterthan%22%2C%22value%22%3A%5B%22$VAR[Path_LikedSongs_Value]%22%5D%7D%5D%7D%2C%22type%22%3A%22songs%22%7D" />
+			<param name="limit" value="50" />
+			<param name="use_custom_click" value="true" />
+			<param name="click_action" value="Play_All_Songs" />
+		</include>
+	</include>
+
+	<include name="Widget_Favourites">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$LOCALIZE[1036]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="content" value="favourites://" />
+		</include>
+	</include>
+
+	<include name="Widget_Custom">
+		<include content="Widget_Template">
+			<param name="widget_position" value="$PARAM[widget_position]" />
+			<param name="widget_header" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_Name)]" />
+			<param name="id" value="$PARAM[id]" />
+			<param name="target" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_Target)]" />
+			<param name="sortby" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_SortMethod)]" />
+			<param name="sortorder" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_SortOrder)]" />
+			<param name="content" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_Path)]" />
+			<param name="limit" value="$INFO[Skin.String(Widget$PARAM[widget_position]_Custom_Limit)]" />
+		</include>
+	</include>
+
+	<include name="Widget_Item">
+		<param name="widget_position" />
+		<param name="id" />
+		<definition>
+			<control type="group">
+				<include content="Widget_InProgress" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_InProgress) + System.AddonIsEnabled(script.copacetic.helper)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_NextUp" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_NextUp) + System.AddonIsEnabled(script.copacetic.helper)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_LatestMovies" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_LatestMovies)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_RandomMovies" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_RandomMovies)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_LatestTVShows" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_LatestTVShows)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_RandomTVShows" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_RandomTVShows)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_LatestAlbums" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_LatestAlbums)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_RecentAlbums" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_RecentAlbums)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_RandomAlbums" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_RandomAlbums)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_LikedSongs" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_LikedSongs)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_Favourites" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_Favourites)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+				<include content="Widget_Custom" condition="Skin.HasSetting(Widget$PARAM[widget_position]_Content_Custom)">
+					<param name="widget_position" value="$PARAM[widget_position]" />
+					<param name="id" value="$PARAM[id]" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Widget_1">
+		<include content="Widget_Item">
+			<param name="widget_position" value="1" />
+			<param name="id" value="3201" />
+		</include>
+	</include>
+
+	<include name="Widget_2">
+		<include content="Widget_Item">
+			<param name="widget_position" value="2" />
+			<param name="id" value="3202" />
+		</include>
+	</include>
+
+	<include name="Widget_3">
+		<include content="Widget_Item">
+			<param name="widget_position" value="3" />
+			<param name="id" value="3203" />
+		</include>
+	</include>
+
+	<include name="Widget_4">
+		<include content="Widget_Item">
+			<param name="widget_position" value="4" />
+			<param name="id" value="3204" />
+		</include>
+	</include>
+
+	<include name="Widget_5">
+		<include content="Widget_Item">
+			<param name="widget_position" value="5" />
+			<param name="id" value="3205" />
+		</include>
+	</include>
+
+	<include name="Widget_6">
+		<include content="Widget_Item">
+			<param name="widget_position" value="6" />
+			<param name="id" value="3206" />
+		</include>
+	</include>
+
+	<include name="Widget_7">
+		<include content="Widget_Item">
+			<param name="widget_position" value="7" />
+			<param name="id" value="3207" />
+		</include>
+	</include>
+
+	<include name="Widget_8">
+		<include content="Widget_Item">
+			<param name="widget_position" value="8" />
+			<param name="id" value="3208" />
+		</include>
+	</include>
+
+	<include name="Widget_9">
+		<include content="Widget_Item">
+			<param name="widget_position" value="9" />
+			<param name="id" value="3209" />
+		</include>
+	</include>
+
+	<include name="Home_Widgets">
+		<control type="group">
+			<visible>!$EXP[Infoscreen_IsVisible] + !Control.HasFocus(4010)</visible>
+			<include content="Visible_Fade_Delayed_Animation" />
+			<include content="Widget_1" condition="!Skin.HasSetting(Widget1_Content_Disabled)" />
+			<include content="Widget_2" condition="!Skin.HasSetting(Widget2_Content_Disabled)" />
+			<include content="Widget_3" condition="!Skin.HasSetting(Widget3_Content_Disabled)" />
+			<include content="Widget_4" condition="!Skin.HasSetting(Widget4_Content_Disabled)" />
+			<include content="Widget_5" condition="!Skin.HasSetting(Widget5_Content_Disabled)" />
+			<include content="Widget_6" condition="!Skin.HasSetting(Widget6_Content_Disabled)" />
+			<include content="Widget_7" condition="!Skin.HasSetting(Widget7_Content_Disabled)" />
+			<include content="Widget_8" condition="!Skin.HasSetting(Widget8_Content_Disabled)" />
+			<include content="Widget_9" condition="!Skin.HasSetting(Widget9_Content_Disabled)" />
+			<include content="Home_Scrollbar" />
+		</control>
+	</include>
+
+	<include name="Infoscreen_Widget_Template">
+		<param name="id" />
+		<param name="widget_position" default="0" />
+		<param name="use_custom_content" default="true" />
+		<param name="use_custom_click" default="true" />
+		<param name="min_items" default="2" />
+		<param name="bypass_min_items" default="false" />
+		<definition>
+			<include content="Hidden_Components">
+				<control type="label" id="620$PARAM[widget_position]1">
+					<label>$PARAM[widget_view]</label>
+				</control>
+				<control type="label" id="620$PARAM[widget_position]2">
+					<label>$PARAM[widget_display]</label>
+				</control>
+			</include>
+			<include content="Widget_List">
+				<param name="min_items" value="$PARAM[min_items]" />
+				<param name="bypass_min_items" value="$PARAM[bypass_min_items]" />
+				<param name="widget_type" value="Infoscreen_Widget" />
+				<param name="id" value="$PARAM[id]" />
+				<param name="use_custom_content" value="$PARAM[use_custom_content]" />
+				<param name="target" value="$PARAM[target]" />
+				<param name="sortby" value="$PARAM[sortby]" />
+				<param name="sortorder" value="$PARAM[sortorder]" />
+				<param name="content" value="$PARAM[content]" />
+				<param name="limit" value="$PARAM[limit]" />
+				<param name="use_custom_click" value="$PARAM[use_custom_click]" />
+				<param name="click_action" value="$PARAM[click_action]" />
+			</include>
+			<!-- Art -->
+			<control type="group">
+				<visible>Control.HasFocus($PARAM[id]) + !Container($PARAM[id]).IsUpdating</visible>
+				<animation effect="slide" start="0" end="0,660" time="0" condition="Control.HasFocus($PARAM[id])">Conditional</animation>
+				<animation effect="slide" start="0" end="0,-660" time="180" tween="sine" easing="inout" reversible="false" condition="Control.HasFocus($PARAM[id])">Conditional</animation>
+				<animation effect="fade" start="0" end="100" time="180" tween="sine" easing="inout" reversible="false" condition="Control.HasFocus($PARAM[id])">Conditional</animation>
+				<include content="$PARAM[widget_view]View_Art_$PARAM[widget_display]">
+					<param name="target_id" value="$PARAM[id]" />
+					<param name="art_icon" value="Widget_$PARAM[widget_display]_Thumbnail" />
+				</include>
+			</control>
+			<!-- Breadcrumb -->
+			<include content="Breadcrumb_Label">
+				<param name="visible" value="Control.HasFocus($PARAM[id]) + !$EXP[TransparentDialog_IsVisible]" />
+				<param name="animation" value="Widget_Breadcrumb_Animation" />
+				<param name="title_label_id" value="620$PARAM[widget_position]3" />
+				<param name="title_label" value="$PARAM[widget_header]" />
+				<param name="info_label_visible" value="true" />
+				<param name="info_label" value="$PARAM[widget_info]" />
+				<param name="textcolor" value="$VAR[Breadcrumb_Label_Color]" />
+			</include>
+			<!-- Details -->
+			<include content="$PARAM[widget_view]View_Details">
+				<param name="visible" value="Control.HasFocus($PARAM[id]) + !Container($PARAM[id]).IsUpdating" />
+				<param name="id" value="$PARAM[id]" />
+				<param name="widget_position" value="$PARAM[widget_position]" />
+				<param name="widget_display" value="$PARAM[widget_display]" />
+			</include>
+			<!-- Busy spinner -->
+			<include content="Busy_Spinner">
+				<param name="visible" value="Control.HasFocus($PARAM[id]) + Container($PARAM[id]).IsUpdating + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(busydialog)" />
+				<param name="color" value="$VAR[Volume_Focused_Color]" />
+			</include>
+		</definition>
+	</include>
+
+	<include name="Infoscreen_Widget_3201_NextUp">
+		<include content="Infoscreen_Widget_Template">
+			<param name="min_items" value="1" />
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3201" />
+			<param name="widget_position" value="1" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="playcount" />
+			<param name="sortorder" value="ascending" />
+			<param name="limit" value="3" />
+			<param name="content" value="videodb://inprogresstvshows/$INFO[ListItem.DBID]/-2/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22playcount%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%5B%220%22%5D%7D%5D%7D%2C%22type%22%3A%22episodes%22%7D" />
+			<param name="click_action" value="Play_Episodes" />
+			<param name="widget_header" value="$LOCALIZE[31201]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3201_Episodes">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3201" />
+			<param name="widget_position" value="1" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="episode" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_Episodes]" />
+			<param name="click_action" value="Play_Episodes" />
+			<param name="widget_header" value="$VAR[Infoscreen_Widget_Episodes_Label]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3201_MovieSet">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Posters" />
+			<param name="id" value="3201" />
+			<param name="widget_position" value="1" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="year" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_MovieSet]" />
+			<param name="click_action" value="Open_MovieSet" />
+			<param name="widget_header" value="$INFO[ListItem.Set]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(3201).CurrentItem]$INFO[Container(3201).NumItems,/]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3201_MostPlayed">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Square" />
+			<param name="id" value="3201" />
+			<param name="widget_position" value="1" />
+			<param name="target" value="music" />
+			<param name="limit" value="10" />
+			<param name="sortby" value="playcount" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="musicdb://artists/$INFO[ListItem.DBID]/-1/-2/" />
+			<param name="click_action" value="Play_All_Songs" />
+			<param name="widget_header" value="$LOCALIZE[31212]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(3201).CurrentItem]$INFO[Container(3201).NumItems,/]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3202_Seasons">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Posters" />
+			<param name="id" value="3202" />
+			<param name="widget_position" value="2" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="season" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_Seasons]" />
+			<param name="click_action" value="Open_Season_Folder" />
+			<param name="widget_header" value="$INFO[Container(3202).ListItem.Season,$LOCALIZE[20373] ]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3202_Discography">
+		<include content="Infoscreen_Widget_Template">
+			<param name="min_items" value="1" />
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Square" />
+			<param name="id" value="3202" />
+			<param name="widget_position" value="2" />
+			<param name="target" value="music" />
+			<param name="sortby" value="year" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="$VAR[Path_Discography]" />
+			<param name="click_action" value="Open_Album" />
+			<param name="widget_header" value="$VAR[Infoscreen_Widget_Discography_Label]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(3202).CurrentItem]$INFO[Container(3202).NumItems,/]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_50_Cast">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Posters" />
+			<param name="widget_position" value="0" />
+			<param name="id" value="50" />
+			<param name="use_custom_content" value="false" />
+			<param name="use_custom_click" value="false" />
+			<param name="widget_header" value="$VAR[Infoscreen_Widget_Cast_Label]" />
+			<param name="widget_info" value="" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_50_Set">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Posters" />
+			<param name="id" value="50" />
+			<param name="widget_position" value="0" />
+			<param name="use_custom_content" value="false" />
+			<param name="use_custom_click" value="false" />
+			<param name="widget_header" value="$INFO[ListItem.Label]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(50).CurrentItem]$INFO[Container(50).NumItems,/]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_50_Screenshots">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="50" />
+			<param name="widget_position" value="0" />
+			<param name="use_custom_content" value="false" />
+			<param name="use_custom_click" value="false" />
+			<param name="widget_header" value="$INFO[ListItem.Label]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$INFO[Container(50).CurrentItem]$INFO[Container(50).NumItems,/]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3203_ActorCredits">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Posters" />
+			<param name="id" value="3203" />
+			<param name="widget_position" value="3" />
+			<param name="bypass_min_items" value="true" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="year" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="$VAR[Path_ActorCredits]" />
+			<param name="click_action" value="ActorCredits" />
+			<param name="limit" value="50" />
+			<param name="widget_header" value="$INFO[Container(50).ListItem.Label]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$LOCALIZE[31211]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3205_DirectorCredits">
+		<include content="Infoscreen_Widget_Template">
+			<param name="min_items" value="1" />
+			<param name="widget_view" value="Billboard" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3205" />
+			<param name="widget_position" value="5" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="votes" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="$VAR[Path_DirectorCredits]" />
+			<param name="click_action" value="Open_More_From_Director" />
+			<param name="limit" value="50" />
+			<param name="widget_header" value="$INFO[Window(home).Property(RandomDirector)]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$LOCALIZE[31211]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3205_MusicVideos">
+		<include content="Infoscreen_Widget_Template">
+			<param name="min_items" value="1" />
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3205" />
+			<param name="widget_position" value="5" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="year" />
+			<param name="sortorder" value="descending" />
+			<param name="content" value="$VAR[Path_MusicVideos]" />
+			<param name="click_action" value="Play_MusicVideos" />
+			<param name="limit" value="50" />
+			<param name="widget_header" value="$LOCALIZE[20389]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$VAR[Infoscreen_Widget_MusicVideos_Label]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3206_StudioCredits">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Strip" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3206" />
+			<param name="widget_position" value="6" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_StudioCredits]" />
+			<param name="click_action" value="Open_More_From_Studio" />
+			<param name="limit" value="50" />
+			<param name="widget_header" value="$INFO[Window(home).Property(StudioSplit.0)]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$LOCALIZE[31211]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3207_Similar">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Posters" />
+			<param name="id" value="3207" />
+			<param name="widget_position" value="7" />
+			<param name="target" value="videos" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_Similar]" />
+			<param name="click_action" value="Open_Similar" />
+			<param name="widget_header" value="$INFO[Window(home).Property(RandomGenre)]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$LOCALIZE[31211]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3207_SimilarArtists">
+		<include content="Infoscreen_Widget_Template">
+			<param name="min_items" value="1" />
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Fanart" />
+			<param name="id" value="3207" />
+			<param name="widget_position" value="7" />
+			<param name="target" value="music" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_SimilarArtists]" />
+			<param name="click_action" value="Open_Similar_Artists" />
+			<param name="widget_header" value="$LOCALIZE[31214]" />
+			<param name="widget_info" value="" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3207_SimilarAlbums">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Square" />
+			<param name="id" value="3207" />
+			<param name="widget_position" value="7" />
+			<param name="target" value="music" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_SimilarAlbums]" />
+			<param name="click_action" value="Open_Similar_Albums" />
+			<param name="widget_header" value="$VAR[Infoscreen_Widget_SimilarAlbums_Label]" />
+			<param name="widget_info" value="$VAR[Copacetic_Divider_Bold,, ]$LOCALIZE[31211]" />
+		</include>
+	</include>
+
+	<include name="Infoscreen_Widget_3207_SimilarSongs">
+		<include content="Infoscreen_Widget_Template">
+			<param name="widget_view" value="Grid" />
+			<param name="widget_display" value="Square" />
+			<param name="id" value="3207" />
+			<param name="widget_position" value="7" />
+			<param name="target" value="music" />
+			<param name="sortby" value="random" />
+			<param name="sortorder" value="ascending" />
+			<param name="content" value="$VAR[Path_SimilarSongs]" />
+			<param name="widget_header" value="$LOCALIZE[31215]" />
+			<param name="click_action" value="Play_All_Songs" />
+			<param name="widget_info" value="" />
+		</include>
+	</include>
+
+</includes>

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+	<include name="Infoscreen_Header_Template">
+		<param name="windowname" />
+		<param name="background_visible" default="true" />
+		<param name="content_visible" default="true" />
+		<param name="window_animation_background" default="WindowOpenClose_Fade_Delayed_Animation" />
+		<param name="visible_animation_background" default="VisibleHidden_Fade_Animation" />
+		<param name="window_animation_content" default="WindowOpenClose_Fade_Delayed_Long_Animation" />
+		<param name="visible_animation_content" default="Visible_Fade_Delayed_Long_Animation" />
+		<definition>
+			<include content="Infoscreen_Menu" />
+			<include content="User_Scroll_Delay" />
+			<include content="Music_Player_Controls" condition="Skin.HasSetting(Music_Player_Enabled)" />
+			<include content="Infoscreen_Path_Tracer_Button" condition="Window.Is(movieinformation)">
+				<param name="window" value="movieinformation" />
+			</include>
+			<include content="Infoscreen_Path_Tracer_Button" condition="Window.Is(musicinformation)">
+				<param name="window" value="musicinformation" />
+			</include>
+			<include content="MyViews_Multiart_Labels">
+				<param name="include_type_label" value="false" />
+				<param name="template" value="Infoscreen_Multiart" />
+			</include>
+			<!-- Background -->
+			<include content="Simple_ListIcon" condition="Window.Is(movieinformation) | Window.Is(musicinformation) | Window.Is(addoninformation)">
+				<param name="visible" value="!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[background_visible]" />
+				<param name="texture" value="$VAR[Infoscreen_Background_Texture]" />
+				<param name="fade_diffuse_override" value="true" />
+				<param name="fadetime" value="720" />
+				<include content="$PARAM[visible_animation_background]" />
+				<include content="$PARAM[window_animation_background]" />
+				<animation effect="fadediffuse" end="ff404040" time="0" condition="true">Conditional</animation> <!-- 25% alpha -->
+				<animation effect="fadediffuse" end="ff9a9a9a" time="360" tween="sine" easing="inout" reversible="true" condition="String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[207]) | String.IsEqual(Window($PARAM[windowname]).Property(Focused_Button),$LOCALIZE[21887])">Conditional</animation> <!-- 15% alpha: 60% of 25% -->
+				<include content="Ken_Burns_Effect_Animation"/>
+			</include>
+			<!-- Artwork -->
+			<control type="group">
+				<include content="$PARAM[window_animation_background]" />
+				<visible>!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[content_visible]</visible>
+				<include content="$PARAM[visible_animation_background]" />
+				<include content="Transparent_Dialog_Panel" condition="[Window.Is(musicinformation) + String.IsEqual(ListItem.DBType,album)] | Window.Is(songinformation) | Window.Is(addoninformation) | Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)">
+					<param name="visible" value="[!ControlGroup(3000).HasFocus(10) + !ControlGroup(3000).HasFocus(12) + !Window.Is(addoninformation)] | [Window.Is(addoninformation) + !ControlGroup(3000).HasFocus(99)] | Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)" />
+					<param name="left" value="720" />
+					<param name="colordiffuse" value="$VAR[Dark_Grey_Color]" />
+					<include content="VisibleHidden_Fade_Delayed_Animation" />
+					<animation effect="zoom" end="60,180,1800,720" time="0" condition="Window.Is(pvrguideinfo) | Window.Is(pvrrecordinginfo)">Conditional</animation>
+				</include>
+				<include content="Simple_ListIcon" condition="[Window.Is(musicinformation) + String.IsEqual(ListItem.DBType,album)] | Window.Is(songinformation) | Window.Is(addoninformation)">
+					<param name="visible" value="[!ControlGroup(3000).HasFocus(10) + !ControlGroup(3000).HasFocus(12) + !Window.Is(addoninformation)] | [Window.Is(addoninformation) + !ControlGroup(3000).HasFocus(99)]" />
+					<param name="width" value="720" />
+					<param name="top" value="180" />
+					<param name="height" value="720" />
+					<param name="texture" value="$INFO[ListItem.Art(thumb)]" />
+					<param name="fallback" value="views/dark_grey_100.png" />
+					<include content="VisibleHidden_Fade_Delayed_Animation" />
+				</include>
+				<include content="Simple_ListIcon" condition="Window.Is(songinformation)">
+					<include content="VisibleHidden_Fade_Delayed_Animation" />
+					<param name="visible" value="ControlGroup(3000).HasFocus(12)" />
+					<param name="left" value="600" />
+					<param name="width" value="720" />
+					<param name="top" value="180" />
+					<param name="height" value="720" />
+					<param name="texture" value="$INFO[ListItem.Art(thumb)]" />
+					<param name="fallback" value="views/dark_grey_100.png" />
+				</include>
+				<include content="Infoscreen_Artwork" condition="!Window.Is(pvrguideinfo) + !Window.Is(pvrrecordinginfo)">
+					<param name="visible" value="[ControlGroup(3000).HasFocus(10) + !Window.Is(addoninformation)] | [ControlGroup(3000).HasFocus(99) + Window.Is(addoninformation)]" />
+				</include>
+			</control>
+			<!-- Content -->
+			<control type="group">
+				<include content="$PARAM[window_animation_content]" />
+				<visible>!Window.IsVisible(1104) + !$EXP[Infoscreen_Widget_HasFocus] + $PARAM[content_visible] + !$EXP[TransparentDialog_IsVisible]</visible>
+				<include content="$PARAM[visible_animation_content]" />
+				<include content="Breadcrumb_Label">
+					<param name="bar" value="false" />
+					<param name="title_label" value="$VAR[Copacetic_Chevron_Left] $INFO[Window($PARAM[windowname]).Property(Focused_Button)] $VAR[Copacetic_Chevron_Right]" />
+					<param name="textcolor" value="$VAR[Breadcrumb_Label_Color]" />
+				</include>
+				<nested />
+			</control>
+		</definition>
+	</include>
+
+	<include name="Infoscreen_Furniture_Template">
+		<param name="visible" default="true" />
+		<param name="overlay" default="true" />
+		<definition>
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>!Window.IsVisible(1104) + $PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<nested />
+				<include content="Music_Player_Widget" condition="Skin.HasSetting(Music_Player_Enabled)">
+					<param name="left_label_visible" value="true" />
+					<param name="background_visible" value="false" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Fullscreen_Info">
+		<param name="color" default="$VAR[Light_Color]" />
+		<param name="show_logo" default="![String.IsEmpty(VideoPlayer.Art(clearlogo-billboard)) + String.IsEmpty(VideoPlayer.Art(clearlogo-aligned)) + String.IsEmpty(VideoPlayer.Art(clearlogo))]" />
+		<param name="info_label" default="$VAR[Info_Label_FullscreenVideo]" />
+		<param name="info_label_max_height" default="70" />
+		<param name="plot_label" default="$VAR[Plot_Label]" />
+		<param name="align" default="center" />
+		<definition>
+			<include content="Hidden_Components">
+				<control type="label" id="6003">
+					<label>$PARAM[plot_label]</label>
+				</control>
+			</include>
+			<include content="Infoscreen_Flag_Checkers">
+				<param name="VideoSource_condition" value="true" />
+				<param name="VideoCodec_condition" value="true" />
+				<param name="AudioCodec_condition" value="true" />
+			</include>
+			<control type="grouplist">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>!$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(playerprocessinfo)</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<nested />
+				<width>1560</width>
+				<centerleft>50%</centerleft>
+				<height>100%</height>
+				<orientation>vertical</orientation>
+				<align>center</align>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="Common_Details_Logo" condition="$PARAM[show_logo]">
+					<param name="align" value="center" />
+					<centerleft>50%</centerleft>
+				</include>
+				<include content="Common_Details_Textbox" condition="!$PARAM[show_logo]">
+					<param name="font" value="Billboard_Title" />
+					<param name="color" value="$PARAM[color]" />
+					<param name="label" value="$VAR[Title_Label]" />
+					<param name="align" value="$PARAM[align]" />
+					<param name="scroll" default="false" />
+				</include>
+				<include content="Common_Details_Info">
+					<param name="maxheight" value="$PARAM[info_label_max_height]" />
+					<param name="font" value="Billboard_Info" />
+					<param name="color" value="$PARAM[color]" />
+					<param name="label" value="$PARAM[info_label]" />
+					<param name="align" value="$PARAM[align]" />
+					<param name="scroll" default="false" />
+				</include>
+				<include content="Common_Details_Textbox">
+					<param name="visible" value="!String.IsEmpty(Control.GetLabel(6003))" />
+					<param name="maxheight" value="300" />
+					<param name="gap" value="60" />
+					<param name="font" value="Body" />
+					<param name="color" value="$PARAM[color]" />
+					<param name="label" value="$PARAM[plot_label]" />
+					<param name="scroll" value="true" />
+					<param name="align" value="$PARAM[align]" />
+				</include>
+				<include content="Infoscreen_Flags_Layout">
+					<param name="VideoSource_condition" value="true" />
+					<param name="VideoCodec_condition" value="true" />
+					<param name="AudioCodec_condition" value="true" />
+					<top>90</top>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="DialogContextMenu_Default_Template">
+		<control type="group">
+			<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+			<visible>!Window.IsVisible(shutdownmenu) + !Window.IsVisible(textviewer)</visible>
+			<include content="Visible_Fade_Delayed_Long_Animation" />
+			<control type="grouplist">
+				<left>960</left>
+				<top>60</top>
+				<width>900</width>
+				<height>960</height>
+				<itemgap>0</itemgap>
+				<align>center</align>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="4015" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="4016" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="4017" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="4018" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1001" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1002" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1003" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1004" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1005" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1006" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1007" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1008" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1009" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1010" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1011" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1012" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1013" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1014" />
+				</include>
+				<include content="Default_ContextMenu_Label">
+					<param name="id" value="1015" />
+				</include>
+			</control>
+		</control>
+		<control type="grouplist" id="996">
+			<visible allowhiddenfocus="true">false</visible>
+			<onup>0</onup>
+			<ondown>0</ondown>
+			<onleft>Close</onleft>
+			<onright>Close</onright>
+			<!-- Shuffle artist -->
+			<control type="button" id="4015">
+				<visible>System.AddonIsEnabled(script.copacetic.helper) + String.IsEqual(ListItem.DBType,artist)</visible>
+				<texturefocus />
+				<label>$LOCALIZE[191]</label>
+				<onclick condition="!String.IsEmpty(Window(home).Property(Widget_DBID))">RunScript(script.copacetic.helper,action=shuffle_artist,id=$INFO[Window(home).Property(Widget_DBID)])</onclick>
+				<onclick condition="String.IsEmpty(Window(home).Property(Widget_DBID))">RunScript(script.copacetic.helper,action=shuffle_artist,id=$INFO[ListItem.DBID])</onclick>
+			</control>
+			<!-- Create radiostation -->
+			<control type="button" id="4016">
+				<visible>System.AddonIsEnabled(script.copacetic.helper)</visible>
+				<visible>[String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Genre)] | [String.IsEqual(Window(home).Property(Widget_DBType),song) + !String.IsEmpty(Window(home).Property(Widget_Genre))]</visible>
+				<texturefocus />
+				<label>$LOCALIZE[31011]</label>
+				<onclick condition="!String.IsEmpty(Window(home).Property(Widget_DBID))">RunScript(script.copacetic.helper,action=play_radio,id=$INFO[Window(home).Property(Widget_DBID)])</onclick>
+				<onclick condition="String.IsEmpty(Window(home).Property(Widget_DBID))">RunScript(script.copacetic.helper,action=play_radio)</onclick>
+			</control>
+			<!-- Like/Unlike song -->
+			<control type="button" id="4017">
+				<visible>System.AddonIsEnabled(script.copacetic.helper) + Skin.String(Music_Rating_Like_Threshold) + !Window.IsVisible(musicplaylist)</visible>
+				<visible>String.IsEqual(ListItem.DBType,song) + Integer.IsLess(ListItem.UserRating,Skin.String(Music_Rating_Like_Threshold))</visible>
+				<texturefocus />
+				<label>$LOCALIZE[31009]</label>
+				<onclick>RunScript(script.copacetic.helper,action=rate_song,id=$INFO[ListItem.DBID],rating=$INFO[Skin.String(Music_Rating_Like_Threshold)])</onclick>
+			</control>
+			<control type="button" id="4018">
+				<visible>System.AddonIsEnabled(script.copacetic.helper) + Skin.String(Music_Rating_Like_Threshold) + !Window.IsVisible(musicplaylist)</visible>
+				<visible>String.IsEqual(ListItem.DBType,song) + !Integer.IsLess(ListItem.UserRating,Skin.String(Music_Rating_Like_Threshold))</visible>
+				<texturefocus />
+				<label>$LOCALIZE[31010]</label>
+				<onclick>RunScript(script.copacetic.helper,action=rate_song,id=$INFO[ListItem.DBID],rating=0)</onclick>
+			</control>
+			<!-- Default button -->
+			<control type="button" id="1000">
+				<texturefocus />
+			</control>
+		</control>
+	</include>
+
+	<include name="DialogContextMenu_Alt_Template">
+		<control type="group">
+			<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+			<visible>!Window.IsVisible(shutdownmenu) + !Window.IsVisible(textviewer)</visible>
+			<include content="Visible_Fade_Delayed_Long_Animation" />
+			<control type="group">
+				<animation effect="slide" start="0,0" end="870,0" condition="Window.IsVisible(filemanager) + String.IsEqual(Window(filemanager).Property(ActiveList),Left)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-30,0" condition="Window.IsVisible(musicplaylisteditor)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1070,0" condition="Window.IsVisible(musicplaylisteditor) + String.IsEqual(Window(musicplaylisteditor).Property(ActiveList),Left)">Conditional</animation>
+				<left>90</left>
+				<width>870</width>
+				<!-- List -->
+				<control type="grouplist" id="996">
+					<height>630</height>
+					<centertop>50%</centertop>
+					<onup>0</onup>
+					<ondown>0</ondown>
+					<onleft>Close</onleft>
+					<onright>Close</onright>
+					<orientation>vertical</orientation>
+					<align>top</align>
+					<itemgap>0</itemgap>
+					<scrolltime tween="sine" easing="inout">360</scrolltime>
+					<pagecontrol>60</pagecontrol>
+					<!-- Default button -->
+					<control type="button" id="1000">
+						<texturefocus />
+					</control>
+				</control>
+				<!-- Underline -->
+				<control type="image">
+					<animation effect="zoom" end="60,0,660,1" condition="Window.IsVisible(musicplaylisteditor)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-60,0" condition="[Window.IsVisible(filemanager) + String.IsEqual(Window(filemanager).Property(ActiveList),Left)] | [Window.IsVisible(musicplaylisteditor) + String.IsEqual(Window(musicplaylisteditor).Property(ActiveList),Left)]">Conditional</animation>
+					<animation effect="slide" end="0,90" time="0" reversible="false" condition="Container(996).Position(1)">Conditional</animation>
+					<animation effect="slide" end="0,180" time="0" reversible="false" condition="Container(996).Position(2)">Conditional</animation>
+					<animation effect="slide" end="0,270" time="0" reversible="false" condition="Container(996).Position(3)">Conditional</animation>
+					<animation effect="slide" end="0,360" time="0" reversible="false" condition="Container(996).Position(4)">Conditional</animation>
+					<animation effect="slide" end="0,450" time="0" reversible="false" condition="Container(996).Position(5)">Conditional</animation>
+					<animation effect="slide" end="0,540" time="0" reversible="false" condition="Container(996).Position(6)">Conditional</animation>
+					<left>60</left>
+					<height>1</height>
+					<top>314</top>
+					<texture colordiffuse="$VAR[Unfocused_Color]">views/white_100.png</texture>
+				</control>
+			</control>
+			<!-- Scrollbar -->
+			<control type="group">
+				<animation effect="slide" start="0,0" end="-5,0" condition="[Window.IsVisible(filemanager) + String.IsEqual(Window(filemanager).Property(ActiveList),Left)] | [Window.IsVisible(musicplaylisteditor) + String.IsEqual(Window(musicplaylisteditor).Property(ActiveList),Left)]">Conditional</animation>
+				<include content="Dialog_Divider_With_Scrollbar">
+					<param name="scrollbarvisible" value="Window.IsVisible(filemanager) | Window.IsVisible(musicplaylisteditor)" />
+					<param name="dividervisible" value="false" />
+				</include>
+			</control>
+		</control>
+	</include>
+
+</includes>

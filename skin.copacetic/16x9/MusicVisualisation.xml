@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<!-- visualisation -->
+	<onload>Skin.TimerStart(music_visualisation)</onload>
+	<onload condition="System.AddonIsEnabled(script.artistslideshow) + !Skin.HasSetting(hide_background_fanart)">RunScript(script.artistslideshow)</onload>
+	<onunload>Skin.TimerStop(music_visualisation)</onunload>
+	<backgroundcolor>$VAR[Dark_Color]</backgroundcolor>
+	<include content="WindowOpenClose_Fade_Delayed_Animation" />
+	<controls>
+		<include content="Hidden_Components">
+			<control type="label" id="6011">
+				<label>$VAR[Rating_Label]</label>
+			</control>
+		</include>
+		<include content="MyViews_Multiart_Labels">
+			<param name="include_type_label" value="false" />
+			<param name="template" value="visualisation_Multiart" />
+		</include>
+		<!-- Background -->
+		<include content="Light_Theme_Background">
+			<param name="visible" value="$EXP[visualisation_Background_IsEmpty]" />
+		</include>
+		<include content="Simple_ListIcon" condition="!Skin.HasSetting(visualisation_Disable_Background)">
+			<param name="visible" value="!Visualisation.Enabled | [Skin.TimerIsRunning(music_visualisation) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(music_visualisation),1)]" />
+			<param name="texture" value="$VAR[visualisation_Background_Texture]" />
+			<param name="fadetime" value="360" />
+			<param name="fade_diffuse_override" value="true" />
+			<include content="VisibleHidden_Fade_Animation" condtion="!Visualisation.Enabled" />
+			<include content="Ken_Burns_Effect_Animation" />
+			<colordiffuse>$VAR[Windows_Artwork_Diffuse]</colordiffuse>
+		</include>
+		<include content="Visualisation" condition="Visualisation.Enabled" />
+		<!-- Foreground -->
+		<include content="Transparent_Dialog_Panel">
+			<param name="visible" value="[Player.ShowInfo | Window.IsActive(musicosd)] + !Window.IsVisible(1103) + !$EXP[TransparentDialog_IsVisible]" />
+			<param name="top" value="240" />
+			<param name="bottom" value="240" />
+			<animation effect="zoom" start="60,240,1800,600" end="240,600,1500,480" time="0" condition="!Skin.String(visualisation_Layout,Large)">Conditional</animation>
+			<include content="Visible_Fade_Animation" />
+		</include>
+		<!-- Large details -->
+		<include content="Default_NoPanel_Layout" condition="Skin.String(visualisation_Layout,Large)">
+			<param name="visible" value="[Player.ShowInfo | Window.IsActive(musicosd)] + !Window.IsVisible(1103) + !$EXP[TransparentDialog_IsVisible]" />
+			<param name="visible_animation" value="Visible_Fade_Delayed_Animation" />
+			<include content="Variable_Title_Label">
+				<param name="label" value="$INFO[MusicPlayer.Title]" />
+			</include>
+			<include content="visualisation_Title_and_Info">
+				<param name="visible" value="!Window.IsVisible(musicosd)" />
+				<param name="left" value="120" />
+				<param name="title" value="$INFO[MusicPlayer.Artist]" />
+				<param name="info" value="$INFO[MusicPlayer.Year]$VAR[MusicPlayer_Album_Divider, , ]$INFO[MusicPlayer.Album]" />
+			</include>
+			<include content="visualisation_Title_and_Info">
+				<param name="visible" value="MusicPlayer.HasNext + !String.IsEmpty(MusicPlayer.offset(1).Title)" />
+				<param name="left" value="1380" />
+				<param name="textalign" value="right" />
+				<param name="title" value="$LOCALIZE[209]" />
+				<param name="info" value="$INFO[MusicPlayer.offset(1).Title]$VAR[MusicPlayer_Offset(1)_Artist_Divider, , ]$INFO[MusicPlayer.offset(1).Artist]" />
+			</include>
+			<include content="Simple_ListIcon">
+				<param name="id" value="6301" />
+				<param name="left" value="600" />
+				<param name="top" value="180" />
+				<param name="width" value="720" />
+				<param name="height" value="720" />
+				<param name="texture" value="$INFO[MusicPlayer.Cover]" />
+				<animation effect="fadediffuse" end="ff3f3f3f" time="360" condition="Window.IsVisible(musicosd) | Player.Paused | Player.Rewinding | Player.Forwarding" reversible="true">Conditional</animation>
+				<include content="Dialog_Over_Artwork_Fadediffuse_Animation" />
+			</include>
+			<include content="Like_focused" condition="Skin.String(Music_Rating_Like_Threshold)">
+				<param name="visible" value="!Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold)) + !Window.IsVisible(musicosd)" />
+				<param name="color" value="$VAR[Accent_Color]" />
+				<animation effect="slide" end="315,-315" time="0" condition="true">Conditional</animation>
+			</include>
+		</include>
+		<!-- Small details -->
+		<include content="Default_NoPanel_Layout" condition="!Skin.String(visualisation_Layout,Large)">
+			<param name="visible" value="[Player.ShowInfo | Window.IsActive(musicosd)] + !Window.IsVisible(1103) + !$EXP[TransparentDialog_IsVisible]" />
+			<param name="visible_animation" value="Visible_Fade_Delayed_Animation" />
+			<include content="visualisation_Title_and_Info">
+				<param name="top" value="660" />
+				<param name="left" value="600" />
+				<param name="width" value="1020" />
+				<param name="title" value="$INFO[MusicPlayer.Title]" />
+				<param name="title_font" value="Showcase_Title" />
+				<param name="info" value="[UPPERCASE]$INFO[MusicPlayer.Artist]$VAR[MusicPlayer_Year_Divider, ]$INFO[MusicPlayer.Year, ]$VAR[MusicPlayer_Album_Divider, , ]$INFO[MusicPlayer.Album][/UPPERCASE]" />
+				<param name="info_font" value="Visualisation_Info" />
+				<include content="Like_focused" condition="Skin.String(Music_Rating_Like_Threshold)">
+					<param name="visible" value="!Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold)) + !Window.IsVisible(musicosd)" />
+					<param name="color" value="$VAR[Accent_Color]" />
+					<include content="Visible_Fade_Delayed_Animation" />
+					<animation effect="slide" end="-490,30" time="0" condition="true">Conditional</animation>
+				</include>
+				<include content="Infoscreen_Stars_Layout" condition="!Skin.String(Music_Rating_Like_Threshold)">
+					<visible>!String.IsEmpty(Control.GetLabel(6011))</visible>
+				</include>
+			</include>
+			<include content="visualisation_Title_and_Info">
+				<param name="visible" value="MusicPlayer.HasNext + !String.IsEmpty(MusicPlayer.offset(1).Title) + !Window.IsVisible(volumebar)" />
+				<param name="top" value="30" />
+				<param name="left" value="900" />
+				<param name="width" value="960" />
+				<param name="align" value="left" />
+				<param name="textalign" value="right" />
+				<param name="textcolor" value="$VAR[visualisation_NextUp_Label_Color]" />
+				<param name="title" value="$LOCALIZE[209]" />
+				<param name="info" value="$INFO[MusicPlayer.offset(1).Title]$VAR[MusicPlayer_Offset(1)_Artist_Divider, , ]$INFO[MusicPlayer.offset(1).Artist]" />
+			</include>
+			<include content="Simple_ListIcon">
+				<param name="id" value="6301" />
+				<param name="left" value="180" />
+				<param name="top" value="660" />
+				<param name="width" value="360" />
+				<param name="height" value="360" />
+				<param name="texture" value="$INFO[MusicPlayer.Cover]" />
+				<animation effect="fadediffuse" end="ff3f3f3f" time="360" condition="Window.IsVisible(musicosd) | Player.Paused | Player.Rewinding | Player.Forwarding" reversible="true">Conditional</animation>
+				<include content="Dialog_Over_Artwork_Fadediffuse_Animation" />
+			</include>
+		</include>
+	</controls>
+</window>

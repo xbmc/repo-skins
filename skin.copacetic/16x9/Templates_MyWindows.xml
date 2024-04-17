@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+	<include name="Common_Controls">
+		<control type="button" id="2">
+			<description>Select viewtype</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="3">
+			<description>Select sort method</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="togglebutton" id="4">
+			<description>Select sortmode (ascending or descending)</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<include content="User_Scroll_Delay" />
+		<!-- Set focus to view -->
+		<control type="button" id="4012">
+			<visible allowhiddenfocus="true">false</visible>
+			<onfocus>ClearProperty(Scrollbars,home)</onfocus>
+			<onfocus condition="!Window.Is(tvguide)">SetFocus(50)</onfocus>
+			<onfocus condition="Window.Is(tvguide)">SetFocus(10)</onfocus>
+		</control>
+		<!-- Set focus to scrollbars -->
+		<control type="button" id="4013">
+			<visible allowhiddenfocus="true">false</visible>
+			<onfocus condition="!String.IsEmpty(Window(home).Property(Multiart_Fadeout))">ClearProperty(Multiart_Fadeout,home)</onfocus>
+			<onfocus>SetProperty(Scrollbars,true,home)</onfocus>
+			<onfocus>SetFocus(60)</onfocus>
+		</control>
+		<!-- Hidden Controls for animation trigger on menu switching and resetting multiart if enabled-->
+		<control type="button" id="4014">
+			<visible allowhiddenfocus="true">false</visible>
+			<onfocus>SetProperty(Options_Switching,Active,Home)</onfocus>
+			<onfocus>SetFocus(50)</onfocus>
+			<onfocus>SetFocus(3000)</onfocus>
+			<include content="Set_Multiart_OnFocus_Conditions" condition="Skin.HasSetting(Multiart_Slideshow) + [Window.Is(videos) | Window.Is(music)]" />
+		</control>
+		<control type="group" id="5005">
+			<visible>Control.HasFocus(4014)</visible>
+			<animation effect="slide" end="0,0" time="360" reversible="false">Hidden</animation>
+		</control>
+		<!-- Container Update Bounce Test For Info_Infoscreens_Label -->
+		<control type="button" id="6001">
+			<visible allowhiddenfocus="true">false</visible>
+			<onfocus condition="Container.IsUpdating">SetFocus(6002)</onfocus>
+			<onfocus condition="!Container.IsUpdating">SetFocus(50)</onfocus>
+			<onfocus condition="!Container.IsUpdating">Action(Info)</onfocus>
+		</control>
+		<control type="button" id="6002">
+			<visible allowhiddenfocus="true">false</visible>
+			<onfocus condition="Container.IsUpdating">SetFocus(6001)</onfocus>
+			<onfocus condition="!Container.IsUpdating">SetFocus(50)</onfocus>
+			<onfocus condition="!Container.IsUpdating">Action(Info)</onfocus>
+		</control>
+		<include content="Embedded_VideoPlayer">
+			<param name="visible" value="String.IsEqual(Window(home).Property(Trailer_Autoplay),true)" />
+		</include>
+		<include content="Music_Player_Controls" condition="Skin.HasSetting(Music_Player_Enabled)" />
+		<include content="Trailer_Autoplay_Mask" condition="Skin.HasSetting(Trailer_Autoplay) + Window.Is(videos)" />
+	</include>
+
+	<include name="addonbrowser_Controls">
+		<control type="radiobutton" id="5">
+			<description>Enable auto update</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="radiobutton" id="6">
+			<description>Enable addon notifications</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="radiobutton" id="7">
+			<description>Enable language filter</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="radiobutton" id="8">
+			<description>Hide broken addons</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="9">
+			<description>Check for repo updates</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+	</include>
+
+	<include name="addonbrowser_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="[$EXP[Container_Addons_Repo] + $EXP[Infoscreen_IsVisible]] | $EXP[Container_Addons_NonRepo]" />
+			</include>
+			<include content="Background_Multiart_Global" condition="$EXP[Library_Has_Content]">
+				<param name="visible" value="$PARAM[visible] + !$EXP[Container_Addons_NonRepo]" />
+				<param name="fadein_animation_condition" value="!$EXP[Background_FadeIn_Exceptions]" />
+				<param name="fadeout_animation_condition" value="!$EXP[Background_FadeOut_Exceptions]" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display">
+					<param name="art_icon" value="addonbrowser" />
+				</include>
+				<include content="ShowcaseView_Container" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="ShowcaseView_Display" condition="$EXP[ShowcaseView_Enabled]">
+					<param name="art_icon" value="addonbrowser" />
+				</include>
+				<include content="StripView_Container" condition="$EXP[StripView_Enabled]" />
+				<include content="StripView_Display" condition="$EXP[StripView_Enabled]">
+					<param name="art_icon" value="addonbrowser" />
+				</include>
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+				<include content="GridView_Container" condition="$EXP[GridView_Enabled]">
+					<param name="art_icon" value="addonbrowser" />
+				</include>
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+				<include content="ShowcaseView_Details" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Details" condition="$EXP[StripView_Enabled]" />
+				<include content="GridView_Overlay_Details" condition="$EXP[GridView_Enabled]" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="favourites_Controls">
+		<control type="edit" id="19">
+			<description>Filter the media files to only show items that include the specified string in the name</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+	</include>
+
+	<include name="favourites_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible] + !$EXP[TransparentDialog_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="!$EXP[Background_IsVisible]" />
+			</include>
+			<include content="Background_Multiart_Global">
+				<param name="visible" value="!$EXP[Infoscreen_IsVisible]" />
+				<param name="fadein_animation_condition" value="!$EXP[Background_FadeIn_Exceptions]" />
+				<param name="fadeout_animation_condition" value="!$EXP[Background_FadeOut_Exceptions]" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display" />			
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="ListView_Container" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="music_Controls">
+		<control type="edit" id="8">
+			<description>Search for a string anywhere in the Kodi music database</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="radiobutton" id="16">
+			<description>Start party mode (randomly play songs from your entire music collection)</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="edit" id="19">
+			<description>Filter the media files to only show items that include the specified string in the name</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="20">
+			<description>Update library</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+	</include>
+
+	<include name="videos_Controls">
+		<control type="edit" id="8">
+			<description>Search for a string anywhere in the Kodi music database</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="14">
+			<description>Show only unwatched or all videos</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="edit" id="19">
+			<description>Filter the media files to only show items that include the specified string in the name</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="20">
+			<description>Update library</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<include content="Hidden_List" condition="!Skin.HasSetting(Secondary_List_Enabled)">
+			<param name="visible" value="!Skin.HasSetting(Secondary_List_Enabled) + [ListItem.IsCollection | Container.Content(playlist)]" />
+			<param name="sortby" value="year" />
+			<param name="sortorder" value="ascending" />
+		</include>
+	</include>
+
+	<include name="videos_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="!$EXP[Background_IsVisible]" />
+				<include content="Trailer_Autoplay_Fade_Delayed_Animation" condition="Skin.HasSetting(Trailer_Autoplay) + Window.Is(videos)" />
+			</include>
+			<include content="Background_Multiart_Global" condition="$EXP[Library_Has_Content]">
+				<param name="visible" value="$PARAM[visible] + [$EXP[Content_HasBackground] | Container.Content()] + !$EXP[ListView_Display_IsThumbnails] + !$EXP[GridView_IsVisible]" />
+				<param name="fadein_animation_condition" value="!$EXP[Background_FadeIn_Exceptions_music]" />
+				<param name="fadeout_animation_condition" value="!$EXP[Background_FadeOut_Exceptions_music]" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible] + !Window.IsVisible(smartplaylisteditor)</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="Trailer_Autoplay_Fade_Animation" condition="Skin.HasSetting(Trailer_Autoplay)" />
+				<include content="Secondary_List_Array" condition="Skin.HasSetting(Secondary_List_Enabled)" />
+				<include content="ListView_Display" />
+				<include content="BillboardView_Container" condition="$EXP[BillboardView_Enabled]" />
+				<include content="BillboardView_Display" condition="$EXP[BillboardView_Enabled]" />
+				<include content="ShowcaseView_Container" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="ShowcaseView_Display" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Container" condition="$EXP[StripView_Enabled]" />
+				<include content="StripView_Display" condition="$EXP[StripView_Enabled]" />
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+				<include content="GridView_Container" condition="$EXP[GridView_Enabled]" />
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible] + !Window.IsVisible(smartplaylisteditor)</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="Trailer_Autoplay_Fade_Animation" condition="Skin.HasSetting(Trailer_Autoplay)" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+				<include content="BillboardView_Details" condition="$EXP[BillboardView_Enabled]" />
+				<include content="ShowcaseView_Details" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Details" condition="$EXP[StripView_Enabled]" />
+				<include content="GridView_Overlay_Details" condition="$EXP[GridView_Enabled]" />
+				<include content="MediaFlags" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="pictures_Controls">
+		<control type="button" id="6">
+			<description>Start a picture slideshow</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="7">
+			<description>Start a recursive picture slideshow</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="radiobutton" id="9">
+			<description>Randomize the picture slideshow</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<include content="Hidden_List">
+			<param name="id" value="3100" />
+			<param name="visible" value="true" />
+			<param name="content" value="$INFO[ListItem.FolderPath]" />
+		</include>
+	</include>
+
+	<include name="pictures_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible] + !Window.IsVisible(slideshow)" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="!Container.Content(images) + !$EXP[ShowcaseView_Display_HasBackground]" />
+			</include>
+			<include content="Background_Multiart_Global">
+				<param name="visible" value="$PARAM[visible] + !Container.Content(images) + !Container.Content(addons)" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display">
+					<param name="art_icon" value="pictures" />
+				</include>
+				<include content="ShowcaseView_Container" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="ShowcaseView_Display" condition="$EXP[ShowcaseView_Enabled]">
+					<param name="art_icon" value="pictures" />
+				</include>
+				<include content="StripView_Container" condition="$EXP[StripView_Enabled]" />
+				<include content="StripView_Display" condition="$EXP[StripView_Enabled]">
+					<param name="art_icon" value="addonbrowser" />
+				</include>
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+				<include content="GridView_Container" condition="$EXP[GridView_Enabled]">
+					<param name="art_icon" value="pictures" />
+				</include>
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+				<include content="ShowcaseView_Details" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Details" condition="$EXP[StripView_Enabled]" />
+				<include content="GridView_Overlay_Details" condition="$EXP[GridView_Enabled]" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="programs_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="!$EXP[BillboardView_IsVisible] + !$EXP[ShowcaseView_Display_HasBackground]" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display" />
+				<include content="BillboardView_Container" condition="$EXP[BillboardView_Enabled]" />
+				<include content="BillboardView_Display" condition="$EXP[BillboardView_Enabled]" />
+				<include content="ShowcaseView_Container" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="ShowcaseView_Display" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Container" condition="$EXP[StripView_Enabled]" />
+				<include content="StripView_Display" condition="$EXP[StripView_Enabled]" />
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+				<include content="GridView_Container" condition="$EXP[GridView_Enabled]" />
+				<include content="MediaFlags" />
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+				<include content="BillboardView_Details" condition="$EXP[BillboardView_Enabled]" />
+				<include content="ShowcaseView_Details" condition="$EXP[ShowcaseView_Enabled]" />
+				<include content="StripView_Details" condition="$EXP[StripView_Enabled]" />
+				<include content="GridView_Overlay_Details" condition="$EXP[GridView_Enabled]" />
+				<include content="MediaFlags" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="tvguide_Controls">
+		<control type="button" id="28">
+			<description>Channel groups button</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="label" id="29">
+			<description>View name / Search term</description>
+			<visible>false</visible>
+		</control>
+		<control type="label" id="30">
+			<description>Channel groups name / Saved status</description>
+			<visible>false</visible>
+		</control>
+	</include>
+
+	<include name="tvguide_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Background_Multiart_Global">
+				<param name="fadein_animation_condition" value="!$EXP[Background_FadeIn_Exceptions]" />
+				<param name="fadeout_animation_condition" value="!$EXP[Background_FadeOut_Exceptions]" />
+			</include>
+			<include content="Embedded_VideoPlayer">
+				<param name="visible" value="VideoPlayer.Content(livetv)" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="Default_Dialog_Panel_Layout">
+					<param name="visible" value="!$EXP[TransparentDialog_IsVisible]" />
+					<param name="panel_edge_top" value="165" />
+					<param name="panel_edge_bottom" value="0" />
+					<param name="panel_edge_left" value="60" />
+					<param name="panel_edge_right" value="60" />
+					<param name="panel_colordiffuse" value="$VAR[Panel_Mask]" />
+					<include content="Breadcrumb_Label">
+						<param name="visible" value="Control.HasFocus(11)" />
+						<param name="animation" value="Visible_Fade_Delayed_Animation" />
+						<param name="bar" value="false" />
+						<param name="title_label" value="$VAR[tvguide_Group_Label]" />
+						<param name="textcolor" value="$VAR[Light_Color]" />
+					</include>
+					<control type="list" id="11">
+						<visible allowhiddenfocus="true">false</visible>
+						<orientation>horizontal</orientation>
+						<onup>SetFocus(3000,0,absolute)</onup>
+						<ondown>10</ondown>
+						<itemlayout width="100" height="100" />
+						<focusedlayout width="100" height="100" />
+					</control>
+					<control type="epggrid" id="10">
+						<description>EPG Grid</description>
+						<top>180</top>
+						<height>630</height>
+						<width>1680</width>
+						<centerleft>50%</centerleft>
+						<scrolltime tween="sine" easing="inout">360</scrolltime>
+						<timeblocks>30</timeblocks>
+						<rulerunit>6</rulerunit>
+						<progresstexture border="0,92,3,0" colordiffuse="$VAR[Accent_Color]">pvr/tvguide_progress_indicator.png</progresstexture>
+						<orientation>vertical</orientation>
+						<onup>11</onup>
+						<ondown>SetFocus(3000,0,absolute)</ondown>
+						<pagecontrol>60</pagecontrol>
+						<rulerlayout width="210" height="90">
+							<control type="label" id="2">
+								<label>$INFO[ListItem.Label]</label>
+								<font>PVR_Time</font>
+								<width>1020</width>
+								<centertop>50%</centertop>
+								<height>30</height>
+								<textcolor>$VAR[Light_Color]</textcolor>
+								<textoffsetx>10</textoffsetx>
+							</control>
+							<control type="image">
+								<centertop>50%</centertop>
+								<height>30</height>
+								<texture colordiffuse="$VAR[Accent_Color]" border="4">pvr/tvguide_focusedlayout_border_left.png</texture>
+							</control>
+						</rulerlayout>
+						<channellayout width="540" height="90">
+							<control type="image">
+								<height>90</height>
+								<width>90</width>
+								<texture>$INFO[ListItem.Art(thumb)]</texture>
+								<aspectratio>keep</aspectratio>
+							</control>
+							<control type="label" id="1">
+								<label>$INFO[ListItem.Label]</label>
+								<width>450</width>
+								<left>90</left>
+								<textoffsetx>30</textoffsetx>
+								<scroll>false</scroll>
+							</control>
+						</channellayout>
+						<focusedchannellayout width="540" height="90">
+							<control type="image" id="1">
+								<bottom>0</bottom>
+								<height>1</height>
+								<texture colordiffuse="$VAR[Unfocused_Color]">views/white_100.png</texture>
+								<animation effect="zoom" end="311,1" time="0" condition="true">Conditional</animation>
+							</control>
+							<control type="image">
+								<height>90</height>
+								<width>90</width>
+								<texture>$INFO[ListItem.Art(thumb)]</texture>
+								<aspectratio>keep</aspectratio>
+							</control>
+							<control type="label" id="1">
+								<label>$INFO[ListItem.Label]</label>
+								<textcolor>$VAR[epggrid_Focused_Color]</textcolor>
+								<left>90</left>
+								<width>450</width>
+								<textoffsetx>30</textoffsetx>
+								<scroll>false</scroll>
+							</control>
+						</focusedchannellayout>
+						<itemlayout width="45" height="90">
+							<control type="label" id="1">
+								<label>$INFO[ListItem.Label]</label>
+								<textoffsetx>15</textoffsetx>
+								<scroll>false</scroll>
+							</control>
+						</itemlayout>
+						<focusedlayout width="45" height="90">
+							<control type="image" id="14">
+								<texture colordiffuse="$VAR[Dark_Grey_Color]">views/white_100.png</texture>
+							</control>
+							<control type="image" id="1">
+								<bottom>0</bottom>
+								<height>1</height>
+								<texture colordiffuse="$VAR[Unfocused_Color]">views/white_100.png</texture>
+							</control>
+							<control type="image" id="1">
+								<height>45</height>
+								<bottom>0</bottom>
+								<texture colordiffuse="$VAR[Unfocused_Color]" border="2">pvr/tvguide_focusedlayout_border.png</texture>
+							</control>
+							<control type="label" id="1">
+								<textcolor>$VAR[epggrid_Focused_Color]</textcolor>
+								<label>$INFO[ListItem.Label]</label>
+								<textoffsetx>15</textoffsetx>
+								<scroll>false</scroll>
+							</control>
+						</focusedlayout>
+					</control>
+					<include content="Dialog_Divider_With_Scrollbar">
+						<param name="scrollbarvisible" value="true" />
+						<param name="id" value="60" />
+						<param name="height" value="540" />
+						<param name="left" value="660" />
+						<param name="scrollbaralignleft" value="true" />
+					</include>
+					<!-- Details -->
+					<include content="PVR_Info_Box">
+						<param name="left" value="470" />
+						<param name="right" value="120" />
+						<param name="bottom" value="30" />
+						<param name="height" value="210" />
+						<param name="plot_height_max" value="100" />
+					</include>
+					<control type="image">
+						<bottom>45</bottom>
+						<height>180</height>
+						<left>120</left>
+						<width>320</width>
+						<texture>$INFO[ListItem.Icon]</texture>
+						<aspectratio align="right" aligny="center">scale</aspectratio>
+						<fadetime>360</fadetime>
+					</control>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="tvsearch_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<definition>
+			<!-- Background -->
+			<include content="Background_Multiart_Global">
+				<param name="fadein_animation_condition" value="!$EXP[Background_FadeIn_Exceptions]" />
+				<param name="fadeout_animation_condition" value="!$EXP[Background_FadeOut_Exceptions]" />
+			</include>
+			<include content="Embedded_VideoPlayer">
+				<param name="visible" value="VideoPlayer.Content(livetv)" />
+			</include>
+			<!-- Layer 1 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display" />
+			</control>
+			<!-- Layer 2 -->
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="Trailer_Autoplay_Fade_Animation" condition="Skin.HasSetting(Trailer_Autoplay)" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+				<include content="Breadcrumb_Label">
+					<param name="bar" value="true" />
+					<param name="title_label_id" value="29" />
+					<param name="info_label_visible" value="true" />
+					<param name="info_label" value="$VAR[Copacetic_Divider_Bold] $LOCALIZE[137]$INFO[Control.GetLabel(30), ]" />
+					<param name="textcolor" value="$VAR[Light_Color]" />
+				</include>
+				<include content="Default_Dialog_Panel_Layout">
+					<param name="visible" value="!$EXP[TransparentDialog_IsVisible] + ListItem.HasEPG" />
+					<param name="panel_edge_left" value="1140" />
+					<param name="panel_edge_right" value="60" />
+					<param name="panel_colordiffuse" value="$VAR[Panel_Mask]" />
+					<include content="PVR_Info_Box">
+						<param name="left" value="1200" />
+						<param name="right" value="120" />
+						<param name="bottom" value="225" />
+						<param name="height" value="630" />
+						<param name="plot_height_max" value="540" />
+					</include>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="videoplaylist_Controls">
+		<control type="radiobutton" id="20">
+			<description>Shuffle the playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="21">
+			<description>Save the playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="22">
+			<description>Clear the playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="23">
+			<description>Play the playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="24">
+			<description>Play next item in playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="25">
+			<description>Play previous item in playlist</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="button" id="26">
+			<description>Put the playlist on repeat</description>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+	</include>
+
+	<include name="videoplaylist_Views">
+		<param name="visible" default="!$EXP[Infoscreen_IsVisible]" />
+		<param name="art_icon" default="playlist" />
+		<definition>
+			<!-- Background -->
+			<include content="Light_Theme_Background">
+				<param name="visible" value="!$EXP[Background_IsVisible]" />
+				<include content="Trailer_Autoplay_Fade_Delayed_Animation" condition="Skin.HasSetting(Trailer_Autoplay) + Window.Is(videos)" />
+			</include>
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<include content="ListView_Display">
+					<param name="art_icon" value="$PARAM[art_icon]" />
+				</include>
+				<include content="Shared_Dialog_Layouts" condition="Skin.HasSetting(Music_Player_Enabled)" />
+			</control>
+			<control type="group">
+				<include content="WindowOpenClose_Fade_Delayed_Long_Animation" />
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Long_Animation" />
+				<include content="ListView_Container" />
+				<include content="ListView_Details" />
+			</control>
+		</definition>
+	</include>
+
+	<include name="OptionsMenu_Slides">
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,12)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,11)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,10)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,9)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,8)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,7)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,6)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,5)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,4)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,3)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,2)">Conditional</animation>
+		<animation effect="slide" start="0" end="0,30" time="0" condition="Integer.IsLessOrEqual(Container(3000).NumItems,1)">Conditional</animation>
+	</include>
+
+	<include name="Hidden_Options_Menu">
+		<param name="target_id" />
+		<definition>
+			<control type="fixedlist" id="3000">
+				<viewtype label="535">list</viewtype>
+				<visible allowhiddenfocus="true">String.IsEqual(Window(home).Property(OptionsMenu),Active) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(virtualkeyboard) + !Window.IsVisible(selectdialog)</visible>
+				<include content="VisibleHidden_Fade_Delayed_Animation" />
+				<include content="OptionsMenu_Slides" />
+				<description>Options menu</description>
+				<left>120</left>
+				<width>1080</width>
+				<centertop>50%</centertop>
+				<height>780</height>
+				<onup>0</onup>
+				<ondown>0</ondown>
+				<onback>4012</onback>
+				<onfocus>ClearProperty(Scrollbars,home)</onfocus>
+				<onfocus>SetProperty(OptionsMenu,Active,home)</onfocus>
+				<onunfocus>ClearProperty(OptionsMenu,home)</onunfocus>
+				<onleft condition="String.IsEmpty(Container(3000).ListItem.Property(ActionLeft))">4012</onleft>
+				<onright condition="String.IsEmpty(Container(3000).ListItem.Property(ActionRight))">4012</onright>
+				<onleft condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionLeft))">$INFO[Container(3000).ListItem.Property(ActionLeft)]</onleft>
+				<onright condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionRight))">$INFO[Container(3000).ListItem.Property(ActionRight)]</onright>
+				<onleft condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionLeft2))">$INFO[Container(3000).ListItem.Property(ActionLeft2)]</onleft>
+				<onright condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionRight2))">$INFO[Container(3000).ListItem.Property(ActionRight2)]</onright>
+				<onleft condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionLeft3))">$INFO[Container(3000).ListItem.Property(ActionLeft3)]</onleft>
+				<onright condition="!String.IsEmpty(Container(3000).ListItem.Property(ActionRight3))">$INFO[Container(3000).ListItem.Property(ActionRight3)]</onright>
+				<!-- Reset multiart on viewchange -->
+				<onleft condition="Container(3000).HasFocus(1)">SetFocus(4014)</onleft>
+				<onright condition="Container(3000).HasFocus(1)">SetFocus(4014)</onright>
+				<!-- Transition on left or right -->
+				<onleft condition="Container(3000).HasFocus(2)">SetFocus(4014)</onleft>
+				<onright condition="Container(3000).HasFocus(2)">SetFocus(4014)</onright>
+				<!-- Transition on left only -->
+				<onleft condition="Container(3000).HasFocus(3)">SetFocus(4014)</onleft>
+				<!-- Transition on right only -->
+				<onright condition="Container(3000).HasFocus(4)">SetFocus(4014)</onright>
+				<!-- Showcase: Turn off Logos & transition on left only -->
+				<onleft condition="Container(3000).HasFocus(5) + Container.Content(movies)">Skin.SetString(ShowcaseView_Logo_Movies,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(5) + Container.Content(sets)">Skin.SetString(ShowcaseView_Logo_Sets,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(5) + Container.Content(tvshows)">Skin.SetString(ShowcaseView_Logo_TVShows,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(5) + Container.Content(artists)">Skin.SetString(ShowcaseView_Logo_Artists,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(5)">SetFocus(4014)</onleft>
+				<!-- Showcase: Turn off Logos & transition on right only -->
+				<onright condition="Container(3000).HasFocus(6) + Container.Content(movies)">Skin.SetString(ShowcaseView_Logo_Movies,Off)</onright>
+				<onright condition="Container(3000).HasFocus(6) + Container.Content(sets)">Skin.SetString(ShowcaseView_Logo_Sets,Off)</onright>
+				<onright condition="Container(3000).HasFocus(6) + Container.Content(tvshows)">Skin.SetString(ShowcaseView_Logo_TVShows,Off)</onright>
+				<onright condition="Container(3000).HasFocus(6) + Container.Content(artists)">Skin.SetString(ShowcaseView_Logo_Artists,Off)</onright>
+				<onright condition="Container(3000).HasFocus(6)">SetFocus(4014)</onright>
+				<!-- Strip: Turn off Logos & transition on right only -->
+				<onright condition="Container(3000).HasFocus(7) + Container.Content(movies)">Skin.SetString(StripView_Logo_Movies,Off)</onright>
+				<onright condition="Container(3000).HasFocus(7) + Container.Content(sets)">Skin.SetString(StripView_Logo_Sets,Off)</onright>
+				<onright condition="Container(3000).HasFocus(7) + Container.Content(tvshows)">Skin.SetString(StripView_Logo_TVShows,Off)</onright>
+				<onright condition="Container(3000).HasFocus(7) + Container.Content(artists)">Skin.SetString(StripView_Logo_Artists,Off)</onright>
+				<onright condition="Container(3000).HasFocus(7)">SetFocus(4014)</onright>
+				<!-- Strip: Turn off Logos & transition on left only -->
+				<onleft condition="Container(3000).HasFocus(8) + Container.Content(movies)">Skin.SetString(StripView_Logo_Movies,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(8) + Container.Content(sets)">Skin.SetString(StripView_Logo_Sets,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(8) + Container.Content(tvshows)">Skin.SetString(StripView_Logo_TVShows,Off)</onleft>
+				<onright condition="Container(3000).HasFocus(8) + Container.Content(artists)">Skin.SetString(StripView_Logo_Artists,Off)</onright>
+				<onleft condition="Container(3000).HasFocus(8)">SetFocus(4014)</onleft>
+				<!-- Strip: Turn off Logos on left only -->
+				<onleft condition="Container(3000).HasFocus(9) + Container.Content(movies)">Skin.SetString(StripView_Logo_Movies,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(9) + Container.Content(sets)">Skin.SetString(StripView_Logo_Sets,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(9) + Container.Content(tvshows)">Skin.SetString(StripView_Logo_TVShows,Off)</onleft>
+				<onleft condition="Container(3000).HasFocus(9) + Container.Content(artists)">Skin.SetString(StripView_Logo_Artists,Off)</onleft>
+				<!-- Strip: Turn off Logos on right only -->
+				<onright condition="Container(3000).HasFocus(10) + Container.Content(movies)">Skin.SetString(StripView_Logo_Movies,Off)</onright>
+				<onright condition="Container(3000).HasFocus(10) + Container.Content(sets)">Skin.SetString(StripView_Logo_Sets,Off)</onright>
+				<onright condition="Container(3000).HasFocus(10) + Container.Content(tvshows)">Skin.SetString(StripView_Logo_TVShows,Off)</onright>
+				<onright condition="Container(3000).HasFocus(10) + Container.Content(artists)">Skin.SetString(StripView_Logo_Artists,Off)</onright>
+				<!--Grid: Transition from keyart to poster -->
+				<onleft condition="Container(3000).HasFocus(11)">SetFocus(505)</onleft>
+				<onleft condition="Container(3000).HasFocus(11)">SetFocus(4014)</onleft>
+				<onright condition="Container(3000).HasFocus(12)">SetFocus(505)</onright>
+				<onright condition="Container(3000).HasFocus(12)">SetFocus(4014)</onright>
+				<orientation>vertical</orientation>
+				<focusposition>0</focusposition>
+				<movement>12</movement>
+				<defaultcontrol>1</defaultcontrol>
+				<scrolltime tween="sine" easing="inout">380</scrolltime>
+				<itemlayout height="60" width="1080">
+					<include content="Simple_List_Layout">
+						<param name="label" value="$INFO[ListItem.Label2]" />
+						<param name="label_left" value="0" />
+						<param name="label_maxwidth" value="1080" />
+					</include>
+				</itemlayout>
+				<focusedlayout height="60" width="1080">
+					<include content="Simple_List_Layout">
+						<param name="font" value="Main_Menu_Focused" />
+						<param name="label" value="$INFO[ListItem.Label]" />
+						<param name="label_left" value="0" />
+						<param name="label_maxwidth" value="1080" />
+					</include>
+				</focusedlayout>
+				<content>
+					<include content="ListView_Menu_Options" condition="!Skin.HasSetting(Kiosk_Mode)" />
+					<include content="BillboardView_Menu_Options" condition="$EXP[BillboardView_Enabled] + !Skin.HasSetting(Kiosk_Mode)" />
+					<include content="ShowcaseView_Menu_Options" condition="$EXP[ShowcaseView_Enabled] + !Skin.HasSetting(Kiosk_Mode)" />
+					<include content="StripView_Menu_Options" condition="$EXP[StripView_Enabled] + !Skin.HasSetting(Kiosk_Mode)" />
+					<include content="GridView_Menu_Options" condition="$EXP[GridView_Enabled] + !Skin.HasSetting(Kiosk_Mode)" />
+					<include content="Trailer_Autoplay_Menu_Options" condition="Window.Is(videos) + Skin.HasSetting(Trailer_Autoplay)" />
+					<include content="tvguide_Menu_Options" condition="Window.Is(tvguide)" />
+					<include content="tvsearch_Menu_Options" condition="Window.Is(tvsearch)" />
+					<include content="Common_Menu_Options">
+						<param name="target_id" value="$PARAM[target_id]" />
+					</include>
+					<include content="Video_Menu_Options" condition="Window.Is(videos)" />
+					<include content="MusicVideo_Menu_Options" condition="Window.Is(videos) | Window.Is(music)" />
+					<include content="AddonBrowser_Menu_Options" condition="Window.Is(addonbrowser)" />
+					<include content="Pictures_Menu_Options" condition="Window.Is(pictures)" />
+					<include content="Playlist_Menu_Options" condition="Window.Is(musicplaylist) | Window.Is(videoplaylist)" />
+					<include content="shutdownmenu_Shortcut" condition="Skin.HasSetting(shutdownmenu_Shortcut)" />
+				</content>
+			</control>
+		</definition>
+	</include>
+
+	<include name="MyViews_Menu_and_Scrollbars">
+		<param name="target_id" default="50" />
+		<definition>
+			<include content="Scrollbars" condition="!Window.Is(tvguide)" />
+			<include content="Hidden_Options_Menu" condition="!$EXP[Hidden_Options_Menu_Disabled]">
+				<param name="target_id" value="$PARAM[target_id]" />
+			</include>
+		</definition>
+	</include>
+</includes>

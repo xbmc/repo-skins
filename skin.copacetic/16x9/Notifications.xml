@@ -1,0 +1,694 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+	<include name="Music_Player_Controls">
+		<param name="id" default="3500" />
+		<definition>
+			<control type="panel" id="$PARAM[id]">
+				<width>180</width>
+				<height>120</height>
+				<include content="Music_Player_Navigation" />
+				<scrolltime>0</scrolltime>
+				<itemlayout width="60" height="60" />
+				<focusedlayout width="60" height="60" />
+				<content>
+					<item>
+						<description>Previous</description>
+						<label>$LOCALIZE[210]</label>
+						<onclick>PlayerControl(Previous)</onclick>
+					</item>
+					<item>
+						<description>Pause</description>
+						<onclick>PlayerControl(Play)</onclick>
+					</item>
+					<item>
+						<description>Next</description>
+						<label>$LOCALIZE[209]</label>
+						<onclick condition="MusicPlayer.HasNext">PlayerControl(Next)</onclick>
+					</item>
+					<item>
+						<description>Artist</description>
+						<label>$LOCALIZE[557]</label>
+						<onclick>Dialog.Close(all)</onclick>
+						<onclick>ActivateWindow(music,musicdb://albums/?xsp=%7b%22rules%22%3a%7b%22and%22%3a%5b%7b%22field%22%3a%22artist%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b$ESCINFO[MusicPlayer.Artist]%5d%7d%5d%7d%2c%22type%22%3a%22albums%22%7d,return)</onclick>
+					</item>
+					<item>
+						<description>Stop</description>
+						<label>$LOCALIZE[31301]</label>
+						<onclick>PlayerControl(Stop)</onclick>
+						<onclick condition="Window.Is(home)">SetFocus(3000)</onclick>
+						<onclick condition="$EXP[ListView_IsVisible]">SetFocus(50)</onclick>
+						<onclick condition="$EXP[BillboardView_IsVisible]">SetFocus(501)</onclick>
+						<onclick condition="$EXP[ShowcaseView_IsVisible]">SetFocus(502)</onclick>
+						<onclick condition="$EXP[StripView_IsVisible]">SetFocus(504)</onclick>
+						<onclick condition="$EXP[GridView_IsVisible]">SetFocus(505)</onclick>
+					</item>
+					<item>
+						<description>Go to music visualisation</description>
+						<visible>!Skin.String(Music_Rating_Like_Threshold)</visible>
+						<label>$LOCALIZE[31306]</label>
+						<onclick>ActivateWindow(visualisation)</onclick>
+					</item>
+					<item>
+						<description>Like song</description>
+						<visible>System.AddonIsEnabled(script.copacetic.helper) + Skin.String(Music_Rating_Like_Threshold) + Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold))</visible>
+						<label>$LOCALIZE[31009]</label>
+						<onclick>RunScript(script.copacetic.helper,action=rate_song,id=$INFO[MusicPlayer.DBID],rating=$INFO[Skin.String(Music_Rating_Like_Threshold)])</onclick>
+					</item>
+					<item>
+						<description>Unlike song</description>
+						<visible>System.AddonIsEnabled(script.copacetic.helper) + Skin.String(Music_Rating_Like_Threshold) + !Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold))</visible>
+						<label>$LOCALIZE[31010]</label>
+						<onclick>RunScript(script.copacetic.helper,action=rate_song,id=$INFO[MusicPlayer.DBID],rating=0)</onclick>
+					</item>
+				</content>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Music_Player_Buttons">
+		<param name="id" default="3500" />
+		<definition>
+			<control type="group">
+				<visible>$EXP[Music_Player_HasFocus]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<width>180</width>
+				<height>120</height>
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,0)" />
+					<param name="icon" value="chevron_horizontal" />
+					<param name="left" value="0" />
+					<param name="top" value="0" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="visible" value="!Player.Paused" />
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,1) + !Player.Paused" />
+					<param name="icon" value="pause" />
+					<param name="left" value="60" />
+					<param name="top" value="0" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="visible" value="Player.Paused" />
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,1) + Player.Paused" />
+					<param name="icon" value="play" />
+					<param name="left" value="60" />
+					<param name="top" value="0" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="visible" value="MusicPlayer.HasNext" />
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,2)" />
+					<param name="icon" value="chevron_horizontal" />
+					<param name="rotate_180" value="true" />
+					<param name="left" value="120" />
+					<param name="top" value="0" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="visible" value="!MusicPlayer.HasNext" />
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,2)" />
+					<param name="icon" value="chevron_horizontal_50%" />
+					<param name="rotate_180" value="true" />
+					<param name="left" value="120" />
+					<param name="top" value="0" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,3)" />
+					<param name="icon" value="artist" />
+					<param name="left" value="0" />
+					<param name="top" value="60" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,4)" />
+					<param name="icon" value="stop" />
+					<param name="left" value="60" />
+					<param name="top" value="60" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,5)" />
+					<param name="visible" value="!Skin.String(Music_Rating_Like_Threshold)" />
+					<param name="icon" value="fullscreen" />
+					<param name="left" value="120" />
+					<param name="top" value="60" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,5)" />
+					<param name="visible" value="Skin.String(Music_Rating_Like_Threshold) + Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold))" />
+					<param name="icon" value="heart_unfilled" />
+					<param name="left" value="120" />
+					<param name="top" value="60" />
+				</include>
+				<include content="Music_Player_Button_Template">
+					<param name="focused" value="String.IsEqual(Container($PARAM[id]).Position,5)" />
+					<param name="visible" value="Skin.String(Music_Rating_Like_Threshold) + !Integer.IsLess(Window(home).Property(MusicPlayer_UserRating),Skin.String(Music_Rating_Like_Threshold))" />
+					<param name="icon" value="heart_filled" />
+					<param name="color" value="$VAR[Accent_Color]" />
+					<param name="left" value="120" />
+					<param name="top" value="60" />
+				</include>
+
+			</control>
+		</definition>
+	</include>
+
+	<include name="Music_Player_Progress">
+		<control type="progress">
+			<visible>$PARAM[progress_visible] + Integer.IsGreater(Player.Progress,0)</visible>
+			<include content="Visible_Fade_Delayed_Animation" />
+			<left>0</left>
+			<right>0</right>
+			<top>$PARAM[progress_top]</top>
+			<height>6</height>
+			<info>Player.Progress</info>
+			<texturebg colordiffuse="$VAR[Progress_Light_Background_Color]">views/white_100.png</texturebg>
+			<midtexture colordiffuse="$VAR[Progress_Light_Focused_Color]">views/white_100.png</midtexture>
+		</control>
+	</include>
+
+	<include name="Volume_Progress">
+		<control type="group">
+			<visible>Window.IsVisible(volumebar) + !$EXP[Music_Player_HasFocus]</visible>
+			<include content="Visible_Fade_Delayed_Animation" />
+			<animation effect="rotate" center="auto" end="90" time="0" condition="true" reversible="false">Conditional</animation>
+			<control type="progress">
+				<visible>!Player.Muted</visible>
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<width>120</width>
+				<height>30</height>
+				<info>Player.Volume</info>
+				<reveal>true</reveal>
+				<texturebg colordiffuse="$VAR[Volume_Focused_Color]">views/white_15.png</texturebg>
+				<midtexture colordiffuse="$VAR[Volume_Focused_Color]">views/white_100.png</midtexture>
+			</control>
+			<control type="image">
+				<visible>Player.Muted</visible>
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<width>120</width>
+				<height>30</height>
+				<texture colordiffuse="$VAR[Volume_Focused_Color]">views/white_15.png</texture>
+			</control>
+			<control type="group">
+				<visible>Player.Muted</visible>
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<width>60</width>
+				<height>60</height>
+				<include content="Cross_focused">
+					<param name="color" value="$VAR[Volume_Focused_Color]" />
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<include name="Common_Notification_Label_Template">
+		<param name="visible" default="true" />
+		<param name="width" default="100%" />
+		<param name="height" default="100%" />
+		<param name="bottom" default="0" />
+		<param name="padding" default="30" />
+		<param name="group_align" default="center" />
+		<param name="label_align" default="left" />
+		<param name="label_shift" default="true" />
+		<param name="label1" default="$INFO[MusicPlayer.Title]" />
+		<param name="label2" default="$INFO[MusicPlayer.Artist]" />
+		<param name="label2_visible" default="true" />
+		<param name="title_label_scroll" default="false" />
+		<param name="info_label_scroll" default="false" />
+		<param name="text_color" default="$VAR[Notification_Widget_Label_Color]" />
+		<definition>
+			<control type="group">
+				<animation effect="slide" start="0,0" end="0,-30" condition="$EXP[StripView_Display_IsPosters] + [$EXP[Music_Player_IsVisible] | Window.IsVisible(volumebar)] + !$EXP[Infoscreen_Widget_HasFocus] + !Window.IsVisible(home)">Conditional</animation>
+				<nested />
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<bottom>$PARAM[bottom]</bottom>
+				<control type="grouplist">
+					<animation effect="fade" start="0" end="100" time="360" delay="540" reversible="false" tween="sine" easing="inout" condition="$EXP[Music_Player_HasFocus] + $PARAM[label_shift]">Conditional</animation>
+					<animation effect="fade" start="0" end="100" time="360" delay="540" reversible="false" tween="sine" easing="inout" condition="!$EXP[Music_Player_HasFocus] + $PARAM[label_shift]">Conditional</animation>
+					<left>$PARAM[padding]</left>
+					<right>$PARAM[padding]</right>
+					<orientation>vertical</orientation>
+					<align>$PARAM[group_align]</align>
+					<itemgap>0</itemgap>
+					<control type="label">
+						<visible>$PARAM[visible]</visible>
+						<include content="Visible_Fade_Delayed_Animation" />
+						<height>40</height>
+						<label>$PARAM[label1]</label>
+						<font>MusicPlayer_Title</font>
+						<textcolor>$PARAM[text_color]</textcolor>
+						<align>$PARAM[label_align]</align>
+						<scroll>$PARAM[title_label_scroll]</scroll>
+						<scrollsuffix> / </scrollsuffix>
+					</control>
+					<control type="label">
+						<visible>$PARAM[visible]</visible>
+						<visible>$PARAM[label2_visible]</visible>
+						<include content="Visible_Fade_Delayed_Animation" />
+						<height>35</height>
+						<label>$PARAM[label2]</label>
+						<font>MusicPlayer_Info</font>
+						<textcolor>$PARAM[text_color]</textcolor>
+						<align>$PARAM[label_align]</align>
+						<scroll>$PARAM[info_label_scroll]</scroll>
+						<scrollsuffix> / </scrollsuffix>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Notification_Gridview_Shadow">
+		<control type="image">
+			<visible>!$EXP[Music_Player_HasFocus] + String.IsEqual(Container.Row,0) + [[$EXP[GridView_Display_IsFanart] + String.IsEqual(Container.Column,2)] | [[$EXP[GridView_Display_IsPosters] | $EXP[GridView_Display_IsSquare]] + String.IsEqual(Container.Column,4)]]</visible>
+			<bottom>0</bottom>
+			<height>120</height>
+			<texture colordiffuse="$VAR[Dropshadow_Diffuse]">views/dropshadow_top_120.png</texture>
+			<aspectratio>stretch</aspectratio>
+		</control>
+	</include>
+
+	<include name="Music_Player_Background">
+		<control type="group">
+			<control type="image">
+				<texture colordiffuse="$VAR[Dark_Color]">views/white_100.png</texture>
+				<aspectratio>scale</aspectratio>
+			</control>
+			<control type="image">
+				<texture colordiffuse="$VAR[Home_Artwork_Diffuse]" fallback="views/dark_grey_100.png">$INFO[Player.Art(album.thumb)]</texture>
+				<aspectratio>scale</aspectratio>
+				<fadetime>360</fadetime>
+			</control>
+			<include content="Music_Player_Progress">
+				<param name="progress_visible" value="$PARAM[progress_visible]" />
+				<param name="progress_top" value="$PARAM[progress_top]" />
+			</include>
+			<include content="Notification_Gridview_Shadow" />
+		</control>
+	</include>
+
+	<include name="Notification_Background">
+		<control type="group">
+			<animation effect="slide" start="0,0" end="0,-10" time="0" condition="!$EXP[Music_Player_HasFocus] + String.IsEqual(Window(home).Property(GridView_Row),0) + [[$EXP[GridView_Display_IsFanart] + String.IsEqual(Window(home).Property(GridView_Column),2)] | [[$EXP[GridView_Display_IsPosters] | $EXP[GridView_Display_IsSquare]] + String.IsEqual(Window(home).Property(GridView_Column),4)]]">Conditional</animation>
+			<visible>$PARAM[background_visible]</visible>
+			<control type="image">
+				<texture colordiffuse="$VAR[Notification_Widget_Background_Color]">views/white_100.png</texture>
+				<aspectratio>scale</aspectratio>
+			</control>
+			<include content="Notification_Gridview_Shadow" />
+		</control>
+	</include>
+
+	<include name="Music_Player_Furniture">
+		<include content="Music_Player_Background" condition="$PARAM[background_visible]">
+			<param name="progress_visible" value="$PARAM[content_visible]" />
+			<param name="progress_top" value="$PARAM[progress_top]" />
+		</include>
+		<include content="Music_Player_Buttons" />
+		<control type="group">
+			<visible>$PARAM[content_visible] + !Window.IsVisible(1107) + !$EXP[Music_Player_HasFocus]</visible>
+			<include content="Visible_Fade_Delayed_Animation" />
+			<include content="Now_Playing_Icon">
+				<param name="color" value="$VAR[Volume_Focused_Color]" />
+			</include>
+			<include content="Player_Status_Icons">
+				<param name="icon_type" value="small" />
+				<param name="small_label" value="true" />
+				<param name="playicon" value="false" />
+				<param name="color" value="$VAR[Volume_Focused_Color]" />
+				<animation effect="slide" start="0" end="0,-15" time="0" condition="Player.Rewinding | Player.Forwarding">Conditional</animation>
+			</include>
+		</control>
+	</include>
+
+	<include name="Notification_Furniture">
+		<include content="Notification_Background">
+			<param name="background_visible" value="$PARAM[background_visible]" />
+		</include>
+		<include content="Volume_Progress" />
+		<include content="Busy_Spinner">
+			<param name="visible" value="!Window.IsVisible(volumebar) + !$EXP[Music_Player_HasFocus]" />
+			<param name="size" value="60" />
+			<param name="color" value="$VAR[Notification_Widget_Icon_Color]" />
+		</include>
+	</include>
+
+	<include name="Common_Notification_Template">
+		<param name="visible" default="true" />
+		<param name="content_visible" default="true" />
+		<param name="background_visible" default="true" />
+		<param name="label_visible" default="true" />
+		<param name="width" default="100%" />
+		<param name="top" default="0" />
+		<param name="height" default="180" />
+		<param name="label_padding" default="-30" />
+		<param name="label_width" default="600" />
+		<param name="label_shift" default="true" />
+		<param name="label2_visible" default="true" />
+		<param name="align" default="right" />
+		<param name="progress_top" default="0" />
+		<param name="title_label_scroll" default="false" />
+		<param name="label1" default="$INFO[MusicPlayer.Title]" />
+		<param name="label2" default="$INFO[MusicPlayer.Artist]" />
+		<param name="center_label_visible" default="false" />
+		<param name="left_label_visible" default="false" />
+		<param name="right_label_visible" default="false" />
+		<definition>
+			<control type="group" id="$PARAM[id]">
+				<visible>$PARAM[visible]</visible>
+				<width>$PARAM[width]</width>
+				<top>$PARAM[top]</top>
+				<height>$PARAM[height]</height>
+				<nested />
+				<control type="grouplist">
+					<visible>!$EXP[Container_Switching] + !$EXP[TransparentDialog_IsVisible]</visible>
+					<include content="Visible_Fade_Delayed_Animation" />
+					<itemgap>0</itemgap>
+					<orientation>horizontal</orientation>
+					<align>$PARAM[align]</align>
+					<usecontrolcoords>true</usecontrolcoords>
+					<include content="Common_Notification_Label_Template" condition="$PARAM[left_label_visible]">
+						<param name="visible" value="$PARAM[label_visible]" />
+						<param name="width" value="$PARAM[label_width]" />
+						<param name="padding" value="$PARAM[label_padding]" />
+						<param name="group_align" value="center" />
+						<param name="label_align" value="right" />
+						<param name="label_shift" value="$PARAM[label_shift]" />
+						<param name="label1" value="$PARAM[label1]" />
+						<param name="label2" value="$PARAM[label2]" />
+						<param name="label2_visible" value="$PARAM[label2_visible]" />
+						<param name="title_label_scroll" value="$PARAM[title_label_scroll]" />
+						<animation effect="slide" end="-60,0" time="0" condition="$EXP[Music_Player_HasFocus] + $PARAM[label_shift]">Conditional</animation>
+					</include>
+					<control type="group">
+						<width>$PARAM[height]</width>
+						<height>$PARAM[height]</height>
+						<include content="$PARAM[type]_Furniture">
+							<param name="background_visible" value="$PARAM[background_visible]" />
+							<param name="content_visible" value="$PARAM[content_visible]" />
+							<param name="progress_visible" value="$PARAM[progress_visible]" />
+							<param name="progress_top" value="$PARAM[progress_top]" />
+						</include>
+						<include content="Common_Notification_Label_Template" condition="$PARAM[center_label_visible]">
+							<param name="visible" value="$PARAM[label_visible]" />
+							<param name="bottom" value="20" />
+							<param name="group_align" value="right" />
+							<param name="label_align" value="left" />
+							<param name="label_shift" value="false" />
+							<param name="title_label_scroll" value="true" />
+							<param name="label1" value="$PARAM[label1]" />
+							<param name="label2" value="$PARAM[label2]" />
+							<param name="label2_visible" value="$PARAM[label2_visible]" />
+							<param name="text_color" value="$VAR[Light_Color]" />
+						</include>
+					</control>
+					<include content="Common_Notification_Label_Template" condition="$PARAM[right_label_visible]">
+						<param name="visible" value="$PARAM[label_visible]" />
+						<param name="width" value="$PARAM[label_width]" />
+						<param name="padding" value="$PARAM[label_padding]" />
+						<param name="group_align" value="center" />
+						<param name="label_align" value="left" />
+						<param name="label_shift" value="$PARAM[label_shift]" />
+						<param name="label1" value="$PARAM[label1]" />
+						<param name="label2" value="$PARAM[label2]" />
+						<param name="label2_visible" value="$PARAM[label2_visible]" />
+						<param name="title_label_scroll" value="$PARAM[title_label_scroll]" />
+					</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Music_Player_Widget">
+		<param name="visible" default="$EXP[Music_Player_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible]" />
+		<param name="content_visible" default="![Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog)]" />
+		<param name="background_visible" default="true" />
+		<param name="width" default="100%" />
+		<param name="top" default="0" />
+		<param name="height" default="180" />
+		<param name="label_padding" default="-30" />
+		<param name="label_width" default="600" />
+		<param name="label_shift" default="true" />
+		<param name="label2_visible" default="true" />
+		<param name="align" default="right" />
+		<param name="progress_top" default="0" />
+		<param name="title_label_scroll" default="false" />
+		<param name="label1" default="$INFO[MusicPlayer.Title]" />
+		<param name="label2" default="$INFO[MusicPlayer.Artist]" />
+		<param name="center_label_visible" default="false" />
+		<param name="left_label_visible" default="false" />
+		<param name="right_label_visible" default="false" />
+		<definition>
+			<include content="Common_Notification_Template">
+				<param name="type" value="Music_Player" />
+				<param name="id" value="$PARAM[id]" />
+				<param name="visible" value="$PARAM[visible]" />
+				<param name="content_visible" value="$PARAM[content_visible]" />
+				<param name="background_visible" value="$PARAM[background_visible]" />
+				<param name="label_visible" value="$PARAM[content_visible] + !Window.IsVisible(1107)" />
+				<param name="width" value="$PARAM[width]" />
+				<param name="top" value="$PARAM[top]" />
+				<param name="height" value="$PARAM[height]" />
+				<param name="label_padding" value="$PARAM[label_padding]" />
+				<param name="label_width" value="$PARAM[label_width]" />
+				<param name="label_shift" value="$PARAM[label_shift]" />
+				<param name="label2_visible" value="$PARAM[label2_visible]" />
+				<param name="align" value="$PARAM[align]" />
+				<param name="progress_top" value="$PARAM[progress_top]" />
+				<param name="title_label_scroll" value="$PARAM[title_label_scroll]" />
+				<param name="label1" value="$PARAM[label1]" />
+				<param name="label2" value="$PARAM[label2]" />
+				<param name="center_label_visible" value="$PARAM[center_label_visible]" />
+				<param name="left_label_visible" value="$PARAM[left_label_visible]" />
+				<param name="right_label_visible" value="$PARAM[right_label_visible]" />
+				<nested />
+			</include>
+		</definition>
+	</include>
+
+	<include name="Notification_Widget">
+		<param name="visible" default="true" />
+		<param name="content_visible" default="!Window.IsVisible(extendedprogressdialog)" />
+		<param name="background_visible" default="!$EXP[Music_Player_IsVisible]" />
+		<param name="width" default="100%" />
+		<param name="top" default="0" />
+		<param name="height" default="180" />
+		<param name="label_width" default="600" />
+		<param name="label_padding" default="-30" />
+		<param name="label2_visible" default="true" />
+		<param name="align" default="right" />
+		<param name="label_scroll" default="false" />
+		<param name="label1" default="$VAR[Notification_Widget_Title_Label]" />
+		<param name="label2" default="$VAR[Notification_Widget_Info_Label]" />
+		<param name="center_label_visible" default="false" />
+		<param name="left_label_visible" default="false" />
+		<param name="right_label_visible" default="false" />
+		<definition>
+			<include content="Common_Notification_Template">
+				<param name="type" value="Notification" />
+				<param name="id" value="$PARAM[id]" />
+				<param name="visible" value="$PARAM[visible]" />
+				<param name="content_visible" value="$PARAM[content_visible]" />
+				<param name="background_visible" value="$PARAM[background_visible]" />
+				<param name="label_visible" value="$PARAM[content_visible]" />
+				<param name="width" value="$PARAM[width]" />
+				<param name="top" value="$PARAM[top]" />
+				<param name="height" value="$PARAM[height]" />
+				<param name="label_padding" value="$PARAM[label_padding]" />
+				<param name="label_width" value="$PARAM[label_width]" />
+				<param name="label_shift" value="false" />
+				<param name="label2_visible" value="$PARAM[label2_visible]" />
+				<param name="align" value="$PARAM[align]" />
+				<param name="title_label_scroll" value="$PARAM[label_scroll]" />
+				<param name="label1" value="$PARAM[label1]" />
+				<param name="label2" value="$PARAM[label2]" />
+				<param name="center_label_visible" value="$PARAM[center_label_visible]" />
+				<param name="left_label_visible" value="$PARAM[left_label_visible]" />
+				<param name="right_label_visible" value="$PARAM[right_label_visible]" />
+				<visible>![Window.Next(home) | Window.Next(videos) | Window.Next(music) | Window.Next(videoplaylist) | Window.Next(musicplaylist) | Window.Next(addonbrowser) | Window.Next(programs) | Window.Next(pictures) | Window.Next(visualisation)]</visible>
+				<include content="VisibleHidden_Fade_Delayed_Animation" />
+				<nested />
+			</include>
+		</definition>
+	</include>
+
+	<include name="Shared_Dialog_Layouts">
+		<param name="type" default="Music_Player" />
+		<param name="visible" default="$EXP[Music_Player_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible]" />
+		<param name="content_visible" default="![Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog)]" />
+		<param name="label1" default="$INFO[MusicPlayer.Title]" />
+		<param name="label2" default="$INFO[MusicPlayer.Artist]" />
+		<param name="label2_visible" default="true" />
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<include content="MusicPlayer_Fade_Animation" />
+				<include content="$PARAM[type]_Widget">
+					<param name="id" value="6500" />
+					<param name="visible" value="!Window.IsMedia | $EXP[ListView_Display_IsBackground] | $EXP[BillboardView_IsVisible] | [$EXP[ShowcaseView_Display_IsPosters] + ![!$EXP[ShowcaseView_Details_Off] + $EXP[Music_Player_IsVisible]]] | $EXP[ShowcaseView_Display_IsSquare] | $EXP[Infoscreen_IsVisible] | $EXP[Trailer_Autoplay_IsVisible] | Window.Is(favouritesbrowser) | Window.Is(addonbrowser) | Window.Is(programs)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="false" />
+					<param name="label_width" value="600" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="!$EXP[Music_Player_HasFocus]">Conditional</animation>
+				</include>
+				<!-- List Thumbnails -->
+				<include content="$PARAM[type]_Widget" condition="Window.IsVisible(videos) | Window.IsVisible(music) | Window.IsVisible(musicplaylist) | Window.IsVisible(pictures)">
+					<param name="id" value="6501" />
+					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="progress_top" value="174" />
+					<param name="label_padding" value="30" />
+					<param name="label_width" value="960" />
+					<param name="label_shift" value="false" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="-60,0" time="0" condition="true">Conditional</animation>
+					<animation effect="slide" end="0,900" time="0" condition="$EXP[Containers_Square] | Container.Content(files)">Conditional</animation>
+				</include>
+				<!-- Showcase -->
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music)] + Skin.HasSetting(ShowcaseView_Enabled)">
+					<param name="id" value="6502" />
+					<param name="visible" value="$EXP[ShowcaseView_Display_IsPosters] + !$EXP[ShowcaseView_Details_Off] + $EXP[Music_Player_IsVisible] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="height" value="360" />
+					<param name="align" value="left" />
+					<param name="label_padding" value="30" />
+					<param name="label_shift" value="false" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="center_label_visible" value="true" />
+				</include>
+				<!-- Strip -->
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music) | Window.IsVisible(addonbrowser) | Window.IsVisible(programs)] + Skin.HasSetting(StripView_Enabled)">
+					<param name="id" value="6503" />
+					<param name="visible" value="$EXP[StripView_IsVisible] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="align" value="right" />
+					<param name="height" value="240" />
+					<param name="label_padding" value="30" />
+					<param name="label_width" value="1035" />
+					<param name="label_shift" value="false" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="-80,0" time="0" condition="$EXP[StripView_Display_IsPosters] | $EXP[StripView_Display_IsFanart]">Conditional</animation>
+					<animation effect="slide" end="-320,0" time="0" condition="$EXP[StripView_Display_IsFanart] + $EXP[StripView_Details_Off]">Conditional</animation>
+					<animation effect="slide" end="-570,0" time="0" condition="$EXP[StripView_Display_IsSquare]">Conditional</animation>
+					<animation effect="slide" end="-75,0" time="0" condition="$EXP[StripView_Display_IsSquare] + $EXP[StripView_Details_Off]">Conditional</animation>
+				</include>
+				<!-- Grid -->
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music) | Window.IsVisible(addonbrowser) | Window.IsVisible(programs)] + Skin.HasSetting(GridView_Enabled)">
+					<param name="id" value="6504" />
+					<param name="visible" value="$EXP[GridView_IsVisible] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="height" value="180" />
+					<param name="label_padding" value="30" />
+					<param name="label_width" value="900" />
+					<param name="label_shift" value="false" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="-60,0" time="0" condition="true">Conditional</animation>
+					<animation effect="slide" end="-12,0" time="0" condition="$EXP[GridView_Display_IsFanart]" reversible="false">Conditional</animation>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Notification_Dialog_Layouts">
+		<param name="type" default="Notification" />
+		<param name="visible" default="!$EXP[Music_Player_IsVisible]" />
+		<param name="content_visible" default="!Window.IsVisible(extendedprogressdialog)" />
+		<param name="background_visible" default="false" />
+		<param name="label_padding" default="-30" />
+		<param name="label1" default="$VAR[Notification_Widget_Title_Label]" />
+		<param name="label2" default="$VAR[Notification_Widget_Info_Label]" />
+		<param name="label2_visible" default="true" />
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<include content="$PARAM[type]_Widget">
+					<param name="id" value="6505" />
+					<param name="visible" value="!Control.IsVisible(6506) + !Control.IsVisible(6507) + !Control.IsVisible(6508) + !Control.IsVisible(6509)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="$PARAM[background_visible]" />
+					<param name="align" value="right" />
+					<param name="label_width" value="720" />
+					<param name="label_padding" value="$PARAM[label_padding]" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="true">Conditional</animation>
+				</include>
+				<!-- List Thumbnails -->
+				<include content="$PARAM[type]_Widget" condition="Window.IsVisible(videos) | Window.IsVisible(music) | Window.IsVisible(musicplaylist) | Window.IsVisible(addonbrowser) | Window.IsVisible(programs) | Window.IsVisible(pictures)">
+					<param name="id" value="6506" />
+					<param name="visible" value="$EXP[ListView_Display_IsThumbnails] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="$PARAM[background_visible]" />
+					<param name="label_width" value="960" />
+					<param name="label_padding" value="$PARAM[label_padding]" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="true">Conditional</animation>
+				</include>
+				<!-- Showcase -->
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music)] + Skin.HasSetting(ShowcaseView_Enabled)">
+					<param name="id" value="6507" />
+					<param name="visible" value="$EXP[ShowcaseView_Display_IsSquare] + !$EXP[Container_HasBackground] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="$PARAM[background_visible]" />
+					<param name="label_width" value="630" />
+					<param name="label_padding" value="$PARAM[label_padding]" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="true">Conditional</animation>
+				</include>
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music)] + Skin.HasSetting(ShowcaseView_Enabled)">
+					<param name="id" value="6508" />
+					<param name="visible" value="$EXP[ShowcaseView_Display_IsPosters] + !$EXP[Container_HasBackground] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="$PARAM[background_visible]" />
+					<param name="label_width" value="1020" />
+					<param name="label_padding" value="$PARAM[label_padding]" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="true">Conditional</animation>
+				</include>
+				<!-- Grid -->
+				<include content="$PARAM[type]_Widget" condition="[Window.IsVisible(videos) | Window.IsVisible(music) | Window.IsVisible(addonbrowser) | Window.IsVisible(programs)] + Skin.HasSetting(GridView_Enabled)">
+					<param name="id" value="6509" />
+					<param name="visible" value="$EXP[GridView_IsVisible] + !$EXP[Infoscreen_IsVisible] + !$EXP[Trailer_Autoplay_IsVisible] + !Window.IsVisible(home)" />
+					<param name="content_visible" value="$PARAM[content_visible]" />
+					<param name="background_visible" value="$PARAM[background_visible]" />
+					<param name="label_width" value="900" />
+					<param name="label_padding" value="$PARAM[label_padding]" />
+					<param name="label1" value="$PARAM[label1]" />
+					<param name="label2" value="$PARAM[label2]" />
+					<param name="label2_visible" value="$PARAM[label2_visible]" />
+					<param name="left_label_visible" value="true" />
+					<animation effect="slide" end="30,0" time="0" condition="true">Conditional</animation>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+</includes>

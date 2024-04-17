@@ -1,0 +1,716 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<includes>
+
+	<include name="selectdialog_Scrollbar">
+		<param name="onup" default="noop" />
+		<param name="ondown" default="noop" />
+		<param name="onright" default="4000" />
+		<param name="target_id_1" default="3" />
+		<param name="target_id_2" default="6" />
+		<definition>
+			<control type="group">
+				<right>27</right>
+				<width>6</width>
+				<top>210</top>
+				<bottom>210</bottom>
+				<visible allowhiddenfocus="true">Integer.IsGreater(Container.NumItems,9)</visible>
+				<control type="scrollbar" id="60">
+					<visible allowhiddenfocus="true">Container.Scrolling | Control.HasFocus(60)</visible>
+					<animation effect="fade" start="0" end="100" time="360" tween="sine" easing="inout" reversible="true" condition="!Container.Scrolling">Visible</animation>
+					<animation effect="fade" start="0" end="100" time="360" delay="360" tween="sine" easing="inout" reversible="true" condition="Container.Scrolling">Visible</animation>
+					<centertop>50%</centertop>
+					<onleft condition="Control.IsVisible($PARAM[target_id_1])">$PARAM[target_id_1]</onleft>
+					<onleft condition="Control.IsVisible($PARAM[target_id_2])">$PARAM[target_id_2]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onback condition="Control.IsVisible($PARAM[target_id_1])">$PARAM[target_id_1]</onback>
+					<onback condition="Control.IsVisible($PARAM[target_id_2])">$PARAM[target_id_2]</onback>
+					<showonepage>false</showonepage>
+					<orientation>vertical</orientation>
+					<texturesliderbackground colordiffuse="$VAR[Scroll_Background_Color]">views/white_100.png</texturesliderbackground>
+					<texturesliderbar colordiffuse="$VAR[Scroll_Background_Color]">views/white_100.png</texturesliderbar>
+					<texturesliderbarfocus colordiffuse="$VAR[Scroll_Focused_Color]">views/white_100.png</texturesliderbarfocus>
+					<textureslidernib />
+					<textureslidernibfocus />
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Scrollbar_Template">
+		<param name="visible" default="true" />
+		<param name="scrollbartype" default="Default" />
+		<param name="right" />
+		<param name="bottom" />
+		<param name="width" />
+		<param name="height" />
+		<param name="onleft" />
+		<param name="onright" />
+		<param name="onright_fallback" />
+		<param name="onup" />
+		<param name="ondown" />
+		<param name="ondown_fallback" />
+		<param name="orientation" />
+		<definition>
+			<control type="group">
+				<nested />
+				<visible>$PARAM[visible]</visible>
+				<right>$PARAM[right]</right>
+				<bottom>$PARAM[bottom]</bottom>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<control type="scrollbar" id="60">
+					<visible allowhiddenfocus="true">Container.Scrolling | Control.HasFocus(60) | Control.HasFocus(62)</visible>
+					<include content="Scrollbar_Fade_Animation" />
+					<onleft>$PARAM[onleft]</onleft>
+					<onright condition="$EXP[SortLetter_Enabled] + Integer.IsGreater(Container.NumItems,33) + !Window.Is(musicplaylist)">$PARAM[onright]</onright>
+					<onright condition="![$EXP[SortLetter_Enabled] + Integer.IsGreater(Container.NumItems,33)] | Window.Is(musicplaylist)">$PARAM[onright_fallback]</onright>
+					<onup>$PARAM[onup]</onup>
+					<ondown condition="$EXP[SortLetter_Enabled] + Integer.IsGreater(Container.NumItems,33)">$PARAM[ondown]</ondown>
+					<ondown condition="![$EXP[SortLetter_Enabled] + Integer.IsGreater(Container.NumItems,33)]">$PARAM[ondown_fallback]</ondown>
+					<onback>4012</onback>
+					<showonepage>false</showonepage>
+					<orientation>$PARAM[orientation]</orientation>
+					<texturesliderbackground colordiffuse="$VAR[Scroll_Background_Color]">views/white_100.png</texturesliderbackground>
+					<texturesliderbar colordiffuse="$VAR[Scroll_Background_Color]">views/white_100.png</texturesliderbar>
+					<texturesliderbarfocus colordiffuse="$VAR[Scroll_Focused_Color]">views/white_100.png</texturesliderbarfocus>
+					<textureslidernib></textureslidernib>
+					<textureslidernibfocus></textureslidernibfocus>
+				</control>
+				<include content="Jump_Button_$PARAM[orientation]" condition="Skin.HasSetting(SortLetter_Enabled) + !Window.Is(musicplaylist)" />
+				<include content="SortLetter" condition="Skin.HasSetting(SortLetter_Enabled) + !Window.Is(musicplaylist)">
+					<param name="scrollbartype" value="$PARAM[scrollbartype]" />
+					<param name="orientation" value="$PARAM[orientation]" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="SortLetter">
+		<definition>
+			<control type="group">
+				<animation effect="slide" end="-12" time="0" condition="$EXP[ListView_IsVisible] | $EXP[GridView_IsVisible]">Conditional</animation>
+				<animation effect="slide" end="0,-12" time="0" condition="![$EXP[ListView_IsVisible] | $EXP[GridView_IsVisible]]">Conditional</animation>
+				<include content="Jump_Icon_Slides_$PARAM[scrollbartype]_$PARAM[orientation]" />
+				<visible>Container.Scrolling | Control.HasFocus(60) | Control.HasFocus(62)</visible>
+				<visible>$EXP[SortLetter_Enabled] + !String.IsEmpty(ListItem.SortLetter) + Integer.IsGreater(Container.NumItems,33)</visible>
+				<include content="Scrollbar_Fade_Animation" />
+				<width>30</width>
+				<height>30</height>
+				<left>0</left>
+				<top>0</top>
+				<control type="image">
+					<animation effect="zoom" end="120,100" time="0" center="auto" condition="[String.IsEqual(Container.SortMethod,$LOCALIZE[563]) | String.IsEqual(Container.SortMethod,$LOCALIZE[38018])] + String.IsEqual(ListItem.SortLetter,0)">Conditional</animation>
+					<animation effect="zoom" end="150,100" time="0" center="auto" condition="String.IsEqual(Container.SortMethod,$LOCALIZE[180]) + Window.Is(videos) + Integer.IsLess(ListItem.Duration,6000)">Conditional</animation>
+					<animation effect="zoom" end="200,100" time="0" center="auto" condition="String.IsEqual(Container.SortMethod,$LOCALIZE[180]) + Window.Is(videos) + Integer.IsGreaterOrEqual(ListItem.Duration,6000)">Conditional</animation>
+					<animation effect="zoom" end="150,100" time="0" center="auto" condition="String.IsEqual(Container.SortMethod,$LOCALIZE[180]) + Window.Is(music)">Conditional</animation>
+					<texture colordiffuse="$VAR[SortLetter_Background_Color]">views/white_100.png</texture>
+				</control>
+				<control type="label">
+					<width>60</width>
+					<centerleft>50%</centerleft>
+					<height>100%</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>Unwatched_Indicator</font>
+					<textcolor>$VAR[SortLetter_Label_Color]</textcolor>
+					<label>$VAR[Sort_Label]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Jump_Button_horizontal">
+		<control type="button" id="62">
+			<visible allowhiddenfocus="true">false</visible>
+			<onleft>SetFocus(50)</onleft>
+			<onleft>Action(PrevLetter)</onleft>
+			<onleft>SetFocus(62)</onleft>
+			<onright>SetFocus(50)</onright>
+			<onright>Action(NextLetter)</onright>
+			<onright>SetFocus(62)</onright>
+			<onup>SetFocus(50)</onup>
+			<ondown condition="!$EXP[Hidden_Options_Menu_Disabled]">SetFocus(3000,0)</ondown>
+			<ondown condition="$EXP[Hidden_Options_Menu_Disabled]">SetFocus(50)</ondown>
+		</control>
+	</include>
+
+	<include name="Jump_Button_vertical">
+		<control type="button" id="62">
+			<visible allowhiddenfocus="true">false</visible>
+			<onup>SetFocus(50)</onup>
+			<onup>Action(PrevLetter)</onup>
+			<onup>SetFocus(62)</onup>
+			<ondown>SetFocus(50)</ondown>
+			<ondown>Action(NextLetter)</ondown>
+			<ondown>SetFocus(62)</ondown>
+			<onleft>SetFocus(50)</onleft>
+			<onright condition="!$EXP[Hidden_Options_Menu_Disabled]">SetFocus(3000,0)</onright>
+			<onright condition="$EXP[Hidden_Options_Menu_Disabled]">SetFocus(50)</onright>
+		</control>
+	</include>
+
+	<include name="Jump_Icon_Slides_Default_vertical">
+		<!-- 720 -->
+		<animation effect="slide" end="0,26" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="0,52" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="0,77" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="0,103" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="0,129" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="0,154" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="0,180" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="0,206" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="0,231" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="0,257" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="0,283" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="0,308" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="0,334" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="0,359" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="0,384" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="0,410" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="0,436" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="0,461" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="0,487" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="0,512" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="0,537" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="0,563" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="0,589" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="0,614" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="0,640" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="0,665" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="0,690" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="0,69" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="0,138" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="0,207" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="0,276" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="0,345" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="0,414" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="0,483" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="0,552" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="0,621" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="0,690" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is10]">Conditional</animation>
+
+		<animation effect="slide" end="0,690" time="0" condition="String.IsEqual(Container.SortOrder,Descending)">Conditional</animation>
+		<animation effect="slide" end="0,-26" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="0,-52" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="0,-77" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="0,-103" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="0,-129" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="0,-154" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="0,-180" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="0,-206" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="0,-231" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="0,-257" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="0,-283" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="0,-308" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="0,-334" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="0,-359" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="0,-384" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="0,-410" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="0,-436" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="0,-461" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="0,-487" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="0,-512" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="0,-537" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="0,-563" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="0,-589" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="0,-614" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="0,-640" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="0,-665" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="0,-690" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="0,-69" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="0,-138" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="0,-207" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="0,-276" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="0,-345" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="0,-414" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="0,-483" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="0,-552" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="0,-621" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="0,-690" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is10]">Conditional</animation>
+	</include>
+
+	<include name="Jump_Icon_Slides_Default_horizontal">
+		<!-- 1080 -->
+		<animation effect="slide" end="39" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="78" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="117" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="156" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="194" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="233" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="272" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="311" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="350" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="389" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="428" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="467" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="506" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="545" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="584" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="623" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="662" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="701" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="740" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="779" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="818" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="857" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="896" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="935" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="973" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="1012" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="1050" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="105" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="210" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="315" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="420" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="525" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="630" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="735" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="840" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="945" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="1050" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is10]">Conditional</animation>
+
+		<animation effect="slide" end="1050" time="0" condition="String.IsEqual(Container.SortOrder,Descending)">Conditional</animation>
+		<animation effect="slide" end="-39" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="-78" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="-117" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="-156" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="-194" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="-233" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="-272" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="-311" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="-350" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="-390" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="-428" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="-467" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="-506" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="-545" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="-584" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="-623" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="-662" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="-701" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="-740" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="-779" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="-818" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="-857" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="-896" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="-935" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="-973" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="-1012" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="-1050" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="-105" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="-210" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="-315" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="-420" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="-525" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="-630" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="-735" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="-840" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="-945" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="-1050" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is10]">Conditional</animation>
+	</include>
+
+	<include name="Jump_Icon_Slides_Alternative_horizontal">
+		<animation effect="slide" end="23" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="46" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="70" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="93" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="116" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="140" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="163" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="186" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="210" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="233" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="256" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="280" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="303" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="327" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="350" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="373" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="397" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="420" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="444" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="467" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="491" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="514" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="537" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="560" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="583" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="607" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="630" time="0" condition="String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="63" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="126" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="189" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="252" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="315" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="378" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="441" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="504" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="567" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="630" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Ascending) + $EXP[SortNumber_Is10]">Conditional</animation>
+
+		<animation effect="slide" end="630" time="0" condition="String.IsEqual(Container.SortOrder,Descending)">Conditional</animation>
+		<animation effect="slide" end="-23" time="0" condition="!$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsNumber]">Conditional</animation>
+		<animation effect="slide" end="-46" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsA]">Conditional</animation>
+		<animation effect="slide" end="-70" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsB]">Conditional</animation>
+		<animation effect="slide" end="-93" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsC]">Conditional</animation>
+		<animation effect="slide" end="-116" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsD]">Conditional</animation>
+		<animation effect="slide" end="-140" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsE]">Conditional</animation>
+		<animation effect="slide" end="-163" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsF]">Conditional</animation>
+		<animation effect="slide" end="-186" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsG]">Conditional</animation>
+		<animation effect="slide" end="-210" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsH]">Conditional</animation>
+		<animation effect="slide" end="-233" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsI]">Conditional</animation>
+		<animation effect="slide" end="-256" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsJ]">Conditional</animation>
+		<animation effect="slide" end="-280" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsK]">Conditional</animation>
+		<animation effect="slide" end="-303" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsL]">Conditional</animation>
+		<animation effect="slide" end="-327" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsM]">Conditional</animation>
+		<animation effect="slide" end="-350" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsN]">Conditional</animation>
+		<animation effect="slide" end="-373" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsO]">Conditional</animation>
+		<animation effect="slide" end="-397" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsP]">Conditional</animation>
+		<animation effect="slide" end="-420" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsQ]">Conditional</animation>
+		<animation effect="slide" end="-444" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsR]">Conditional</animation>
+		<animation effect="slide" end="-467" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsS]">Conditional</animation>
+		<animation effect="slide" end="-491" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsT]">Conditional</animation>
+		<animation effect="slide" end="-514" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsU]">Conditional</animation>
+		<animation effect="slide" end="-537" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsV]">Conditional</animation>
+		<animation effect="slide" end="-560" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsW]">Conditional</animation>
+		<animation effect="slide" end="-583" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsX]">Conditional</animation>
+		<animation effect="slide" end="-607" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsY]">Conditional</animation>
+		<animation effect="slide" end="-630" time="0" condition="String.IsEqual(Container.SortOrder,Descending) + $EXP[SortLetter_IsZ]">Conditional</animation>
+		<animation effect="slide" end="-63" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is1]">Conditional</animation>
+		<animation effect="slide" end="-126" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is2]">Conditional</animation>
+		<animation effect="slide" end="-189" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is3]">Conditional</animation>
+		<animation effect="slide" end="-252" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is4]">Conditional</animation>
+		<animation effect="slide" end="-315" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is5]">Conditional</animation>
+		<animation effect="slide" end="-378" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is6]">Conditional</animation>
+		<animation effect="slide" end="-441" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is7]">Conditional</animation>
+		<animation effect="slide" end="-504" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is8]">Conditional</animation>
+		<animation effect="slide" end="-567" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is9]">Conditional</animation>
+		<animation effect="slide" end="-630" time="0" condition="$EXP[SortNumber_Enabled] + String.IsEqual(Container.SortOrder,Descending) + $EXP[SortNumber_Is10]">Conditional</animation>
+	</include>
+
+	<include name="Scrollbars">
+		<control type="group">
+			<visible>!Window.IsVisible(shutdownmenu)</visible>
+			<include content="Visible_Fade_Animation" />
+			<!-- Vertical -->
+			<include content="Scrollbar_Template">
+				<param name="visible" value="[$EXP[ListView_IsVisible] + Integer.IsGreater(Container.NumItems,22)] | [$EXP[GridView_IsVisible] + Integer.IsGreater(Container.NumItems,9)]" />
+				<param name="right" value="27" />
+				<param name="bottom" value="180" />
+				<param name="width" value="6" />
+				<param name="height" value="720" />
+				<param name="onleft" value="4012" />
+				<param name="onright" value="62" />
+				<param name="onright_fallback" value="SetFocus(3000,0)" />
+				<param name="onup" value="60" />
+				<param name="ondown" value="60" />
+				<param name="ondown_fallback" value="60" />
+				<param name="orientation" value="vertical" />
+			</include>
+			<!-- Horizontal (Main) -->
+			<include content="Scrollbar_Template" condition="$EXP[BillboardView_Enabled] | $EXP[ShowcaseView_Enabled] | $EXP[StripView_Enabled]">
+				<param name="visible" value="[$EXP[BillboardView_IsVisible] + Integer.IsGreater(Container.NumItems,3)] | [$EXP[StripView_IsVisible] + Integer.IsGreater(Container.NumItems,9)] | [Integer.IsGreater(Container.NumItems,5) + [[$EXP[ShowcaseView_IsVisible] + $EXP[ShowcaseView_Details_Off]] | [$EXP[ShowcaseView_Display_IsPosters] + !$EXP[ShowcaseView_Details_Off] + ![Skin.HasSetting(Music_Player_Enabled) + Player.HasAudio]]]]" />
+				<param name="right" value="420" />
+				<param name="bottom" value="27" />
+				<param name="width" value="1080" />
+				<param name="height" value="6" />
+				<param name="onleft" value="60" />
+				<param name="onright" value="60" />
+				<param name="onright_fallback" value="60" />
+				<param name="onup" value="4012" />
+				<param name="ondown" value="62" />
+				<param name="ondown_fallback" value="SetFocus(3000,0)" />
+				<param name="orientation" value="horizontal" />
+				<animation effect="slide" end="360" time="0" condition="$EXP[ShowcaseView_IsVisible] + $EXP[ShowcaseView_Display_IsPosters] + !$EXP[ShowcaseView_Details_Off] + ![Skin.HasSetting(Music_Player_Enabled) + Player.HasAudio]">Conditional</animation>
+			</include>
+			<!-- Horizontal (Alternative) -->
+			<include content="Scrollbar_Template" condition="$EXP[ShowcaseView_Enabled]">
+				<param name="visible" value="Integer.IsGreater(Container.NumItems,5) + [[$EXP[ShowcaseView_Display_IsSquare] + !$EXP[ShowcaseView_Details_Off]] | [$EXP[ShowcaseView_Display_IsPosters] + !$EXP[ShowcaseView_Details_Off] + Skin.HasSetting(Music_Player_Enabled) + Player.HasAudio]]" />
+				<param name="scrollbartype" value="Alternative" />
+				<param name="right" value="90" />
+				<param name="bottom" value="27" />
+				<param name="width" value="660" />
+				<param name="height" value="6" />
+				<param name="onleft" value="60" />
+				<param name="onright" value="60" />
+				<param name="onright_fallback" value="60" />
+				<param name="onup" value="4012" />
+				<param name="ondown" value="62" />
+				<param name="ondown_fallback" value="SetFocus(3000,0)" />
+				<param name="orientation" value="horizontal" />
+			</include>
+		</control>
+	</include>
+
+	<include name="Settings_Grouplist_Scrollbar">
+		<param name="target_id_id" />
+		<param name="scrollbar_id" default="61" />
+		<param name="left" default="564" />
+		<param name="onleft" />
+		<param name="onright" />
+		<param name="onback" />
+		<definition>
+			<control type="scrollbar" id="$PARAM[scrollbar_id]">
+				<visible allowhiddenfocus="true">Control.HasFocus($PARAM[scrollbar_id]) | Control.IsVisible($PARAM[target_id_id])</visible>
+				<left>$PARAM[left]</left>
+				<width>6</width>
+				<centertop>50%</centertop>
+				<height>630</height>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<onback>$PARAM[onback]</onback>
+				<showonepage>false</showonepage>
+				<orientation>vertical</orientation>
+				<texturesliderbackground></texturesliderbackground>
+				<texturesliderbar></texturesliderbar>
+				<texturesliderbarfocus colordiffuse="$VAR[Unfocused_Color]">views/white_100.png</texturesliderbarfocus>
+				<textureslidernib></textureslidernib>
+				<textureslidernibfocus></textureslidernibfocus>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Widget_Scrollbar_Nib">
+		<param name="visible" />
+		<param name="active" />
+		<param name="width" default="100%" />
+		<param name="height" default="80" />
+	<definition>
+			<control type="group">
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="image">
+					<texture colordiffuse="$PARAM[background_color]">views/white_100.png</texture>
+					<visible>!$PARAM[active]</visible>
+				</control>
+				<control type="image">
+					<texture colordiffuse="$PARAM[focused_color]">views/white_100.png</texture>
+					<visible>$PARAM[active]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Widget_Scrollbar_Template">
+		<param name="visible" />
+		<param name="background_color" default="$VAR[Scroll_Widget_Background_Color]" />
+		<param name="focused_color" default="$VAR[Scroll_Widget_Focused_Color]" />
+		<param name="pos0_enabled" default="false" />
+		<param name="pos0_visible" default="false" />
+		<param name="pos0_active" default="false" />
+		<param name="pos1_enabled" default="false" />
+		<param name="pos1_visible" default="false" />
+		<param name="pos1_active" default="false" />
+		<param name="pos2_enabled" default="false" />
+		<param name="pos2_visible" default="false" />
+		<param name="pos2_active" default="false" />
+		<param name="pos3_enabled" default="false" />
+		<param name="pos3_visible" default="false" />
+		<param name="pos3_active" default="false" />
+		<param name="pos4_enabled" default="false" />
+		<param name="pos4_visible" default="false" />
+		<param name="pos4_active" default="false" />
+		<param name="pos5_enabled" default="false" />
+		<param name="pos5_visible" default="false" />
+		<param name="pos5_active" default="false" />
+		<param name="pos6_enabled" default="false" />
+		<param name="pos6_visible" default="false" />
+		<param name="pos6_active" default="false" />
+		<param name="pos7_enabled" default="false" />
+		<param name="pos7_visible" default="false" />
+		<param name="pos7_active" default="false" />
+		<param name="pos8_enabled" default="false" />
+		<param name="pos8_visible" default="false" />
+		<param name="pos8_active" default="false" />
+		<param name="pos9_enabled" default="false" />
+		<param name="pos9_visible" default="false" />
+		<param name="pos9_active" default="false" />
+		<definition>
+			<control type="grouplist">
+				<visible>$PARAM[visible]</visible>
+				<include content="Visible_Fade_Delayed_Animation" />
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos0_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos1_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos2_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos3_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos4_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos5_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos6_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos7_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos8_active]">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="360" delay="2560" tween="sine" easing="inout" reversible="false" condition="$PARAM[pos9_active]">Conditional</animation>
+				<right>30</right>
+				<width>6</width>
+				<height>100%</height>
+				<align>center</align>
+				<orientation>vertical</orientation>
+				<itemgap>0</itemgap>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos0_enabled]">
+					<param name="visible" value="$PARAM[pos0_visible]" />
+					<param name="active" value="$PARAM[pos0_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos1_enabled]">
+					<param name="visible" value="$PARAM[pos1_visible]" />
+					<param name="active" value="$PARAM[pos1_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos2_enabled]">
+					<param name="visible" value="$PARAM[pos2_visible]" />
+					<param name="active" value="$PARAM[pos2_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos3_enabled]">
+					<param name="visible" value="$PARAM[pos3_visible]" />
+					<param name="active" value="$PARAM[pos3_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos4_enabled]">
+					<param name="visible" value="$PARAM[pos4_visible]" />
+					<param name="active" value="$PARAM[pos4_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos5_enabled]">
+					<param name="visible" value="$PARAM[pos5_visible]" />
+					<param name="active" value="$PARAM[pos5_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos6_enabled]">
+					<param name="visible" value="$PARAM[pos6_visible]" />
+					<param name="active" value="$PARAM[pos6_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos7_enabled]">
+					<param name="visible" value="$PARAM[pos7_visible]" />
+					<param name="active" value="$PARAM[pos7_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos8_enabled]">
+					<param name="visible" value="$PARAM[pos8_visible]" />
+					<param name="active" value="$PARAM[pos8_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+				<include content="Widget_Scrollbar_Nib" condition="$PARAM[pos9_enabled]">
+					<param name="visible" value="$PARAM[pos9_visible]" />
+					<param name="active" value="$PARAM[pos9_active]" />
+					<param name="background_color" value="$PARAM[background_color]" />
+					<param name="focused_color" value="$PARAM[focused_color]" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Home_Scrollbar">
+		<include content="Widget_Scrollbar_Template">
+			<param name="visible" value="!Control.HasFocus(4300) + !$EXP[TransparentDialog_IsVisible]" />
+			<param name="background_color" value="$VAR[Home_Scroll_Widget_Background_Color]" />
+			<param name="focused_color" value="$VAR[Home_Scroll_Widget_Focused_Color]" />
+			<param name="pos0_enabled" value="true" />
+			<param name="pos0_visible" value="true" />
+			<param name="pos0_active" value="Control.HasFocus(3000) | Control.HasFocus(4300) | $EXP[Music_Player_HasFocus]" />
+			<param name="pos1_enabled" value="!Skin.HasSetting(Widget1_Content_Disabled)" />
+			<param name="pos1_visible" value="Control.IsVisible(3201)" />
+			<param name="pos1_active" value="Control.HasFocus(3201)" />
+			<param name="pos2_enabled" value="!Skin.HasSetting(Widget2_Content_Disabled)" />
+			<param name="pos2_visible" value="Control.IsVisible(3202)" />
+			<param name="pos2_active" value="Control.HasFocus(3202)" />
+			<param name="pos3_enabled" value="!Skin.HasSetting(Widget3_Content_Disabled)" />
+			<param name="pos3_visible" value="Control.IsVisible(3203)" />
+			<param name="pos3_active" value="Control.HasFocus(3203)" />
+			<param name="pos4_enabled" value="!Skin.HasSetting(Widget4_Content_Disabled)" />
+			<param name="pos4_visible" value="Control.IsVisible(3204)" />
+			<param name="pos4_active" value="Control.HasFocus(3204)" />
+			<param name="pos5_enabled" value="!Skin.HasSetting(Widget5_Content_Disabled)" />
+			<param name="pos5_visible" value="Control.IsVisible(3205)" />
+			<param name="pos5_active" value="Control.HasFocus(3205)" />
+			<param name="pos6_enabled" value="!Skin.HasSetting(Widget6_Content_Disabled)" />
+			<param name="pos6_visible" value="Control.IsVisible(3206)" />
+			<param name="pos6_active" value="Control.HasFocus(3206)" />
+			<param name="pos7_enabled" value="!Skin.HasSetting(Widget7_Content_Disabled)" />
+			<param name="pos7_visible" value="Control.IsVisible(3207)" />
+			<param name="pos7_active" value="Control.HasFocus(3207)" />
+			<param name="pos8_enabled" value="!Skin.HasSetting(Widget8_Content_Disabled)" />
+			<param name="pos8_visible" value="Control.IsVisible(3208)" />
+			<param name="pos8_active" value="Control.HasFocus(3208)" />
+			<param name="pos9_enabled" value="!Skin.HasSetting(Widget9_Content_Disabled)" />
+			<param name="pos9_visible" value="Control.IsVisible(3209)" />
+			<param name="pos9_active" value="Control.HasFocus(3209)" />
+		</include>
+	</include>
+
+	<include name="DialogAddonInfo_Scrollbar">
+		<include content="Widget_Scrollbar_Template">
+			<param name="visible" value="!Window.IsVisible(shutdownmenu) + Control.IsVisible(50)" />
+			<param name="pos0_enabled" value="true" />
+			<param name="pos0_visible" value="[ControlGroup(3000).HasFocus + !Window.IsVisible(1104)] | $EXP[Music_Player_HasFocus]" />
+			<param name="pos0_active" value="ControlGroup(3000).HasFocus" />
+			<param name="pos1_enabled" value="true" />
+			<param name="pos1_visible" value="Control.IsVisible(50)" />
+			<param name="pos1_active" value="Control.HasFocus(50)" />
+		</include>
+	</include>
+
+	<include name="DialogMusicInfo_Scrollbar">
+		<include content="Widget_Scrollbar_Template">
+			<param name="visible" value="!Window.IsVisible(shutdownmenu) + !Control.HasFocus(60)" />
+			<param name="pos0_enabled" value="true" />
+			<param name="pos0_visible" value="Control.IsVisible(3000)" />
+			<param name="pos0_active" value="[ControlGroup(3000).HasFocus + !Window.IsVisible(1104)] | Control.HasFocus(60) | Control.HasFocus(3100) | Control.HasFocus(4021) | Control.HasFocus(4022) | $EXP[Music_Player_HasFocus]" />
+			<param name="pos1_enabled" value="!String.IsEqual(ListItem.DBType,album)" />
+			<param name="pos1_visible" value="Control.IsVisible(3201)" />
+			<param name="pos1_active" value="Control.HasFocus(3201)" />
+			<param name="pos2_enabled" value="true" />
+			<param name="pos2_visible" value="Control.IsVisible(3202)" />
+			<param name="pos2_active" value="Control.HasFocus(3202)" />
+			<param name="pos3_enabled" value="true" />
+			<param name="pos3_visible" value="Control.IsVisible(3205)" />
+			<param name="pos3_active" value="Control.HasFocus(3205)" />
+			<param name="pos4_enabled" value="true" />
+			<param name="pos4_visible" value="Control.IsVisible(3207)" />
+			<param name="pos4_active" value="Control.HasFocus(3207)" />
+		</include>
+	</include>
+
+	<include name="DialogVideoInfo_Scrollbar">
+		<include content="Widget_Scrollbar_Template">
+			<param name="visible" value="!Window.IsVisible(shutdownmenu) + !Control.HasFocus(60) + !String.IsEqual(ListItem.DBType,video)" />
+			<param name="pos0_enabled" value="true" />
+			<param name="pos0_visible" value="Control.IsVisible(3000)" />
+			<param name="pos0_active" value="[ControlGroup(3000).HasFocus + !Window.IsVisible(1104)] | Control.HasFocus(60) | Control.HasFocus(4020) | Control.HasFocus(4021) | Control.HasFocus(4022) | $EXP[Music_Player_HasFocus]" />
+			<param name="pos1_enabled" value="true" />
+			<param name="pos1_visible" value="Control.IsVisible(3201)" />
+			<param name="pos1_active" value="Control.HasFocus(3201)" />
+			<param name="pos2_enabled" value="[String.IsEqual(ListItem.DBType,tvshow) + String.IsEqual(ListItem.Label,ListItem.TVShowTitle)] | String.IsEqual(ListItem.DBType,episode)" />
+			<param name="pos2_visible" value="Control.IsVisible(3202)" />
+			<param name="pos2_active" value="Control.HasFocus(3202)" />
+			<param name="pos3_enabled" value="true" />
+			<param name="pos3_visible" value="Control.IsVisible(50)" />
+			<param name="pos3_active" value="Control.HasFocus(50)" />
+			<param name="pos4_enabled" value="!String.IsEqual(ListItem.DBType,set)" />
+			<param name="pos4_visible" value="Control.IsVisible(3203) + $EXP[Actor_Has_Credits]" />
+			<param name="pos4_active" value="Control.HasFocus(3203)" />
+			<param name="pos5_enabled" value="!String.IsEqual(ListItem.DBType,set)" />
+			<param name="pos5_visible" value="Control.IsVisible(3205)" />
+			<param name="pos5_active" value="Control.HasFocus(3205)" />
+			<param name="pos6_enabled" value="!String.IsEqual(ListItem.DBType,set)" />
+			<param name="pos6_visible" value="Control.IsVisible(3206)" />
+			<param name="pos6_active" value="Control.HasFocus(3206)" />
+			<param name="pos7_enabled" value="!String.IsEqual(ListItem.DBType,set)" />
+			<param name="pos7_visible" value="Control.IsVisible(3207)" />
+			<param name="pos7_active" value="Control.HasFocus(3207)" />
+		</include>
+	</include>
+
+</includes>
