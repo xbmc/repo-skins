@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<animation effect="fade" time="200">WindowOpen</animation>
+	<animation effect="fade" time="150">WindowClose</animation>
+
+	<onload>SetProperty(ResetScroll," ",home)</onload>
+    <onload>AlarmClock(ClearValue,ClearProperty(ResetScroll,home),00:01,silent)</onload>
+
+	<controls>
+
+		<include>HiddenCast</include>
+
+		<control type="image">
+			<width>1920</width>
+			<height>1080</height>
+			<texture>img/blackdot1.png</texture>
+			<aspectratio>scale</aspectratio>
+		</control>
+		<control type="image">
+			<width>1920</width>
+			<height>1080</height>
+			<texture background="true">$VAR[MusicInfoBackground]</texture>
+			<aspectratio>scale</aspectratio>
+		</control>
+		<include content="BackgroundOverlay">
+			<param name="parentid" value="9000"/>
+		</include>
+		<include content="ShadowedImage">
+			<param name="top">64</param>
+			<param name="left">24</param>
+			<param name="width">619</param>
+			<param name="height">960</param>
+			<param name="shadowoffset">16</param>
+			<param name="texture">$INFO[ListItem.Icon]</param>
+		</include>
+		<control type="image">
+            <posy>60</posy>
+		    <posx>174.75</posx>
+            <width>309.5</width>
+            <height>119.7</height>
+            <texture background="true">$VAR[ClearLogo]</texture>
+		    <aspectratio align="center" aligny="center">keep</aspectratio>
+        </control>
+		<control type="group" description="Media Info">
+			<control type="group" description="top">
+				<posx>700</posx>
+				<posy>-7</posy>
+				<control type="label" description="Main Label">
+					<posy>15</posy>
+					<width>1180</width>
+					<height>60</height>
+					<font>InfoTitle</font>
+					<textcolor>$VAR[HighlightColor]</textcolor>
+					<align>left</align>
+					<label>$VAR[MusicInfoHeader]</label>
+				</control>
+				<control type="image" description="Line Split">
+					<posy>83</posy>
+					<width>1180</width>
+					<height>1</height>
+					<texture>img/LineL.png</texture>
+					<aspectratio>stretch</aspectratio>
+				</control>
+				<control type="textbox" description="Plot">
+					<include>VisibleFadeEffectDelay</include>
+					<posy>90</posy>
+                    <left>5</left>
+					<width>620</width>
+					<height>435</height>
+					<align>justify</align>
+					<font>InfoPlot</font>
+					<label fallback="19055">$VAR[Plots]$INFO[Window(home).Property(ResetScroll)]</label>
+				</control>
+                <control type="radiobutton" id="90003">
+                    <posy>525</posy>
+                    <left>588.3</left>
+                    <onright>9009</onright>
+                    <ondown>9000</ondown>
+                    <align>center</align>
+                    <aligny>center</aligny>
+                    <textureradioonfocus colordiffuse="$VAR[FocusedTextColor]">icons/dots7.png</textureradioonfocus>
+                    <textureradioonnofocus>icons/dots7.png</textureradioonnofocus>
+                    <texturefocus border="4" colordiffuse="$VAR[HighlightColor]">img/WhiteRoundedST2.png</texturefocus>
+                    <texturenofocus border="4">img/WhiteRoundedT.png</texturenofocus>
+                    <width>37</width>
+                    <height>17</height>
+                    <radiowidth>37</radiowidth>
+                    <radioheight>37</radioheight>
+                    <radioposx>0.1</radioposx>
+                    <radioposy>0</radioposy>
+                    <font></font>
+                    <selected>true</selected>
+                    <onclick>SetProperty(TextViewerHeader,$ESCVAR[MusicInfoHeader],Home)</onclick>
+                    <onclick>SetProperty(TextViewerContent,$ESCVAR[Plots],Home)</onclick>
+                    <onclick>ActivateWindow(1124)</onclick>
+                </control>
+                <control type="image" description="Line Split">
+                    <posy>90</posy>
+                    <left>637</left>
+                    <width>1</width>
+                    <height>452</height>
+                    <texture>img/LineL.png</texture>
+                    <aspectratio>stretch</aspectratio>
+                </control>
+				<control type="panel" id="9009">
+					<include>VisibleFadeEffectDelay</include>
+					<include>List_9009_Commons</include>
+                    <onup>9009</onup>
+                    <ondown>9009</ondown>
+                    <onleft>90003</onleft>
+
+					<!-- Begin Matrix change -->
+					<content>
+						<include condition="String.IsEqual(ListItem.DBTYPE,artist)">MusicInfoArtistInfo</include>
+						<include condition="String.IsEqual(ListItem.DBTYPE,album)">MusicInfoAlbumInfo</include>
+						<include condition="String.IsEqual(ListItem.DBTYPE,song)">MusicInfoSongInfo</include>
+					</content>
+					<!-- End Matrix change -->
+
+				</control>
+			</control>
+		</control>
+		<control type="grouplist" id="9000">
+			<left>700</left>
+			<posy>550</posy>
+			<width>1210</width>
+			<height>90</height>
+			<align>center</align>
+			<onup>90003</onup>
+			<ondown>SetProperty(AlbumDBID,$INFO[ListItem.DBID],Home)</ondown>
+			<ondown>91001</ondown>
+			<orientation>horizontal</orientation>
+			<itemgap>16</itemgap>
+			<!-- Play the album from album info or song info -->
+			<control type="button" id="298" description="Play Album/Song">
+				<height>90</height>
+				<width min="190">auto</width>
+				<align>center</align>
+				<font>Details</font>
+				<label>$LOCALIZE[208]</label>
+                <visible>!String.IsEqual(ListItem.DBType,artist)</visible>
+				<onclick condition="String.IsEmpty(ListItem.DBID)">PlayMedia($INFO[ListItem.FilenameAndPath])</onclick>
+                <onclick condition="System.AddonIsEnabled(script.playalbum) + String.IsEqual(ListItem.DBType,album)">RunScript(script.playalbum,albumid=$INFO[ListItem.DBID])</onclick>
+                <onclick condition="System.AddonIsEnabled(script.playalbum) + String.IsEqual(ListItem.DBType,song)">RunScript(script.playalbum,songid=$INFO[ListItem.DBID])</onclick>
+                <onclick condition="System.AddonIsEnabled(script.playalbum)">Action(close)</onclick>
+                <onclick condition="System.HasAddon(script.playalbum) + !System.AddonIsEnabled(script.playalbum) + !String.IsEmpty(ListItem.DBID)">EnableAddon(script.playalbum)</onclick>
+				<onclick condition="!System.HasAddon(script.playalbum) + !String.IsEmpty(ListItem.DBID)">InstallAddon(script.playalbum)</onclick>
+			</control>
+			<control type="button" id="6" description="Refresh">
+				<height>90</height>
+				<width min="190">auto</width>
+				<align>center</align>
+				<font>Details</font>
+				<label>$LOCALIZE[184]</label>
+                <visible>!Skin.HasSetting(KioskMode.Enabled)</visible>
+			</control>
+			<control type="button" id="7" description="Rating">
+				<height>90</height>
+				<width min="190">auto</width>
+				<font>Details</font>
+				<align>center</align>
+				<label>$LOCALIZE[31033]</label>
+				<visible>String.IsEqual(ListItem.DBType,album) | String.IsEqual(ListItem.DBType,song)</visible>
+			</control>
+			<control type="button" id="12" description="Artist/Album Information">
+				<height>90</height>
+				<width min="190">auto</width>
+				<align>center</align>
+				<font>Details</font>
+				<label>$LOCALIZE[20413]</label>
+			</control>
+			<!-- Extras: Choose Art, AB options, Show Fanart, Edit Data and Search YouTube -->
+			<control type="button" id="297" description="Extras">
+                <height>90</height>
+                <width min="190">auto</width>
+                <align>center</align>
+                <font>Details</font>
+                <label>$LOCALIZE[32135]</label>
+                <onclick>SetProperty(DoInfoExtrasMusic,True,Home)</onclick>
+                <onclick>SetProperty(InfoExtrasDBID,$INFO[ListItem.DBID],Home)</onclick>
+                <onclick>SetProperty(InfoExtrasDBType,$INFO[ListItem.DBType],Home)</onclick>
+				<onclick>SetProperty(InfoExtrasArtist,$INFO[ListItem.Artist],Home)</onclick>
+                <onclick>SetProperty(fanart,$ESCINFO[ListItem.Art(fanart)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart1,$ESCINFO[ListItem.Art(fanart1)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart2,$ESCINFO[ListItem.Art(fanart2)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart3,$ESCINFO[ListItem.Art(fanart3)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart4,$ESCINFO[ListItem.Art(fanart4)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart5,$ESCINFO[ListItem.Art(fanart5)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart6,$ESCINFO[ListItem.Art(fanart6)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart7,$ESCINFO[ListItem.Art(fanart7)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart8,$ESCINFO[ListItem.Art(fanart8)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart9,$ESCINFO[ListItem.Art(fanart9)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart10,$ESCINFO[ListItem.Art(fanart10)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart11,$ESCINFO[ListItem.Art(fanart11)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart12,$ESCINFO[ListItem.Art(fanart12)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart13,$ESCINFO[ListItem.Art(fanart13)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart14,$ESCINFO[ListItem.Art(fanart14)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart15,$ESCINFO[ListItem.Art(fanart15)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart16,$ESCINFO[ListItem.Art(fanart16)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart17,$ESCINFO[ListItem.Art(fanart17)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart18,$ESCINFO[ListItem.Art(fanart18)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart19,$ESCINFO[ListItem.Art(fanart19)],home)</onclick>
+                <onclick condition="Skin.HasSetting(EnableExtraFanart)">SetProperty(fanart20,$ESCINFO[ListItem.Art(fanart20)],home)</onclick>
+                <onclick>ActivateWindow(1121)</onclick>
+                <visible>!Skin.HasSetting(KioskMode.Enabled)</visible>
+                <visible>!String.IsEmpty(Listitem.DBID)</visible>
+            </control>
+		</control>
+
+		<!-- Track and Album Lists -->
+        <control type="grouplist" id="91001">
+			<posx>700</posx>
+            <posy>652</posy>
+            <width>1180</width>
+            <height>450</height>
+            <orientation>vertical</orientation>
+            <itemgap>-44</itemgap>
+            <usecontrolcoords>true</usecontrolcoords>
+            <onup>9000</onup>
+			<scrolltime tween="quadratic">400</scrolltime>
+			<defaultcontrol always="true">90050</defaultcontrol>
+			<control type="group" id="89000"></control>
+			<include condition="String.IsEqual(ListItem.DBType,album)">DefaultTrackList</include>
+			<include condition="String.IsEqual(ListItem.DBType,artist)">DefaultAlbumList</include>
+        </control>
+
+	</controls>
+</window>

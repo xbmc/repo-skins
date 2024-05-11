@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window type="dialog" id="1131">
+
+<!-- Search functionality adapted from sualfred's embuary and jurialmunkey's arctic.zephyr.2 -->
+    <onload condition="String.IsEmpty(Skin.String(SingleSearchTerm))">Action(Close)</onload>
+    <onunload>Skin.Reset(SingleSearchType)</onunload>
+    <onunload>Skin.Reset(SingleSearchHeader)</onunload>
+    <onunload>Skin.Reset(OnlineMediaType)</onunload>
+    <onunload>Skin.Reset(OnlineCallType)</onunload>
+
+	<defaultcontrol always="true">10</defaultcontrol>
+
+	<controls>
+
+		<!-- background -->
+        <include>DefaultBackground</include>
+		<include>OpenClose</include>
+
+        <control type="image">
+		    <posx>0</posx>
+		    <posy>0</posy>
+		    <include>Dimensions_Fullscreen</include>
+		    <aspectratio>scale</aspectratio>
+		    <texture background="true">$INFO[Container.ListItem.Art(fanart)]</texture>
+		    <visible>Control.HasFocus(101)</visible>
+		    <fadetime>600</fadetime>
+		    <animation effect="fade" time="600">Visible</animation>
+		    <animation effect="fade" time="600">Hidden</animation>
+		</control>
+
+        <include>BackgroundOverlaySearch</include>
+
+		<!-- results -->
+		<control type="grouplist" id="10">
+            <left>0</left>
+            <top>70</top>
+            <height>460</height>
+            <scrolltime tween="quadratic">400</scrolltime>
+			<itemgap>-40</itemgap>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+		    <control type="group" id="99"></control>
+			<control type="group" id="1011">
+			    <visible>Integer.IsGreater(Container(101).NumItems,0) | Container(101).IsUpdating</visible>
+				<top>40</top>
+				<height>40</height>
+				<control type="group">
+			        <top>40</top>
+				    <height>420</height>
+                    <visible>Container(101).IsUpdating</visible>
+                    <include>InfoLoading</include>
+                </control>
+				<control type="group">
+				    <visible>Integer.IsGreater(Container(101).NumItems,0)</visible>
+		            <control type="label">
+	                    <top>0</top>
+	                    <left>10</left>
+			            <width>auto</width>
+                        <height>30</height>
+    		            <font>font16</font>
+			            <align>left</align>
+			            <aligny>center</aligny>
+			            <label>$INFO[Skin.String(SingleSearchHeader)]$INFO[Skin.String(SingleSearchTerm), &quot;[CAPITALIZE],[/CAPITALIZE]&quot;]$INFO[Container(101).NumItems, (,)]</label>
+			            <textcolor>$VAR[HighlightColor]</textcolor>
+		            </control>
+					<control type="image" description="Line Split">
+			            <top>40</top>
+                        <left>10</left>
+			            <width>100%</width>
+			            <height>1</height>
+			            <texture>img/LineL.png</texture>
+			            <aspectratio>stretch</aspectratio>
+			        </control>
+				</control>
+            </control>
+			<control type="panel" id="101">
+				<top>54</top>
+				<left>10</left>
+				<width>100%</width>
+                <height>420</height>
+				<scrolltime>200</scrolltime>
+                <orientation>horizontal</orientation>
+                <visible>Integer.IsGreater(Container(101).NumItems,0) | Container(101).IsUpdating</visible>
+				<onfocus>Dialog.Close(movieinformation,force)</onfocus>
+				<onclick condition="!String.IsEmpty(Container.ListItem.DBID)">SetProperty(SingleSearchCalledInfo,yes,Home)</onclick>
+				<onclick condition="!String.IsEmpty(Container.ListItem.DBID)">Action(Info)</onclick>
+				<onclick condition="String.IsEmpty(Container.ListItem.DBID)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.FolderPath],call_auto=1134)</onclick>
+
+<!--				<onclick>Dialog.Close(All)</onclick>
+				<onclick condition="!String.IsEmpty(Container.ListItem.DBID) + [String.IsEqual(Container.ListItem.DBType,movie | String.IsEqual(Container.ListItem.DBType,episode)]">PlayMedia($ESCINFO[Container.ListItem.FileNameAndPath])</onclick>
+				<onclick condition="!String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,tvshow)">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Container.ListItem.DBID]/-1/?tvshowid=$INFO[Container.ListItem.DBID])</onclick>
+				<onclick condition="String.IsEmpty(Container.ListItem.DBID)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.FolderPath],call_auto=1134)</onclick>
+				<oninfo>Dialog.Close(1131)</oninfo>
+				<oninfo>Action(Info)</oninfo>
+				<onclick condition="Skin.HasSetting(Enable.TMDbHelper)">Dialog.Close(1131)</onclick>
+				<onclick condition="Skin.HasSetting(Enable.TMDbHelper) + [String.IsEmpty(Container.ListItem.DBID) | [!String.IsEqual(Container.ListItem.DBType,movie) + !String.IsEqual(Container.ListItem.DBType,tvshow) + !String.IsEqual(Container.ListItem.DBType,episode)]]">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.FolderPath],call_auto=1134)</onclick>
+                <onclick condition="Skin.HasSetting(Enable.TMDbHelper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,movie)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.Label,videodb://movies/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%5B%22,%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D],call_auto=1134)</onclick>
+                <onclick condition="Skin.HasSetting(Enable.TMDbHelper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,tvshow)">RunScript(plugin.video.themoviedb.helper,add_path=$INFO[Container.ListItem.Label,videodb://tvshows/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22is%22%2C%22value%22%3A%5B%22,%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D],call_auto=1134)</onclick>
+                <onclick condition="Skin.HasSetting(Enable.TMDbHelper) + !String.IsEmpty(Container.ListItem.DBID) + String.IsEqual(Container.ListItem.DBType,episode)">RunScript(plugin.video.themoviedb.helper,add_path=videodb://tvshows/titles/-1/-1/-1/-1/?xsp=%7b%22rules%22%3a%7b%22and%22%3a%5b%7b%22field%22%3a%22tvshow%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.TvShowTitle]%22%5d%7d%2c%7b%22field%22%3a%22season%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.Season]%22%5d%7d%2c%7b%22field%22%3a%22episode%22%2c%22operator%22%3a%22is%22%2c%22value%22%3a%5b%22$INFO[Container.ListItem.Episode]%22%5d%7d%5d%7d%2c%22type%22%3a%22episodes%22%7d,call_auto=1134)</onclick>
+				<onclick condition="!Skin.HasSetting(Enable.TMDbHelper)">Action(Info)</onclick> -->
+				<animation effect="fade" start="100" end="0" condition="!Integer.IsGreater(Container(101).NumItems,0) | Container(101).IsUpdating">Conditional</animation>
+                <itemlayout height="326" width="232.5">
+				    <include content="GenericThumbIconTemplate">
+				        <param name="isFocused">false</param>
+						<param name="isSearch">true</param>
+				        <param name="iconwidth">232.5</param>
+				        <param name="iconheight">326</param>
+				        <param name="iconoffset">0</param>
+				        <param name="iconimage">$VAR[ContainerPoster]</param>
+						<param name="aspect">stretch</param>
+				        <param name="shadowoffset">8</param>
+				        <param name="bordersizeLT">12</param>
+				        <param name="bordersizeRB">20</param>
+				        <param name="belowdoublelabelvisibility">String.IsEqual(Window(Home).Property(SingleSearchType),OnlineTotals)</param>
+						<param name="belowdoublelabel1">$INFO[Container.ListItem.Year]</param>
+						<param name="belowdoublelabel2">[I]$VAR[SearchBelowLabel2][/I]</param>
+	                </include>
+	            </itemlayout>
+	            <focusedlayout height="326" width="232.5">
+				    <include content="GenericThumbIconTemplate">
+		                <param name="isFocused">Control.HasFocus(101)</param>
+		                <param name="isSearch">true</param>
+						<param name="iconwidth">232.5</param>
+		                <param name="iconheight">326</param>
+		                <param name="iconoffset">0</param>
+		                <param name="iconimage">$VAR[ContainerPoster]</param>
+						<param name="aspect">stretch</param>
+		                <param name="shadowoffset">8</param>
+		                <param name="bordersizeLT">12</param>
+		                <param name="bordersizeRB">20</param>
+						<param name="belowdoublelabelvisibility">String.IsEqual(Window(Home).Property(SingleSearchType),OnlineTotals)</param>
+						<param name="belowdoublelabel1">$INFO[Container.ListItem.Year]</param>
+						<param name="belowdoublelabel2">[I]$VAR[SearchBelowLabel2][/I]</param>
+	                </include>
+	            </focusedlayout>
+                <content sortby="year" sortorder="descending" target="videos">$VAR[SingleSearchContent]</content>
+			</control>
+        </control>
+
+		<!-- header bar -->
+        <include>Time</include>
+
+        <control type="image" description="Footer Dim BG">
+            <posx>0</posx>
+            <posy>873</posy>
+            <width>1920</width>
+            <height>207</height>
+            <texture>img/GradientNew.png</texture>
+            <colordiffuse>dfcebe9e</colordiffuse>
+        </control>
+        <control type="image" description="Footer">
+            <posx>0</posx>
+            <posy>873</posy>
+            <width>1920</width>
+            <height>207</height>
+            <texture>OSD/FS_OSDBackground.png</texture>
+            <colordiffuse>dfcebe9e</colordiffuse>
+        </control>
+
+        <control type="group" description="Media Info Lite">
+		    <include>ContentFade</include>
+			<posy>937</posy>
+			<posx>390</posx>
+			<width>1140</width>
+		    <control type="label" description="Title shadow">
+		        <left>4</left>
+		        <top>4</top>
+		        <width>1140</width>
+		        <height>50</height>
+		        <align>center</align>
+		        <textcolor>Black</textcolor>
+		        <shadowcolor></shadowcolor>
+		        <font>InfoTitle</font>
+		        <scroll>false</scroll>
+				<label>$VAR[panelheading]</label>
+			</control>
+			<control type="label" description="Title Label">
+			    <width>1140</width>
+			    <height>50</height>
+			    <align>center</align>
+			    <textcolor>$VAR[HighlightColor]</textcolor>
+			    <shadowcolor></shadowcolor>
+			    <font>InfoTitle</font>
+			    <scroll>false</scroll>
+			    <label>$VAR[panelheading]</label>
+			</control>
+			<control type="label" description="Details">
+			    <posy>59</posy>
+			    <width>1140</width>
+			    <height>50</height>
+			    <align>center</align>
+			    <shadowcolor>Black</shadowcolor>
+			    <label>$VAR[ContainerPanelSubHeading]</label>
+			</control>
+		</control>
+		<control type="group">
+		    <visible>!Skin.HasSetting(coloredflags)</visible>
+			<include>ContentFade</include>
+			<control type="grouplist" description="Left Flags">
+			    <left>20</left>
+			    <top>1010</top>
+			    <width>520</width>
+			    <height>80</height>
+			    <itemgap>20</itemgap>
+			    <orientation>horizontal</orientation>
+			    <align>left</align>
+			    <include content="MediaFlagItems">
+				    <param name="showvideobadge">true</param>
+				    <param name="showaudiobadge">false</param>
+				    <param name="showratingbadge">false</param>
+				    <param name="diffuse">$VAR[LabelTextColor]</param>
+			    </include>
+		    </control>
+		    <control type="grouplist" description="Right Flags">
+			    <left>1600</left>
+			    <top>1010</top>
+			    <width>300</width>
+			    <height>80</height>
+			    <itemgap>20</itemgap>
+			    <orientation>horizontal</orientation>
+			    <align>right</align>
+			    <include content="MediaFlagItems">
+				    <param name="showvideobadge">false</param>
+				    <param name="showaudiobadge">true</param>
+				    <param name="showratingbadge">true</param>
+				    <param name="diffuse">$VAR[LabelTextColor]</param>
+			    </include>
+		    </control>
+		</control>
+		<control type="group">
+		    <visible>Skin.HasSetting(coloredflags)</visible>
+			<include>ContentFade</include>
+			<control type="grouplist" description="Left Flags">
+			    <left>0</left>
+			    <top>1010</top>
+			    <width>520</width>
+			    <height>80</height>
+			    <itemgap>20</itemgap>
+			    <orientation>horizontal</orientation>
+			    <align>left</align>
+			    <include content="MediaFlagItems">
+				    <param name="showvideobadge">true</param>
+				    <param name="showaudiobadge">false</param>
+				    <param name="showratingbadge">false</param>
+				    <param name="diffuse">$VAR[LabelTextColor]</param>
+			    </include>
+		    </control>
+		    <control type="grouplist" description="Right Flags">
+			    <left>1600</left>
+			    <top>1010</top>
+			    <width>300</width>
+			    <height>80</height>
+			    <itemgap>20</itemgap>
+			    <orientation>horizontal</orientation>
+			    <align>right</align>
+			    <include content="MediaFlagItems">
+				    <param name="showvideobadge">false</param>
+				    <param name="showaudiobadge">true</param>
+				    <param name="showratingbadge">true</param>
+				    <param name="diffuse">$VAR[LabelTextColor]</param>
+			    </include>
+		    </control>
+		</control>
+
+        <!-- No information found label -->
+		<control type="group">
+		    <visible>!Control.IsVisible(101)</visible>
+			<width>100%</width>
+			<height>420</height>
+			<control type="label">
+                <top>60</top>
+		        <left>65</left>
+			    <width>auto</width>
+                <height>30</height>
+                <font>font16</font>
+     		    <align>left</align>
+			    <aligny>center</aligny>
+			    <label>$LOCALIZE[19055]</label>
+			    <textcolor>$VAR[HighlightColor]</textcolor>
+			</control>
+		</control>
+
+	</controls>
+</window>
