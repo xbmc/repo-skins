@@ -11,6 +11,7 @@
 		<param name="aspectratio" default="scale" />
 		<param name="art_diffuse" default="!$EXP[ListView_Display_IsThumbnails] | Window.Is(videoplaylist)" />
 		<param name="has_progress" default="false" />
+		<param name="kenburns" default="false" />
 		<definition>
 			<control type="group">
 				<visible>$PARAM[visible]</visible>
@@ -26,14 +27,19 @@
 					<param name="art_diffuse" value="$PARAM[art_diffuse]" />
 					<param name="now_playing" value="false" />
 					<param name="fadetime" value="45" />
+					<include content="Ken_Burns_Effect_Animation" condition="$PARAM[kenburns]" />
 				</include>
-				<include content="Icon_Art">
+				<include content="Icon_Art" condition="!Skin.HasSetting(Experiment_Disable_Transitions)">
 					<param name="texture" value="$VAR[$PARAM[art_icon](0)Content]" />
 					<param name="aspectratio" value="$PARAM[aspectratio]" />
 					<param name="fallback" value="$PARAM[fallback]" />
 					<param name="art_diffuse" value="$PARAM[art_diffuse]" />
 					<param name="now_playing" value="false" />
-					<param name="fadetime" value="360" />
+					<param name="fadetime" value="Default_Transition_1x" />
+					<include content="Ken_Burns_Effect_Animation" condition="$PARAM[kenburns]" />
+				</include>
+				<include content="Icon_Component_Indicator" condition="Skin.HasSetting(Secondary_List_Enabled)">
+					<param name="visible" value="Container($PARAM[target_id]).ListItemNoWrap($PARAM[position]).IsCollection" />
 				</include>
 				<!-- Progress overlay -->
 				<include content="Icon_Component_Progress_Overlay" condition="$PARAM[has_progress] + [Window.Is(home) | Window.Is(videos) | Window.Is(movieinformation)]">
@@ -47,34 +53,43 @@
 		<param name="condition" default="$EXP[ListView_Display_IsThumbnails]" />
 		<definition>
 			<itemlayout height="60" width="1140" condition="$PARAM[condition]">
-				<include content="Common_List_Unfocused" />
+				<include content="Common_List_Unfocused">
+					<param name="label_left" value="90" />
+					<param name="label_maxwidth" value="840" />
+				</include>
 			</itemlayout>
 			<focusedlayout height="60" width="1140" condition="$PARAM[condition]">
-				<include content="Common_List_Focused" />
+				<include content="Common_List_Focused">
+					<param name="label_left" value="90" />
+					<param name="label_maxwidth" value="990" />
+				</include>
 			</focusedlayout>
 		</definition>
 	</include>
 
 	<include name="ListView_Layout_Background">
 		<param name="condition" default="$EXP[ListView_Display_IsBackground]" />
-		<param name="unfocused_maxwidth" default="1080" />
-		<param name="focused_maxwidth" default="1200" />
+		<param name="label_left" default="120" />
+		<param name="unfocused_label_maxwidth" default="1080" />
+		<param name="focused_label_maxwidth" default="1200" />
+		<param name="icon_slide" default="-900" />
+		<param name="music_rating_slide" default="870" />
 		<definition>
 			<itemlayout height="60" width="1920" condition="$PARAM[condition]">
 				<include content="Common_List_Unfocused">
-					<param name="label_left" value="120" />
-					<param name="label_maxwidth" value="$PARAM[unfocused_maxwidth]" />
-					<param name="icon_slide" value="-900" />
-					<param name="music_rating_slide" value="870" />
+					<param name="label_left" value="$PARAM[label_left]" />
+					<param name="label_maxwidth" value="$PARAM[unfocused_label_maxwidth]" />
+					<param name="icon_slide" value="$PARAM[icon_slide]" />
+					<param name="music_rating_slide" value="$PARAM[music_rating_slide]" />
 					<param name="music_rating_color" value="$VAR[Light_Color]" />
 				</include>
 			</itemlayout>
 			<focusedlayout height="60" width="1920" condition="$PARAM[condition]">
 				<include content="Common_List_Focused">
-					<param name="label_left" value="120" />
-					<param name="label_maxwidth" value="$PARAM[focused_maxwidth]" />
-					<param name="icon_slide" value="-900" />
-					<param name="music_rating_slide" value="870" />
+					<param name="label_left" value="$PARAM[label_left]" />
+					<param name="label_maxwidth" value="$PARAM[focused_label_maxwidth]" />
+					<param name="icon_slide" value="$PARAM[icon_slide]" />
+					<param name="music_rating_slide" value="$PARAM[music_rating_slide]" />
 					<param name="music_rating_color" value="$VAR[Light_Color]" />
 				</include>
 			</focusedlayout>
@@ -85,7 +100,7 @@
 		<itemlayout height="60" width="1140">
 			<include content="Common_List_Unfocused">
 				<param name="label_left" value="90" />
-				<param name="label_maxwidth" value="900" />
+				<param name="label_maxwidth" value="840" />
 				<param name="list_icon" value="true" />
 				<param name="list_icon_texture" value="Special_Addonbrowser_unfocused" />
 			</include>
@@ -93,7 +108,7 @@
 		<focusedlayout height="60" width="1140">
 			<include content="Common_List_Focused">
 				<param name="label_left" value="90" />
-				<param name="label_maxwidth" value="1020" />
+				<param name="label_maxwidth" value="990" />
 				<param name="list_icon" value="true" />
 				<param name="list_icon_texture" value="Special_Addonbrowser_focused" />
 			</include>
@@ -108,11 +123,13 @@
 	<include name="ListView_Layout_music">
 		<itemlayout height="60" width="1140" condition="$EXP[ListView_Display_IsThumbnails] + Container.Content(songs)">
 			<include content="Common_List_Unfocused">
-				<param name="label_maxwidth" value="720" />
+				<param name="label_left" value="90" />
+				<param name="label_maxwidth" value="840" />
 			</include>
 		</itemlayout>
 		<focusedlayout height="60" width="1140" condition="$EXP[ListView_Display_IsThumbnails] + Container.Content(songs)">
 			<include content="Common_List_Focused">
+				<param name="label_left" value="90" />
 				<param name="label_maxwidth" value="840" />
 			</include>
 		</focusedlayout>
@@ -140,8 +157,6 @@
 	<include name="ListView_Layout_tvsearch">
 		<include content="ListView_Layout_Background">
 			<param name="condition" value="true" />
-			<param name="focused_maxwidth" value="1200" />
-			<param name="unfocused_maxwidth" value="1200" />
 		</include>
 	</include>
 
