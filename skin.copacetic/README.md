@@ -20,6 +20,95 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 ---
+**1.4.3**
+- Increased version number of script.copacetic.helper dependency to 1.1.0
+- Added visibility delay to multiartwhen switching containers to prevent seeing it fade out immediately after moving from Movies to Sets, etc.
+- Added experimental feature to enable landscape artwork to be displayed instead of fanart for background artwork in List and Billboard view (Settings > Copacetic > Customisations > Experimentsle > 'Enable landscape art for List and Billboard view backgrounds')
+- Added small and large item layouts for Grid view panels (Copacetic > Views > Grid > 'Item artwork size') https://github.com/realcopacetic/skin.copacetic/issues/168
+- Added option to change plot text colour on Showcase and Strip views from grey to white (Copacetic > Customisations > Library > 'Prefer white to grey text for plot in Showcase and Strip views') https://github.com/realcopacetic/skin.copacetic/issues/168 https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added label to video infoscreen showing end time when infolabel is available https://github.com/realcopacetic/skin.copacetic/issues/168
+- Added option to disable video information from being displayed at the top of the screen upon video playback (Copacetic > Customisations > Video Player > 'Disable video information from being displayed at the start of playback') https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added option to show remaining time rather than item duration in the seekbar (Copacetic > Customisations > Video Player > 'Prefer time remaining to video duration in seek bar') https://github.com/realcopacetic/skin.copacetic/issues/173  
+- Fixed missing label when scrolling embedded lists in Thumbnails layout of List view
+- Added fadetime to episode artwork when in ListView Thumbnails layout https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added video title to top of video player when osd is on the screen, with currently focused button moved to secondary info label in the top bar https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added option to scroll long titles in ListView instead of truncating (Copacetic > Views > List > 'Enable scrolling on long titles instead of truncation (...)') https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added wrap around on context/options menus so if you get to the bottom/top and press down/up, you will wrap back around to the other end of the list https://github.com/realcopacetic/skin.copacetic/issues/173
+
+Still to do:
+--- transparency of video player overlay
+--- checkmarks/fades for other views?
+--- check to see the player status labels
+-- transition times - check all animations are switched to constants, decide on content switching exclusions for each view. See if anything breaks or any other areas animations can be cut
+-- check tmdb helper click actions for all infoscreen widgets (including episode ones etc)
+-- tmdb helper for play button on infoscreen?
+- autoscroll bar
+- multiart on autoscroll
+- login background
+- Create radio station button
+- remove window property hack for music ratings during playback in Omega
+artwork slideshow label wrong when you go into places like music library
+<!-- temp fix to account for fact that DecreaseRating won't go lower than 1 for VideoPlayer.UserRating -->
+- PVR
+https://github.com/jurialmunkey/plugin.video.themoviedb.helper/wiki/Replacing-Extended-Info#direct-call-auto
+- Code cleanup - replace things like [skin.string(x,y) | !skin.string(x)] with !skin.string(z)
+
+**1.4.2**
+- Improved visibility condition for widget settings screen
+- Added globalsearch configuration screen to skin settings under Settings > Copacetic > Home > 'Configure global search'
+- Disabled use of landscape artwork on Billboard widget views
+- Disabled 'Prefer landscape artwork' option when Billboard view selected on a home widget
+- Added script to quick subtitle switcher in videoOSD controls that allows it to toggle only between 'Off' and a preferred language, as set in skin settings. If preferred language is not available or no value is entered in skin settings, this button will toggle through all available subtitles instead https://github.com/realcopacetic/skin.copacetic/issues/170
+
+**1.4.0**
+- Added option to prefer TMDbHelper plugin if it's enabled as the content source for info screen widgets, under Settings > Copacetic > Customisations > Info screens https://github.com/realcopacetic/skin.copacetic/issues/105
+- Fixed bug in window transition animations between home, settings etc to ensure that when background slideshow is the same between two windows, the transition is instantaneous
+- Fixed a bug in how views are displayed when a home widget redirects to a view in videos window https://github.com/realcopacetic/skin.copacetic/issues/167
+- Added error notification if global search returns 0 results.
+- fixed bugs in infoscreen breadcrumb system especially when using tmdbhelper for info screen widgets
+- Allow flags to show on Strip View even when details set to 'Off' - this enables views where user wants poster or landscape artwork to be visible without additional title label but still showing flags https://github.com/realcopacetic/skin.copacetic/issues/169
+
+**1.3.9**
+- Updated more widget paths with URL-encoded strings from script.copacetic.helper
+
+**1.3.8**
+- Updated widget paths with url_encoded strings from script.copacetic.helper to enable xsp filtering when titles have special characters
+- Videoosd next button now does bigskipforward if no chapters or playlist are present
+- Experimental option (Settings > Copacetic > Customisations > Experiments) to enable Kodi to automatically move to the parent directory in the event that you find yourself in an empty list, e.g. if you are in the Episodes folder of a TV Show and your filter is set to Unwatched but you don't have any unwatched episodes, this will return you to TV Shows, or Seasons if you have unwatched episodes in another season https://forum.kodi.tv/showthread.php?tid=376965&pid=3195627#pid3195627
+- New studio logos https://github.com/realcopacetic/skin.copacetic/issues/131#issuecomment-2040162305
+
+**1.3.7**
+- Further refinement of auto scroll/play timers
+
+**1.3.6**
+- Fix for preventing widgets from auto-playing trailers when auto-scroll also enabled
+
+**1.3.5**
+- Added visual listitem indicator for Collections (sets)
+- Added tvchannels window
+- Improved tvguide window
+- Fixed issue with path tracer when navigating from one infoscreen widget to a new infoscreen. On pressing back, instead of going to the back to the previous infoscreen, Copacetic was closing all dialogs and the main lists were remaining hidden.
+- Staying idle on global search home button will now trigger screensaver if it is active
+- Added landscape to movieartwhitelist/tvshowartwhitelist recommended settings
+- Added support for landscape artwork across all fanart views and widgets
+- Added ability to prefer keyart and lanscape art on a per view / per widget basis
+- Added ability to enable trailer autoplay on a per widget basis
+- Added optional autoscroll to each widget, which can be combined with trailer autoplay to create a playlist of trailers
+- Added ability to choose to display clearlogos on a per widget basis
+- New 'Spotlight' display option for Grid widgets. This is the same as fanart, but smaller and stays on the screen when trailers are playing. Together with the options for autoscroll and trailer autoplay, the idea is to create a similar feel to the Netflix trailer auto-play view
+- Rebuilt widget settings section of Copacetic settings screen into its own window to make for easier management of the new options
+- Reordered some other parts of the Copacetic settings screen 
+
+
+**1.3.4**
+- fix for globalsearch scrollbar colour
+
+**1.3.3**
+- misc bug fixes
+
+**1.3.2**
+- globalsearch
+
 **1.2.2**
 - Non-breaking changes to keep code in sync with Omega
 - Cleaned some expressions governing Light theme and artwork backgrounds to simplify complex scenarios when several transparent windows are open on top of each other
@@ -60,12 +149,6 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 - Made some fixes to videoplaylist/musicplaylist
 - Made some fixes to visualisation window https://github.com/realcopacetic/skin.copacetic/issues/130
 - Added support for artist fanart multiart to visualisation slideshow https://github.com/realcopacetic/skin.copacetic/issues/47
-
-Still to do:
-- OSD : (still to update --> Buttons, Settings, Stars, icon_Player)
-- login background
-- Create radio station button
-
 
 **1.1.24**
 - Disabled debugging flag
