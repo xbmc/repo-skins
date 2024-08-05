@@ -2,10 +2,10 @@
 <includes>
 	
 	<!-- Windows -->
-	<expression name="Home_HasBackground">Window.IsVisible(home) + [String.IsEmpty(Window(home).Property(Home_Widget)) | $EXP[BillboardView_Display_IsFanart_Widget_Home]] + !$EXP[globalsearch_IsVisible]</expression>
+	<expression name="Home_HasBackground">Window.IsVisible(home) + [String.IsEmpty(Window(home).Property(Home_Widget)) | $EXP[BillboardView_Display_IsFanart_Widget_Home]] + !$EXP[globalsearch_IsVisible] + !$EXP[Infoscreen_IsVisible]</expression>
 	<expression name="Settings_Window_IsVisible">Window.IsVisible(settings) | Window.IsVisible(skinsettings) | Window.IsVisible(appearancesettings) | Window.IsVisible(mediasettings) | Window.IsVisible(playersettings) | Window.IsVisible(servicesettings) | Window.IsVisible(systemsettings) | Window.IsVisible(pvrsettings) | Window.IsVisible(gamesettings) | Window.IsVisible(profiles) | Window.IsVisible(systeminfo) | Window.IsVisible(filemanager)</expression>
-	<expression name="Window_HasBackground">[Window.IsVisible(addonsettings) + !String.IsEmpty(ListItem.Art(fanart))] | [Window.IsVisible(addonbrowser) + !Container.Content(addons)] | Window.IsVisible(favouritesbrowser) | Window.IsVisible(loginscreen) | Window.IsVisible(musicplaylisteditor)</expression>
-	<expression name="Container_HasBackground">[$EXP[ListView_Display_IsBackground] | $EXP[BillboardView_IsVisible] | $EXP[ShowcaseView_Display_HasBackground]] + !$EXP[globalsearch_IsVisible]</expression>
+	<expression name="Window_HasBackground">[Window.IsVisible(addonsettings) + !String.IsEmpty(ListItem.Art(fanart))] | [Window.IsVisible(addonbrowser) + !$EXP[Container_Addons_NonRepo]] | Window.IsVisible(favouritesbrowser) | Window.IsVisible(loginscreen) | Window.IsVisible(musicplaylisteditor)</expression>
+	<expression name="Container_HasBackground">[$EXP[ListView_Display_IsBackground] | $EXP[BillboardView_IsVisible] | $EXP[ShowcaseView_Display_HasBackground]] + !$EXP[globalsearch_IsVisible] + !$EXP[Infoscreen_IsVisible]</expression>
 	<expression name="Content_HasBackground">Container.Content(videoversions) | Container.Content(genres) | Container.Content(years) | Container.Content(playlists) | Container.Content(sources) | Container.Content(studios) | Container.Content(directors) | Container.Content(tags) | Container.Content(countries) | Container.Content(roles)</expression>
 	<expression name="Infoscreen_HasBackground">[Window.IsVisible(movieinformation) + [Window.IsVisible(1104) | Window.IsVisible(1150) | !String.IsEmpty(Window(movieinformation).Property(Focused_Button)) | String.IsEqual(Window(home).Property(Infoscreen_Widget),3205)]] | [Window.IsVisible(musicinformation) + String.IsEqual(Window(musicinformation).Property(Info_Type),artist) + [Window.IsVisible(1104) | Window.IsVisible(1150) | !String.IsEmpty(Window(musicinformation).Property(Focused_Button))]] | [Window.IsVisible(musicinformation) + String.IsEqual(Window(musicinformation).Property(Focused_Button),$LOCALIZE[21891])]</expression>
 	<expression name="Background_IsVisible">$EXP[Home_HasBackground] | $EXP[Settings_Window_IsVisible] | $EXP[Window_HasBackground] | $EXP[Container_HasBackground] | $EXP[Content_HasBackground] | $EXP[Infoscreen_HasBackground] | [Container.Content() + $EXP[ListView_Display_IsBackground] + [Window.IsVisible(videos) | Window.IsVisible(music)]]</expression>
@@ -42,7 +42,7 @@
 
 	<!-- Misc -->
 	<expression name="Library_Has_Content">Library.HasContent(Video) | Library.HasContent(Music)</expression>
-	<expression name="Actor_Has_Credits">Integer.IsGreater(Container(3203).NumItems,1) | !String.IsEqual(Container(3203).ListItem.Label,ListItem.Label)</expression>
+	<expression name="Actor_Has_Credits">Integer.IsGreater(Container(3203).NumItems,1) | [String.IsEqual(ListItem.DBType,episode) + !String.IsEqual(Container(3203).ListItem.Label,ListItem.TVShowTitle)] | [!String.IsEqual(ListItem.DBType,episode) + !String.IsEqual(Container(3203).ListItem.Label,ListItem.Label)]</expression>
 	<expression name="Hidden_Focus_Setter">Control.HasFocus(4010)</expression>
 	<expression name="Hidden_Options_Menu_Disabled">Skin.HasSetting(Kiosk_Mode) + Skin.HasSetting(Disable_Hidden_Menu)</expression>
 	<expression name="Scrollbar_HasFocus">Control.HasFocus(60) | Control.HasFocus(61) | Control.HasFocus(62) | Control.HasFocus(4012) | Control.HasFocus(4013)</expression>
@@ -100,9 +100,12 @@
 	<expression name="Container_Switching">[$EXP[Container_Level_0] | $EXP[Container_Level_1] | $EXP[Container_Level_2] | $EXP[Container_Level_3] | $EXP[Container_Level_4] | $EXP[Container_Level_5]] + !Window.IsVisible(home) + !$EXP[Infoscreen_IsVisible]</expression>
 	<expression name="Content_Next">Control.IsVisible(5002)</expression>
 	<expression name="Content_Previous">Control.IsVisible(5001)</expression>
-	<expression name="Content_Switching">[Control.IsVisible(5001) | Control.IsVisible(5002)] + [!String.IsEqual(Container.NumItems,1) | Window.Is(movieinformation) | Window.Is(musicinformation) | Window.Is(songinformation) | Window.Is(addoninformation)] + !Window.IsVisible(managevideoversions) + !Window.IsVisible(managevideoextras)</expression>
-	<expression name="Content_Switching_Minus_Exclusions">$EXP[Content_Switching] + ![Skin.HasSetting(Experiment_Disable_Transitions) + [$EXP[Content_Switching_Exclusions_StripView] | $EXP[BillboardView_IsVisible]]]</expression>
-	<expression name="Content_Switching_Exclusions_StripView">[$EXP[StripView_Media_IsVisible] + $EXP[StripView_Details_Off]] | $EXP[StripView_Widget_Infoscreen_IsVisible]</expression>
+	<expression name="Content_Switching">$EXP[Content_Switching_Base] + !$EXP[Content_Switching_Exclusions_BillboardView] + !$EXP[Content_Switching_Exclusions_ShowcaseView] + !$EXP[Content_Switching_Exclusions_StripView] + !$EXP[Content_Switching_Exclusions_GridView]</expression>
+	<expression name="Content_Switching_Base">[Control.IsVisible(5001) | Control.IsVisible(5002)] + [!String.IsEqual(Container.NumItems,1) | Window.Is(movieinformation) | Window.Is(musicinformation) | Window.Is(songinformation) | Window.Is(addoninformation)] + !Window.IsVisible(managevideoversions) + !Window.IsVisible(managevideoextras)</expression>
+	<expression name="Content_Switching_Exclusions_BillboardView">$EXP[BillboardView_IsVisible] + Skin.HasSetting(Quick_Transitions)</expression>
+	<expression name="Content_Switching_Exclusions_ShowcaseView">$EXP[ShowcaseView_Media_IsVisible] + Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)</expression>
+	<expression name="Content_Switching_Exclusions_StripView">[$EXP[StripView_Media_IsVisible] + $EXP[StripView_Details_Off]] | [Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)] | $EXP[StripView_Widget_Infoscreen_IsVisible]</expression>
+	<expression name="Content_Switching_Exclusions_GridView">$EXP[GridView_Media_IsVisible] + Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)</expression>
 
 	<!-- Container Transitions -->
 	<expression name="Container_Level_0">Window.IsVisible(1110) + $EXP[all_Level_0]</expression>
@@ -120,15 +123,16 @@
 	<!-- children -->
 	<expression name="media_Level_0">String.IsEmpty(Container.FolderName) + Container.Content()</expression>
 	<expression name="media_Level_1">String.IsEmpty(Container.FolderName) + !Container.Content()</expression>
-	<expression name="media_Level_2">$EXP[Content_HasBackground] | Container.Content(actors)</expression>
+	<expression name="media_Level_2">$EXP[Content_HasBackground] | Container.Content(actors) | $EXP[music_Level_2]</expression>
 	<expression name="media_Level_3">$EXP[movies_Level_3] | $EXP[music_Level_3] | $EXP[tvshows_Level_3] | Container.Content(addons)</expression>
 	<expression name="media_Level_4">$EXP[movies_Level_4] | $EXP[music_Level_4] | $EXP[tvshows_Level_4]</expression>
 	<expression name="media_Level_5">$EXP[movies_Level_5] | $EXP[music_Level_5] | $EXP[tvshows_Level_5]</expression>
 	<expression name="movies_Level_3">Container.Content(sets) | [Container.Content(movies) + !String.IsEqual(Container.FolderName,ListItem.Set) + !String.IsEqual(Container.FolderName,ListItem.Title)]</expression>
 	<expression name="movies_Level_4">Container.Content(movies) + String.IsEqual(Container.FolderName,ListItem.Set)</expression>
 	<expression name="movies_Level_5">Container.Content(movies) + String.IsEqual(Container.FolderName,ListItem.Title)</expression><!-- video versions -->
-	<expression name="music_Level_3">Container.Content(artists)</expression>
-	<expression name="music_Level_4">Container.Content(albums)</expression>
+	<expression name="music_Level_2">Container.Content(artists)</expression>
+	<expression name="music_Level_3">Container.Content(albums) + String.IsEqual(Container.FolderName,ListItem.Artist)</expression>
+	<expression name="music_Level_4">Container.Content(albums) + String.IsEqual(Container.FolderName,ListItem.Album)</expression>
 	<expression name="music_Level_5">Container.Content(songs)</expression>
 	<expression name="tvshows_Level_3">Container.Content(tvshows)</expression>
 	<expression name="tvshows_Level_4">Container.Content(seasons) | [Container.Content(episodes) + ListItem.IsFolder + !String.Contains(Container.FolderPath,videodb)]</expression>
@@ -148,6 +152,8 @@
 	<expression name="files_and_folders_Level_5">!Container.HasFolders + !Container.HasFiles + [Container.Content(images) | Container.Content(files)]</expression>
 	<expression name="programs_Level_3">$EXP[Container_Programs_IsFolders]</expression>
 	<expression name="programs_Level_4">$EXP[Container_Programs_IsFiles]</expression>
+
+	<expression name="globalsearch_Container_Switching">[Control.HasFocus(3201) + Window.IsVisible(1131)] | [Control.HasFocus(3202) + Window.IsVisible(1132)] | [Control.HasFocus(3203) + Window.IsVisible(1133)] | [Control.HasFocus(3204) + Window.IsVisible(1134)] | [Control.HasFocus(3205) + Window.IsVisible(1135)] | [Control.HasFocus(3206) + Window.IsVisible(1136)] | [Control.HasFocus(3207) + Window.IsVisible(1137)] | [Control.HasFocus(3208) + Window.IsVisible(1138)] | [Control.HasFocus(3209) + Window.IsVisible(1139)]</expression>
 
 	<!-- Extras -->
 	<expression name="Multiart_Container_Switching">[String.IsEqual(Window(home).Property(Home_Widget),3201) + Window.IsVisible(1131)] | [String.IsEqual(Window(home).Property(Home_Widget),3202) + Window.IsVisible(1132)] | [String.IsEqual(Window(home).Property(Home_Widget),3203) + Window.IsVisible(1133)] | [String.IsEqual(Window(home).Property(Home_Widget),3204) + Window.IsVisible(1134)] | [String.IsEqual(Window(home).Property(Home_Widget),3205) + Window.IsVisible(1135)] | [String.IsEqual(Window(home).Property(Home_Widget),3206) + Window.IsVisible(1136)] | [String.IsEqual(Window(home).Property(Home_Widget),3207) + Window.IsVisible(1137)] | [String.IsEqual(Window(home).Property(Home_Widget),3208) + Window.IsVisible(1138)] | [String.IsEqual(Window(home).Property(Home_Widget),3209) + Window.IsVisible(1139)]</expression>
@@ -998,7 +1004,7 @@
 	<expression name="GridView_Display_IsFanart_Widget9_Home">String.IsEqual(Window(home).Property(Home_Widget),3209) + Skin.String(Widget9_View,Grid) + Skin.String(Widget9_Display,Fanart)</expression>
 	<expression name="GridView_Display_IsFanart_Widget_Infoscreen">$EXP[Infoscreen_IsVisible] + [Control.HasFocus(50) + String.IsEqual(Control.GetLabel(62001),Grid) + String.IsEqual(Control.GetLabel(62002),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3201) + String.IsEqual(Control.GetLabel(62011),Grid) + String.IsEqual(Control.GetLabel(62012),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3202) + String.IsEqual(Control.GetLabel(62021),Grid) + String.IsEqual(Control.GetLabel(62022),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3203) + String.IsEqual(Control.GetLabel(62031),Grid) + String.IsEqual(Control.GetLabel(62032),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3204) + String.IsEqual(Control.GetLabel(62041),Grid) + String.IsEqual(Control.GetLabel(62042),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3205) + String.IsEqual(Control.GetLabel(62051),Grid) + String.IsEqual(Control.GetLabel(62052),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3206) + String.IsEqual(Control.GetLabel(62061),Grid) + String.IsEqual(Control.GetLabel(62062),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3207) + String.IsEqual(Control.GetLabel(62071),Grid) + String.IsEqual(Control.GetLabel(62072),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3208) + String.IsEqual(Control.GetLabel(62081),Grid) + String.IsEqual(Control.GetLabel(62082),Fanart)] | [String.IsEqual(Window(home).Property(Infoscreen_Widget),3209) + String.IsEqual(Control.GetLabel(62091),Grid) + String.IsEqual(Control.GetLabel(62092),Fanart)]</expression>
 	<!-- Display: Square -->
-	<expression name="GridView_Display_IsSquare">[$EXP[GridView_Media_IsVisible] + [$EXP[GridView_Display_IsSquare_Artists] | $EXP[GridView_Display_IsSquare_Programs_Folders] | $EXP[GridView_Display_IsSquare_Programs_Files] | Container.Content(albums) | Container.Content(songs) | Container.Content(addons) | $EXP[GridView_Display_IsSquare_Images] | $EXP[Container_Plugin_Empty] | [Container.Content(files) + String.Contains(Container.PluginName,YouTube)]]] | $EXP[GridView_Display_IsSquare_Widget]</expression>
+	<expression name="GridView_Display_IsSquare">[$EXP[GridView_Media_IsVisible] + [$EXP[GridView_Display_IsSquare_Artists] | $EXP[GridView_Display_IsSquare_Programs_Folders] | $EXP[GridView_Display_IsSquare_Programs_Files] | Container.Content(albums) | Container.Content(songs) | Container.Content(addons) | $EXP[GridView_Display_IsSquare_Images] | $EXP[Container_Plugin_Empty] | [Container.Content(files) + String.Contains(Container.PluginName,YouTube)]]] | $EXP[GridView_Display_IsSquare_Widget] | Container.Content()</expression>
 	<expression name="GridView_Display_IsSquare_Artists">Container.Content(artists) + Skin.String(GridView_Display_Artists,Square)</expression>
 	<expression name="GridView_Display_IsSquare_Images">Container.Content(images) + [!Skin.HasSetting(Experiment_GridView_Fanart_Pictures) | Skin.String(GridView_Display_Images,Square) | !Skin.String(GridView_Display_Images)]</expression>
 	<expression name="GridView_Display_IsSquare_Programs_Folders">$EXP[Container_Programs_IsFolders] + Skin.String(GridView_Display_Programs_Folders,Square)</expression>
@@ -1067,7 +1073,7 @@
 	<expression name="GridView_Details_Info_Images">Container.Content(images) + Skin.String(GridView_Details_Images,TitleAndInfo)</expression>
 	<expression name="GridView_Details_Info_Programs_Folders">$EXP[Container_Programs_IsFolders] + [Skin.String(GridView_Details_Programs_Folders,TitleAndInfo) | !Skin.String(GridView_Details_Programs_Folders)]</expression>
 	<expression name="GridView_Details_Info_Programs_Files">$EXP[Container_Programs_IsFiles] + [Skin.String(GridView_Details_Programs_Files,TitleAndInfo) | !Skin.String(GridView_Details_Programs_Files)]</expression>
-	<expression name="GridView_Details_Breadcrumb">$EXP[GridView_Details_Breadcrumb_Movies] | $EXP[GridView_Details_Breadcrumb_Sets] | $EXP[GridView_Details_Breadcrumb_TVShows] | $EXP[GridView_Details_Breadcrumb_Seasons] | $EXP[GridView_Details_Breadcrumb_Episodes] | Container.Content(videos) | $EXP[GridView_Details_Breadcrumb_Artists] | $EXP[GridView_Details_Breadcrumb_Albums] | Container.Content(songs) | $EXP[GridView_Details_Breadcrumb_MusicVideos] | $EXP[GridView_Details_Breadcrumb_Addons] | $EXP[GridView_Details_Breadcrumb_Images] | $EXP[GridView_Details_Breadcrumb_Programs_Folders] | $EXP[GridView_Details_Breadcrumb_Programs_Files] | $EXP[Container_Plugin_Empty]</expression>
+	<expression name="GridView_Details_Breadcrumb">$EXP[GridView_Details_Breadcrumb_Movies] | $EXP[GridView_Details_Breadcrumb_Sets] | $EXP[GridView_Details_Breadcrumb_TVShows] | $EXP[GridView_Details_Breadcrumb_Seasons] | $EXP[GridView_Details_Breadcrumb_Episodes] | Container.Content(videos) | $EXP[GridView_Details_Breadcrumb_Artists] | $EXP[GridView_Details_Breadcrumb_Albums] | Container.Content(songs) | $EXP[GridView_Details_Breadcrumb_MusicVideos] | $EXP[GridView_Details_Breadcrumb_Addons] | $EXP[GridView_Details_Breadcrumb_Images] | $EXP[GridView_Details_Breadcrumb_Programs_Folders] | $EXP[GridView_Details_Breadcrumb_Programs_Files] | $EXP[Container_Plugin_Empty] | Container.Content()</expression>
 	<expression name="GridView_Details_Breadcrumb_Movies">Container.Content(movies) + Skin.String(GridView_Details_Movies,Breadcrumb)</expression>
 	<expression name="GridView_Details_Breadcrumb_Sets">Container.Content(sets) + Skin.String(GridView_Details_Sets,Breadcrumb)</expression>
 	<expression name="GridView_Details_Breadcrumb_TVShows">Container.Content(tvshows) + Skin.String(GridView_Details_TVShows,Breadcrumb)</expression>

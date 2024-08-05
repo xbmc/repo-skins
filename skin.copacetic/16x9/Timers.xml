@@ -1,6 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <timers>
   <timer>
+    <name>home_visible</name>
+    <start reset="true">Window.IsVisible(home)</start>
+    <stop>!Window.IsVisible(home)</stop>
+  </timer>
+  <timer>
+    <name>videos_visible</name>
+    <start reset="true">Window.IsVisible(videos)</start>
+    <stop>!Window.IsVisible(videos)</stop>
+  </timer>
+  <timer>
+    <name>osd_idle</name>
+    <start reset="true">String.IsEqual(System.CurrentWindow,Fullscreen OSD) | String.IsEqual(System.CurrentWindow,Music OSD)</start>
+    <reset>[VideoPlayer.IsFullscreen + !String.IsEqual(System.CurrentWindow,Fullscreen OSD)] | [Window.IsVisible(visualisation) + !String.IsEqual(System.CurrentWindow,Music OSD)] | [!System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(osd_idle),1)]</reset>
+    <stop>[Window.IsActive(videoosd) | Window.IsVisible(musicosd)] + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(osd_idle),3)</stop>
+    <onstop>Dialog.Close(all)</onstop>
+  </timer>
+  <timer>
     <name>home_screensaver</name>
     <start reset="true">Skin.HasSetting(Home_Screensaver_Enabled) + Window.Is(home) + [Control.HasFocus(3000) | Control.HasFocus(4201)]</start>
     <reset>!Control.HasFocus(3000) + !Control.HasFocus(4201)</reset>
@@ -29,17 +46,8 @@
     <description>timer that starts whenever music visualisation is showing</description>
   </timer>
   <timer>
-    <name>season_info_monitor</name>
-    <description>Properties set as soon as navigation stops on a listitem</description>
-    <start reset="true">Container.Content(seasons)</start>
-    <stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(season_info_monitor),0) + !Window.IsVisible(movieinformation)</stop>
-    <onstop>SetProperty(Season_Number,$INFO[ListItem.Season],home)</onstop>
-    <onstop>SetProperty(Season_Year,$INFO[ListItem.Year],home)</onstop>
-    <onstop>SetProperty(Season_Fanart,$ESCINFO[ListItem.Art(fanart)],home)</onstop>
-  </timer>
-  <timer>
     <name>trailer_autoplay</name>
-    <start reset="true">Window.Is(videos) + Skin.HasSetting(Trailer_Autoplay) + [[Skin.String(Trailer_Autoplay_Movies_Enabled,true) + Container.Content(movies)] | [Skin.String(Trailer_Autoplay_TVShows_Enabled,true) + !Container.Content(tvshows)]] + Window.IsVisible(1160) + !Player.HasMedia</start>
+    <start reset="true">Window.Is(videos) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(videos_visible),3) + Skin.HasSetting(Trailer_Autoplay) + [[Skin.String(Trailer_Autoplay_Movies_Enabled,true) + Container.Content(movies)] | [Skin.String(Trailer_Autoplay_TVShows_Enabled,true) + Container.Content(tvshows)]] + Window.IsVisible(1160) + !Player.HasMedia</start>
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>!String.IsEmpty(ListItem.Trailer) + String.IsEmpty(Window(home).Property(Trailer_Autoplay)) + !Player.HasVideo</stop>
     <onstart condition="[Control.HasFocus(50) | Control.HasFocus(501) | Control.HasFocus(502) | Control.HasFocus(504)] + !String.IsEmpty(ListItem.Trailer)">SetProperty(Trailer_Autoplay,true,home)</onstart>
@@ -49,7 +57,7 @@
   </timer>
   <timer>
     <name>trailer_autoplay_home</name>
-    <start reset="true">Window.Is(home) + Skin.HasSetting(Trailer_Autoplay) + !String.IsEmpty(window(home).property(Home_Widget)) + Window.IsVisible(1160) + !Player.HasMedia</start>
+    <start reset="true">Window.Is(home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(home_visible),3) + Skin.HasSetting(Trailer_Autoplay) + !String.IsEmpty(window(home).property(Home_Widget)) + Window.IsVisible(1160) + !Player.HasMedia</start>
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>!String.IsEmpty(ListItem.Trailer) + String.IsEmpty(Window(home).Property(Trailer_Autoplay)) + !Player.HasVideo</stop>
     <onstart condition="Control.HasFocus(3201) + Skin.HasSetting(Widget1_Trailer_Autoplay) + !String.IsEmpty(ListItem.Trailer)">SetProperty(Trailer_Autoplay,true,home)</onstart>
@@ -77,7 +85,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget1_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3201),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget1_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3201),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget1_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3201,1)</onstop>
+    <onstop condition="Control.HasFocus(3201)">Control.Move(3201,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3202</name>
@@ -85,7 +93,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget2_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3202),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget2_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3202),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget2_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3202,1)</onstop>
+    <onstop condition="Control.HasFocus(3202)">Control.Move(3202,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3203</name>
@@ -93,7 +101,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget3_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3203),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget3_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3203),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget3_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3203,1)</onstop>
+    <onstop condition="Control.HasFocus(3203)">Control.Move(3203,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3204</name>
@@ -101,7 +109,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget4_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3204),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget4_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3204),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget4_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3204,1)</onstop>
+    <onstop condition="Control.HasFocus(3204)">Control.Move(3204,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3205</name>
@@ -109,7 +117,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget5_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3205),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget5_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3205),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget5_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3205,1)</onstop>
+    <onstop condition="Control.HasFocus(3205)">Control.Move(3205,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3206</name>
@@ -117,7 +125,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget6_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3206),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget6_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3206),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget6_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3206,1)</onstop>
+    <onstop condition="Control.HasFocus(3206)">Control.Move(3206,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3207</name>
@@ -125,7 +133,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget7_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3207),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget7_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3207),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget7_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3207,1)</onstop>
+    <onstop condition="Control.HasFocus(3207)">Control.Move(3207,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3208</name>
@@ -133,7 +141,7 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget8_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3208),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget8_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3208),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget8_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3208,1)</onstop>
+    <onstop condition="Control.HasFocus(3208)">Control.Move(3208,1)</onstop>
   </timer>
   <timer>
     <name>widget_spotlight_3209</name>
@@ -141,6 +149,6 @@
     <reset>Player.HasVideo | Window.IsVisible(movieinformation) | Window.IsVisible(shutdownmenu) | Window.IsVisible(busydialog)</reset>
     <stop>[[!Skin.HasSetting(Widget9_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3209),8) + System.IdleTime(8)] | [Skin.HasSetting(Widget9_Trailer_Autoplay) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(widget_spotlight_3209),2) + Skin.TimerIsRunning(trailer_autoplay_home) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(trailer_autoplay_home),2)]] + !Player.HasVideo + !Window.IsVisible(movieinformation) + !Window.IsVisible(shutdownmenu) + !Window.IsVisible(busydialog)</stop>
     <onstop condition="Skin.HasSetting(Widget9_Trailer_Autoplay) + String.IsEqual(Window(home).Property(Trailer_Autoplay),true)">ClearProperty(Trailer_Autoplay,home)</onstop>
-    <onstop>Control.Move(3209,1)</onstop>
+    <onstop condition="Control.HasFocus(3209)">Control.Move(3209,1)</onstop>
   </timer>
 </timers>
