@@ -5,7 +5,10 @@
 		<scrolltime tween="sine" easing="inout">360</scrolltime>
 	</include>
 	<include name="Quick_Scrolltime">
-		<scrolltime tween="sine" easing="inout">90</scrolltime>
+		<scrolltime tween="sine" easing="inout">100</scrolltime>
+	</include>
+	<include name="Zero_Scrolltime">
+		<scrolltime>0</scrolltime>
 	</include>
 
 	<include name="Hidden_List">
@@ -22,19 +25,20 @@
 				<orientation>vertical</orientation>
 				<itemlayout />
 				<focusedlayout />
-				<content sortby="$PARAM[sortby]" sortorder="$PARAM[sortorder]">$PARAM[content]</content>
+				<content sortby="$PARAM[sortby]" sortorder="$PARAM[sortorder]" browse="never">$PARAM[content]</content>
 			</control>
 		</definition>
 	</include>
 
-	<include name="User_Scroll_Delay">
+	<include name="User_Scroll_Delay_Template">
 		<param name="onprevious_id" default="5001" />
-		<param name="onnext_id" default="5002" />
-		<param name="oncontainerswitch_id" default="5006" />
-		<param name="content_delay" default="Default_Transition_1x" />
-		<param name="container_delay" default="720" />
 		<param name="onprevious_trigger" default="Container.OnPrevious | Container(50).OnPrevious | Container(3201).OnPrevious | Container(3202).OnPrevious | Container(3203).OnPrevious | Container(3204).OnPrevious | Container(3205).OnPrevious | Container(3206).OnPrevious | Container(3207).OnPrevious | Container(3208).OnPrevious | Container(3209).OnPrevious | Container(11).OnPrevious | Container(52).OnPrevious" />
+		<param name="onnext_id" default="5002" />
 		<param name="onnext_trigger" default="Container.OnNext | Container(50).OnNext | Container(3201).OnNext | Container(3202).OnNext | Container(3203).OnNext | Container(3204).OnNext | Container(3205).OnNext | Container(3206).OnNext | Container(3207).OnNext | Container(3208).OnNext | Container(3209).OnNext | Container(11).OnNext | Container(52).OnNext" />
+		<param name="oncontainerswitch_id" default="5006" />
+		<param name="oncontainerswitch_trigger" default="$EXP[Container_Switching]" />
+		<param name="content_delay" default="Default_Transition_1x" />
+		<param name="container_delay" default="Default_Transition_2x" />
 		<definition>
 			<control type="group" id="$PARAM[onprevious_id]">
 				<visible>$PARAM[onprevious_trigger]</visible>
@@ -45,10 +49,31 @@
 				<animation effect="slide" end="0,0" time="$PARAM[content_delay]" reversible="false">Hidden</animation>
 			</control>
 			<control type="group" id="$PARAM[oncontainerswitch_id]">
-				<visible>$EXP[Container_Switching]</visible>
+				<visible>$PARAM[oncontainerswitch_trigger]</visible>
 				<animation effect="slide" end="0,0" time="$PARAM[container_delay]" reversible="false">Hidden</animation>
 			</control>
 		</definition>
+	</include>
+
+	<include name="User_Scroll_Delay">
+		<include content="User_Scroll_Delay_Template" condition="![Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)]">
+			<param name="onprevious_id" value="$PARAM[onprevious_id]" />
+			<param name="onprevious_trigger" value="$PARAM[onprevious_trigger]" />
+			<param name="onnext_id" value="$PARAM[onnext_id]" />
+			<param name="onnext_trigger" value="$PARAM[onnext_trigger]" />
+			<param name="oncontainerswitch_id" value="$PARAM[oncontainerswitch_id]" />
+			<param name="oncontainerswitch_trigger" value="$PARAM[oncontainerswitch_trigger]" />
+		</include>
+		<include content="User_Scroll_Delay_Template" condition="Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)">
+			<param name="onprevious_id" value="$PARAM[onprevious_id]" />
+			<param name="onprevious_trigger" value="$PARAM[onprevious_trigger]" />
+			<param name="onnext_id" value="$PARAM[onnext_id]" />
+			<param name="onnext_trigger" value="$PARAM[onnext_trigger]" />
+			<param name="oncontainerswitch_id" value="$PARAM[oncontainerswitch_id]" />
+			<param name="oncontainerswitch_trigger" value="$PARAM[oncontainerswitch_trigger]" />
+			<param name="content_delay" value="Quick_Transition_0x" />
+			<param name="container_delay" value="Quick_Transition_0x" />
+		</include>
 	</include>
 	
 	<include name="HiddenFocusButton">
@@ -84,6 +109,11 @@
 				<onfocus condition="Window.Is(addonbrowser) + !$EXP[Container_Addons_NonRepo]">ClearProperty(Container_Addons_NonRepo,home)</onfocus>
 				<!-- Go back if container is empty -->
 				<onfocus condition="Skin.HasSetting(Experiment_ParentDir_IfEmptyContainer) + !Integer.IsGreater(Container.NumItems,0)">ParentDir</onfocus>
+				<!-- Clear window prop used to calculate set percentage complete -->
+				<onfocus condition="String.IsEqual(ListItem.DBType,set) + !Control.HasFocus(3100) + !$EXP[Secondary_List_Container_Switching] + !String.IsEqual(Window(home).Property(collection_watched_dbid),ListItem.DBID)">ClearProperty(collection_watched_dbid,home)</onfocus>
+				<onfocus condition="String.IsEqual(ListItem.DBType,set) + !Control.HasFocus(3100) + !$EXP[Secondary_List_Container_Switching] + !String.IsEqual(Window(home).Property(collection_watched_dbid),ListItem.DBID)">ClearProperty(collection_watched_percentage,home)</onfocus>
+				<onfocus condition="String.IsEqual(ListItem.DBType,set) + !Control.HasFocus(3100) + !$EXP[Secondary_List_Container_Switching] + !String.IsEqual(Window(home).Property(collection_watched_dbid),ListItem.DBID)">ClearProperty(collection_unwatched,home)</onfocus>
+				<onfocus condition="String.IsEqual(ListItem.DBType,set) + String.IsEqual(ListItem.Overlay,OverlayUnwatched.png) + !String.IsEqual(Window(home).Property(collection_watched_dbid),ListItem.DBID)">RunScript(script.copacetic.helper,action=get_collection_status,dbid=$INFO[ListItem.DBID])</onfocus>
 			</control>
 		</definition>
 	</include>
@@ -137,8 +167,9 @@
 				<pagecontrol>60</pagecontrol>
 				<preloaditems>2</preloaditems>
 				<orientation>$PARAM[orientation]</orientation>
-				<include content="Default_Scrolltime" condition="!Skin.HasSetting(Experiment_Disable_Transitions)" />
-				<include content="Quick_Scrolltime" condition="Skin.HasSetting(Experiment_Disable_Transitions)" />
+				<include content="Default_Scrolltime" condition="!Skin.HasSetting(Quick_Transitions)" />
+				<include content="Quick_Scrolltime" condition="Skin.HasSetting(Quick_Transitions) + !Skin.HasSetting(Zero_Transitions)" />
+				<include content="Zero_Scrolltime" condition="Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)" />
 				<focusedlayout width="480">
 					<include content="HiddenFocusButton" />
 					<include content="Multiart_Resetter" condition="Skin.HasSetting(Multiart_Slideshow)" />
@@ -404,8 +435,8 @@
 				<preloaditems>2</preloaditems>
 				<focusposition>$PARAM[focusposition]</focusposition>
 				<orientation>vertical</orientation>
-				<include content="Default_Scrolltime" condition="!Skin.HasSetting(Experiment_Disable_Transitions)" />
-				<include content="Quick_Scrolltime" condition="Skin.HasSetting(Experiment_Disable_Transitions)" />
+				<include content="Default_Scrolltime" condition="!Skin.HasSetting(Quick_Transitions)" />
+				<include content="Quick_Scrolltime" condition="Skin.HasSetting(Quick_Transitions)" />
 				<itemlayout height="60" width="$PARAM[width]">
 					<include content="$PARAM[layout]_List_Layout">
 						<param name="icon_slide" value="$PARAM[icon_slide]" />
@@ -555,7 +586,7 @@
 						<centerleft>50%</centerleft>
 					</include>
 					<control type="grouplist">
-						<include content="Common_Details_Slides" condition="Skin.HasSetting(Crop_Clearlogos) + ![Window.Is(home) + !$PARAM[widget_clearlogos]]">
+						<include content="Common_Details_Slides" condition="Skin.HasSetting(Crop_Clearlogos) + ![Window.Is(home) + !$PARAM[widget_clearlogos]] + ![Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)]">
 							<param name="viewtype_label" value="$PARAM[viewtype_label]" />
 						</include>
 						<orientation>vertical</orientation>
@@ -610,41 +641,41 @@
 
 	<include name="Common_Details_Slides">
 		<!-- Secondary/Primary list clearlogo-alt_cropped -->
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),220)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),200)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),180)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),160)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),140)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),120)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),100)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),80)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),60)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),40)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),20)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),220)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),200)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),180)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),160)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),140)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),120)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),100)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),80)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),60)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),40)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Skin.String(Theme,Light) + !String.IsEmpty(Window(home).Property(clearlogo-alt_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo-alt_cropped-height),20)">Conditional</animation>
 		<!-- Secondary list clearlogo_cropped -->
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),220)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),200)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),180)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),160)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),140)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),120)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),100)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),80)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),60)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),40)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),20)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),220)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),200)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),180)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),160)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),140)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),120)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),100)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),80)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),60)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),40)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(Container(3100).ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),20)">Conditional</animation>
 		<!-- Primary list clearlogo_cropped -->
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),220)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),200)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),180)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),160)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),140)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),120)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),100)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),80)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),60)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),40)">Conditional</animation>
-		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + $EXP[BillboardView_Details_Title]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),20)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),220)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),200)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),180)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),160)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),140)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),120)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),100)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),80)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),60)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),40)">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-10" time="0" condition="![$EXP[BillboardView_IsVisible] + [Skin.HasSetting(Quick_Transitions) | $EXP[BillboardView_Details_Title]]] + $EXP[$PARAM[viewtype_label]View_IsVisible] + [$EXP[$PARAM[viewtype_label]View_Logo_IsVisible] | $EXP[Widget_HasLogo]] + !Control.HasFocus(3100) + [[Skin.String(Theme,Light) + String.IsEmpty(ListItem.Art(clearlogo-alt))] | !Skin.String(Theme,Light)] + !String.IsEmpty(Window(home).Property(clearlogo_cropped-height)) + Integer.IsLessOrEqual(Window(home).Property(clearlogo_cropped-height),20)">Conditional</animation>
 	</include>
 
 	<include name="Variable_Title_Label">
@@ -808,18 +839,17 @@
 		<definition>
 			<control type="group">
 				<visible>$PARAM[visible]</visible>
-				<visible>!String.IsEqual(Container($PARAM[id]).ListItem.DBType,artist) + !String.IsEqual(Container($PARAM[id]).ListItem.DBType,album) + !String.IsEqual(Container($PARAM[id]).ListItem.DBType,song) + !Container.Content(actors) + ![$EXP[Infoscreen_IsVisible] + Control.HasFocus(50)]</visible>
 				<animation effect="slide" start="0,0" end="0,6" time="0" condition="Skin.HasSetting(Unwatched_Indicator) + $EXP[ShowcaseView_IsVisible] + $EXP[ShowcaseView_Details_Off] + Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),0)">Conditional</animation>
-				<include content="Progress_Bar_0" condition="!Window.Is(music)">
+				<include content="Progress_Bar_0">
 					<param name="id" value="$PARAM[id]" />
 					<param name="background_color" value="$PARAM[background_color]" />
 				</include>
-				<include content="Progress_Bar_WatchedEpisodePercent" condition="!Window.Is(music)">
+				<include content="Progress_Bar_WatchedEpisodePercent">
 					<param name="id" value="$PARAM[id]" />
 					<param name="background_color" value="$PARAM[background_color]" />
 					<param name="focus_color" value="$PARAM[focus_color]" />
 				</include>
-				<include content="Progress_Bar_WatchedProgress" condition="!Window.Is(music)">
+				<include content="Progress_Bar_WatchedProgress">
 					<param name="id" value="$PARAM[id]" />
 					<param name="background_color" value="$PARAM[background_color]" />
 					<param name="focus_color" value="$PARAM[focus_color]" />
@@ -829,11 +859,15 @@
 					<param name="background_color" value="$PARAM[background_color]" />
 					<param name="focus_color" value="$PARAM[focus_color]" />
 				</include>
+				<include content="Progress_Bar_SetProgress">
+					<param name="id" value="$PARAM[id]" />
+					<param name="focus_color" value="$PARAM[focus_color]" />
+				</include>
 				<include content="Progress_Bar_100">
 					<param name="id" value="$PARAM[id]" />
 					<param name="focus_color" value="$PARAM[focus_color]" />
 				</include>
-				<include content="Unwatched_Indicator" condition="Skin.HasSetting(Unwatched_Indicator)">
+				<include content="Unwatched_Indicator" condition="Skin.HasSetting(Unwatched_Indicator) + !Window.Is(music)">
 					<param name="id" value="$PARAM[id]" />
 					<param name="slides" value="$PARAM[slides]" />
 					<param name="background" value="$PARAM[progress_indicator_background]" />
@@ -845,8 +879,7 @@
 
 	<include name="Progress_Bar_0">
 		<control type="image">
-			<visible>Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),0) + Skin.HasSetting(Unwatched_Indicator)</visible>
-			<visible>[!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent)) + Integer.IsEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),0)] | [!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedProgress)) + Integer.IsEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),0)]</visible>
+			<visible>[!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent)) + Integer.IsEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),0)] | [!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedProgress)) + Integer.IsEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),0)] | [Container($PARAM[id]).ListItem.IsCollection + String.IsEqual(ListItem.Overlay,OverlayUnwatched.png)]</visible>
 			<width>100%</width>
 			<height>100%</height>
 			<texture colordiffuse="$PARAM[background_color]">views/white_100.png</texture>
@@ -881,12 +914,42 @@
 
 	<include name="Progress_Bar_Resumable">
 		<control type="progress">
-			<visible>Container($PARAM[id]).ListItem.IsResumable</visible>
+			<visible>Container($PARAM[id]).ListItem.IsResumable + !Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreater(ListItem.PercentPlayed,0)</visible>
 			<width>100%</width>
 			<height>100%</height>
 			<texturebg colordiffuse="$PARAM[background_color]">views/white_100.png</texturebg>
 			<midtexture colordiffuse="$PARAM[focus_color]">views/white_100.png</midtexture>
 			<info>Container($PARAM[id]).ListItem.PercentPlayed</info>
+		</control>
+	</include>
+
+	<include name="Progress_Bar_SetProgress">
+		<control type="image">
+			<visible>Container($PARAM[id]).ListItem.IsCollection + !String.IsEmpty(Window(home).Property(collection_unwatched),0) + Integer.IsGreater(Window(home).Property(collection_watched_percentage),0)</visible>
+			<visible>![$EXP[ListView_IsVisible] + !$EXP[Infoscreen_IsVisible]]</visible>
+			<width>100%</width>
+			<height>100%</height>
+			<texture colordiffuse="$PARAM[focus_color]">views/white_100.png</texture>
+			<animation effect="zoom" center="0,0" end="95,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),93) + Integer.IsLess(Window(home).Property(collection_watched_percentage),100)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="90,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),88) + Integer.IsLess(Window(home).Property(collection_watched_percentage),93)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="85,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),83) + Integer.IsLess(Window(home).Property(collection_watched_percentage),88)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="80,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),78) + Integer.IsLess(Window(home).Property(collection_watched_percentage),83)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="75,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),73) + Integer.IsLess(Window(home).Property(collection_watched_percentage),78)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="70,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),68) + Integer.IsLess(Window(home).Property(collection_watched_percentage),73)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="65,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),63) + Integer.IsLess(Window(home).Property(collection_watched_percentage),68)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="60,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),58) + Integer.IsLess(Window(home).Property(collection_watched_percentage),63)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="55,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),53) + Integer.IsLess(Window(home).Property(collection_watched_percentage),58)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="50,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),48) + Integer.IsLess(Window(home).Property(collection_watched_percentage),53)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="45,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),43) + Integer.IsLess(Window(home).Property(collection_watched_percentage),48)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="40,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),38) + Integer.IsLess(Window(home).Property(collection_watched_percentage),43)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="35,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),33) + Integer.IsLess(Window(home).Property(collection_watched_percentage),38)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="30,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),28) + Integer.IsLess(Window(home).Property(collection_watched_percentage),33)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="25,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),23) + Integer.IsLess(Window(home).Property(collection_watched_percentage),28)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="20,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),18) + Integer.IsLess(Window(home).Property(collection_watched_percentage),23)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="15,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),13) + Integer.IsLess(Window(home).Property(collection_watched_percentage),18)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="10,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),8) + Integer.IsLess(Window(home).Property(collection_watched_percentage),13)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="5,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),3) + Integer.IsLess(Window(home).Property(collection_watched_percentage),8)" reversible="false">Conditional</animation>
+			<animation effect="zoom" center="0,0" end="3,100" time="0" condition="Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),0) + Integer.IsLess(Window(home).Property(collection_watched_percentage),3)" reversible="false">Conditional</animation>
 		</control>
 	</include>
 
@@ -903,7 +966,7 @@
 
 	<include name="Unwatched_Indicator">
 		<control type="group">
-			<visible>Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),0)</visible>
+			<visible>Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),0) | [Container($PARAM[id]).ListItem.IsCollection + String.IsEqual(ListItem.Overlay,OverlayUnwatched.png)]</visible>
 			<include content="Progress_Slides_$PARAM[slides]">
 				<param name="id" value="$PARAM[id]" />
 			</include>
@@ -911,7 +974,7 @@
 			<width>60</width>
 			<height>30</height>
 			<centertop>50%</centertop>
-			<left>0</left>
+			<centerleft>50%</centerleft>
 			<control type="image">
 				<centerleft>50%</centerleft>
 				<width>30</width>
@@ -925,66 +988,61 @@
 				<aligny>center</aligny>
 				<font>Unwatched_Indicator</font>
 				<textcolor>$PARAM[textcolor]</textcolor>
-				<label>$INFO[Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes)]</label>
+				<label>$VAR[Unwatched_Indicator_Label]</label>
 			</control>
 		</control>
 	</include>
 
 	<include name="Progress_Slides_Template">
-		<animation effect="slide" end="$PARAM[0]" time="0" condition="[!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent)) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),5)] | [!String.IsEmpty(Container($PARAM[id]).ListItem.Property(WatchedProgress)) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),5)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[5]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),5) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),10)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),5) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),10)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[10]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),10) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),15)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),10) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),15)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[15]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),15) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),20)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),15) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),20)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[20]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),20) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),25)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),20) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),25)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[25]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),25) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),30)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),25) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),30)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[30]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),30) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),35)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),30) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),35)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[35]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),35) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),40)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),35) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),40)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[40]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),40) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),45)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),40) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),45)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[45]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),45) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),50)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),45) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),50)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[50]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),50) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),55)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),50) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),55)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[55]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),55) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),60)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),55) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),60)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[60]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),60) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),65)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),60) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),65)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[65]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),65) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),70)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),65) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),70)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[70]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),70) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),75)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),70) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),75)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[75]" time="0" condition="[Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),75) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),80)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),75) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),80)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[80_30]" time="0" condition="!Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),80) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),85)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),80) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),85)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[85_30]" time="0" condition="!Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),85) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),90)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),85) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),90)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[90_30]" time="0" condition="!Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),90) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),95)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),90) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),95)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[95_30]" time="0" condition="!Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),95) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),95)">Conditional</animation>
-		<animation effect="slide" end="$PARAM[80_60]" time="0" condition="Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),80) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),85)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),80) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),85)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[85_60]" time="0" condition="Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),85) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),90)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),85) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),90)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[90_60]" time="0" condition="Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),90) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),95)] | [Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),90) + Integer.IsLess(Container($PARAM[id]).ListItem.Property(WatchedProgress),95)]">Conditional</animation>
-		<animation effect="slide" end="$PARAM[95_60]" time="0" condition="Integer.IsGreater(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),99) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),95) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),95)">Conditional</animation>
+		<animation effect="slide" end="$PARAM[05]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),3) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),3) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),3)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[10]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),8) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),8) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),8)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[15]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),13) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),13) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),13)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[20]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),18) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),18) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),18)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[25]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),23) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),23) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),23)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[30]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),28) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),28) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),28)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[35]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),33) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),33) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),33)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[40]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),38) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),38) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),38)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[45]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),43) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),43) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),43)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[50]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),48) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),48) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),48)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[55]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),53) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),53) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),53)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[60]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),58) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),58) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),58)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[65]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),63) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),63) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),63)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[70]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),68) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),68) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),68)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[75]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),73) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),73) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),73)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[80]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),78) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),78) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),78)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[85]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),83) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),83) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),83)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[90]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),88) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),88) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),88)]">Conditional</animation>
+		<animation effect="slide" end="$PARAM[95]" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedEpisodePercent),93) | Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),93) | [Container($PARAM[id]).ListItem.IsCollection + Integer.IsGreaterOrEqual(Window(home).Property(collection_watched_percentage),93)]">Conditional</animation>
+		<animation effect="slide" end="-3" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),18) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),100)		">Conditional</animation>
+		<animation effect="slide" end="-3" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),38) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),100)">Conditional</animation>
+		<animation effect="slide" end="-3" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),58) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),100)">Conditional</animation>
+		<animation effect="slide" end="-3" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),78) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),100)">Conditional</animation>
+		<animation effect="slide" end="-3" time="0" condition="Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(WatchedProgress),98) + Integer.IsGreaterOrEqual(Container($PARAM[id]).ListItem.Property(UnwatchedEpisodes),100)">Conditional</animation>
 	</include>
 
 	<!-- for 360 width progress bar (30 off each side for the width of the number icon -->
 	<include name="Progress_Slides_360">
 		<include content="Progress_Slides_Template">
 			<param name="id" value="$PARAM[id]" />
-			<param name="0" value="150" />
-			<param name="5" value="159" />
-			<param name="10" value="168" />
-			<param name="15" value="177" />
-			<param name="20" value="186" />
-			<param name="25" value="195" />
-			<param name="30" value="204" />
-			<param name="35" value="213" />
-			<param name="40" value="222" />
-			<param name="45" value="231" />
-			<param name="50" value="240" />
-			<param name="55" value="249" />
-			<param name="60" value="258" />
-			<param name="65" value="267" />
-			<param name="70" value="276" />
-			<param name="75" value="285" />
-			<param name="80_30" value="294" />
-			<param name="85_30" value="303" />
-			<param name="90_30" value="312" />
-			<param name="95_30" value="315" />
-			<param name="80_60" value="294" />
-			<param name="85_60" value="300" />
-			<param name="90_60" value="300" />
-			<param name="95_60" value="300" />
+			<param name="05" value="9" />
+			<param name="10" value="9" />
+			<param name="15" value="9" />
+			<param name="20" value="9" />
+			<param name="25" value="9" />
+			<param name="30" value="9" />
+			<param name="35" value="9" />
+			<param name="40" value="9" />
+			<param name="45" value="9" />
+			<param name="50" value="9" />
+			<param name="55" value="8" />
+			<param name="60" value="7" />
+			<param name="65" value="8" />
+			<param name="70" value="7" />
+			<param name="75" value="8" />
+			<param name="80" value="7" />
+			<param name="85" value="8" />
+			<param name="90" value="7" />
+			<param name="95" value="8" />
 		</include>
 	</include>
 
@@ -992,30 +1050,25 @@
 	<include name="Progress_Slides_240">
 		<include content="Progress_Slides_Template">
 			<param name="id" value="$PARAM[id]" />
-			<param name="0" value="90" />
-			<param name="5" value="96" />
-			<param name="10" value="102" />
-			<param name="15" value="108" />
-			<param name="20" value="114" />
-			<param name="25" value="120" />
-			<param name="30" value="126" />
-			<param name="35" value="132" />
-			<param name="40" value="138" />
-			<param name="45" value="144" />
-			<param name="50" value="150" />
-			<param name="55" value="156" />
-			<param name="60" value="162" />
-			<param name="65" value="168" />
-			<param name="70" value="174" />
-			<param name="75" value="180" />
-			<param name="80_30" value="186" />
-			<param name="85_30" value="192" />
-			<param name="90_30" value="195" />
-			<param name="95_30" value="195" />
-			<param name="80_60" value="180" />
-			<param name="85_60" value="180" />
-			<param name="90_60" value="180" />
-			<param name="95_60" value="180" />
+			<param name="05" value="6" />
+			<param name="10" value="6" />
+			<param name="15" value="6" />
+			<param name="20" value="6" />
+			<param name="25" value="6" />
+			<param name="30" value="6" />
+			<param name="35" value="6" />
+			<param name="40" value="6" />
+			<param name="45" value="6" />
+			<param name="50" value="6" />
+			<param name="55" value="5" />
+			<param name="60" value="4" />
+			<param name="65" value="5" />
+			<param name="70" value="4" />
+			<param name="75" value="5" />
+			<param name="80" value="4" />
+			<param name="85" value="5" />
+			<param name="90" value="4" />
+			<param name="95" value="5" />
 		</include>
 	</include>
 
@@ -1031,6 +1084,7 @@
 		<param name="id" />
 		<param name="texture" />
 		<param name="colordiffuse" default="$VAR[Light_Color]" />
+		<param name="fadetime" default="0" />
 		<definition>
 			<control type="group">
 				<visible>$PARAM[visible]</visible>
@@ -1046,6 +1100,7 @@
 					<height>60</height>
 					<aspectratio>keep</aspectratio>
 					<texture fallback="flags/blank.png" colordiffuse="$PARAM[colordiffuse]">$PARAM[texture]</texture>
+					<fadetime>$PARAM[fadetime]</fadetime>
 				</control>
 			</control>
 		</definition>

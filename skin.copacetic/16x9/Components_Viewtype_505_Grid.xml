@@ -12,11 +12,9 @@
 			<control type="group">
 				<visible>$PARAM[visible]</visible>
 				<visible>!$EXP[TransparentDialog_IsVisible] + !$EXP[Scrollbar_HasFocus]</visible>
-				<include content="Visible_Fade_Animation" />
+				<include content="Visible_Fade_Delayed_Animation" />
 				<height>$PARAM[width]</height>
-				<bottom>0</bottom>
 				<width>$PARAM[width]</width>
-				<centerleft>50%</centerleft>
 				<control type="image">
 					<texture colordiffuse="$VAR[Accent_Color]">views/white_100.png</texture>
 					<visible>$PARAM[backing_visible]</visible>
@@ -25,35 +23,47 @@
 					<param name="color" value="$PARAM[color]" />
 					<param name="width" value="$PARAM[width]" />
 				</include>
+				<nested />
 			</control>
 		</definition>
 	</include>
 
 	<include name="GridView_Icon_Unfocused">
 		<include content="ListIcon_Static_Unfocused">
-			<param name="visible" value="$EXP[GridView_Display_Is$PARAM[displaytype_label]] + !$EXP[Container_Switching] + !$EXP[Options_Switching]" />
-			<param name="left" value="10" />
+			<param name="visible" value="!$EXP[Container_Switching] + !$EXP[Options_Switching]" />
+			<param name="left" value="$PARAM[left]" />
+			<param name="top" value="$PARAM[top]" />
 			<param name="art_icon" value="$PARAM[art_icon]" />
 			<param name="fallback" value="views/dark_grey_100.png" />
 			<param name="indicator" value="false" />
-			<param name="watched_diffuse" value="[Skin.HasSetting(GridView_WatchedStatus_Enabled) + String.IsEqual(ListItem.Overlay,OverlayWatched.png)] | [Container.Content(addons) + !ListItem.Property(Addon.IsEnabled)]" />
+			<param name="watched_diffuse" value="[Skin.HasSetting(GridView_WatchedStatus_Enabled) + String.IsEqual(ListItem.Overlay,OverlayWatched.png)] | [Container.Content(addons) + ListItem.Property(Addon.IsInstalled) + !ListItem.Property(Addon.IsEnabled)]" />
 			<param name="now_playing" value="$EXP[ListItem(0)_NowPlaying]" />
 			<include content="Visible_Fade_Animation" />
 			<animation effect="slide" end="4,0" time="0" condition="Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
-			<animation effect="slide" end="12,0" time="0" condition="$EXP[GridView_Display_IsFanart] + !Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
+			<animation effect="slide" end="12,0" time="0" condition="$EXP[GridView_Display_IsFanart] + Skin.String(GridView_Size,Large)" reversible="false">Conditional</animation>
+			<!-- Check -->
 			<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + Window.Is(videos)">
 				<param name="backing_visible" value="false" />
 				<param name="color" value="$VAR[Light_Color]" />
+				<bottom>0</bottom>
+				<centerleft>50%</centerleft>
 			</include>
 			<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + [Window.Is(addonbrowser) | Window.Is(programs)]">
 				<param name="backing_visible" value="false" />
 				<param name="color" value="$VAR[Light_Color]" />
 				<param name="icon" value="Special_Addonbrowser_focused" />
 				<param name="visible" value="[!String.Contains(Container.FolderPath,/user/) + [ListItem.Property(Addon.IsInstalled) | String.Contains(ListItem.Label,Copacetic)]] | [$EXP[Container_Addons_NonRepo] + String.Contains(Container.FolderPath,/user/) + ListItem.Property(Addon.IsInstalled) + !ListItem.Property(Addon.IsEnabled)]" />
+				<bottom>0</bottom>
+				<centerleft>50%</centerleft>
 			</include>
-			<include content="Icon_Component_Indicator_Grid" condition="Skin.HasSetting(Secondary_List_Enabled)">
+			<!-- IsCollection or HasVideoVersions -->
+			<include content="Grid_Icon" condition="Skin.HasSetting(Secondary_List_Enabled) + Window.Is(videos)">
+				<param name="backing_visible" value="false" />
+				<param name="icon" value="Library_focused" />
+				<param name="color" value="$VAR[Light_Color]" />
 				<param name="visible" value="ListItem.IsCollection | [ListItem.HasVideoVersions + !String.IsEqual(Container.FolderName,ListItem.Title)]" />
-				<param name="backing" value="false" />
+				<top>0</top>
+				<right>0</right>
 			</include>
 		</include>
 	</include>
@@ -166,9 +176,15 @@
 			<param name="bottom_left" value="!Container(505).Column(0) + [[$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6353))] | [!$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6356))]]" />
 		</include>
 	</include>
-
-
-	<!-- Fanart small !Column(3) / Poster/Square small !Column(6) -->
+	<include name="GridView_Dropshadow_Horizontal">
+		<include content="GridView_Dropshadow">
+			<param name="top_right" value="[!$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6351))] | [$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6352))]" />
+			<param name="right" value="[!$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6352))] | [$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6353))]" />
+			<param name="bottom_right" value="[!$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6353))] | [$EXP[GridView_Display_IsFanart] + !String.IsEmpty(Control.GetLabel(6354))]" />
+			<param name="bottom" value="!String.IsEmpty(Control.GetLabel(6351))" />
+			<param name="bottom_left" value="true" />
+		</include>
+	</include>
 
 	<include name="GridView_Icon_Focused">
 		<param name="border_width" default="10" />
@@ -179,37 +195,40 @@
 			<include content="Multiart_Resetter" condition="Skin.HasSetting(Multiart_Slideshow)" />
 			<include content="Multiart_Setter" condition="Skin.HasSetting(Multiart_Slideshow)" />
 			<control type="group">
-				<visible>$EXP[GridView_Display_Is$PARAM[displaytype_label]] + !$EXP[Container_Switching] + !$EXP[Options_Switching]</visible>
+				<visible>!$EXP[Container_Switching] + !$EXP[Options_Switching]</visible>
 				<include content="Visible_Fade_Animation" />
 				<animation effect="slide" end="4,0" time="0" condition="Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
-				<animation effect="slide" end="12,0" time="0" condition="$EXP[GridView_Display_IsFanart] + !Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
-				<left>10</left>
+				<animation effect="slide" end="12,0" time="0" condition="$EXP[GridView_Display_IsFanart] + Skin.String(GridView_Size,Large)" reversible="false">Conditional</animation>
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
 				<width>100%</width>
 				<height>100%</height>
 				<!-- Dropshadow -->
-				<include content="GridView_Dropshadow_Large" condition="!Skin.String(GridView_Size,Small)" />
+				<include content="GridView_Dropshadow_Large" condition="!Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)" />
 				<include content="GridView_Dropshadow_Small" condition="Skin.String(GridView_Size,Small)" />
+				<include content="GridView_Dropshadow_Horizontal" condition="Skin.String(GridView_Size,Horizontal)" />
 				<!-- Artwork -->
 				<control type="group">
-					<include content="Focus_Zoom_Animation" />
+					<include content="Focus_Zoom_Animation" condition="![Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)]" />
 					<include content="ListIcon_Static_Focused">
-						<param name="visible" value="$EXP[GridView_Display_Is$PARAM[displaytype_label]]" />
 						<param name="art_icon" value="$PARAM[art_icon]" />
+						<param name="art_diffuse" value="Skin.HasSetting(Quick_Transitions) + ![$EXP[GridView_Details_Off] | $EXP[GridView_Details_Breadcrumb] | $EXP[ListItem(0)_NowPlaying]] + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(pictureinfo)" />
 						<param name="indicator" value="false" />
 						<param name="now_playing" value="$EXP[ListItem(0)_NowPlaying]" />
 						<param name="fallback" value="views/dark_grey_100.png" />
 						<!-- Multiart -->
 						<include content="Icon_Component_Multiart_Static" condition="Skin.HasSetting(Multiart_Slideshow) + [Window.Is(videos) | Window.Is(music)]">
-							<param name="fadetime" value="360" />
+							<param name="fadetime" value="Default_Transition_1x" />
+							<param name="art_diffuse" value="Skin.HasSetting(Quick_Transitions) + ![$EXP[GridView_Details_Off] | $EXP[GridView_Details_Breadcrumb] | $EXP[ListItem(0)_NowPlaying]] + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(pictureinfo)" />
 							<param name="now_playing" value="$EXP[ListItem(0)_NowPlaying]" />
 						</include>
 						<!-- Progress overlay -->
 						<include content="Icon_Component_Progress_Overlay" condition="Window.Is(home) | Window.Is(videos) | Window.Is(movieinformation)">
 							<param name="visible" value="[$EXP[GridView_Details_Off] | $EXP[GridView_Details_Breadcrumb]] + $EXP[Progress_IsVisible]" />
 						</include>
-						<!-- Artwork Mask -->
+						<!-- Artwork Mask for fade animation on overlay when it's not instant -->
 						<control type="image">
-							<visible>![$EXP[GridView_Details_Off] | $EXP[GridView_Details_Breadcrumb] | $EXP[ListItem(0)_NowPlaying]] + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(pictureinfo)</visible>
+							<visible>![$EXP[GridView_Details_Off] | $EXP[GridView_Details_Breadcrumb] | $EXP[ListItem(0)_NowPlaying]] + !$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(pictureinfo) + !Skin.HasSetting(Quick_Transitions)</visible>
 							<include content="Visible_Fade_Animation" />
 							<animation effect="fade" start="0" end="66" time="Default_Transition_1x" delay="Default_Transition_2x" tween="sine" easing="inout" reversible="false">Focus</animation>
 							<texture colordiffuse="$VAR[Dark_Color]">views/white_100.png</texture>
@@ -220,7 +239,7 @@
 				<control type="group">
 					<visible>!$EXP[TransparentDialog_IsVisible] + !Window.IsVisible(pictureinfo) + !$EXP[Scrollbar_HasFocus] + !$EXP[Music_Player_HasFocus]</visible>
 					<include content="Visible_Fade_Animation" />
-					<control type="image">
+					<control type="image"><!-- top -->
 						<animation effect="slide" end="0,-$PARAM[border_width]" time="0" condition="true" reversible="false">Conditional</animation>
 						<left>-$PARAM[border_width]</left>
 						<right>-$PARAM[border_width]</right>
@@ -228,21 +247,31 @@
 						<height>$PARAM[border_width]</height>
 						<texture colordiffuse="$VAR[Accent_Color]">views/white_100.png</texture>
 					</control>
-					<control type="image">
+					<control type="image"><!-- bottom -->
+						<animation effect="slide" end="0,$PARAM[border_width]" time="0" condition="true" reversible="false">Conditional</animation>
 						<left>-$PARAM[border_width]</left>
 						<right>-$PARAM[border_width]</right>
-						<bottom>-$PARAM[border_width]</bottom>
+						<bottom>0</bottom>
 						<height>$PARAM[border_width]</height>
 						<texture colordiffuse="$VAR[Accent_Color]">views/white_100.png</texture>
 					</control>
-					<control type="image">
-						<left>-$PARAM[border_width]</left>
+					<control type="image"><!-- left -->
+						<animation effect="slide" end="-$PARAM[border_width],-$PARAM[border_width]" time="0" condition="true" reversible="false">Conditional</animation> -->
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],353" time="0" condition="$EXP[GridView_Display_IsFanart] + !Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],268" time="0" condition="$EXP[GridView_Display_IsFanart] + Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],295" time="0" condition="$EXP[GridView_Display_IsFanart] + Skin.String(GridView_Size,Horizontal)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],560" time="0" condition="$EXP[GridView_Display_IsPosters] + !Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],400" time="0" condition="$EXP[GridView_Display_IsPosters] + Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],376" time="0" condition="$EXP[GridView_Display_IsSquare] + !Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],272" time="0" condition="$EXP[GridView_Display_IsSquare] + Skin.String(GridView_Size,Small)" reversible="false">Conditional</animation>
+						<animation effect="zoom" start="0,0,$PARAM[border_width],$PARAM[height]" end="0,0,$PARAM[border_width],436" time="0" condition="!$EXP[GridView_Display_IsFanart] + Skin.String(GridView_Size,Horizontal)" reversible="false">Conditional</animation>
+						<left>0</left>
 						<width>$PARAM[border_width]</width>
-						<top>-$PARAM[border_width]</top>
-						<bottom>-$PARAM[border_width]</bottom>
+						<top>0</top>
+						<bottom>0</bottom>
 						<texture colordiffuse="$VAR[Accent_Color]">views/white_100.png</texture>
 					</control>
-					<control type="image">
+					<control type="image"><!-- right -->
 						<right>-$PARAM[border_width]</right>
 						<width>$PARAM[border_width]</width>
 						<top>-$PARAM[border_width]</top>
@@ -251,43 +280,60 @@
 					</control>
 				</control>
 				<!-- Progress -->
-				<include content="Progress_Grid" condition="Window.Is(videos) | Window.Is(music)">
+				<include content="Progress_Grid" condition="Window.Is(videos)">
 					<param name="id" value="505" />
 					<param name="left" value="$PARAM[progress_left]" />
 					<param name="width" value="$PARAM[progress_width]" />
 					<param name="slides" value="$PARAM[progress_slides]" />
 				</include>
 				<!-- Check -->
-				<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + Window.Is(videos)" />
+				<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + Window.Is(videos)">
+					<bottom>0</bottom>
+					<centerleft>50%</centerleft>
+				</include>
 				<include content="Grid_Icon" condition="Skin.HasSetting(GridView_AltWatchedStatus_Enabled) + [Window.Is(addonbrowser) | Window.Is(programs)]">
 					<param name="icon" value="Special_Addonbrowser_focused" />
 					<param name="visible" value="[!String.Contains(Container.FolderPath,/user/) + [ListItem.Property(Addon.IsInstalled) | String.Contains(ListItem.Label,Copacetic)]] | [$EXP[Container_Addons_NonRepo] + String.Contains(Container.FolderPath,/user/) + ListItem.Property(Addon.IsInstalled) + !ListItem.Property(Addon.IsEnabled)]" />
+					<bottom>0</bottom>
+					<centerleft>50%</centerleft>
 				</include>
-				<!-- Indicator -->
-				<include content="Icon_Component_Indicator_Grid" condition="Skin.HasSetting(Secondary_List_Enabled)">
+				<!-- IsCollection or HasVideoVersions -->
+				<include content="Grid_Icon" condition="Skin.HasSetting(Secondary_List_Enabled) + Window.Is(videos)">
+					<param name="icon" value="Library_focused" />
 					<param name="visible" value="ListItem.IsCollection | [ListItem.HasVideoVersions + !String.IsEqual(Container.FolderName,ListItem.Title)]" />
+					<top>0</top>
+					<right>0</right>
 				</include>
 			</control>
 		</definition>
 	</include>
 
 	<include name="GridView_Layout">
-		<itemlayout width="$PARAM[width]" height="$PARAM[height]" condition="$PARAM[condition]">
-			<include content="GridView_Icon_Unfocused">
-				<param name="displaytype_label" value="$PARAM[displaytype_label]" />
-				<param name="art_icon" value="$PARAM[art_icon]" />
-			</include>
-		</itemlayout>
-		<focusedlayout width="$PARAM[width]" height="$PARAM[height]" infoupdate="500" condition="$PARAM[condition]">
-			<include content="GridView_Icon_Focused">
-				<param name="displaytype_label" value="$PARAM[displaytype_label]" />
-				<param name="art_icon" value="$PARAM[art_icon]" />
-				<param name="border_width" value="$PARAM[border_width]" />
-				<param name="progress_left" value="$PARAM[progress_left]" />
-				<param name="progress_width" value="$PARAM[progress_width]" />
-				<param name="progress_slides" value="$PARAM[progress_slides]" />
-			</include>
-		</focusedlayout>
+		<param name="left" default="10" />
+		<param name="top" default="0" />
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]" condition="$PARAM[condition]">
+				<include content="GridView_Icon_Unfocused">
+					<param name="left" value="$PARAM[left]" />
+					<param name="top" value="$PARAM[top]" />
+					<param name="displaytype_label" value="$PARAM[displaytype_label]" />
+					<param name="art_icon" value="$PARAM[art_icon]" />
+				</include>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]" infoupdate="500" condition="$PARAM[condition]">
+				<include content="GridView_Icon_Focused">
+					<param name="left" value="$PARAM[left]" />
+					<param name="top" value="$PARAM[top]" />
+					<param name="height" value="$PARAM[height]" />
+					<param name="displaytype_label" value="$PARAM[displaytype_label]" />
+					<param name="art_icon" value="$PARAM[art_icon]" />
+					<param name="border_width" value="$PARAM[border_width]" />
+					<param name="progress_left" value="$PARAM[progress_left]" />
+					<param name="progress_width" value="$PARAM[progress_width]" />
+					<param name="progress_slides" value="$PARAM[progress_slides]" />
+				</include>
+			</focusedlayout>
+		</definition>
 	</include>
 
 	<include name="GridView_Layout_Fanart_Large">
@@ -316,6 +362,21 @@
 		</include>
 	</include>
 
+	<include name="GridView_Layout_Fanart_Horizontal">
+		<include content="GridView_Layout">
+			<param name="displaytype_label" value="Fanart" />
+			<param name="art_icon" value="$PARAM[art_icon]" />
+			<param name="left" value="0" />
+			<param name="top" value="0" />
+			<param name="width" value="496" />
+			<param name="height" value="279" />
+			<param name="condition" value="$EXP[GridView_Display_IsFanart]" />
+			<param name="border_width" value="8" />
+			<param name="progress_left" value="68" />
+			<param name="progress_slides" value="360" />
+		</include>
+	</include>
+
 	<include name="GridView_Layout_Posters_Large">
 		<include content="GridView_Layout">
 			<param name="displaytype_label" value="Posters" />
@@ -339,6 +400,22 @@
 			<param name="condition" value="$EXP[GridView_Display_IsPosters]" />
 			<param name="border_width" value="8" />
 			<param name="progress_left" value="8" />
+			<param name="progress_width" value="240" />
+			<param name="progress_slides" value="240" />
+		</include>
+	</include>
+
+	<include name="GridView_Layout_Posters_Horizontal">
+		<include content="GridView_Layout">
+			<param name="displaytype_label" value="Posters" />
+			<param name="art_icon" value="$PARAM[art_icon]" />
+			<param name="left" value="0" />
+			<param name="top" value="0" />
+			<param name="width" value="280" />
+			<param name="height" value="420" />
+			<param name="condition" value="$EXP[GridView_Display_IsPosters]" />
+			<param name="border_width" value="8" />
+			<param name="progress_left" value="20" />
 			<param name="progress_width" value="240" />
 			<param name="progress_slides" value="240" />
 		</include>
@@ -372,14 +449,32 @@
 		</include>
 	</include>
 
+	<include name="GridView_Layout_Square_Horizontal">
+		<include content="GridView_Layout">
+			<param name="displaytype_label" value="Square" />
+			<param name="art_icon" value="$PARAM[art_icon]" />
+			<param name="left" value="0" />
+			<param name="top" value="0" />
+			<param name="width" value="420" />
+			<param name="height" value="420" />
+			<param name="condition" value="$EXP[GridView_Display_IsSquare]" />
+			<param name="border_width" value="8" />
+			<param name="progress_left" value="30" />
+			<param name="progress_slides" value="360" />
+		</include>
+	</include>
+
 	<include name="GridView_Layout_Array">
 		<param name="displaytype_label" />
 		<param name="art_icon" />
 		<definition>
-			<include content="GridView_Layout_$PARAM[displaytype_label]_Large" condition="!Skin.String(GridView_Size,Small)">
+			<include content="GridView_Layout_$PARAM[displaytype_label]_Large" condition="!Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)">
 				<param name="art_icon" value="$PARAM[art_icon]" />
 			</include>
 			<include content="GridView_Layout_$PARAM[displaytype_label]_Small" condition="Skin.String(GridView_Size,Small)">
+				<param name="art_icon" value="$PARAM[art_icon]" />
+			</include>
+			<include content="GridView_Layout_$PARAM[displaytype_label]_Horizontal" condition="Skin.String(GridView_Size,Horizontal)">
 				<param name="art_icon" value="$PARAM[art_icon]" />
 			</include>
 		</definition>
@@ -424,6 +519,24 @@
 		<animation effect="slide" end="0,104" time="0" reversible="false" condition="$EXP[GridView_Display_IsSquare] + Integer.IsGreaterOrEqual(Container.NumItems,8) + Integer.IsLessOrEqual(Container.NumItems,14)">Conditional</animation>
 	</include>
 
+	<include name="GridView_Slides_Horizontal">
+		<animation effect="slide" end="0,281" time="0" reversible="false" condition="$EXP[GridView_Display_IsFanart] + Integer.IsEqual(Container.NumItems,1)">Conditional</animation>
+		<animation effect="slide" end="0,141" time="0" reversible="false" condition="$EXP[GridView_Display_IsFanart] + Integer.IsEqual(Container.NumItems,2)">Conditional</animation>
+		<animation effect="slide" end="662" time="0" reversible="false" condition="$EXP[GridView_Display_IsFanart] + Integer.IsLessOrEqual(Container.NumItems,3)">Conditional</animation>
+		<animation effect="slide" end="414" time="0" reversible="false" condition="$EXP[GridView_Display_IsFanart] + Integer.IsGreater(Container.NumItems,3) + Integer.IsLessOrEqual(Container.NumItems,6)">Conditional</animation>
+		<animation effect="slide" end="166" time="0" reversible="false" condition="$EXP[GridView_Display_IsFanart] + Integer.IsGreater(Container.NumItems,6) + Integer.IsLessOrEqual(Container.NumItems,9)">Conditional</animation>
+		<animation effect="slide" end="0,210" time="0" reversible="false" condition="!$EXP[GridView_Display_IsFanart] + Integer.IsEqual(Container.NumItems,1)">Conditional</animation>
+		<animation effect="slide" end="770" time="0" reversible="false" condition="$EXP[GridView_Display_IsPosters] + Integer.IsLessOrEqual(Container.NumItems,2)">Conditional</animation>
+		<animation effect="slide" end="630" time="0" reversible="false" condition="$EXP[GridView_Display_IsPosters] + Integer.IsGreater(Container.NumItems,2) + Integer.IsLessOrEqual(Container.NumItems,4)">Conditional</animation>
+		<animation effect="slide" end="490" time="0" reversible="false" condition="$EXP[GridView_Display_IsPosters] + Integer.IsGreater(Container.NumItems,4) + Integer.IsLessOrEqual(Container.NumItems,6)">Conditional</animation>
+		<animation effect="slide" end="350" time="0" reversible="false" condition="$EXP[GridView_Display_IsPosters] + Integer.IsGreater(Container.NumItems,6) + Integer.IsLessOrEqual(Container.NumItems,8)">Conditional</animation>
+		<animation effect="slide" end="210" time="0" reversible="false" condition="$EXP[GridView_Display_IsPosters] + Integer.IsGreater(Container.NumItems,8) + Integer.IsLessOrEqual(Container.NumItems,10)">Conditional</animation>
+		<animation effect="slide" end="700" time="0" reversible="false" condition="$EXP[GridView_Display_IsSquare] + Integer.IsLessOrEqual(Container.NumItems,2)">Conditional</animation>
+		<animation effect="slide" end="490" time="0" reversible="false" condition="$EXP[GridView_Display_IsSquare] + Integer.IsGreater(Container.NumItems,2) + Integer.IsLessOrEqual(Container.NumItems,4)">Conditional</animation>
+		<animation effect="slide" end="280" time="0" reversible="false" condition="$EXP[GridView_Display_IsSquare] + Integer.IsGreater(Container.NumItems,4) + Integer.IsLessOrEqual(Container.NumItems,6)">Conditional</animation>
+		<animation effect="slide" end="70" time="0" reversible="false" condition="$EXP[GridView_Display_IsSquare] + Integer.IsGreater(Container.NumItems,6) + Integer.IsLessOrEqual(Container.NumItems,8)">Conditional</animation>
+	</include>
+
 	<include name="GridView_Overlay_Slides_Fanart_Large">
 		<animation effect="slide" end="592,0" time="0" condition="Container.Position(1)" reversible="false">Conditional</animation>
 		<animation effect="slide" end="1184,0" time="0" condition="Container.Position(2)" reversible="false">Conditional</animation>
@@ -444,6 +557,17 @@
 		<animation effect="slide" end="448,504" time="0" condition="Container.Position(9)" reversible="false">Conditional</animation>
 		<animation effect="slide" end="896,504" time="0" condition="Container.Position(10)" reversible="false">Conditional</animation>
 		<animation effect="slide" end="1344,504" time="0" condition="Container.Position(11)" reversible="false">Conditional</animation>
+	</include>
+
+	<include name="GridView_Overlay_Slides_Fanart_Horizontal">
+		<animation effect="slide" end="0,279" time="0" condition="Container.Position(1)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="0,558" time="0" condition="Container.Position(2)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="496,0" time="0" condition="Container.Position(3)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="496,279" time="0" condition="Container.Position(4)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="496,558" time="0" condition="Container.Position(5)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="992,0" time="0" condition="Container.Position(6)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="992,279" time="0" condition="Container.Position(7)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="992,558" time="0" condition="Container.Position(8)" reversible="false">Conditional</animation>
 	</include>
 
 	<include name="GridView_Overlay_Slides_Posters_Large">
@@ -467,6 +591,20 @@
 		<animation effect="slide" end="1024,384" time="0" condition="Container.Position(11)" reversible="false">Conditional</animation>
 		<animation effect="slide" end="1280,384" time="0" condition="Container.Position(12)" reversible="false">Conditional</animation>
 		<animation effect="slide" end="1536,384" time="0" condition="Container.Position(13)" reversible="false">Conditional</animation>
+	</include>
+
+	<include name="GridView_Overlay_Slides_Posters_Horizontal">
+		<animation effect="slide" end="0,420" time="0" condition="Container.Position(1)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="280,0" time="0" condition="Container.Position(2)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="280,420" time="0" condition="Container.Position(3)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="560,0" time="0" condition="Container.Position(4)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="560,420" time="0" condition="Container.Position(5)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="840,0" time="0" condition="Container.Position(6)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="840,420" time="0" condition="Container.Position(7)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1120,0" time="0" condition="Container.Position(8)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1120,420" time="0" condition="Container.Position(9)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1400,0" time="0" condition="Container.Position(10)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1400,420" time="0" condition="Container.Position(11)" reversible="false">Conditional</animation>
 	</include>
 
 	<include name="GridView_Overlay_Slides_Square_Large">
@@ -504,6 +642,16 @@
 		<animation effect="slide" end="1536,512" time="0" condition="Container.Position(20)" reversible="false">Conditional</animation>
 	</include>
 
+	<include name="GridView_Overlay_Slides_Square_Horizontal">
+		<animation effect="slide" end="0,420" time="0" condition="Container.Position(1)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="420,0" time="0" condition="Container.Position(2)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="420,420" time="0" condition="Container.Position(3)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="840,0" time="0" condition="Container.Position(4)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="840,420" time="0" condition="Container.Position(5)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1260,0" time="0" condition="Container.Position(6)" reversible="false">Conditional</animation>
+		<animation effect="slide" end="1260,420" time="0" condition="Container.Position(7)" reversible="false">Conditional</animation>
+	</include>
+
 	<include name="GridView_Overlay">
 		<param name="displaytype_label" />
 		<param name="include_slides" default="true" />
@@ -517,8 +665,9 @@
 		<param name="info_font" default="Grid_Info" />
 		<definition>
 			<control type="group">
-				<include content="GridView_Overlay_Slides_$PARAM[displaytype_label]_Large" condition="!Skin.String(GridView_Size,Small)" />
+				<include content="GridView_Overlay_Slides_$PARAM[displaytype_label]_Large" condition="!Skin.String(GridView_Size,Small) + !Skin.String(GridView_Size,Horizontal)" />
 				<include content="GridView_Overlay_Slides_$PARAM[displaytype_label]_Small" condition="Skin.String(GridView_Size,Small)" />
+				<include content="GridView_Overlay_Slides_$PARAM[displaytype_label]_Horizontal" condition="Skin.String(GridView_Size,Horizontal)" />
 				<left>$PARAM[left]</left>
 				<top>$PARAM[top]</top>
 				<width>$PARAM[width]</width>
@@ -1103,7 +1252,7 @@
 				<top>$PARAM[top]</top>
 				<include content="Visible_Fade_Animation" />
 				<control type="group">
-					<visible>!$EXP[Content_Switching]</visible>
+					<visible>!$EXP[Content_Switching_Base]</visible>
 					<include content="GridView_ListIcon_Static_Unfocused">
 						<param name="visible" value="true" />
 						<param name="position" value="-1" />
@@ -1225,7 +1374,7 @@
 			<control type="group">
 				<animation effect="slide" start="0,0" end="60,0" time="0" condition="true">Conditional</animation>
 				<nested />
-				<include content="GridView_Animated">
+				<include content="GridView_Animated" condition="![Skin.HasSetting(Quick_Transitions) + Skin.HasSetting(Zero_Transitions)]">
 					<param name="target_id" value="$PARAM[target_id]" />
 					<param name="viewtype_label" value="Grid" />
 					<param name="displaytype_label" value="$PARAM[displaytype_label]" />
