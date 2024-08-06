@@ -338,56 +338,155 @@
 		</definition>
 	</include>
 
+	<include name="Home_Time_Widget">
+		<param name="visible" default="![$EXP[Music_Player_IsVisible] | $EXP[Music_Player_HasFocus] | $EXP[Infoscreen_IsVisible] | Control.HasFocus(4300) | Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog) | Window.IsVisible(shutdownmenu)]" />
+		<param name="textcolor" default="$VAR[Time_Widget_Label_Color]" />
+		<definition>
+			<include content="Clock" condition="!Skin.String(Time_Widget,Date) + !Skin.String(Time_Widget,Weather)">
+				<param name="visible" value="$PARAM[visible]" />
+				<param name="textcolor" value="$PARAM[textcolor]" />
+			</include>
+			<include content="Time_Widget" condition="Skin.String(Time_Widget,Date) | Skin.String(Time_Widget,Weather)">
+				<param name="visible" value="$PARAM[visible]" />
+				<param name="include_weather" value="Skin.String(Time_Widget,Weather)" />
+				<param name="textcolor" value="$PARAM[textcolor]" />
+			</include>
+		</definition>
+	</include>
+
 	<include name="Clock">
 		<param name="visible" default="true" />
-		<param name="size" default="180" />
-		<param name="right" default="0" />
-		<param name="backgroundcolor" default="$VAR[Blank_Color]" />
 		<param name="textcolor" default="$VAR[Light_Color]" />
 		<definition>
 			<control type="group">
-				<visible>![$EXP[Music_Player_IsVisible] | $EXP[Music_Player_HasFocus] | Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog)] | Window.IsVisible(shutdownmenu)</visible>
+				<visible>$PARAM[visible]</visible>
 				<include content="VisibleHidden_Fade_Animation" />
-				<control type="group">
-					<visible>$PARAM[visible]</visible>
-					<right>$PARAM[right]</right>
-					<top>0</top>
-					<width>$PARAM[size]</width>
-					<height>$PARAM[size]</height>
-					<include content="Visible_Fade_Delayed_Animation" />
-					<control type="image">
-						<texture colordiffuse="$PARAM[backgroundcolor]">views/white_100.png</texture>
-					</control>
-					<control type="grouplist">
-						<left>15</left>
-						<right>15</right>
-						<centertop>50%</centertop>
+				<right>0</right>
+				<top>0</top>
+				<width>180</width>
+				<height>180</height>
+				<control type="grouplist">
+					<left>15</left>
+					<right>15</right>
+					<centertop>50%</centertop>
+					<height>70</height>
+					<align>center</align>
+					<itemgap>3</itemgap>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width>auto</width>
 						<height>70</height>
-						<align>center</align>
-						<itemgap>3</itemgap>
-						<orientation>horizontal</orientation>
-						<usecontrolcoords>true</usecontrolcoords>
-						<control type="label">
-							<width>auto</width>
-							<height>70</height>
-							<font>Main_Menu_Focused</font>
-							<align>right</align>
-							<aligny>center</aligny>
-							<textcolor>$PARAM[textcolor]</textcolor>
-							<label>$INFO[System.Time(hh)]</label>
-						</control>
-						<control type="label">
-							<width>auto</width>
-							<height>55</height>
-							<top>13</top>
-							<font>Main_Menu_Unfocused</font>
-							<align>left</align>
-							<aligny>center</aligny>
-							<textcolor>$PARAM[textcolor]</textcolor>
-							<label>$INFO[System.Time(mm)]</label>
-						</control>
+						<font>Main_Menu_Focused</font>
+						<align>right</align>
+						<aligny>center</aligny>
+						<textcolor>$PARAM[textcolor]</textcolor>
+						<label>$INFO[System.Time(hh)]</label>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>55</height>
+						<top>13</top>
+						<font>Main_Menu_Unfocused</font>
+						<align>left</align>
+						<aligny>center</aligny>
+						<textcolor>$PARAM[textcolor]</textcolor>
+						<label>$INFO[System.Time(mm)]</label>
 					</control>
 				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Time_Widget">
+		<param name="visible" default="![$EXP[Music_Player_IsVisible] | $EXP[Music_Player_HasFocus] | $EXP[Infoscreen_IsVisible] | Window.IsVisible(volumebar) | Window.IsVisible(notification) | Window.IsVisible(extendedprogressdialog)]" />
+		<param name="include_weather" default="true" />
+		<param name="textcolor" default="$VAR[Light_Color]" />
+		<definition>
+			<control type="grouplist">
+				<visible>$PARAM[visible]</visible>
+				<include content="VisibleHidden_Fade_Delayed_Animation" />
+				<nested />
+				<right>60</right>
+				<top>66</top>
+				<height>48</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>10</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="Time_Widget_Label_Small">
+					<param name="label" value="$INFO[System.Date(ddd)]$INFO[System.Date(mmm d),$COMMA ]" />
+					<param name="textcolor" value="$PARAM[textcolor]" />
+				</include>
+				<include content="Time_Widget_Icon" condition="$PARAM[include_weather]">
+					<param name="visible" value="Weather.IsFetched + !String.Contains(Weather.Conditions,$LOCALIZE[503])" />
+					<param name="texture" value="$INFO[Weather.ConditionsIcon]" />
+				</include>
+				<include content="Time_Widget_Label_Small" condition="$PARAM[include_weather]">
+					<param name="visible" value="Weather.IsFetched + !String.Contains(Weather.Conditions,$LOCALIZE[503])" />
+					<param name="label" value="$INFO[Weather.Temperature]" />
+					<param name="textcolor" value="$PARAM[textcolor]" />
+				</include>
+				<include content="Time_Widget_Label_Small">
+					<param name="label" value="$VAR[Copacetic_Divider_Bold]" />
+					<param name="textcolor" value="$PARAM[textcolor]" />
+				</include>
+				<include content="Time_Widget_Label_Large">
+					<param name="label" value="$INFO[System.Time(hh)]" />
+					<param name="textcolor" value="$PARAM[textcolor]" />
+				</include>
+				<include content="Time_Widget_Label_Small">
+					<param name="left" value="-7" />
+					<param name="label" value="$INFO[System.Time(mm)]" />
+					<param name="textcolor" value="$PARAM[textcolor]" />
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Time_Widget_Label_Large">
+		<param name="visible" default="true" />
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<visible>$PARAM[visible]</visible>
+				<font>Title_Breadcrumb_Label</font>
+				<height>100%</height>
+				<width>auto</width>
+				<label>$PARAM[label]</label>
+				<aligny>center</aligny>
+				<textcolor>$PARAM[textcolor]</textcolor>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Time_Widget_Label_Small">
+		<param name="visible" default="true" />
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<visible>$PARAM[visible]</visible>
+				<font>MusicPlayer_Info</font>
+				<top>13</top>
+				<height>33</height>
+				<width>auto</width>
+				<label>$PARAM[label]</label>
+				<aligny>center</aligny>
+				<textcolor>$PARAM[textcolor]</textcolor>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Time_Widget_Icon">
+		<param name="visible" default="true" />
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<visible>$PARAM[visible]</visible>
+				<top>13</top>
+				<height>33</height>
+				<width>33</width>
+				<texture>$PARAM[texture]</texture>
 			</control>
 		</definition>
 	</include>

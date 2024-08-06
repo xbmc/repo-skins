@@ -20,38 +20,116 @@ or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisc
 
 ### Changelog
 ---
+**1.6.1**
+- Added a three second delay when entering movies or home windows before trailers will autoplay
+- Minor tweaks to design for pvr guide and channels
+
+Still to do:
+- infoscreen bug
+- remaining pvr screens
+- infoscreen widget navigation for music widgets + music videos (songvideourl)
+- check to see the player status labels
+- Evaluate Container.NumItems for scrollbars in each view / layout
+- autoscroll bar
+- multiart on autoscroll
+- Create radio station button
+- remove window property hack for music ratings during playback in Omega
+= <!-- temp fix to account for fact that DecreaseRating won't go lower than 1 for VideoPlayer.UserRating -->
+- https://github.com/jurialmunkey/plugin.video.themoviedb.helper/wiki/Replacing-Extended-Info#direct-call-auto
+
+**1.6.0**
+- Fixed typo in trailer autoplay preventing tvshow trailers from autoplaying in videos window unless container content was NOT tvshows. 
+
+**1.5.10**
+- Switched OSD idle timer from custom window to skin timer
+
+**1.5.9**
+- Hide dialogvideinfo.xml label for ends time in top right corner when musicplayer widget is active.
+- Attempted fix for crashes in when browsing settings screens on certain platforms, courtesy of @mikeSILVO
+
+**1.5.8**
+- New attempted fix for infoscreen path tracer bug
+
+**1.5.6**
+- New attempted fix for Infoscreen Path Tracer Button bug (see below). Rearchitected logic of the loop so it's no longer reliant on a timed delay
+
+**1.5.5**
+- Fixed bug in tvshow infoscreen widgets where 'Next up' and 'More episodes from Season X' widgets would both display on top of each other
+- Fixed bug in 'More from Actor Name' widget where it was not removing the current item if widget was opened from an episode infoscreen. This fix is in conjunction with a fix in script.copacetic.helper (1.1.5).
+-  Attempted fix for bug in Infoscreen Path Tracer Button that was not resolved in previous update on less powerful hardware, where the container takes too long to update on the exit route from ContainerPath_02 to ContainerPath_01. Previously when control 6001 received focus, it would only pause if Container.IsUpdating. Theory is that it was receiving focus before the container update began and so redirecting back to the infoscreen for the same item before the container update had completed. Now the condition for the delay is set to true to hopefully give the container update time to begin. Once it begins, the Container Update Bounce Test will proceed to check every 100ms if the update is finished, before redirecting to the updated infoscreen. --> To be tested on different devices...
+
+**1.5.4**
+- Improved animations for gridview border
+- Fixed label for visualisation layout in skin settings
+- Fixed stripview variable label in global search https://github.com/realcopacetic/skin.copacetic/issues/181
+- Fixed bug in infoscreen navigation that was causing navigation to break because !String.IsEqual(Container(3203).ListItem.Label,ListItem.Label) was evaluating to true even when Container(3203) was empty
+- Fixed a bug causing some infoscreen widget artwork not to dim when dialog window was open on top, e.g. shutdownmenu
+- Fixed a bug causing background colour to stay black on infoscreen widgets when Light theme selected and navigating to infoscreen from a Billboard view home widget
+- New WB logo
+- New DC logo
+- Added Prime Video studio flag logo
+- Fixed time widget label colour when showing shutdown menu on top of a home screen widget with Light background theme enabled
+- Added container transition between Album and Album disc screen
+- Adjusted fade delay times to be consistent between home widget details and breadcrumb label
+- Fixed loginscreen background with library fallbacks as script is not loaded until this screen is bypassed
+- Fixed a bug in navigation between infoscreens where clicking on an item from an infoscreen to load a new instance of the infoscreen for the new item, then going back, would not result in returning to the previous item's infoscreen. This required adding a tiny delay to the container update bounce check, as it may have been evaluating too quickly.
+- Removed season_info_monitor timer and replaced with script.copacetic.helper monitoring
+- Fixed infoscreen path tracer when starting from an episode in a widget
+- Fixed infoscreen widgets for Seasons view
+- Fixed bug preventing Grid view from displaying properly for windows where Container.Content() is empty, e.g. video sources 
+- Fixed musicplayer navigation for horizontal gridviews
+- Fixed alignment and shadow on musicplayer when horizontal gridviews are active
+
+**1.5.3**
+- Disabled debugging
+
+**1.5.2**
+- Fixed a bug in translations file https://github.com/realcopacetic/skin.copacetic/issues/183
+- Fixed slides for Grid Horizontal layout 
+- Added visibility condition to seek label https://github.com/realcopacetic/skin.copacetic/issues/187
+
+**1.5.1**
+- Fixed bug where square widgets were showing fanart even when a thumbnail was available https://github.com/realcopacetic/skin.copacetic/issues/179
+- Fixed an animation bug when quick transitions are selected caused by the fact that the content switching scroll time was reduced but some scrolling animations in Strip and Showcase are hardcoded. Now the scrolling speed is the same for these views as the default transitions, but there is no longer a delay before the content appears, so it still feels quicker. Choosing to disable scrolling animations entirely still reduces the scroll speed to 0 for these views.
+- Fixed a bug in the new Time widget preventing the weather information from correctly displaying
+
+**1.5.0**
+- Added option to change transparency of video player overlay (Settings > Copacetic > Backgrounds > 'OSD background brightness during video playback')
+- Fixed bug in screen to choose preferred classification system (Settings > Copacetic > Customisations > Preferred classification ratings). Previously wrong labels were showing up in the dialog screen that opens https://github.com/realcopacetic/skin.copacetic/issues/173
+- Fixed bug in breadcrumb label colour when Addonbrowser window open and repository list is 
+- Added fallback for TV shows info label when ListItem.Property(unwatched episodes) is unavailable
+- Fixed animation glitch in artwork fadediffuse when a dialog window e.g. Context Menu is visible on top.
+- Transitioned majority of animations to constants
+- Fixed background slideshow label - in some scenarios it was showing names that didn't match the artwork currently on display
+- Prevented empty progress bar from showing on incomplete movie sets. This was showing as empty because ListItem.IsResumable returns True for collections, but ListItem.PercentPlayed returns empty i.e. 0.
+- Fixed glitch in progress bar gradient when navigating through secondary lists on some views
+- Disabled Multiart Reset Interrupter on GridView. This interrupter prevents the multiart timer resetting when the container loses focus to items such as the shutdown or view options menu. It's why multiart slideshows can continue in the background when these menus are focused for most views. However, Gridview cannot support this as it is constructed using a default panel, meaning that the focuslayout disappears whenever these other menus take focus. Without disabling the Reset Interruptor, multiart will be visible, then it will disappear if you bring up the shutdown menu, then it will immediately reappear after the menu is closed. This can be jarring so it's better to let the multiart timer reset and start counting again from 0 when gridview loses focus.
+- Added progress bar and remaining movies indicator for sets that aren't fully watched using a script.copacetic.helper script.
+- Improved accuracy and efficiency of conditional animations for the progress bar unwatched episodes/movies indicator.
+- Added ability to speed up animations and window transitions (Settings > Copacetic > General > Speed up animations and window transitions). This feature is currently in beta so further refinement may be necessary following wider testing. When enabled, there is a secondary option to 'Disable all viewtype scroll animations', which will further speed up the main media views by setting scrolltime to 0 https://github.com/realcopacetic/skin.copacetic/issues/73
+- Fix for glitch in widget spotlight auto scroll function, which could cause widgets to momentarily disappear 
+- Fix for bug where secondary list was sometimes showing Poster art even when 'Prefer keyart' was selected for the specified view and vice versa https://github.com/realcopacetic/skin.copacetic/issues/174
+- Added horizontal layouts for Gridview. In Settings > Copacetic > Views > Grid, you can now choose item layout. The options are 'Vertical small', 'Vertical large' and 'Horizontal' https://github.com/realcopacetic/skin.copacetic/issues/180
+- Added new Time widget replacing the Clock. Now in Settings > Copacetic > Home > General, you can choose the furniture to include (None / Clock / Clock and Date / Clock, Date and Weather). Note: For weather to be displayed, you must install a weather addon and make sure it's enabled under Settings > Services > Weather https://github.com/realcopacetic/skin.copacetic/issues/177
+- Ability to make new Time widget persistent across the entire home screen (Settings > Copacetic > Home > General). In addition, time widget added to settings screens and shutdown menu dialog. https://github.com/realcopacetic/skin.copacetic/issues/178
+- Improved widget navigation by switching from visibility conditionals to Container.NumItems
+- Fixed animation issue affecting collections icon during scrolling in Stripview
+
 **1.4.3**
+- Bumping version number by 1 to differentiate between Nexus and Omega versions. 
 - Increased version number of script.copacetic.helper dependency to 1.1.0
 - Added visibility delay to multiartwhen switching containers to prevent seeing it fade out immediately after moving from Movies to Sets, etc.
 - Added experimental feature to enable landscape artwork to be displayed instead of fanart for background artwork in List and Billboard view (Settings > Copacetic > Customisations > Experimentsle > 'Enable landscape art for List and Billboard view backgrounds')
-- Added small and large item layouts for Grid view panels (Copacetic > Views > Grid > 'Item artwork size') https://github.com/realcopacetic/skin.copacetic/issues/168
-- Added option to change plot text colour on Showcase and Strip views from grey to white (Copacetic > Customisations > Library > 'Prefer white to grey text for plot in Showcase and Strip views') https://github.com/realcopacetic/skin.copacetic/issues/168 https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added small and large item layouts for Grid view panels (Settings > Copacetic > Views > Grid > 'Item artwork size') https://github.com/realcopacetic/skin.copacetic/issues/168
+- Added option to change plot text colour on Showcase and Strip views from grey to white (Settings > Copacetic > Customisations > Library > 'Prefer white to grey text for plot in Showcase and Strip views') https://github.com/realcopacetic/skin.copacetic/issues/168 https://github.com/realcopacetic/skin.copacetic/issues/173
 - Added label to video infoscreen showing end time when infolabel is available https://github.com/realcopacetic/skin.copacetic/issues/168
-- Added option to disable video information from being displayed at the top of the screen upon video playback (Copacetic > Customisations > Video Player > 'Disable video information from being displayed at the start of playback') https://github.com/realcopacetic/skin.copacetic/issues/173
-- Added option to show remaining time rather than item duration in the seekbar (Copacetic > Customisations > Video Player > 'Prefer time remaining to video duration in seek bar') https://github.com/realcopacetic/skin.copacetic/issues/173  
+- Added option to disable video information from being displayed at the top of the screen upon video playback (Settings > Copacetic > Customisations > Video Player > 'Disable video information from being displayed at the start of playback') https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added option to show remaining time rather than item duration in the seekbar (Settings > Copacetic > Customisations > Video Player > 'Prefer time remaining to video duration in seek bar') https://github.com/realcopacetic/skin.copacetic/issues/173  
 - Fixed missing label when scrolling embedded lists in Thumbnails layout of List view
 - Added fadetime to episode artwork when in ListView Thumbnails layout https://github.com/realcopacetic/skin.copacetic/issues/173
 - Added video title to top of video player when osd is on the screen, with currently focused button moved to secondary info label in the top bar https://github.com/realcopacetic/skin.copacetic/issues/173
-- Added option to scroll long titles in ListView instead of truncating (Copacetic > Views > List > 'Enable scrolling on long titles instead of truncation (...)') https://github.com/realcopacetic/skin.copacetic/issues/173
+- Added option to scroll long titles in ListView instead of truncating (Settings > Copacetic > Views > List > 'Enable scrolling on long titles instead of truncation (...)') https://github.com/realcopacetic/skin.copacetic/issues/173
 - Added wrap around on context/options menus so if you get to the bottom/top and press down/up, you will wrap back around to the other end of the list https://github.com/realcopacetic/skin.copacetic/issues/173
-
-Still to do:
---- transparency of video player overlay
---- checkmarks/fades for other views?
---- check to see the player status labels
--- transition times - check all animations are switched to constants, decide on content switching exclusions for each view. See if anything breaks or any other areas animations can be cut
--- check tmdb helper click actions for all infoscreen widgets (including episode ones etc)
--- tmdb helper for play button on infoscreen?
-- autoscroll bar
-- multiart on autoscroll
-- login background
-- Create radio station button
-- remove window property hack for music ratings during playback in Omega
-artwork slideshow label wrong when you go into places like music library
-<!-- temp fix to account for fact that DecreaseRating won't go lower than 1 for VideoPlayer.UserRating -->
-- PVR
-https://github.com/jurialmunkey/plugin.video.themoviedb.helper/wiki/Replacing-Extended-Info#direct-call-auto
-- Code cleanup - replace things like [skin.string(x,y) | !skin.string(x)] with !skin.string(z)
 
 **1.4.2**
 - Improved visibility condition for widget settings screen
