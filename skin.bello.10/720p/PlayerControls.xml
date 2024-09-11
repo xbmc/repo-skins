@@ -1,0 +1,499 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window>
+	<defaultcontrol always="true">500</defaultcontrol>
+	<onload condition="!String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current))">Action(back)</onload>
+	<include condition="[Skin.HasSetting(EnableQuickNav) | Player.HasMedia]">OnLoadDialogsClose</include>
+	<onload condition="Window.IsActive(favourites) + [Skin.HasSetting(EnableQuickNav) | Player.HasMedia]">Dialog.Close(favourites)</onload>
+	<onload condition="Window.IsActive(FullscreenVideo) | Window.IsActive(Visualisation)">Action(back)</onload>
+	<onload>SetProperty(Movement,1)</onload>
+	<onunload>ClearProperty(Movement)</onunload>
+	<controls>
+		<include>QuickNavFanart</include>
+		<control type="group">
+			<include>FanartFade</include>
+			<visible>Window.IsActive(DialogVideoInfo.xml) | Window.IsActive(DialogMusicInfo.xml)</visible>
+			<control type="image">
+				<include>FullscreenDimensions</include>
+				<texture background="true">windows/bg/bg_overlay.png</texture>
+			</control>
+			<control type="image">
+				<include>FullscreenDimensions</include>
+				<texture background="true">windows/bg/bg_overlay_two.png</texture>
+			</control>
+		</control>
+		<control type="button" id="500">
+			<include>HiddenItem</include>
+			<onfocus condition="[Player.HasMedia + !VideoPlayer.Content(LiveTV)]">SetFocus(103)</onfocus>
+			<onfocus condition="[Player.HasMedia + VideoPlayer.Content(LiveTV)]">SetFocus(109)</onfocus>
+			<onfocus condition="!Player.HasMedia + [Skin.HasSetting(QuickNavWidgetSettings) + String.IsEmpty(Skin.String(CustomItem.1.Path))]">SetFocus(600)</onfocus>
+			<onfocus condition="!Player.HasMedia + [Skin.HasSetting(QuickNavWidgetItems) | Skin.HasSetting(QuickNavWidgetHomeMenu)  | Skin.HasSetting(QuickNavWidgetSettings) | [Skin.HasSetting(QuickNavWidgetCustomItems) + !String.IsEmpty(Skin.String(CustomItem.1.Path))]]">SetFocus(150)</onfocus>
+		</control>
+
+		<control type="group" id="600">
+			<include>VisibleHiddenSlideAnimation</include>
+			<visible>[Window.IsActive(PlayerControls) + [Skin.HasSetting(EnableQuickNav) | Player.HasMedia]] + !Window.IsActive(DialogVideoInfo.xml) + !Window.IsActive(DialogMusicInfo.xml)</visible>
+			<width>1280</width>
+			<!-- <animation effect="slide" start="0,0" end="0,-50" time="200" condition="Window.IsActive(notification) | Window.IsActive(extendedprogressdialog) | Window.IsActive(busydialog)">Conditional</animation> -->
+
+			<!-- ===================== -->
+			<!-- == QuickNav Widget == -->
+			<!-- ===================== -->
+			<control type="group">
+				<left>45</left>
+				<include>VisibleFadeEffectQuickNav</include>
+				<visible allowhiddenfocus="true">Control.HasFocus(150)</visible>
+				<include>PlayerControls_Labels</include>
+				<control type="fixedlist" id="150">
+					<left>0</left>
+					<top>335</top>
+					<width>1189</width>
+					<height>256</height>
+					<onleft>150</onleft>
+					<onright>150</onright>
+					<onup>SetProperty(Movement,1)</onup>
+					<onup condition="Player.HasMedia">100</onup>
+					<onup condition="!Player.HasMedia">300</onup>
+					<ondown>ClearProperty(Movement)</ondown>
+					<ondown>200</ondown>
+					<preloaditems>4</preloaditems>
+					<focusposition>0</focusposition>
+					<!-- <movement>7</movement> -->
+					<orientation>horizontal</orientation>
+					<scrolltime tween="Quadratic" easing="out">300</scrolltime>
+					<itemlayout width="199.5">
+						<include>HomeWidgets_Square_ItemLayout</include>
+					</itemlayout>
+					<focusedlayout width="199.5">
+						<control type="image">
+							<width>191</width>
+							<height>191</height>
+							<texture border="30">views/other/panel.png</texture>
+						</control>
+						<control type="image">
+							<width>191</width>
+							<height>191</height>
+							<aspectratio align="center" aligny="center">scale</aspectratio>
+							<texture background="true" fallback="thumbs/fallback_square_tp.png">$INFO[ListItem.Icon]</texture>
+							<bordersize>ThumbsBorderSize</bordersize>
+							<visible>Skin.HasSetting(QuickNavWidgetCustomItems)</visible>
+						</control>
+						<control type="image">
+							<width>191</width>
+							<height>191</height>
+							<colordiffuse>$VAR[Textures.GlobalColor]</colordiffuse>
+							<aspectratio align="center" aligny="center">scale</aspectratio>
+							<texture background="true" fallback="thumbs/fallback_square_tp.png">$INFO[ListItem.Icon]</texture>
+							<bordersize>ThumbsBorderSize</bordersize>
+							<visible>!Skin.HasSetting(QuickNavWidgetCustomItems)</visible>
+						</control>
+						<include>HomeWidgets_FocusTexture</include>
+					</focusedlayout>
+					<content>
+						<include condition="Skin.HasSetting(QuickNavWidgetItems)">QuickNavContent</include>
+						<include condition="Skin.HasSetting(QuickNavWidgetHomeMenu)">skinshortcuts-mainmenu</include>
+						<include condition="Skin.HasSetting(QuickNavWidgetSettings)">SettingsContent</include>
+						<include condition="Skin.HasSetting(QuickNavWidgetCustomItems)">CustomItems</include>
+					</content>
+				</control>
+				<include content="PlayerControls_NavigationArrows">
+					<param name="top" value="403"/>
+					<param name="visible_previous" value="Control.HasFocus(150) + Container(150).HasPrevious"/>
+					<param name="visible_next" value="Control.HasFocus(150) + Container(150).HasNext"/>
+				</include>
+			</control>
+
+			<!-- =================== -->
+			<!-- == Movies Widget == -->
+			<!-- =================== -->
+			<control type="group">
+				<left>45</left>
+				<include>VisibleFadeEffectMovies</include>
+				<visible allowhiddenfocus="true">Control.HasFocus(200)</visible>
+				<include>PlayerControls_Labels</include>
+				<control type="fixedlist" id="200">
+					<left>0</left>
+					<top>288</top>
+					<width>1189</width>
+					<height>256</height>
+					<onleft>200</onleft>
+					<onright>200</onright>
+					<onup>SetProperty(Movement,1)</onup>
+					<onup>150</onup>
+					<ondown>ClearProperty(Movement)</ondown>
+					<ondown>250</ondown>
+					<onclick>Dialog.Close(playercontrols)</onclick>
+					<onclick>$VAR[QuickNavWidgetsCustomClick]</onclick>
+					<preloaditems>4</preloaditems>
+					<focusposition>0</focusposition>
+					<!--  <movement>10</movement> -->
+					<orientation>horizontal</orientation>
+					<scrolltime tween="Quadratic" easing="out">300</scrolltime>
+					<itemlayout width="171">
+						<include>HomeWidgets_Poster_ItemLayout</include>
+					</itemlayout>
+					<focusedlayout width="171">
+						<include>HomeWidgets_Poster_Focusedlayout</include>
+					</focusedlayout>
+					<content>$VAR[QuickNav_WidgetListMoviesContent]</content>
+				</control>
+				<include content="PlayerControls_NavigationArrows">
+					<param name="top" value="396"/>
+					<param name="visible_previous" value="Control.HasFocus(200) + Container(200).HasPrevious"/>
+					<param name="visible_next" value="Control.HasFocus(200) + Container(200).HasNext"/>
+				</include>
+			</control>
+
+			<!-- ==================== -->
+			<!-- == TVShows Widget == -->
+			<!-- ==================== -->
+			<control type="group">
+				<left>45</left>
+				<include>VisibleFadeEffectTVShows</include>
+				<visible allowhiddenfocus="true">Control.HasFocus(250)</visible>
+				<include>PlayerControls_Labels</include>
+				<control type="fixedlist" id="250">
+					<animation effect="slide" start="0,0" end="0,68" condition="!String.IsEqual(ListItem.DBType,tvshow)">Conditional</animation>
+					<left>0</left>
+					<top>288</top>
+					<width>1189</width>
+					<height>256</height>
+					<onleft>250</onleft>
+					<onright>250</onright>
+					<onup>SetProperty(Movement,1)</onup>
+					<onup>200</onup>
+					<ondown>ClearProperty(Movement)</ondown>
+					<ondown>300</ondown>
+					<onclick>Dialog.Close(playercontrols)</onclick>
+					<onclick>$VAR[QuickNavWidgetsCustomClick]</onclick>
+					<preloaditems>4</preloaditems>
+					<focusposition>0</focusposition>
+					<!--  <movement>10</movement> -->
+					<orientation>horizontal</orientation>
+					<scrolltime tween="Quadratic" easing="out">300</scrolltime>
+					<itemlayout condition="String.IsEqual(ListItem.DBType,tvshow)" width="171">
+						<include>HomeWidgets_Poster_ItemLayout</include>
+					</itemlayout>
+					<itemlayout condition="!String.IsEqual(ListItem.DBType,tvshow)" width="299">
+						<include>HomeWidgets_Landscape_ItemLayout</include>
+					</itemlayout>
+					<focusedlayout condition="String.IsEqual(ListItem.DBType,tvshow)" width="171">
+						<include>HomeWidgets_Poster_Focusedlayout</include>
+					</focusedlayout>
+					<focusedlayout condition="!String.IsEqual(ListItem.DBType,tvshow)" width="299">
+						<include>HomeWidgets_Landscape_Focusedlayout</include>
+					</focusedlayout>
+					<content>$VAR[QuickNav_WidgetListContentTVShows]</content>
+				</control>
+				<include content="PlayerControls_NavigationArrows">
+					<param name="top" value="413"/>
+					<param name="visible_previous" value="Control.HasFocus(250) + Container(250).HasPrevious"/>
+					<param name="visible_next" value="Control.HasFocus(250) + Container(250).HasNext"/>
+				</include>
+			</control>
+
+			<!-- ================== -->
+			<!-- == Music Widget == -->
+			<!-- ================== -->
+			<control type="group">
+				<left>45</left>
+				<include>VisibleFadeEffectMusic</include>
+				<visible allowhiddenfocus="true">Control.HasFocus(300)</visible>
+				<include>PlayerControls_Labels</include>
+				<control type="fixedlist" id="300">
+					<left>0</left>
+					<top>335</top>
+					<width>1189</width>
+					<height>256</height>
+					<onleft>300</onleft>
+					<onright>300</onright>
+					<onup>SetProperty(Movement,1)</onup>
+					<onup>250</onup>
+					<ondown>ClearProperty(Movement)</ondown>
+					<ondown condition="Player.HasMedia">100</ondown>
+					<ondown condition="!Player.HasMedia">150</ondown>
+					<onclick>Dialog.Close(playercontrols)</onclick>
+					<onclick>$VAR[QuickNavWidgetsCustomClick]</onclick>
+					<preloaditems>4</preloaditems>
+					<focusposition>0</focusposition>
+					<!-- <movement>7</movement> -->
+					<orientation>horizontal</orientation>
+					<scrolltime tween="Quadratic" easing="out">300</scrolltime>
+					<itemlayout width="199.5">
+						<include>HomeWidgets_Square_ItemLayout</include>
+					</itemlayout>
+					<focusedlayout width="199.5">
+						<include>HomeWidgets_Square_Focusedlayout</include>
+					</focusedlayout>
+					<content>$VAR[QuickNav_WidgetListContentMusic]</content>
+				</control>
+				<include content="PlayerControls_NavigationArrows">
+					<param name="top" value="403"/>
+					<param name="visible_previous" value="Control.HasFocus(300) + Container(300).HasPrevious"/>
+					<param name="visible_next" value="Control.HasFocus(300) + Container(300).HasNext"/>
+				</include>
+			</control>
+
+			<!-- ================= -->
+			<!-- == Now Playing == -->
+			<!-- ================= -->
+			<control type="group">
+				<left>45</left>
+				<include>VisibleFadeEffectNowPlaying</include>
+				<include>PlayerControls_Labels</include>
+				<visible allowhiddenfocus="true">ControlGroup(100).HasFocus + Player.HasMedia</visible>
+
+				<!-- Movies/Episodes Cover -->
+				<control type="group">
+					<top>400</top>
+					<include>PlayerPoster</include>
+					<visible>[VideoPlayer.Content(Movies) + !String.IsEmpty(Player.Art(poster))] | [VideoPlayer.Content(Files) + !String.IsEmpty(Player.Art(poster))] | [VideoPlayer.Content(Episodes) + !String.IsEmpty(Player.Art(tvshow.poster))]</visible>
+				</control>
+
+				<!-- LiveTV/Music Cover -->
+				<control type="group">
+					<top>475</top>
+					<include>PlayerSquare</include>
+					<visible>Player.HasAudio | VideoPlayer.Content(LiveTV)</visible>
+				</control>
+
+				<!-- Progress -->
+				<control type="group" id="1">
+					<left>-45</left>
+					<top>537</top>
+					<include>OSDProgressBar</include>
+				</control>
+
+				<!-- Info -->
+				<control type="group">
+					<left>0</left>
+					<top>500</top>
+					<animation effect="slide" start="0,0" end="180,0" condition="[VideoPlayer.Content(Movies) + !String.IsEmpty(Player.Art(poster))] | [VideoPlayer.Content(Files) + !String.IsEmpty(Player.Art(poster))] | [VideoPlayer.Content(Episodes) + !String.IsEmpty(Player.Art(tvshow.poster))] | VideoPlayer.Content(LiveTV) | Player.HasAudio">Conditional</animation>
+					<include content="OSDPlayerTitleLabel">
+						<param name="height" value="30"/>
+						<param name="width" value="830"/>
+						<param name="label" value="$VAR[HomeWidgetsTitleLabels]"/>
+					</include>
+					<include content="OSDPlayerSubLabel">
+						<param name="width" value="550"/>
+						<param name="label" value="$VAR[HomeWidgetsSubLabels]"/>
+					</include>
+					<include content="OSDPlayerTime">
+						<param name="top" value="85"/>
+					</include>
+					<include>OSDPlayerRightFadeSubLabels</include>
+				</control>
+
+				<!-- Player Controls -->
+				<control type="grouplist" id="100">
+					<right>40</right>
+					<top>585</top>
+					<width>505</width>
+					<height>58</height>
+					<onleft>100</onleft>
+					<onright>100</onright>
+					<onup condition="Skin.HasSetting(EnableQuickNav)">SetProperty(Movement,1)</onup>
+					<onup condition="Skin.HasSetting(EnableQuickNav)">300</onup>
+					<ondown condition="Skin.HasSetting(EnableQuickNav)">ClearProperty(Movement)</ondown>
+					<ondown condition="Skin.HasSetting(EnableQuickNav)">150</ondown>
+					<align>right</align>
+					<orientation>horizontal</orientation>
+					<itemgap>-8</itemgap>
+					<control type="button" id="110">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/fs_fo.png</texturefocus>
+						<texturenofocus>osd/controls/fs_nf.png</texturenofocus>
+						<onclick>PreviousMenu</onclick>
+						<onclick>FullScreen</onclick>
+					</control>
+					<control type="togglebutton" id="107">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/random_OFF_fo.png</texturefocus>
+						<texturenofocus>osd/controls/random_OFF_nf.png</texturenofocus>
+						<usealttexture>Playlist.IsRandom</usealttexture>
+						<alttexturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/random_ON_fo.png</alttexturefocus>
+						<alttexturenofocus>osd/controls/random_ON_nf.png</alttexturenofocus>
+						<onclick>PlayerControl(Random)</onclick>
+						<visible>Player.HasAudio | [Player.HasVideo + [VideoPlayer.Content(Movies) | VideoPlayer.Content(Episodes)]]</visible>
+					</control>
+					<control type="button" id="112">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/playlist_fo.png</texturefocus>
+						<texturenofocus>osd/controls/playlist_nf.png</texturenofocus>
+						<onclick>PreviousMenu</onclick>
+						<onclick condition="Player.HasVideo">ActivateWindow(videoplaylist)</onclick>
+						<onclick condition="Player.HasAudio">ActivateWindow(musicplaylist)</onclick>
+						<visible>!String.IsEqual(Playlist.Length,0)</visible>
+					</control>
+					<control type="button" id="108">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/channelUP_fo.png</texturefocus>
+						<texturenofocus>osd/controls/channelUP_nf.png</texturenofocus>
+						<onclick>ChannelDown</onclick>
+						<visible>VideoPlayer.Content(LiveTV)</visible>
+					</control>
+					<control type="button" id="109">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/channelDOWN_fo.png</texturefocus>
+						<texturenofocus>osd/controls/channelDOWN_nf.png</texturenofocus>
+						<onclick>ChannelUp</onclick>
+						<visible>VideoPlayer.Content(LiveTV)</visible>
+					</control>
+					<control type="button" id="101">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/previous_fo.png</texturefocus>
+						<texturenofocus>osd/controls/previous_nf.png</texturenofocus>
+						<onclick>PlayerControl(Previous)</onclick>
+						<visible>!VideoPlayer.Content(LiveTV)</visible>
+					</control>
+					<control type="button" id="102">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/rw_fo.png</texturefocus>
+						<texturenofocus>osd/controls/rw_nf.png</texturenofocus>
+						<onclick>PlayerControl(Rewind)</onclick>
+						<enable>Player.SeekEnabled</enable>
+						<animation effect="fade" start="100" end="50" time="100" condition="!Player.SeekEnabled">Conditional</animation>
+					</control>
+					<control type="togglebutton" id="103">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/pause_fo.png</texturefocus>
+						<texturenofocus>osd/controls/pause_nf.png</texturenofocus>
+						<usealttexture>Player.Paused | Player.Forwarding | Player.Rewinding</usealttexture>
+						<alttexturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/play_fo.png</alttexturefocus>
+						<alttexturenofocus>osd/controls/play_nf.png</alttexturenofocus>
+						<onclick>PlayerControl(Play)</onclick>
+						<visible>!VideoPlayer.Content(LiveTV)</visible>
+					</control>
+					<control type="togglebutton" id="111">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/pause_fo.png</texturefocus>
+						<texturenofocus>osd/controls/pause_nf.png</texturenofocus>
+						<usealttexture>Player.Paused | Player.Forwarding | Player.Rewinding</usealttexture>
+						<alttexturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/play_fo.png</alttexturefocus>
+						<alttexturenofocus>osd/controls/play_nf.png</alttexturenofocus>
+						<enable>Player.PauseEnabled</enable>
+						<onclick>PlayerControl(Play)</onclick>
+						<visible>VideoPlayer.Content(LiveTV)</visible>
+						<animation effect="fade" start="100" end="50" time="100" condition="!Player.PauseEnabled">Conditional</animation>
+					</control>
+					<control type="button" id="104">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/stop_fo.png</texturefocus>
+						<texturenofocus>osd/controls/stop_nf.png</texturenofocus>
+						<onclick>back</onclick>
+						<onclick>PlayerControl(Stop)</onclick>
+					</control>
+					<control type="button" id="105">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/ff_fo.png</texturefocus>
+						<texturenofocus>osd/controls/ff_nf.png</texturenofocus>
+						<onclick>PlayerControl(Forward)</onclick>
+						<enable>Player.SeekEnabled</enable>
+						<animation effect="fade" start="100" end="50" time="100" condition="!Player.SeekEnabled">Conditional</animation>
+					</control>
+					<control type="button" id="106">
+						<include>OSDControlsButton</include>
+						<texturefocus colordiffuse="$VAR[Textures.GlobalColor]">osd/controls/next_fo.png</texturefocus>
+						<texturenofocus>osd/controls/next_nf.png</texturenofocus>
+						<onclick>PlayerControl(Next)</onclick>
+						<visible>!VideoPlayer.Content(LiveTV)</visible>
+					</control>
+				</control>
+			</control>
+		</control>
+
+		<control type="image">
+			<include>FullscreenDimensions</include>
+			<texture background="true">windows/bg/bg_overlay.png</texture>
+			<include>FanartFade</include>
+			<visible>Window.IsActive(DialogConfirm.xml)</visible>
+			<visible>String.IsEmpty(Window(Home).Property(TMDbHelper.Path.Current)) + [Window.IsActive(DialogVideoInfo.xml) | Window.IsActive(DialogMusicInfo.xml)]</visible>
+		</control>
+
+		<!-- ================ -->
+		<!-- Top Content Info -->
+		<!-- ================ -->
+		<control type="group">
+			<left>45</left>
+			<top>25</top>
+			<include>ShutdownMenuAnimation</include>
+			<include>OpenCloseSlideAnimationTwo</include>
+			<include>VisibleHiddenSlideAnimation</include>
+			<visible>[Window.IsActive(PlayerControls) + [Skin.HasSetting(EnableQuickNav) | Player.HasMedia]] + !Window.IsActive(DialogVideoInfo.xml) + !Window.IsActive(DialogMusicInfo.xml) + !Window.IsActive(FullscreenVideo) + !Window.IsActive(Visualisation)</visible>
+			<control type="grouplist">
+				<include>CommonTopInfoGroupList</include>
+				<control type="label">
+					<include>TopBigLabel</include>
+					<label>$VAR[HomeWidgetsHeaderLabels]</label>
+				</control>
+			</control>
+			<include content="PageCountLabel">
+				<param name="label" value="$VAR[ContainerNumItems]"/>
+				<param name="visible" value="!ControlGroup(100).HasFocus"/>
+			</include>
+			<include content="PageCountLabel">
+				<param name="label" value="$VAR[PlayerContent]"/>
+				<param name="visible" value="ControlGroup(100).HasFocus"/>
+			</include>
+		</control>
+
+		<control type="group">
+			<left>25</left>
+			<top>45</top>
+			<include>OpenCloseSlideAnimation</include>
+			<include>VisibleHiddenSlideAnimation</include>
+			<include>WeatherAndClock</include>
+			<visible>Skin.HasSetting(EnableQuickNav) + ![Container.Scrolling | Window.IsActive(DialogVideoInfo.xml) | Window.IsActive(DialogMusicInfo.xml) | Window.IsActive(DialogAddonInfo.xml) | Window.IsActive(DialogPVRInfo.xml)]</visible>
+		</control>
+
+
+		<control type="group">
+			<animation type="Visible" reversible="false">
+				<include>CommonVisibleEffect</include>
+			</animation>
+			<animation type="Hidden" reversible="false">
+				<include>CommonHiddenEffect</include>
+			</animation>
+			<visible>![Window.IsActive(PlayerControls) + [Skin.HasSetting(EnableQuickNav) | Player.HasMedia]]</visible>
+			<control type="button" id="150">
+				<include>HiddenItem</include>
+				<onfocus>Action(close)</onfocus>
+			</control>
+		</control>
+
+
+
+
+
+
+  <!-- ================================ -->
+  <!-- DBID, Content, IMDBNumber (DOWN) -->
+  <!-- ================================ -->
+  <control type="grouplist">
+   <left>0%</left>
+   <bottom>50</bottom>
+   <width>100%</width>
+   <height>25</height>
+   <align>center</align>
+   <orientation>horizontal</orientation>
+   <visible>Skin.HasSetting(ShowDebugInfo)</visible>
+   <control type="label">
+    <width>auto</width>
+    <font>TextboxFont_15B</font>
+    <label>[COLOR=FFFF0000]DBID Number:[/COLOR][COLOR=FF00FF00] $INFO[ListItem.DBID][/COLOR]</label>
+   </control>
+   <control type="label">
+    <width>auto</width>
+    <font>TextboxFont_15B</font>
+    <label>|| [COLOR=FFFF0000]IMDB Number:[/COLOR][COLOR=FF00FF00] $INFO[ListItem.IMDBNumber][/COLOR]</label>
+   </control>
+   <control type="label">
+    <width>auto</width>
+    <font>TextboxFont_15B</font>
+    <label>|| [COLOR=FFFF0000]DBType:[/COLOR][COLOR=FF00FF00] $INFO[ListItem.DBType][/COLOR]</label>
+    <visible>!String.IsEmpty(ListItem.DBType)</visible>
+   </control>
+  </control>
+	</controls>
+</window>
+
+
