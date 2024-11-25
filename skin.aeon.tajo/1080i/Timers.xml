@@ -25,6 +25,21 @@
 		<onstop>Dialog.Close(1196)</onstop>
 	</timer>
 	<timer>
+		<name>autocloseplayercontrols</name>
+		<description>Timer to auto close playercontrols</description>
+		<start reset="true">Window.IsActive(playercontrols)</start>
+		<reset>Window.IsActive(playercontrols) + !System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(autocloseplayercontrols), 1)</reset>
+		<stop>!Window.IsActive(playercontrols) | Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(autocloseplayercontrols), 5)</stop>
+		<onstop>Dialog.Close(playercontrols)</onstop>
+	</timer>
+	<timer>
+		<name>autoclosevideointro</name>
+		<description>Timer to auto close the video intro</description>
+		<start reset="true">Window.IsActive(startup) + Skin.HasSetting(Enable.StartupIntro) + Player.Playing</start>
+		<stop>!Window.IsActive(startup) | !Player.Playing</stop>
+		<onstop condition="Window.IsActive(startup)">ReplaceWindow($INFO[System.StartupWindow])</onstop>
+	</timer>
+	<timer>
 		<name>homemelody</name>
 		<description>Timer to play melody in home menu</description>
 		<start reset="true">Skin.HasSetting(melodyForHome) + [Window.IsActive(home) | Window.IsActive(settings) | Window.IsActive(skinsettings) | Window.IsActive(settingscategory.xml) | Window.IsActive(systeminfo) | Window.IsActive(profiles)] + !Player.Caching + !Window.IsActive(DialogButtonMenu.xml) + !Player.HasMedia + !Pvr.IsPlayingTv + !Pvr.IsPlayingRadio + !Player.IsInternetStream + !Window.IsActive(Favouritesbrowser) + !System.HasMediadvd</start>
@@ -72,6 +87,29 @@
 		<onstart>RunScript(script.embuary.helper,action=calc,do='"$INFO[Window(home).Property(2Contador)] + 1"',prop=2MyResult)</onstart>
 	</timer>
 	<timer>
+		<name>alltimer</name>
+		<description>Play random musicvideos</description>
+		<start reset="true">Window.IsActive(1105) + String.IsEmpty(Player.Filenameandpath) + Integer.IsGreaterOrEqual(Container(6658).NumItems,1)</start>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(alltimer),5)</stop>
+		<onstart>Control.Move(6658,$INFO[Window(home).Property(3MyResult)])</onstart>
+		<onstart>SetProperty(3New_Notif,True,home)</onstart>
+		<onstart>AlarmClock(Nomore3,ClearProperty(3New_Notif,home),00:10,silent)</onstart>
+		<onstart>SetProperty(3Notif_icon,$INFO[Container(6658).ListItem.Art(album.thumb)],home)</onstart>
+		<onstart>SetProperty(3Notif_icon2,$INFO[Container(6658).ListItem.Art(videothumb)],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Artist,$ESCINFO[Container(6658).ListItem.Artist],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Fanart,$INFO[Container(6658).ListItem.Art(artist.fanart)],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Clearlogo,$INFO[Container(6658).ListItem.Art(artist.clearlogo)],home)</onstart>
+		<onstart>SetProperty(3Next_Song,$ESCINFO[Container(6658).ListItem.Label],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Year,$INFO[Container(6658).ListItem.Year],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Current,$INFO[Container(6658).CurrentItem],home)</onstart>
+		<onstart>SetProperty(3Next_Song_Total,$INFO[Container(6658).NumItems],home)</onstart>
+		<onstart>PlayMedia($ESCINFO[Container(6658).ListItem.Property(SongVideoURL)],1)</onstart>
+		<onstart>AlarmClock(Nomore4,Notification(,, 5000),00:05,silent)</onstart>
+		<onstart>AlarmClock(Nomore5,ClearProperty(3Next_Song_Fanart,Home),00:05,silent)</onstart>
+		<onstart>AlarmClock(Nomore7,ClearProperty(3Next_Song_Clearlogo,Home),00:05,silent)</onstart>
+		<onstart>RunScript(script.embuary.helper,action=calc,do='"$VAR[0Seconds] * $VAR[0Minutes]"',prop=3MyResult)</onstart>
+	</timer>
+	<timer>
 		<name>windowcloser</name>
 		<description>Close window musicvideos</description>
 		<start reset="true">Control.HasFocus(4329) + String.IsEmpty(Player.Filenameandpath) + Integer.IsEqual(Window(home).Property(MyResult),Container(6728).NumItems)</start>
@@ -84,5 +122,126 @@
 		<start reset="true">Control.HasFocus(4339) + String.IsEmpty(Player.Filenameandpath) + Integer.IsEqual(Window(home).Property(2MyResult),Container(6828).NumItems)</start>
 		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(albumwindowcloser),2)</stop>
 		<onstop>SetFocus(659)</onstop>
+	</timer>
+	<timer>
+		<name>forsimilar</name>
+		<description>Allow time to load actors</description>
+		<start reset="true">Skin.HasSetting(similars) + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,tvshow)] + [Control.HasFocus(50160) | Control.HasFocus(5060) | Control.HasFocus(58760) | Control.HasFocus(59560) | Control.HasFocus(59660)] + !System.IdleTime(1)</start>
+		<reset>!System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(forsimilar), 1)</reset>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(forsimilar),7) | ![Control.HasFocus(50160) | Control.HasFocus(5060) | Control.HasFocus(58760) | Control.HasFocus(59560) | Control.HasFocus(59660)]</stop>
+	</timer>
+	<timer>
+		<name>checktheme</name>
+		<description>Look for movie theme</description>
+		<start reset="true">Skin.HasSetting(playTheme) + System.IdleTime(2) + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set)] + [Control.HasFocus(595) | Control.HasFocus(590) | Control.HasFocus(593) | Control.HasFocus(587) | Control.HasFocus(596) | Control.HasFocus(597) | Control.HasFocus(501) | Control.HasFocus(504) | Control.HasFocus(594) | Control.HasFocus(580) | Control.HasFocus(589) | Control.HasFocus(586) | Control.HasFocus(50)] + !String.IsEqual(Window(Home).Property(MoveMovie),ListItem.Path) + !ListItem.IsParentFolder + !String.Contains(ListItem.Path,http) + !String.Contains(ListItem.Path,plugin) + !String.IsEqual(ListItem.FileExtension,strm) + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart condition="!ListItem.IsCollection">RunPlugin("plugin://script.skinvariables/?info=get_file_exists&amp;window_prop=theme_yes&amp;window_id=Home&amp;&amp;$INFO[ListItem.Path,,theme.mp3]")</onstart>
+		<onstart condition="ListItem.IsCollection">RunPlugin("plugin://script.skinvariables/?info=get_file_exists&amp;window_prop=theme_yes&amp;window_id=Home&amp;&amp;$INFO[Control.GetLabel(6410),,theme.mp3]")</onstart>
+		<onstart>SetProperty(MoveMovie,$INFO[ListItem.Path],home)</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(checktheme),1)</stop>
+	</timer>
+	<timer>
+		<name>starttheme</name>
+		<description>Play theme movie</description>
+		<start reset="true">Skin.HasSetting(playTheme) + System.IdleTime(1) + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set)] + !Player.Playing + !String.IsEmpty(Window(Home).Property(theme_yes)) + String.IsEqual(Window(Home).Property(MoveMovie),ListItem.Path) + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart condition="ListItem.IsCollection">PlayMedia($ESCINFO[Control.GetLabel(6410),,theme.mp3],1)</onstart>
+		<onstart condition="!ListItem.IsCollection + [!Skin.HasSetting(playTrailer) | [Skin.HasSetting(playTrailer) + String.IsEmpty(ListItem.Trailer)] | [Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + String.IsEqual(Skin.String(StartTrailer),10)] | [Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !String.IsEqual(Skin.String(StartTrailer),10) + [Control.HasFocus(580) | Control.HasFocus(589) | Control.HasFocus(586) | Control.HasFocus(50)]]]">PlayMedia($ESCINFO[ListItem.Path,,theme.mp3],1)</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(starttheme),2)</stop>
+		<onstop>ClearProperty(theme_yes,home)</onstop>
+	</timer>
+	<timer>
+		<name>cleartheme</name>
+		<description>Clear theme</description>
+		<start reset="true">Skin.HasSetting(playTheme) + Player.Playing + String.IsEqual(Player.Filename,theme.mp3) + !System.IdleTime(1) + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,set) | ListItem.IsParentFolder] + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>ClearProperty(theme_yes,home)</onstart>
+		<onstart>ClearProperty(MoveMovie,home)</onstart>
+		<onstart condition="!Player.Muted">SetProperty(MuteMovie,True,home)</onstart>
+		<onstart condition="!Player.Muted">Mute</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(cleartheme),1)</stop>
+	</timer>
+	<timer>
+		<name>clearthemeinfo</name>
+		<description>Clear theme info dialog</description>
+		<start reset="true">Skin.HasSetting(playTheme) + Player.Playing + String.IsEqual(Player.Filename,theme.mp3) + [Window.IsActive(movieinformation) | ListItem.IsParentFolder | !String.IsEmpty(Window(Home).Property(MediaMenu))] + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>AlarmClock(StopInfo,Stop,00:01,silent)</onstart>
+		<onstart>ClearProperty(theme_yes,home)</onstart>
+		<onstart>ClearProperty(MoveMovie,home)</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(clearthemeinfo),1)</stop>
+	</timer>
+	<timer>
+		<name>stopthemetrailer</name>
+		<description>Stop the theme to play trailer at 12 seconds</description>
+		<start reset="true">Skin.HasSetting(playTheme) + String.IsEqual(Player.Filename,theme.mp3) + [Control.HasFocus(595) | [Control.HasFocus(590) + [Container.Content(movies) | Container.Content(sets)]] | Control.HasFocus(593) | Control.HasFocus(587) | Control.HasFocus(596) | Control.HasFocus(597) | Control.HasFocus(501) | Control.HasFocus(504) | Control.HasFocus(594)] + System.IdleTime(12) + Skin.HasSetting(playTrailer) + String.IsEqual(Skin.String(StartTrailer),10) + !String.IsEmpty(ListItem.Trailer) + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>Stop</onstart>
+		<onstart>ClearProperty(theme_yes,home)</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(stopthemetrailer),2)</stop>
+	</timer>
+	<timer>
+		<name>checkthemetv</name>
+		<description>Look for TV Show theme</description>
+		<start reset="true">Skin.HasSetting(playTheme) + System.IdleTime(2) + [String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season) | String.IsEqual(ListItem.DBTYPE,episode)] + !String.IsEqual(Window(Home).Property(MoveMovie),ListItem.TvShowTitle) + !ListItem.IsParentFolder + !String.Contains(ListItem.Path,http) + !String.Contains(ListItem.Path,plugin) + !String.IsEqual(ListItem.FileExtension,strm) + [Control.HasFocus(595) | Control.HasFocus(590) | Control.HasFocus(5903) | Control.HasFocus(5904) | Control.HasFocus(593) | Control.HasFocus(587) | Control.HasFocus(596) | Control.HasFocus(597) | Control.HasFocus(501) | Control.HasFocus(504) | Control.HasFocus(594) | Control.HasFocus(580) | Control.HasFocus(586) | Control.HasFocus(50)] + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart condition="!String.IsEqual(ListItem.DBTYPE,episode)">RunPlugin("plugin://script.skinvariables/?info=get_file_exists&amp;window_prop=theme_yes&amp;window_id=Home&amp;&amp;$INFO[ListItem.Path,,theme.mp3]")</onstart>
+		<onstart condition="String.IsEqual(ListItem.DBTYPE,episode)">RunPlugin("plugin://script.skinvariables/?info=get_file_exists&amp;window_prop=theme_yes&amp;window_id=Home&amp;&amp;$INFO[Container(9998).ListItemAbsolute(0).Path,,theme.mp3]")</onstart>
+		<onstart>SetProperty(MoveMovie,$INFO[ListItem.TvShowTitle],home)</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(checkthemetv),1)</stop>
+	</timer>
+	<timer>
+		<name>startthemetv</name>
+		<description>Play theme TV Show</description>
+		<start reset="true">Skin.HasSetting(playTheme) + System.IdleTime(1) + [String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season) | String.IsEqual(ListItem.DBTYPE,episode)] + !Player.Playing + !String.IsEmpty(Window(Home).Property(theme_yes)) + String.IsEqual(Window(Home).Property(MoveMovie),ListItem.TvShowTitle) + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart condition="String.IsEqual(ListItem.DBTYPE,episode)">PlayMedia($ESCINFO[Container(9998).ListItemAbsolute(0).Path,,theme.mp3],1)</onstart>
+		<onstart condition="String.IsEqual(ListItem.DBTYPE,season) | [String.IsEqual(ListItem.DBTYPE,tvshow) + [Control.HasFocus(5903) | Control.HasFocus(5904)]]">PlayMedia($ESCINFO[ListItem.Path,,theme.mp3],1)</onstart>
+		<onstart condition="String.IsEqual(ListItem.DBTYPE,tvshow) + [!Skin.HasSetting(playTrailer) | [Skin.HasSetting(playTrailer) + String.IsEmpty(ListItem.Trailer)] | [Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + String.IsEqual(Skin.String(StartTrailer),10)] | [Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !String.IsEqual(Skin.String(StartTrailer),10) + [Control.HasFocus(590) | Control.HasFocus(580) | Control.HasFocus(586) | Control.HasFocus(50)]]]">PlayMedia($ESCINFO[ListItem.Path,,theme.mp3],1)</onstart>
+		<onstop>ClearProperty(theme_yes,home)</onstop>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(startthemetv),2)</stop>
+	</timer>
+	<timer>
+		<name>clearthemetv</name>
+		<description>Clear theme TV</description>
+		<start reset="true">Skin.HasSetting(playTheme) + Player.Playing + String.IsEqual(Player.Filename,theme.mp3) + [!String.IsEqual(Window(Home).Property(MoveMovie),ListItem.TvShowTitle) | [!Control.HasFocus(595) + !Control.HasFocus(590) + !Control.HasFocus(5903) + !Control.HasFocus(5904) + !Control.HasFocus(5865) + !Control.HasFocus(593) + !Control.HasFocus(587) + !Control.HasFocus(596) + !Control.HasFocus(597) + !Control.HasFocus(501) + !Control.HasFocus(504) + !Control.HasFocus(594) + !Control.HasFocus(580) + !Control.HasFocus(586) + !Control.HasFocus(50)]] + [String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,season) | String.IsEqual(ListItem.DBTYPE,episode)] + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>ClearProperty(theme_yes,home)</onstart>
+		<onstart>ClearProperty(MoveMovie,home)</onstart>
+		<onstart condition="!Player.Muted">SetProperty(MuteMovie,True,home)</onstart>
+		<onstart condition="!Player.Muted">Mute</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(clearthemetv),1)</stop>
+	</timer>
+	<timer>
+		<name>ridtheme</name>
+		<description>Stop theme</description>
+		<start reset="true">Skin.HasSetting(playTheme) + [System.IdleTime(1) | ![Control.HasFocus(595) | Control.HasFocus(590) | Control.HasFocus(5903) | Control.HasFocus(5904) | Control.HasFocus(593) | Control.HasFocus(587) | Control.HasFocus(596) | Control.HasFocus(597) | Control.HasFocus(501) | Control.HasFocus(504) | Control.HasFocus(594) | Control.HasFocus(580) | Control.HasFocus(589) | Control.HasFocus(586) | Control.HasFocus(50)]] + !String.IsEmpty(Window(Home).Property(MuteMovie)) + Player.Muted + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>ClearProperty(MuteMovie,home)</onstart>
+		<onstart>Stop</onstart>
+		<onstart>Mute</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(ridtheme),2)</stop>
+	</timer>
+	<timer>
+		<name>ridtrailer</name>
+		<description>Stop trailer</description>
+		<start reset="true">Skin.HasSetting(playTrailer) + [Container.Content(movies) | Container.Content(tvshows)] + !String.IsEqual(Window(home).Property(What_trailer),ListItem.Trailer) + [Control.IsVisible(2449) | Control.IsVisible(2459) | Control.IsVisible(2549) | Control.IsVisible(3499) | Control.IsVisible(3834) | Control.IsVisible(3334) | Control.IsVisible(3734)] + String.IsEmpty(Window(Home).Property(script.preshowexperience.running))</start>
+		<onstart>ClearProperty(MoveMovie,Home)</onstart>
+		<onstart>Stop</onstart>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(ridtrailer),2)</stop>
+	</timer>
+	<timer>
+		<name>netflixsaver</name>
+		<description>Timer to display screensaver Netflix style</description>
+		<start reset="true">Skin.HasSetting(ScreensaverNetflix) + Window.IsActive(videos) + !Window.IsActive(movieinformation) + !Player.Playing + !Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(netflixsaver),125)</start>
+		<reset>[Player.Playing + !String.IsEqual(Player.Filename,theme.mp3)] | !System.IdleTime(1)</reset>
+		<stop>!Window.IsActive(videos) | Window.IsActive(movieinformation) | [Player.Playing + !String.IsEqual(Player.Filename,theme.mp3)] | Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(netflixsaver),130)</stop>
+	</timer>
+	<timer>
+		<name>playmusicvideos</name>
+		<description>Play musicvideos automatically after 5 sec</description>
+		<start reset="true">Container.Content(songs) + Skin.HasSetting(playMusicVideo) + !Integer.IsEqual(Window(Home).Property(PlayOnce),ListItem.DBID) + !String.IsEqual(Skin.String(StartMusicVideo),10) + !String.IsEmpty(ListItem.SongVideoURL) + System.IdleTime(5) + !Player.Playing + [Control.HasFocus(596) | Control.HasFocus(504) | Control.HasFocus(501) | Control.HasFocus(580) | Control.HasFocus(588) | Control.HasFocus(50)]</start>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(playmusicvideos),5)</stop>
+		<onstart>PlayMedia($ESCINFO[ListItem.SongVideoURL])</onstart>
+		<onstart>SetProperty(PlayOnce,$INFO[ListItem.DBID],home)</onstart>
+	</timer>
+	<timer>
+		<name>playmusicvideos10</name>
+		<description>Play musicvideos automatically after 12 sec</description>
+		<start reset="true">Container.Content(songs) + Skin.HasSetting(playMusicVideo) + !Integer.IsEqual(Window(Home).Property(PlayOnce),ListItem.DBID) + String.IsEqual(Skin.String(StartMusicVideo),10) + !String.IsEmpty(ListItem.SongVideoURL) + System.IdleTime(12) + !Player.Playing + [Control.HasFocus(596) | Control.HasFocus(504) | Control.HasFocus(501) | Control.HasFocus(580) | Control.HasFocus(588) | Control.HasFocus(50)]</start>
+		<stop>Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(playmusicvideos10),5)</stop>
+		<onstart>PlayMedia($ESCINFO[ListItem.SongVideoURL])</onstart>
+		<onstart>SetProperty(PlayOnce,$INFO[ListItem.DBID],home)</onstart>
 	</timer>
 </timers>

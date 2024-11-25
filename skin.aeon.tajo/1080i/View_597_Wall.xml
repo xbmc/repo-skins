@@ -10,7 +10,7 @@
 				<left>110</left>
 				<top>95</top>
 				<control type="group">
-					<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.Contains(Player.Filenameandpath,theme.mp3)">Conditional</animation>
+					<animation effect="fade" start="100" end="0" time="1000" delay="2000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.IsEqual(Player.Filename,theme.mp3)">Conditional</animation>
 					<control type="image">
 						<left>-15</left>
 						<top>-8</top>
@@ -32,10 +32,10 @@
 					</control>
 				</control>
 				<control type="image">
-					<visible>[Integer.IsGreater(Player.Time,0) | [System.IdleTime(5) + !System.IdleTime(30) + !String.IsEqual(Skin.String(StartTrailer),10)] | [System.IdleTime(11) + !System.IdleTime(30) + String.IsEqual(Skin.String(StartTrailer),10)]] + Skin.HasSetting(playTrailer) + !String.Contains(Player.Filenameandpath,theme.mp3) + !String.IsEmpty(ListItem.Trailer)</visible>
+					<visible>Control.IsVisible(3834) + Skin.HasSetting(playTrailer) + !String.IsEqual(Player.Filename,theme.mp3) + Player.HasVideo</visible>
 					<visible>Control.HasFocus(597)</visible>
-					<animation effect="fade" start="100" end="0" time="900">Hidden</animation>
-					<animation effect="fade" start="0" end="100" time="500">Visible</animation>
+					<animation effect="fade" start="100" end="0" time="100">Hidden</animation>
+					<animation effect="fade" start="0" end="100" time="100">Visible</animation>
 					<left>-170</left>
 					<top>-90</top>
 					<width>980</width>
@@ -43,7 +43,7 @@
 					<texture background="true">blackk.jpg</texture>
 				</control>
 				<control type="videowindow" id="3834">
-					<visible>Integer.IsGreater(Player.Time,0) + Skin.HasSetting(playTrailer)</visible>
+					<visible>Integer.IsGreater(Player.Time,0) + Skin.HasSetting(playTrailer) + !String.IsEqual(Player.Filename,theme.mp3) + Player.HasVideo</visible>
 					<left>-165</left>
 					<top>-85</top>
 					<width>970</width>
@@ -119,8 +119,8 @@
 				<control type="scrollbar" id="59760">
 					<include>ScrollBar_Vertical</include>
 					<left>1962</left>
-					<top>155</top>
-					<height>960</height>
+					<top>105</top>
+					<height>1010</height>
 					<onleft>597</onleft>
 					<onright>597</onright>
 					<visible allowhiddenfocus="true">Control.IsVisible(597) + !Control.HasFocus(5919)</visible>
@@ -137,7 +137,7 @@
 					<onright condition="!Container.Content(seasons) + !Container.Content(episodes) + [String.Contains(Container.SortMethod,$LOCALIZE[369]) | String.Contains(Container.SortMethod,$LOCALIZE[557])]">5919</onright>
 					<onright>59760</onright>
 					<pagecontrol>59760</pagecontrol>
-					<scrolltime>400</scrolltime>
+					<scrolltime tween="sine">500</scrolltime>
 					<orientation>vertical</orientation>
 					<preloaditems>2</preloaditems>
 					<visible>Container.Content(movies) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(sets)</visible>
@@ -179,27 +179,30 @@
 								<top>6</top>
 								<width>40</width>
 								<height>40</height>
-								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]overlaywatched.png</texture>
-								<visible>String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(noshow_watched)</visible>
-							</control>
-							<control type="image">
-								<visible>!ListItem.IsParentFolder</visible>
-								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
-								<left>130</left>
-								<top>6</top>
-								<width>53</width>
-								<height>53</height>
-								<texture background="true">tajo/shelf/corner2.png</texture>
-								<aspectratio scalediffuse="false">keep</aspectratio>
-								<visible>!String.IsEqual(ListItem.Overlay,OverlayWatched.png) + [Container.Content(tvshows) | Container.Content(seasons)]</visible>
+								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]$VAR[overlayvar]</texture>
+								<visible>!Skin.HasSetting(noshow_watched) | !Skin.HasSetting(noshow_unwatched)</visible>
 							</control>
 							<control type="label">
-								<visible>!String.IsEqual(ListItem.Overlay,OverlayWatched.png)</visible>
-								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
-								<left>120</left>
-								<top>-10</top>
+								<visible>!Skin.HasSetting(noshow_resumable) + ListItem.IsResumable + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,episode)]</visible>
+								<left>116</left>
+								<top>-3</top>
 								<font>titlesmall3</font>
-								<textcolor>white</textcolor>
+								<textcolor>Skin.String(mark_color)</textcolor>
+								<shadowcolor>black</shadowcolor>
+								<align>right</align>
+								<aligny>center</aligny>
+								<width>60</width>
+								<height>52</height>
+								<label>$INFO[ListItem.PercentPlayed]%</label>
+							</control>
+							<control type="label">
+								<visible>!Skin.HasSetting(noshow_episodes)</visible>
+								<visible>!String.IsEqual(ListItem.Overlay,overlaywatched.png)</visible>
+								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
+								<left>114</left>
+								<top>-3</top>
+								<font>titlesmall3</font>
+								<textcolor>Skin.String(mark_color)</textcolor>
 								<shadowcolor>black</shadowcolor>
 								<align>right</align>
 								<aligny>center</aligny>
@@ -212,15 +215,6 @@
 					<itemlayout width="405" height="250" condition="Container.Content(episodes)">
 						<control type="group">
 							<left>5</left>
-							<control type="image">
-								<animation effect="rotate" end="180" center="auto" condition="true">Conditional</animation>
-								<left>11</left>
-								<top>230</top>
-								<width>380</width>
-								<height>3</height>
-								<aspectratio align="center">stretch</aspectratio>
-								<texture diffuse="tajo/mask_cover3.png">tajo/$VAR[GlobalCaseVarTajo]</texture>
-							</control>
 							<control type="image">
 								<left>11</left>
 								<top>18</top>
@@ -245,7 +239,17 @@
 								<texture colordiffuse="ddffffff" background="true">tajo/osd_black_bg.png</texture>
 								<aspectratio scalediffuse="false" align="center" aligny="center">stretch</aspectratio>
 							</control>
+							<control type="image">
+								<animation effect="rotate" end="180" center="auto" condition="true">Conditional</animation>
+								<left>11</left>
+								<top>230</top>
+								<width>380</width>
+								<height>3</height>
+								<aspectratio align="center">stretch</aspectratio>
+								<texture diffuse="tajo/mask_cover3.png">tajo/$VAR[GlobalCaseVarTajo]</texture>
+							</control>
 							<control type="textbox">
+								<visible>!ListItem.IsParentFolder</visible>
 								<left>21</left>
 								<top>160</top>
 								<width>360</width>
@@ -253,7 +257,7 @@
 								<align>right</align>
 								<aligny>center</aligny>
 								<font>titlenew</font>
-								<label>$INFO[ListItem.Label]</label>
+								<label>$LOCALIZE[20373]  $INFO[ListItem.Season][CR]$LOCALIZE[20359]  $INFO[ListItem.Episode]</label>
 								<textcolor>grey2</textcolor>
 								<shadowcolor>black</shadowcolor>
 							</control>
@@ -262,8 +266,21 @@
 								<top>19</top>
 								<width>40</width>
 								<height>40</height>
-								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]overlaywatched.png</texture>
-								<visible>String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(noshow_watched)</visible>
+								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]$VAR[overlayvar]</texture>
+								<visible>!Skin.HasSetting(noshow_watched) | !Skin.HasSetting(noshow_unwatched)</visible>
+							</control>
+							<control type="label">
+								<visible>!Skin.HasSetting(noshow_resumable) + ListItem.IsResumable + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,episode)]</visible>
+								<left>321</left>
+								<top>10</top>
+								<font>titlesmall3</font>
+								<textcolor>Skin.String(mark_color)</textcolor>
+								<shadowcolor>black</shadowcolor>
+								<align>right</align>
+								<aligny>center</aligny>
+								<width>60</width>
+								<height>52</height>
+								<label>$INFO[ListItem.PercentPlayed]%</label>
 							</control>
 						</control>
 					</itemlayout>
@@ -277,7 +294,7 @@
 							<left>4</left>
 							<top>6</top>
 							<animation type="Focus" reversible="false">
-								<effect type="zoom" delay="400" center="90,10" start="100" end="115" time="300" tween="cubic" easing="out"/>
+								<effect type="zoom" delay="400" center="90,70" start="100" end="115" time="300" tween="cubic" easing="out"/>
 							</animation>
 							<control type="image">
 								<left>-7</left>
@@ -323,27 +340,30 @@
 								<top>6</top>
 								<width>40</width>
 								<height>40</height>
-								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]overlaywatched.png</texture>
-								<visible>String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(noshow_watched)</visible>
-							</control>
-							<control type="image">
-								<visible>!ListItem.IsParentFolder</visible>
-								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
-								<left>130</left>
-								<top>6</top>
-								<width>53</width>
-								<height>53</height>
-								<texture background="true">tajo/shelf/corner2.png</texture>
-								<aspectratio scalediffuse="false">keep</aspectratio>
-								<visible>!String.IsEqual(ListItem.Overlay,OverlayWatched.png) + [Container.Content(tvshows) | Container.Content(seasons)]</visible>
+								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]$VAR[overlayvar]</texture>
+								<visible>!Skin.HasSetting(noshow_watched) | !Skin.HasSetting(noshow_unwatched)</visible>
 							</control>
 							<control type="label">
-								<visible>!String.IsEqual(ListItem.Overlay,OverlayWatched.png)</visible>
-								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
-								<left>120</left>
-								<top>-10</top>
+								<visible>!Skin.HasSetting(noshow_resumable) + ListItem.IsResumable + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,episode)]</visible>
+								<left>116</left>
+								<top>-3</top>
 								<font>titlesmall3</font>
-								<textcolor>white</textcolor>
+								<textcolor>Skin.String(mark_color)</textcolor>
+								<shadowcolor>black</shadowcolor>
+								<align>right</align>
+								<aligny>center</aligny>
+								<width>60</width>
+								<height>52</height>
+								<label>$INFO[ListItem.PercentPlayed]%</label>
+							</control>
+							<control type="label">
+								<visible>!Skin.HasSetting(noshow_episodes)</visible>
+								<visible>!String.IsEqual(ListItem.Overlay,overlaywatched.png)</visible>
+								<visible>Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)</visible>
+								<left>114</left>
+								<top>-3</top>
+								<font>titlesmall3</font>
+								<textcolor>Skin.String(mark_color)</textcolor>
 								<shadowcolor>black</shadowcolor>
 								<align>right</align>
 								<aligny>center</aligny>
@@ -369,15 +389,6 @@
 								<colordiffuse>Skin.String(flat_back)</colordiffuse>
 							</control>
 							<control type="image">
-								<animation effect="rotate" end="180" center="auto" condition="true">Conditional</animation>
-								<left>11</left>
-								<top>230</top>
-								<width>380</width>
-								<height>3</height>
-								<aspectratio align="center">stretch</aspectratio>
-								<texture diffuse="tajo/mask_cover3.png">tajo/$VAR[GlobalCaseVarTajo]</texture>
-							</control>
-							<control type="image">
 								<left>11</left>
 								<top>18</top>
 								<width>380</width>
@@ -393,7 +404,17 @@
 								<texture colordiffuse="ddffffff" background="true">tajo/osd_black_bg.png</texture>
 								<aspectratio scalediffuse="false" align="center" aligny="center">stretch</aspectratio>
 							</control>
+							<control type="image">
+								<animation effect="rotate" end="180" center="auto" condition="true">Conditional</animation>
+								<left>11</left>
+								<top>230</top>
+								<width>380</width>
+								<height>3</height>
+								<aspectratio align="center">stretch</aspectratio>
+								<texture diffuse="tajo/mask_cover3.png">tajo/$VAR[GlobalCaseVarTajo]</texture>
+							</control>
 							<control type="textbox">
+								<visible>!ListItem.IsParentFolder</visible>
 								<left>21</left>
 								<top>160</top>
 								<width>360</width>
@@ -401,7 +422,7 @@
 								<align>right</align>
 								<aligny>center</aligny>
 								<font>titlenew</font>
-								<label>$INFO[ListItem.Label]</label>
+								<label>$LOCALIZE[20373]  $INFO[ListItem.Season][CR]$LOCALIZE[20359]  $INFO[ListItem.Episode]</label>
 								<textcolor>white</textcolor>
 								<shadowcolor>black</shadowcolor>
 							</control>
@@ -410,8 +431,21 @@
 								<top>19</top>
 								<width>40</width>
 								<height>40</height>
-								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]overlaywatched.png</texture>
-								<visible>String.IsEqual(ListItem.Overlay,OverlayWatched.png) + !Skin.HasSetting(noshow_watched)</visible>
+								<texture colordiffuse="$INFO[Skin.String(mark_color)]">$INFO[Skin.String(Overlay.Path)]$VAR[overlayvar]</texture>
+								<visible>!Skin.HasSetting(noshow_watched) | !Skin.HasSetting(noshow_unwatched)</visible>
+							</control>
+							<control type="label">
+								<visible>!Skin.HasSetting(noshow_resumable) + ListItem.IsResumable + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,episode)]</visible>
+								<left>321</left>
+								<top>10</top>
+								<font>titlesmall3</font>
+								<textcolor>Skin.String(mark_color)</textcolor>
+								<shadowcolor>black</shadowcolor>
+								<align>right</align>
+								<aligny>center</aligny>
+								<width>60</width>
+								<height>52</height>
+								<label>$INFO[ListItem.PercentPlayed]%</label>
 							</control>
 						</control>
 					</focusedlayout>
@@ -424,7 +458,7 @@
 				<left>125</left>
 				<top>145</top>
 				<control type="textbox">
-					<visible>!ListItem.IsCollection + [!Skin.HasSetting(showCast) | !System.HasAddon(script.embuary.helper) | Container.Content(seasons) | Container.Content(episodes)]</visible>
+					<visible>!ListItem.IsCollection + [!Skin.HasSetting(showCast) | Container.Content(seasons) | Container.Content(episodes)]</visible>
 					<left>30</left>
 					<top>373</top>
 					<width>535</width>
@@ -449,7 +483,7 @@
 					<top>50</top>
 					<control type="image">
 						<visible>!ListItem.IsCollection</visible>
-						<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.Contains(Player.Filenameandpath,theme.mp3)">Conditional</animation>
+						<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.IsEqual(Player.Filename,theme.mp3)">Conditional</animation>
 						<left>365</left>
 						<top>130</top>
 						<width>170</width>
@@ -483,12 +517,26 @@
 							<param name="FontBig3">titlewall</param>
 						</include>
 					</control>
+					<control type="label">
+						<visible>!String.Contains(ListItem.Label,$LOCALIZE[20373])</visible>
+						<visible>[Container.Content(seasons) + !String.StartsWith(ListItem.Label,*)]</visible>
+						<left>120</left>
+						<align>right</align>
+						<width>480</width>
+						<top>-95</top>
+						<height>60</height>
+						<font>titlemus4</font>
+						<textcolor>white</textcolor>
+						<shadowcolor>black</shadowcolor>
+						<selectedcolor>Skin.String(theme_text)</selectedcolor>
+						<label>$INFO[ListItem.Season,$LOCALIZE[20373] ,]</label>
+					</control>
 					<control type="list" id="6977">
 						<visible>ListItem.IsCollection</visible>
 						<scrolltime>1500</scrolltime>
 						<autoscroll time="600">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
 						<left>15</left>
-						<top>786</top>
+						<top>791</top>
 						<height>140</height>
 						<width>570</width>
 						<itemlayout height="34">
@@ -555,7 +603,7 @@
 						<align>center</align>
 						<aligny>top</aligny>
 						<font>font28b</font>
-						<label>[B]$VAR[value_ground17_label]: [/B][COLOR=FFFFFAF0]$VAR[value_ground17_value][/COLOR] • [B]$VAR[value_ground14_label]: [/B][COLOR=FFFFFAF0]$VAR[value_ground14_value][/COLOR][CR]$VAR[Seasons_Year_Label]</label>
+						<label>[B]$VAR[value_ground17_label]: [/B][COLOR=FFFFFAF0]$VAR[value_ground17_value]  •  [/COLOR][B]$VAR[value_ground14_label]: [/B][COLOR=FFFFFAF0]$VAR[value_ground14_value][/COLOR][CR]$VAR[Seasons_Year_Label]$INFO[ListItem.Premiered,  [COLOR=FFFFFAF0]•[/COLOR]  [B]$LOCALIZE[31981]:[/B] [COLOR=FFFFFAF0],][/COLOR]</label>
 						<textcolor>Skin.String(theme_text)</textcolor>
 					</control>
 					<control type="textbox">
@@ -584,7 +632,7 @@
 					</control>
 					<control type="textbox">
 						<left>15</left>
-						<top>750</top>
+						<top>745</top>
 						<width>560</width>
 						<height>38</height>
 						<visible>ListItem.IsCollection</visible>
@@ -594,7 +642,7 @@
 						<textcolor>FFFFFFFF</textcolor>
 					</control>
 					<control type="image">
-						<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.Contains(Player.Filenameandpath,theme.mp3)">Conditional</animation>
+						<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + !String.IsEqual(Player.Filename,theme.mp3)">Conditional</animation>
 						<left>20</left>
 						<top>170</top>
 						<width>250</width>
@@ -656,7 +704,7 @@
 						<left>-20</left>
 						<visible>!Container.Content(seasons) + !Container.Content(episodes)</visible>
 						<control type="image">
-							<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + Player.HasVideo + !String.Contains(Player.Filenameandpath,theme.mp3)">Conditional</animation>
+							<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + Player.HasVideo + Player.HasVideo + !String.IsEqual(Player.Filename,theme.mp3)">Conditional</animation>
 							<visible>[[!String.IsEmpty(Window(Home).Property(extras_yes)) | Integer.IsGreater(Container(3322).NumItems,0)] + Skin.HasSetting(SearchExtras)] | ListItem.HasVideoExtras</visible>
 							<animation effect="slide" start="0,0" end="-65,0" time="0" condition="ListItem.HasVideoVersions">Conditional</animation>
 							<visible>!Control.HasFocus(59760) + !Control.HasFocus(5919)</visible>
@@ -670,7 +718,7 @@
 							<aspectratio>keep</aspectratio>
 						</control>
 						<control type="label">
-							<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + !String.Contains(Player.Filenameandpath,theme.mp3)">Conditional</animation>
+							<animation effect="fade" start="100" end="0" time="1000" reversible="false" condition="Skin.HasSetting(playTrailer) + !String.IsEmpty(ListItem.Trailer) + !VideoPlayer.IsFullscreen + Player.Playing + !String.IsEqual(Player.Filename,theme.mp3)">Conditional</animation>
 							<visible>[[!String.IsEmpty(Window(Home).Property(extras_yes)) | Integer.IsGreater(Container(3322).NumItems,0)] + Skin.HasSetting(SearchExtras)] | ListItem.HasVideoExtras</visible>
 							<animation effect="slide" start="0,0" end="-65,0" time="0" condition="ListItem.HasVideoVersions">Conditional</animation>
 							<visible>!Control.HasFocus(59760) + !Control.HasFocus(5919)</visible>
@@ -725,10 +773,11 @@
 					<font>titlemus</font>
 					<align>center</align>
 					<left>650</left>
-					<top>-43</top>
+					<top>-51</top>
 					<width>1190</width>
 					<height>50</height>
-					<label>$LOCALIZE[20373] $INFO[ListItem.Season]$INFO[Container.FolderName,  •  ,] $INFO[ListItem.Property(TotalSeasons)]</label>
+					<textcolor>grey2</textcolor>
+					<label>$INFO[Container.FolderName]</label>
 				</control>
 				<control type="textbox">
 					<visible>Container.Content(episodes)</visible>
@@ -737,7 +786,7 @@
 					<font>titlemus</font>
 					<align>center</align>
 					<left>650</left>
-					<top>-43</top>
+					<top>-51</top>
 					<width>1190</width>
 					<height>50</height>
 					<label>$LOCALIZE[20373] $INFO[ListItem.Season]</label>
@@ -842,8 +891,8 @@
 				</control>
 				<control type="scrollbar" id="59760">
 					<include>ScrollBar_Vertical</include>
-					<left>1802</left>
-					<top>190</top>
+					<left>1805</left>
+					<top>185</top>
 					<height>830</height>
 					<onleft>597</onleft>
 					<onright>597</onright>
@@ -862,7 +911,7 @@
 					<onright condition="String.Contains(Container.SortMethod,$LOCALIZE[557]) | String.Contains(Container.SortMethod,$LOCALIZE[558])">5919</onright>
 					<onright>59760</onright>
 					<pagecontrol>59760</pagecontrol>
-					<scrolltime>300</scrolltime>
+					<scrolltime tween="sine">500</scrolltime>
 					<orientation>vertical</orientation>
 					<preloaditems>2</preloaditems>
 					<itemlayout width="218" height="213">
@@ -888,7 +937,7 @@
 								<top>9</top>
 								<width>181</width>
 								<height>184</height>
-								<texture diffuse="tajo/mask_cover3.png" background="true">tajo/embuback9.jpg</texture>
+								<texture diffuse="tajo/mask_cover3.png" background="true">tajo/widebackm.jpg</texture>
 								<aspectratio align="center">scale</aspectratio>
 							</control>
 							<control type="image">
@@ -954,7 +1003,7 @@
 								<shadowcolor>black</shadowcolor>
 								<align>center</align>
 								<aligny>center</aligny>
-								<label>$INFO[ListItem.Label]</label>
+								<label>$LOCALIZE[358]</label>
 							</control>
 							<control type="image">
 								<visible>Container.Content(artists) + String.StartsWith(ListItem.Label,*)</visible>
@@ -991,6 +1040,28 @@
 								<shadowcolor>black</shadowcolor>
 							</control>
 							<control type="image">
+								<visible>Container.Content(albums) + String.IsEqual(ListItem.Icon,DefaultFolder.png) + !String.StartsWith(ListItem.Label,*)</visible>
+								<left>11</left>
+								<top>-29</top>
+								<width>181</width>
+								<height>222</height>
+								<texture colordiffuse="aaffffff" background="true">tajo/osd_black_bg.png</texture>
+								<aspectratio scalediffuse="false" align="center" aligny="center">stretch</aspectratio>
+							</control>
+							<control type="textbox">
+								<visible>Container.Content(albums) + String.IsEqual(ListItem.Icon,DefaultFolder.png) + !String.StartsWith(ListItem.Label,*)</visible>
+								<left>18</left>
+								<top>124</top>
+								<width>168</width>
+								<height>66</height>
+								<align>right</align>
+								<aligny>center</aligny>
+								<font>titleartist</font>
+								<label>$INFO[Listitem.Label]</label>
+								<textcolor>white</textcolor>
+								<shadowcolor>black</shadowcolor>
+							</control>
+							<control type="image">
 								<visible>Container.Content(musicvideos) | String.StartsWith(container.folderpath,library://video/musicvideos/) | String.StartsWith(container.folderpath,videodb://musicvideos)</visible>
 								<visible>!Container.Content(artists) + !Container.Content(albums)</visible>
 								<left>11</left>
@@ -1011,7 +1082,7 @@
 								<aligny>center</aligny>
 								<font>titleartist</font>
 								<label>$INFO[ListItem.Title]</label>
-								<textcolor>grey2</textcolor>
+								<textcolor>white</textcolor>
 								<shadowcolor>black</shadowcolor>
 							</control>
 							<control type="image">
@@ -1093,7 +1164,7 @@
 								<top>9</top>
 								<width>181</width>
 								<height>184</height>
-								<texture diffuse="tajo/mask_cover3.png" background="true">tajo/embuback9.jpg</texture>
+								<texture diffuse="tajo/mask_cover3.png" background="true">tajo/widebackm.jpg</texture>
 								<aspectratio align="center">scale</aspectratio>
 							</control>
 							<control type="image">
@@ -1136,7 +1207,7 @@
 								<shadowcolor>black</shadowcolor>
 								<align>center</align>
 								<aligny>center</aligny>
-								<label>$INFO[ListItem.Label]</label>
+								<label>$LOCALIZE[358]</label>
 							</control>
 							<control type="image">
 								<visible>Container.Content(artists) + String.StartsWith(ListItem.Label,*)</visible>
@@ -1168,6 +1239,17 @@
 								<texture background="true">$INFO[ListItem.Art(clearlogo)]</texture>
 								<aspectratio>keep</aspectratio>
 							</control>
+							<control type="image">
+								<visible>Container.Content(artists) + String.IsEmpty(ListItem.Art(clearlogo))</visible>
+								<animation effect="fade" end="65" condition="true">Conditional</animation>
+								<left>10</left>
+								<top>8</top>
+								<width>187</width>
+								<height>187</height>
+								<colordiffuse>ffFFFFFF</colordiffuse>
+								<aspectratio scalediffuse="false" align="center" aligny="center">scale</aspectratio>
+								<texture diffuse="tajo/mask_circle.png" background="true">tajo/osd_black_bg.png</texture>
+							</control>
 							<control type="textbox">
 								<visible>Container.Content(artists) + String.IsEmpty(ListItem.Art(clearlogo))</visible>
 								<left>19</left>
@@ -1177,6 +1259,28 @@
 								<align>center</align>
 								<font>titleartist</font>
 								<label>$INFO[listitem.artist]</label>
+								<textcolor>white</textcolor>
+								<shadowcolor>black</shadowcolor>
+							</control>
+							<control type="image">
+								<visible>Container.Content(albums) + String.IsEqual(ListItem.Icon,DefaultFolder.png) + !String.StartsWith(ListItem.Label,*)</visible>
+								<left>11</left>
+								<top>-29</top>
+								<width>181</width>
+								<height>222</height>
+								<texture colordiffuse="aaffffff" background="true">tajo/osd_black_bg.png</texture>
+								<aspectratio scalediffuse="false" align="center" aligny="center">stretch</aspectratio>
+							</control>
+							<control type="textbox">
+								<visible>Container.Content(albums) + String.IsEqual(ListItem.Icon,DefaultFolder.png) + !String.StartsWith(ListItem.Label,*)</visible>
+								<left>18</left>
+								<top>124</top>
+								<width>168</width>
+								<height>66</height>
+								<align>right</align>
+								<aligny>center</aligny>
+								<font>titleartist</font>
+								<label>$INFO[Listitem.Label]</label>
 								<textcolor>white</textcolor>
 								<shadowcolor>black</shadowcolor>
 							</control>
@@ -1343,6 +1447,7 @@
 					<left>-80</left>
 					<control type="image" id="4587">
 						<visible>!Container.OnScrollNext + !Container.OnScrollPrevious</visible>
+						<visible>Container.Content(albums) + System.IdleTime(3)</visible>
 						<animation effect="fade" start="0" end="100" time="200" reversible="false">Visible</animation>
 						<width>120</width>
 						<height>45</height>
@@ -1365,7 +1470,7 @@
 						<font>font10t</font>
 						<textcolor>grey</textcolor>
 						<wrapmultiline>true</wrapmultiline>
-						<visible>String.IsEmpty(Control.GetLabel(4587))</visible>
+						<visible>!System.IdleTime(3) | String.IsEmpty(Container(6874).ListItemAbsolute(0).Icon)</visible>
 					</control>
 				</control>
 				<control type="image">
@@ -1976,11 +2081,43 @@
 					<autoscroll delay="6000" time="2000" repeat="6000">Skin.HasSetting(Enable.AutoScroll)</autoscroll>
 					<label>$INFO[ListItem.Plot]</label>
 				</control>
+				<control type="grouplist">
+					<animation effect="zoom" end="55" time="0" condition="true">Conditional</animation>
+					<animation effect="fade" start="0" end="100" delay="300" time="350" reversible="false">Visible</animation>
+					<top>996</top>
+					<left>62</left>
+					<width>990</width>
+					<height>90</height>
+					<align>left</align>
+					<orientation>horizontal</orientation>
+					<visible>Container.Content(musicvideos) | String.StartsWith(container.folderpath,library://video/musicvideos/) | String.StartsWith(container.folderpath,videodb://musicvideos)</visible>
+					<visible>!String.IsEmpty(ListItem.AudioChannels)</visible>
+					<include>IconsMusicVideo</include>
+				</control>
 				<control type="group">
 					<visible>Container.Content(musicvideos) | String.StartsWith(container.folderpath,library://video/musicvideos/) | String.StartsWith(container.folderpath,videodb://musicvideos)</visible>
-					<left>42</left>
-					<top>1012</top>
-					<include>IconsVideo</include>
+					<animation effect="zoom" end="85" center="auto" condition="true">Conditional</animation>
+					<left>390</left>
+					<top>984</top>
+					<control type="image">
+						<animation effect="slide" end="-2,20" condition="true">Conditional</animation>
+						<width>30</width>
+						<height>30</height>
+						<aspectratio>keep</aspectratio>
+						<texture colordiffuse="$VAR[Colour_UserRating]">star.png</texture>
+						<visible>!String.IsEmpty(ListItem.UserRating)</visible>
+					</control>
+					<control type="label">
+						<animation effect="slide" end="34,15" condition="true">Conditional</animation>
+						<width>40</width>
+						<visible>!String.IsEmpty(ListItem.UserRating)</visible>
+						<align>left</align>
+						<aligny>bottom</aligny>
+						<font>font13_bold</font>
+						<label>[B]$INFO[ListItem.UserRating][/B]</label>
+						<include condition="!Skin.HasSetting(Coloured.icons)">TextGrey</include>
+						<shadowcolor>black</shadowcolor>
+					</control>
 				</control>
 			</control>
 			<control type="group">
