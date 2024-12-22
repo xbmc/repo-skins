@@ -24,9 +24,8 @@ This is the 10th generation of Bello for Kodi (Omega) Home Theater Software. Bel
 <br><br>
 
 ## Release Notes
-<ul>No major changes for this release. Just make the skin compatible for Kodi Omega 21.xx and added to official repo.
-</ul>
-<br>
+No major changes for this release. Just make the skin compatible for Kodi Omega 21.xx and added to official repo.
+<br><br>
 
 ## Compatibility
 Bello 10 is compatible only with [Kodi 21.xx Omega](https://kodi.tv/download).
@@ -109,8 +108,8 @@ To my donors group and their appreciation to this skin, to all addons developers
 <br><br>
 
 
-[![icon-paypalme](http://i.imgur.com/6kI10fcu.png)](https://www.paypal.me/Nessus)
+[![icon-paypalme](http://i.imgur.com/6kI9fcu.png)](https://www.paypal.me/Nessus)
 <br><br>
 
 ## Links
-[![badge-kodi](https://img.shields.io/badge/Current_Version-10.0.0-32A232)](https://forum.kodi.tv/forumdisplay.php?fid=198)  [![badge-kodi](https://img.shields.io/badge/Skin-Support-red.svg)](https://forum.kodi.tv/forumdisplay.php?fid=198) [![badge-kodi](https://img.shields.io/badge/Skin-Gallery-571181.svg)](https://imgur.com/gallery/yRJolx3) [![badge-kodi](https://img.shields.io/badge/Powered_by-Kodi_21.xx-blue.svg)](https://kodi.tv/download) [![badge-kodi](https://img.shields.io/badge/Kodi-Wiki-FACE14.svg)](https://kodi.wiki/) [![badge-kodi](https://img.shields.io/badge/@-Fanart.tv-4949E7.svg)](https://fanart.tv/) [![badge-kodi](https://img.shields.io/badge/@-TMDB-D500D8.svg)](https://www.themoviedb.org/)  [![badge-kodi](https://img.shields.io/badge/Creative_Commons-BY--NC--SA-00B29F.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![badge-kodi](https://img.shields.io/badge/Current_Version-10.0.0-32A232)](https://forum.kodi.tv/forumdisplay.php?fid=198)  [![badge-kodi](https://img.shields.io/badge/Skin-Support-red.svg)](https://forum.kodi.tv/forumdisplay.php?fid=198) [![badge-kodi](https://img.shields.io/badge/Skin-Gallery-571181.svg)](https://imgur.com/a/yrpF7wv) [![badge-kodi](https://img.shields.io/badge/Powered_by-Kodi_21.xx-blue.svg)](https://kodi.tv/download) [![badge-kodi](https://img.shields.io/badge/Kodi-Wiki-FACE14.svg)](https://kodi.wiki/) [![badge-kodi](https://img.shields.io/badge/@-Fanart.tv-4949E7.svg)](https://fanart.tv/) [![badge-kodi](https://img.shields.io/badge/@-TMDB-D500D8.svg)](https://www.themoviedb.org/)  [![badge-kodi](https://img.shields.io/badge/Creative_Commons-BY--NC--SA-00B29F.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
