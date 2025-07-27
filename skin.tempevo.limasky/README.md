@@ -7,46 +7,20 @@ A skin for Kodi that gives a modern and appealing impression.
 This project began under the name AnimaMax (GitHub repository: skin.animav6 - This skin has been made private), inspired by renowned Kodi skins such as Estuary, Amber, Pellucid, Unity, AppTV, FTV, and others. After a hiatus in 2023 due to various commitments, it was revived in early 2024 under a new name (Anima LimaSky) and continuously updated until early 2025, when it was renamed LimaSky TempEvo and publicly uploaded to a new repository (this repository).
 
 # Screenshots
+## LimaSky TempEvo
+<img width="1920" height="1080" alt="11 - pOv2Z86" src="https://github.com/user-attachments/assets/da7c215c-4942-4779-95fc-c357108454ee" />
+<img width="1920" height="1080" alt="10 - c6yWa4x" src="https://github.com/user-attachments/assets/fdab509a-078b-4421-9aa7-5f549e617906" />
+<img width="1920" height="1080" alt="9 - v23dWaJ" src="https://github.com/user-attachments/assets/ecac0f0f-5bde-4545-b431-8bdb67c8c8b1" />
+<img width="1920" height="1080" alt="8 - c2527Er" src="https://github.com/user-attachments/assets/9fb6c273-1bb6-43be-ba74-7a7a3ceb33a8" />
+<img width="1920" height="1080" alt="7 - vB5AhxO" src="https://github.com/user-attachments/assets/c70ca28d-52da-4caf-8b8d-e5aa6e3bd551" />
+<img width="1920" height="1080" alt="6 - 9l4zZiK" src="https://github.com/user-attachments/assets/ad24d8f9-2215-42a5-bd95-0f9a135a727e" />
+<img width="1920" height="1080" alt="5 - gdZ32jN" src="https://github.com/user-attachments/assets/428d3f26-a37c-4c0f-b783-cb7145470bda" />
+<img width="1920" height="1080" alt="3 - FOocQ7y" src="https://github.com/user-attachments/assets/401c589c-df95-4189-9b33-718f1b10cf32" />
 
-Screenshots of the skin from its early release versions that are still 'saved' to this day.
-
-- 0.0.5 (AnimaMax)
-
-![screenshot00010](https://github.com/user-attachments/assets/9234d0d1-1afd-4e59-ae51-2cf28fb15853)
-![screenshot00013](https://github.com/user-attachments/assets/59a92d6b-1e15-4540-a09d-004329a0f8a0)
-![screenshot00007](https://github.com/user-attachments/assets/f9e7bb30-7786-4ea4-a9e2-091844f44167)
-
-
-- 0.1.9 (AnimaMax)
-
-![screenshot00014](https://github.com/user-attachments/assets/32943227-1945-4deb-8760-63365e70f98a)
-![screenshot00015](https://github.com/user-attachments/assets/6bc5956f-0470-430a-b8fa-703ff7e5cb11)
-
-
-- 0.2.5 (Anima LimaSky)
-
-![Screenshot (24)](https://github.com/user-attachments/assets/a2e4e431-5931-4791-92a4-0c1a76113279)
-
-
-- 0.5.5 (Anima LimaSky)
-
-![screenshot00017](https://github.com/user-attachments/assets/8918f66c-9c3f-4163-84f6-2fb048cec692)
-![screenshot00019](https://github.com/user-attachments/assets/fd6754fe-285d-4513-94f5-5a68e1f724ef)
-
-
-- 0.8.0 (Anima LimaSky)
-
-![screenshot00003](https://github.com/user-attachments/assets/0ae3cd00-6d72-44c2-94f1-cb988c76e526)
-![screenshot00006](https://github.com/user-attachments/assets/fe8d32b4-9b6a-4774-9f02-95a1aa541c2e)
-![screenshot00002](https://github.com/user-attachments/assets/dff6285f-d596-4bcf-a98b-f9f170a3e664)
-
-
-- 0.8.9 (LimaSky TempEvo)
-
-![screenshot00026](https://github.com/user-attachments/assets/e75a6b94-29dc-474f-9251-003612895149)
-![screenshot00029](https://github.com/user-attachments/assets/2aeb9481-5e37-4dd8-a09f-7131eb82140e)
-![screenshot00030](https://github.com/user-attachments/assets/71fffcdd-b9ba-4693-9e63-cd7f4b1c63c4)
-![screenshot00031](https://github.com/user-attachments/assets/19557618-384d-4020-876c-7b5881acdbae)
-
-
-
+## LimaSky Satu (Screenshot by TempeTahoo)
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 183744" src="https://github.com/user-attachments/assets/5de6cf3b-4ff9-435f-b366-3410596da7fc" />
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 214306" src="https://github.com/user-attachments/assets/415db585-8546-443d-b19f-d862100f7379" />
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 214232" src="https://github.com/user-attachments/assets/6443b247-0c07-4e9b-b3e1-40cc68ec74f8" />
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 211449" src="https://github.com/user-attachments/assets/acc9bd02-4796-42eb-99d4-947060cf9607" />
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 211410" src="https://github.com/user-attachments/assets/50d2bdc4-c199-43fa-97ae-ee9268492649" />
+<img width="1920" height="1080" alt="Screenshot 2025-06-26 210509" src="https://github.com/user-attachments/assets/be67f9c7-ffc7-4921-b8bd-34243849a596" />
