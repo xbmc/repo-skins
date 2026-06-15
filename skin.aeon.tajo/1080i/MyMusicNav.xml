@@ -43,11 +43,10 @@
 			<scrollout>false</scrollout>
 			<resetonlabelchange>true</resetonlabelchange>
 		</control>
-		<include condition="Skin.HasSetting(SearchExtrasMusic) + Skin.HasSetting(SettingCommon)">Extr_album</include>
-		<include condition="System.HasAddon(script.skinvariables) + !String.IsEqual(System.AddonVersion(script.skinvariables),0.2.5)">Look_links</include>
+		<include condition="Skin.HasSetting(SearchExtrasMusic)">Extr_album</include>
 		<include condition="Skin.HasSetting(PlayPreviewM)">PlayPreviewMusic</include>
 		<include>CommonBackground</include>
-		<include condition="System.HasAddon(resource.images.recordlabels.white) + Skin.HasSetting(imagesRecord)">Record_labels</include>
+		<include>WindowOpenAnimation3</include>
 		<control type="group">
 			<include>MusicList</include>
 			<!-- view id = 50 -->
@@ -77,7 +76,6 @@
 			<!-- view id = 584 -->
 			<include condition="!Skin.HasSetting(Disable.Magazinem)">ViewMagazine</include>
 			<!-- view id = 599 -->
-			<include>WindowOpenAnimation2</include>
 		</control>
 		<control type="group">
 			<left>-440</left>
@@ -87,6 +85,11 @@
 				<onfocus condition="Skin.HasSetting(Kiosk.Enabled)">SetFocus(50)</onfocus>
 				<onfocus condition="Skin.HasSetting(Kiosk.Enabled)">ClearProperty(MediaMenu,Home)</onfocus>
 				<onfocus condition="!Skin.HasSetting(Kiosk.Enabled)">SetFocus(9059)</onfocus>
+				<onfocus condition="System.HasAddon(plugin.audio.theaudiodb.helper) + [String.IsEqual(ListItem.DBTYPE,artist) | String.IsEqual(ListItem.DBTYPE,album)]">RunScript(plugin.audio.theaudiodb.helper, artist=$INFO[ListItem.AlbumArtist])</onfocus>
+				<onfocus condition="Skin.HasSetting(similars) + !String.IsEmpty(ListItem.Genre) + [String.IsEqual(ListItem.DBTYPE,artist) | String.IsEqual(ListItem.DBTYPE,album)]">ClearProperty(SpGenrem.0,Home)</onfocus>
+				<onfocus condition="Skin.HasSetting(similars) + !String.IsEmpty(ListItem.Genre) + [String.IsEqual(ListItem.DBTYPE,artist) | String.IsEqual(ListItem.DBTYPE,album)]">ClearProperty(EncodedTitlem,Home)</onfocus>
+				<onfocus condition="Skin.HasSetting(similars) + !String.IsEmpty(ListItem.Genre) + [String.IsEqual(ListItem.DBTYPE,artist) | String.IsEqual(ListItem.DBTYPE,album)]">RunScript(plugin.video.themoviedb.helper,split_value=$INFO[ListItem.Genre],separator=/,property=SpGenrem)</onfocus>
+				<onfocus condition="Skin.HasSetting(similars) + !String.IsEmpty(ListItem.Genre) + [String.IsEqual(ListItem.DBTYPE,artist) | String.IsEqual(ListItem.DBTYPE,album)]">RunPlugin("plugin://script.skinvariables/?info=get_encoded_string&amp;window_prop=EncodedTitlem&amp;window_id=Home&amp;&amp;$INFO[ListItem.Label]")</onfocus>
 			</control>
 			<control type="grouplist" id="9059">
 				<include>MediaMenuTop</include>
@@ -199,15 +202,14 @@
 				<control type="button" id="16">
 					<visible>!Container.Content(musicvideos) + !String.StartsWith(container.folderpath,library://video/musicvideos/) + !String.StartsWith(container.folderpath,videodb://musicvideos)</visible>
 					<description>PartyMode</description>
-					<label>32085</label>
+					<label>31350</label>
 					<textwidth>365</textwidth>
 					<include>ButtonCommonValues</include>
 				</control>
 				<control type="button" id="191">
-					<visible>Skin.HasSetting(SettingCommon)</visible>
 					<visible>System.HasAddon(script.skinvariables) + !String.IsEqual(System.AddonVersion(script.skinvariables),0.2.5)</visible>
 					<description>PartyMode musicvideos</description>
-					<label>32086</label>
+					<label>31351</label>
 					<textwidth>365</textwidth>
 					<include>ButtonCommonValues</include>
 					<onclick>ClearProperty(MediaMenu,Home)</onclick>
@@ -239,14 +241,15 @@
 					<usealttexture>library.isscanningmusic</usealttexture>
 				</control>
 				<control type="button" id="193">
-					<visible>System.HasAddon(script.videolinks)</visible>
+					<visible>System.HasAddon(plugin.audio.theaudiodb.helper)</visible>
+					<visible>!Container.Content(artists) + !Container.Content(albums) + !Container.Content(songs)</visible>
 					<description>Search videolinks</description>
-					<label>32078</label>
+					<label>31343</label>
 					<textwidth>365</textwidth>
 					<include>ButtonCommonValues</include>
 					<onclick>ClearProperty(MediaMenu,Home)</onclick>
 					<onclick>SetFocus(50)</onclick>
-					<onclick>RunScript(script.videolinks)</onclick>
+					<onclick>RunScript(plugin.audio.theaudiodb.helper)</onclick>
 				</control>
 				<control type="button" id="613">
 					<description>Get more</description>
@@ -261,13 +264,6 @@
 					<label>$LOCALIZE[10140]</label>
 					<onclick>Addon.OpenSettings($INFO[Container.PluginName])</onclick>
 					<visible>!String.IsEmpty(Container.PluginName)</visible>
-				</control>
-				<control type="button" id="615">
-					<description>Settings button</description>
-					<include>ButtonCommonValues</include>
-					<label>$LOCALIZE[5]</label>
-					<onclick>ActivateWindow(mediasettings,music)</onclick>
-					<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
 				</control>
 				<control type="button" id="612">
 					<description>Go to playlist</description>
@@ -290,10 +286,22 @@
 					<onclick>ClearProperty(MediaMenu,Home)</onclick>
 					<visible>Player.HasMedia</visible>
 				</control>
+				<control type="button" id="615">
+					<description>Settings button</description>
+					<include>ButtonCommonValues</include>
+					<label>$LOCALIZE[5]</label>
+					<onclick>ActivateWindow(mediasettings,music)</onclick>
+					<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
+				</control>
+			</control>
+			<control type="grouplist" id="9089">
+				<visible>!Window.IsActive(1129)</visible>
+				<visible>!String.StartsWith(ListItem.Label,*) + !ListItem.IsParentFolder + [Container.Content(songs) | Container.Content(albums) | Container.Content(artists) | Container.Content(musicvideos)]</visible>
+				<include>MediaMenuRightMusic</include>
 			</control>
 		</control>
 		<control type="group">
-			<visible>String.IsEmpty(Window(Home).Property(MediaMenu)) + !Control.IsVisible(591)</visible>
+			<visible>String.IsEmpty(Window(10000).Property(MediaMenu)) + !Control.IsVisible(591)</visible>
 			<animation effect="fade" start="100" end="25" time="4000" tween="sine" easing="inout" condition="Control.IsVisible(585) + Player.Playing + System.Idletime(15)">Conditional</animation>
 			<animation effect="fade" end="100" time="200">Visible</animation>
 			<animation effect="fade" end="0" time="200">Hidden</animation>
@@ -558,17 +566,17 @@
 			</control>
 		</control>
 		<control type="image">
-			<visible>String.Contains(Window(Home).Property(Show_clips),Player.Filenameandpath) + Player.HasVideo</visible>
+			<visible>String.Contains(Window(10000).Property(Show_clips),Player.Filenameandpath) + Player.HasVideo</visible>
 			<include>FullscreenDimensions</include>
 			<texture>black.png</texture>
 		</control>
 		<control type="image">
-			<visible>Player.HasVideo + [!String.IsEmpty(Window(Home).Property(Extras_info_music)) | Container.Content(musicvideos)]</visible>
+			<visible>Player.HasVideo + [!String.IsEmpty(Window(10000).Property(Extras_info_music)) | Container.Content(musicvideos)]</visible>
 			<include>FullscreenDimensions</include>
 			<texture>black.png</texture>
 		</control>
 		<control type="videowindow" id="2433">
-			<visible>Player.HasVideo + [!String.IsEmpty(Window(Home).Property(Extras_info_music)) | String.Contains(Window(Home).Property(Show_clips),Player.Filenameandpath)]</visible>
+			<visible>Player.HasVideo + [!String.IsEmpty(Window(10000).Property(Extras_info_music)) | String.Contains(Window(10000).Property(Show_clips),Player.Filenameandpath)]</visible>
 			<include>FullscreenDimensions</include>
 		</control>
 	</controls>
