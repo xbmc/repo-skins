@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing (MusicVisualisation.xml) and the music OSD (MusicOSD.xml), Daylight language.
+	Geometry: cover 120,168 600x600; text column x 784..1800; track y 690 (12 px); Up next card /
+	OSD panel 120,816 1680x200. Prefix NP_. Transport buttons reuse DLOSD_Circle / DLOSD_Pill.
+-->
+<includes>
+	<constant name="np_col_x">784</constant>
+	<constant name="np_col_w">1016</constant>
+
+	<variable name="NP_Kicker">
+		<value condition="Player.Paused">Paused$INFO[MusicPlayer.PlaylistPosition,  ·  ,]$INFO[MusicPlayer.PlaylistLength, of ,]</value>
+		<value condition="Integer.IsGreater(MusicPlayer.PlaylistLength,1)">Now playing  ·  $INFO[MusicPlayer.PlaylistPosition]$INFO[MusicPlayer.PlaylistLength, of ,]</value>
+		<value>Now playing</value>
+	</variable>
+	<variable name="NP_AlbumLine">
+		<value>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year,  ·  ,]</value>
+	</variable>
+	<variable name="NP_EndLine">
+		<value condition="!String.IsEmpty(Player.FinishTime)">−$INFO[Player.TimeRemaining]  ·  ends $INFO[Player.FinishTime]</value>
+		<value>$INFO[Player.Duration]</value>
+	</variable>
+	<variable name="NP_Codec">
+		<value condition="!String.IsEmpty(MusicPlayer.Codec)">[UPPERCASE]$INFO[MusicPlayer.Codec][/UPPERCASE]$INFO[MusicPlayer.BitRate,  ·  , kbps]</value>
+	</variable>
+	<variable name="NP_ShuffleLabel">
+		<value condition="Playlist.IsRandom">Shuffle on</value>
+		<value>Shuffle</value>
+	</variable>
+	<variable name="NP_RepeatLabel">
+		<value condition="Playlist.IsRepeatOne">Repeat one</value>
+		<value condition="Playlist.IsRepeat">Repeat all</value>
+		<value>Repeat</value>
+	</variable>
+	<variable name="NP_QueueRight">
+		<value condition="MusicPlayer.HasNext">$INFO[MusicPlayer.offset(1).Duration]</value>
+	</variable>
+
+	<!-- ============================================================ cover -->
+	<include name="NP_Cover">
+		<control type="group">
+			<left>page_margin</left>
+			<top>168</top>
+			<width>600</width>
+			<height>600</height>
+			<control type="image">
+				<left>-120</left>
+				<top>-90</top>
+				<right>-120</right>
+				<bottom>-150</bottom>
+				<texture border="120" colordiffuse="$VAR[DL_Shadow]">daylight/card_shadow.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>600</width>
+				<height>600</height>
+				<texture diffuse="daylight/mask_cover_l.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>236</left>
+				<top>236</top>
+				<width>128</width>
+				<height>128</height>
+				<texture colordiffuse="$VAR[DL_Ink3]">daylight/icons/music.png</texture>
+				<visible>String.IsEmpty(Player.Art(thumb))</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>600</width>
+				<height>600</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<fadetime>250</fadetime>
+				<texture background="true" diffuse="daylight/mask_cover_l.png">$INFO[Player.Art(thumb)]</texture>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ text column -->
+	<include name="NP_TextColumn">
+		<control type="group">
+			<left>np_col_x</left>
+			<top>196</top>
+			<width>np_col_w</width>
+			<height>470</height>
+			<control type="image">
+				<left>0</left>
+				<top>9</top>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<width>996</width>
+				<height>28</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$VAR[NP_Kicker]</label>
+			</control>
+			<control type="grouplist">
+				<left>0</left>
+				<top>44</top>
+				<width>np_col_w</width>
+				<height>420</height>
+				<orientation>vertical</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<!-- measuring copy (transparent): the lines below follow a 1- or 2-line title -->
+				<include content="T_NowPlaying_Measure">
+					<param name="label" value="$INFO[MusicPlayer.Title]"/>
+				</include>
+				<control type="image"><width>10</width><height>18</height><texture></texture></control>
+				<control type="label">
+					<width>np_col_w</width>
+					<height>42</height>
+					<font>ui_28_semibold</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$INFO[MusicPlayer.Artist]</label>
+				</control>
+				<control type="label">
+					<width>np_col_w</width>
+					<height>36</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[NP_AlbumLine]</label>
+				</control>
+				<control type="image"><width>10</width><height>22</height><texture></texture></control>
+				<control type="grouplist">
+					<width>np_col_w</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<itemgap>8</itemgap>
+					<include content="DLOSD_Flag">
+						<param name="label" value="$INFO[MusicPlayer.Genre]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.Genre)"/>
+					</include>
+					<include content="DLOSD_Flag">
+						<param name="label" value="$VAR[NP_Codec]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.Codec)"/>
+					</include>
+					<include content="DLOSD_Flag">
+						<param name="label" value="$INFO[MusicPlayer.SampleRate,, kHz]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.SampleRate)"/>
+					</include>
+					<include content="DLOSD_Flag">
+						<param name="label" value="$VAR[Music_PlayModes]"/>
+						<param name="visible" value="Playlist.IsRandom | Playlist.IsRepeat | Playlist.IsRepeatOne"/>
+					</include>
+				</control>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>44</top>
+				<width>np_col_w</width>
+				<include content="T_NowPlaying_Title">
+					<param name="label" value="$INFO[MusicPlayer.Title]"/>
+					<param name="color" value="$VAR[DL_Ink]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ track -->
+	<include name="NP_Progress">
+		<control type="group">
+			<left>np_col_x</left>
+			<top>690</top>
+			<width>np_col_w</width>
+			<height>12</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>np_col_w</width>
+				<height>12</height>
+				<texture border="6,0,6,0" colordiffuse="$VAR[DL_Line2]">daylight/track_12.png</texture>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<top>0</top>
+				<width>np_col_w</width>
+				<height>12</height>
+				<info>Player.Progress</info>
+				<texturebg colordiffuse="clear">common/white.png</texturebg>
+				<midtexture border="6,0,6,0" colordiffuse="$VAR[DL_Accent]">daylight/track_12.png</midtexture>
+			</control>
+			<control type="slider">
+				<left>-20</left>
+				<top>-14</top>
+				<width>1056</width>
+				<height>40</height>
+				<info>Player.Progress</info>
+				<texturesliderbar>osd/slider_bg.png</texturesliderbar>
+				<textureslidernib colordiffuse="$VAR[DL_Ink]">daylight/nib.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="$VAR[DL_Ink]">daylight/nib.png</textureslidernibfocus>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+		</control>
+		<control type="label">
+			<left>np_col_x</left>
+			<top>718</top>
+			<width>400</width>
+			<height>34</height>
+			<font>num_22</font>
+			<textcolor>$VAR[DL_Ink]</textcolor>
+			<label>$INFO[Player.Time]</label>
+		</control>
+		<control type="label">
+			<left>1200</left>
+			<top>718</top>
+			<width>600</width>
+			<height>34</height>
+			<align>right</align>
+			<font>num_22</font>
+			<textcolor>$VAR[DL_Ink2]</textcolor>
+			<label>$VAR[NP_EndLine]</label>
+		</control>
+	</include>
+
+	<!-- ============================================================ up next card -->
+	<include name="NP_UpNext">
+		<control type="group">
+			<left>page_margin</left>
+			<top>816</top>
+			<width>page_width</width>
+			<height>200</height>
+			<visible>!Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<include>DL_Card</include>
+			<!-- next song -->
+			<control type="group">
+				<visible>MusicPlayer.HasNext</visible>
+				<control type="image">
+					<left>32</left>
+					<top>32</top>
+					<width>136</width>
+					<height>136</height>
+					<texture diffuse="daylight/mask_cover_s.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+				</control>
+				<control type="image">
+					<left>32</left>
+					<top>32</top>
+					<width>136</width>
+					<height>136</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<fadetime>160</fadetime>
+					<texture background="true" diffuse="daylight/mask_cover_s.png">$INFO[MusicPlayer.offset(1).Cover]</texture>
+				</control>
+				<control type="label">
+					<left>200</left>
+					<top>38</top>
+					<width>900</width>
+					<height>30</height>
+					<font>small_20_bold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$LOCALIZE[31235]</label>
+				</control>
+				<control type="label">
+					<left>200</left>
+					<top>70</top>
+					<width>1000</width>
+					<height>48</height>
+					<font>serif_34</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$INFO[MusicPlayer.offset(1).Title]</label>
+				</control>
+				<control type="label">
+					<left>200</left>
+					<top>122</top>
+					<width>1000</width>
+					<height>34</height>
+					<font>ui_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[MusicPlayer.offset(1).Artist]$INFO[MusicPlayer.offset(1).Album,  ·  ,]</label>
+				</control>
+				<control type="label">
+					<left>1240</left>
+					<top>70</top>
+					<width>400</width>
+					<height>48</height>
+					<align>right</align>
+					<font>num_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[NP_QueueRight]</label>
+				</control>
+			</control>
+			<!-- last song -->
+			<control type="group">
+				<visible>!MusicPlayer.HasNext</visible>
+				<control type="image">
+					<left>40</left>
+					<top>68</top>
+					<width>64</width>
+					<height>64</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">$VAR[DL_MoodIcon]</texture>
+				</control>
+				<control type="label">
+					<left>136</left>
+					<top>56</top>
+					<width>1400</width>
+					<height>48</height>
+					<font>serif_34</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$LOCALIZE[31236]</label>
+				</control>
+				<control type="label">
+					<left>136</left>
+					<top>108</top>
+					<width>1400</width>
+					<height>34</height>
+					<font>ui_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[Player.FinishTime,The music stops at ,.]  OK for the controls.</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<!-- small card over a running visualisation (hidden on Info / OSD, where the page comes back) -->
+	<include name="NP_VisCard">
+		<control type="group">
+			<left>page_margin</left>
+			<top>900</top>
+			<width>900</width>
+			<height>116</height>
+			<visible>Visualisation.Enabled + !Player.ShowInfo + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="DL_Card">
+				<param name="color" value="$VAR[DL_Panel]"/>
+			</include>
+			<control type="image">
+				<left>20</left>
+				<top>20</top>
+				<width>76</width>
+				<height>76</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<texture background="true" diffuse="daylight/mask_cover_s.png" fallback="daylight/icons/music.png">$INFO[Player.Art(thumb)]</texture>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>18</top>
+				<width>750</width>
+				<height>44</height>
+				<font>serif_30</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$INFO[MusicPlayer.Title]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>62</top>
+				<width>750</width>
+				<height>34</height>
+				<font>ui_22</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$INFO[MusicPlayer.Artist]$INFO[Player.TimeRemaining,  ·  −,]</label>
+				<visible>[!Visualisation.Enabled | !Visualisation.HasPresets]</visible>
+			</control>
+			<!-- 0.9.10: with visualiser presets the line makes room for how to reach them -->
+			<control type="label">
+				<left>120</left>
+				<top>62</top>
+				<width>480</width>
+				<height>34</height>
+				<font>ui_22</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$INFO[MusicPlayer.Artist]$INFO[Player.TimeRemaining,  ·  −,]</label>
+				<visible>Visualisation.Enabled + Visualisation.HasPresets</visible>
+			</control>
+			<control type="label">
+				<left>610</left>
+				<top>62</top>
+				<width>260</width>
+				<height>34</height>
+				<align>right</align>
+				<font>ui_22</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$LOCALIZE[31319]</label>
+				<visible>Visualisation.Enabled + Visualisation.HasPresets</visible>
+			</control>
+		</control>
+	</include>
+</includes>

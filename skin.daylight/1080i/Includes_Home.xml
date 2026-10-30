@@ -1,0 +1,1114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home "For now" (docs/concepts/mockups/DaylightEvening + DaylightNight). Everything on this page is
+	chosen by the time engine in Includes_Daylight.xml (greeting, countdown, rows, hero).
+
+	Ids
+	  9000 top line nav: 9001 For now, 9002 Films, 9003 Shows, 9004 Music, 9005 Search, 9006 System menu
+	  9101 hero data list (up to 5 picks, $VAR[DL_Hero_Path]; 0.9.3 browsable), 9110 Play, 9111 More, 9112 Trailer, (Play becomes "Browse films" when nothing matches)
+	  9120 card A (time row, posters), 9130 card B (Next up, episodes), 9140 card C (weather / just added)
+
+	Focus map: nav (Left/Right) -Down-> Play. Hero buttons -Down-> card A (B, C when A is empty).
+	Hero picks (0.9.3, Omar rule 2): Left on Play = previous pick, Right off the last visible button
+	(Trailer, else More) = next pick, both Control.Move(9101) and wrapping; Trailer hands focus to
+	More first when the next pick has no trailer, so focus never sits on a hidden button. Dots show
+	which pick.
+	Cards are one sequence (hero, A, B, C): Down = next card, Up = previous card (A: hero), from
+	any item; Left/Right scroll inside a card and spill over at its ends. Empty cards are skipped.
+	Back from anywhere -> nav.
+	0.9.11: Films / Shows hidden in Skin settings (HideMenu.*): the hero + cards A / C (films) or card B (TV)
+	disappear with them; card B then moves to the first slot (Home_HasA/B/C + Home_HeroOn gate the moves).
+	TMDb Helper reads Container(TMDbHelper.WidgetContainer).ListItem for the borrowed colour; every
+	focusable list sets it on focus.
+-->
+<includes>
+	<!-- ================================================================ constants -->
+	<constant name="home_hero_y">280</constant>
+	<constant name="home_hero_h">352</constant>
+	<constant name="home_cards_y">668</constant>
+	<constant name="home_card_w">536</constant>
+	<constant name="home_card_h">348</constant>
+	<constant name="home_card_b_x">692</constant>
+	<constant name="home_card_c_x">1264</constant>
+	<constant name="home_poster_w">140</constant>
+	<constant name="home_poster_h">210</constant>
+	<constant name="home_pad">14</constant>          <!-- room inside a list for zoom 5% + the 9 px focus ring -->
+
+	<!-- ============================================================== expressions -->
+	<expression name="Home_HasHero">Integer.IsGreater(Container(9101).NumItems,0) + !Skin.HasSetting(HideMenu.Movies)</expression>
+	<!-- 0.9.11: the hero and cards A / C are films, card B is TV (hidden with HideMenu.Movies / HideMenu.TVShows) -->
+	<expression name="Home_HeroOn">!Skin.HasSetting(HideMenu.Movies)</expression>
+	<expression name="Home_HeroMany">Integer.IsGreater(Container(9101).NumItems,1)</expression>
+	<expression name="Home_TrailerOn">$EXP[Home_HasHero] + $EXP[ShowTrailerButton] + !String.IsEmpty(Container(9101).ListItem.Trailer)</expression>
+	<expression name="Home_HasA">Integer.IsGreater(Container(9120).NumItems,0) + !Skin.HasSetting(HideMenu.Movies)</expression>
+	<expression name="Home_HasB">Integer.IsGreater(Container(9130).NumItems,0) + !Skin.HasSetting(HideMenu.TVShows)</expression>
+	<expression name="Home_HasC">Integer.IsGreater(Container(9140).NumItems,0) + !Skin.HasSetting(HideMenu.Movies)</expression>
+	<expression name="Home_MusicBar">Player.HasAudio + !Player.HasVideo</expression>
+	<expression name="Home_IsMoreItem">ListItem.IsFolder + String.IsEmpty(ListItem.DBID)</expression>
+
+	<!-- ================================================================ variables -->
+	<variable name="Home_HeroArt">
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Art(fanart))">$INFO[Container(9101).ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Art(landscape))">$INFO[Container(9101).ListItem.Art(landscape)]</value>
+		<value>$INFO[Container(9101).ListItem.Art(poster)]</value>
+	</variable>
+	<variable name="Home_HeroRuntime">
+		<value condition="Integer.IsGreater(Container(9101).ListItem.Duration(h),0)">$INFO[Container(9101).ListItem.Duration(h),,h ]$INFO[Container(9101).ListItem.Duration(m),,m]</value>
+		<value>$INFO[Container(9101).ListItem.Duration(m),,m]</value>
+	</variable>
+	<variable name="Home_HeroMeta">
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Duration)">$VAR[Home_HeroRuntime]  ·  ends $INFO[Container(9101).ListItem.EndTime]  ·</value>
+		<value>$INFO[Container(9101).ListItem.Year]  ·</value>
+	</variable>
+	<variable name="Home_HeroChip">
+		<value>$INFO[Container(9101).ListItem.Director,,  ·  ]$INFO[Container(9101).ListItem.Year]$INFO[Container(9101).ListItem.Genre,  ·  ,]</value>
+	</variable>
+	<variable name="Home_EmptyHero">
+		<value condition="$EXP[DL_FitsOn]">Nothing unwatched fits before $VAR[DL_BedWord] tonight.</value>
+		<value>Nothing to suggest right now.</value>
+	</variable>
+	<!-- poster caption: "ends 11:32 PM" when counting down, else runtime -->
+	<variable name="Home_PosterCaption">
+		<value condition="$EXP[DL_RowA_ShowsEnd] + !String.IsEmpty(ListItem.Duration)">ends $INFO[ListItem.EndTime]</value>
+		<value condition="Integer.IsGreater(ListItem.Duration(h),0)">$INFO[ListItem.Duration(h),,h ]$INFO[ListItem.Duration(m),,m]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">$INFO[ListItem.Duration(m),,m]</value>
+		<value>$INFO[ListItem.Year]</value>
+	</variable>
+	<variable name="Home_PosterCaptionC">
+		<value condition="$EXP[DL_RowC_IsAdded]">$INFO[ListItem.DateAdded]</value>
+		<value condition="Integer.IsGreater(ListItem.Duration(h),0)">$INFO[ListItem.Duration(h),,h ]$INFO[ListItem.Duration(m),,m]</value>
+		<value>$INFO[ListItem.Duration(m),,m]</value>
+	</variable>
+	<!-- Next up row (episodes from embuary helper, or in-progress shows from the xsp fallback) -->
+	<variable name="Home_EpArt">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + !String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.landscape))">$INFO[ListItem.Art(tvshow.landscape)]</value>
+		<value>$INFO[ListItem.Art(tvshow.fanart)]</value>
+	</variable>
+	<variable name="Home_EpShow">
+		<value condition="!String.IsEmpty(ListItem.TVShowTitle)">$INFO[ListItem.TVShowTitle]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="Home_EpLine">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Property(WatchedEpisodes),, of ]$INFO[ListItem.Property(TotalEpisodes),, watched]</value>
+		<value>$INFO[ListItem.Season,S, · ]$INFO[ListItem.Episode,E,]$INFO[ListItem.Title, · ,]</value>
+	</variable>
+	<variable name="Home_EpNote">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Property(UnWatchedEpisodes),, unwatched]</value>
+		<value condition="ListItem.IsResumable">$INFO[ListItem.PercentPlayed,,%]  ·  ends $INFO[ListItem.EndTimeResume]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">$INFO[ListItem.Duration(mins),, min]  ·  ends $INFO[ListItem.EndTime]</value>
+	</variable>
+	<variable name="Home_EpNoteColor">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$VAR[DL_Ink2]</value>
+		<value>$VAR[DL_AccentText]</value>
+	</variable>
+	<variable name="Home_NowPlayingLine">
+		<value>$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Artist,  ·  ,]</value>
+	</variable>
+
+	<!-- ============================================================ top line -->
+	<include name="Home_TopLine">
+		<!-- left: mood icon, day part, weather -->
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>topbar_item_top</top>
+			<width>820</width>
+			<height>topbar_item_h</height>
+			<orientation>horizontal</orientation>
+			<itemgap>14</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="image">
+				<top>11</top>
+				<width>30</width>
+				<height>30</height>
+				<texture colordiffuse="$VAR[DL_Accent]">$VAR[DL_MoodIcon]</texture>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>topbar_item_h</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[DL_DayPart]</label>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>topbar_item_h</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>·</label>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+			<control type="image">
+				<top>14</top>
+				<width>24</width>
+				<height>24</height>
+				<texture colordiffuse="$VAR[DL_Ink2]">$VAR[DL_WeatherIcon]</texture>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>topbar_item_h</height>
+				<font>ui_22</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[DL_WeatherShort]</label>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+		</control>
+		<!-- right: clock -->
+		<control type="label">
+			<left>1600</left>
+			<top>topbar_item_top</top>
+			<width>200</width>
+			<height>topbar_item_h</height>
+			<align>right</align>
+			<font>clock_30</font>
+			<textcolor>$VAR[DL_Ink]</textcolor>
+			<label>$VAR[ClockLabel]</label>
+		</control>
+		<!-- nav pills -->
+		<include content="DL_NavPills">
+			<param name="gid" value="9000"/>
+			<param name="p" value="900"/>
+			<param name="ondown" value="$VAR[Home_DownFromNav]"/>
+			<param name="active1" value="true"/>
+			<param name="click1" value="$VAR[Home_DownFromNav]"/>
+			<param name="custom" value="true"/>
+		</include>
+	</include>
+
+	<!-- ============================================================ greeting -->
+	<include name="Home_Greeting">
+		<control type="label">
+			<left>116</left>
+			<top>112</top>
+			<width>1100</width>
+			<height>88</height>
+			<font>display_72</font>
+			<textcolor>$VAR[DL_Ink]</textcolor>
+			<label>$VAR[DL_Greeting]</label>
+		</control>
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>206</top>
+			<width>1180</width>
+			<height>40</height>
+			<orientation>horizontal</orientation>
+			<itemgap>14</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="label">
+				<width max="760">auto</width>
+				<height>40</height>
+				<font>ui_28</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[DL_Subline]</label>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>40</height>
+				<font>ui_28</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>·</label>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+			<control type="image">
+				<top>6</top>
+				<width>28</width>
+				<height>28</height>
+				<texture colordiffuse="$VAR[DL_Ink2]">$VAR[DL_WeatherIcon]</texture>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+			<control type="label">
+				<width max="420">auto</width>
+				<height>40</height>
+				<font>ui_28</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[DL_WeatherLong]</label>
+				<visible>$EXP[DL_HasWeather]</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- Music playing: a quiet pill at the right of the greeting -->
+	<include name="Home_NowPlaying">
+		<control type="group">
+			<left>1180</left>
+			<top>186</top>
+			<width>620</width>
+			<height>64</height>
+			<visible>$EXP[Home_MusicBar]</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>620</width>
+				<height>64</height>
+				<texture border="32,0,32,0" colordiffuse="$VAR[DL_Surface]">daylight/pill_64.png</texture>
+			</control>
+			<control type="image">
+				<left>8</left>
+				<top>8</top>
+				<width>48</width>
+				<height>48</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<texture background="true" diffuse="daylight/circle_64.png">$INFO[Player.Art(thumb)]</texture>
+			</control>
+			<control type="label">
+				<left>72</left>
+				<top>8</top>
+				<width>520</width>
+				<height>28</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[Home_NowPlayingLine]</label>
+			</control>
+			<control type="progress">
+				<left>72</left>
+				<top>42</top>
+				<width>440</width>
+				<height>8</height>
+				<texturebg border="4,0,4,0" colordiffuse="$VAR[DL_Line2]">daylight/track_8.png</texturebg>
+				<midtexture border="4,0,4,0" colordiffuse="$VAR[DL_Accent]">daylight/track_8.png</midtexture>
+				<info>Player.Progress</info>
+			</control>
+			<control type="label">
+				<left>520</left>
+				<top>32</top>
+				<width>80</width>
+				<height>26</height>
+				<align>right</align>
+				<font>num_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$INFO[Player.TimeRemaining,-,]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ hero -->
+	<include name="Home_DataLists">
+		<!-- hero source (draws its art invisibly so the item arrives with art: LESSONS 2) -->
+		<control type="list" id="9101">
+			<left>0</left>
+			<top>0</top>
+			<width>1</width>
+			<height>1</height>
+			<orientation>vertical</orientation>
+			<scrolltime>0</scrolltime>
+			<onup>9000</onup>
+			<ondown>9110</ondown>
+			<onleft>9110</onleft>
+			<onright>9111</onright>
+			<onback>9000</onback>
+			<onfocus>SetProperty(TMDbHelper.WidgetContainer,9101,home)</onfocus>
+			<itemlayout width="1" height="1">
+				<control type="image"><width>1</width><height>1</height><texture background="true">$INFO[ListItem.Art(fanart)]</texture><animation effect="fade" start="0" end="0" time="0" condition="true">Conditional</animation></control>
+			</itemlayout>
+			<focusedlayout width="1" height="1">
+				<control type="image"><width>1</width><height>1</height><texture background="true">$INFO[ListItem.Art(fanart)]</texture><animation effect="fade" start="0" end="0" time="0" condition="true">Conditional</animation></control>
+			</focusedlayout>
+			<content target="videos" limit="5" sortby="random" browse="never">$VAR[DL_Hero_Path]</content>  <!-- 0.9.3: the xsp "order" in URL options is ignored (alphabetical); sortby on the content shuffles, browse never drops "More..." -->
+		</control>
+	</include>
+
+	<include name="Home_Hero">
+		<control type="group">
+			<left>page_margin</left>
+			<top>home_hero_y</top>
+			<width>page_width</width>
+			<height>home_hero_h</height>
+			<visible>$EXP[Home_HeroOn]</visible>
+			<include content="Anim_RowStagger"><param name="delay" value="40"/></include>
+			<include>DL_Card</include>
+			<!-- art, right 1140 px, right corners rounded -->
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>home_hero_h</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<include>Anim_BackgroundCrossfade</include>
+				<texture background="true" diffuse="daylight/mask_hero.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[Home_HeroArt]</texture>
+				<visible>$EXP[Home_HasHero]</visible>
+			</control>
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>home_hero_h</height>
+				<texture colordiffuse="$VAR[DL_Surface]">daylight/hero_fade.png</texture>
+			</control>
+			<!-- caption chip on the art: Director · year · genres (auto-width disabled button) -->
+			<control type="grouplist">
+				<left>700</left>
+				<top>282</top>
+				<width>940</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<visible>$EXP[Home_HasHero]</visible>
+				<control type="button">
+					<width>auto</width>
+					<height>40</height>
+					<label>$VAR[Home_HeroChip]</label>
+					<font>small_20</font>
+					<textoffsetx>18</textoffsetx>
+					<disabledcolor>$VAR[DL_ChipText]</disabledcolor>
+					<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Chip]">daylight/pill_40.png</texturenofocus>
+					<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Chip]">daylight/pill_40.png</texturefocus>
+					<enable>false</enable>
+				</control>
+			</control>
+
+			<!-- text block -->
+			<control type="group">
+				<left>56</left>
+				<top>0</top>
+				<width>620</width>
+				<height>home_hero_h</height>
+				<visible>$EXP[Home_HasHero]</visible>
+				<control type="grouplist">
+					<left>0</left>
+					<top>40</top>
+					<width>620</width>
+					<height>200</height>
+					<orientation>vertical</orientation>
+					<itemgap>0</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="group">
+						<height>28</height>
+						<control type="image">
+							<left>0</left>
+							<top>9</top>
+							<width>10</width>
+							<height>10</height>
+							<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+						</control>
+						<control type="label">
+							<left>20</left>
+							<top>0</top>
+							<width>560</width>
+							<height>28</height>
+							<font>ui_22_semibold</font>
+							<textcolor>$VAR[DL_AccentText]</textcolor>
+							<label>$VAR[DL_Hero_Kicker]</label>
+						</control>
+					</control>
+					<control type="image">
+						<height>10</height>
+						<width>10</width>
+						<texture></texture>
+					</control>
+					<!-- measuring copy (transparent): pushes the meta line down by 1 or 2 title lines -->
+					<include content="T_HomeHero_Measure">
+						<param name="label" value="$INFO[Container(9101).ListItem.Label]"/>
+					</include>
+					<control type="image">
+						<height>12</height>
+						<width>10</width>
+						<texture></texture>
+					</control>
+					<control type="grouplist">
+						<width>620</width>
+						<height>30</height>
+						<orientation>horizontal</orientation>
+						<itemgap>10</itemgap>
+						<usecontrolcoords>true</usecontrolcoords>
+						<control type="label">
+							<width max="420">auto</width>
+							<height>30</height>
+							<font>ui_24</font>
+							<textcolor>$VAR[DL_Ink2]</textcolor>
+							<label>$VAR[Home_HeroMeta]</label>
+						</control>
+						<control type="image">
+							<top>4</top>
+							<width>22</width>
+							<height>22</height>
+							<texture colordiffuse="$VAR[DL_AccentText]">$VAR[DL_Hero_BadgeIcon]</texture>
+						</control>
+						<control type="label">
+							<width max="340">auto</width>
+							<height>30</height>
+							<font>ui_24_semibold</font>
+							<textcolor>$VAR[DL_AccentText]</textcolor>
+							<label>$VAR[DL_Hero_Badge]</label>
+						</control>
+					</control>
+				</control>
+				<!-- visible title, unclipped (taller than 2 lines of 58 so descenders survive), clamps at 2 -->
+				<control type="group">
+					<left>0</left>
+					<top>78</top>
+					<width>620</width>
+					<include content="T_HomeHero_Title">
+						<param name="label" value="$INFO[Container(9101).ListItem.Label]"/>
+						<param name="color" value="$VAR[DL_Ink]"/>
+					</include>
+				</control>
+			</control>
+
+			<!-- buttons -->
+			<control type="group">
+				<left>56</left>
+				<top>252</top>
+				<width>620</width>
+				<height>56</height>
+				<include content="DL_ButtonPrimary">
+					<param name="id" value="9110"/>
+					<param name="onfocus" value="SetProperty(TMDbHelper.WidgetContainer,9101,home)"/>
+					<param name="left" value="0"/>
+					<param name="width" value="140"/>
+					<param name="label" value="$VAR[Home_PlayLabel]"/>
+					<param name="icon" value="$VAR[Home_PlayIcon]"/>
+					<param name="onclick" value="$VAR[Home_PlayAction]"/>
+					<param name="onup" value="9000"/>
+					<param name="ondown" value="$VAR[Home_DownFromHero]"/>
+					<param name="onback" value="9000"/>
+					<param name="onright" value="9111"/>
+					<param name="onleft_pre" value="Control.Move(9101,-1)"/>
+					<param name="onleft_pre_if" value="$EXP[Home_HeroMany]"/>
+				</include>
+				<include content="DL_ButtonSecondary">
+					<param name="id" value="9111"/>
+					<param name="onfocus" value="SetProperty(TMDbHelper.WidgetContainer,9101,home)"/>
+					<param name="left" value="160"/>
+					<param name="width" value="111"/>
+					<param name="label" value="More"/>
+					<param name="onclick" value="SetFocus(9101)"/>
+					<param name="onclick2" value="Action(Info)"/>
+					<param name="onclick3" value="SetFocus(9111)"/>
+					<param name="focus_also" value="Control.HasFocus(9101)"/>
+					<param name="visible" value="$EXP[Home_HasHero]"/>
+					<param name="onup" value="9000"/>
+					<param name="ondown" value="$VAR[Home_DownFromHero]"/>
+					<param name="onback" value="9000"/>
+					<param name="onleft" value="9110"/>
+					<param name="onright" value="9112"/>
+					<param name="onright_if" value="$EXP[Home_TrailerOn]"/>
+					<param name="onright_pre" value="Control.Move(9101,1)"/>
+					<param name="onright_pre_if" value="!$EXP[Home_TrailerOn] + $EXP[Home_HeroMany]"/>
+				</include>
+				<include content="DL_ButtonSecondary">
+					<param name="id" value="9112"/>
+					<param name="onfocus" value="SetProperty(TMDbHelper.WidgetContainer,9101,home)"/>
+					<param name="left" value="291"/>
+					<param name="width" value="123"/>
+					<param name="label" value="$LOCALIZE[20410]"/>
+					<param name="onclick" value="PlayMedia($ESCINFO[Container(9101).ListItem.Trailer],playlist_type_hint=1)"/>
+					<param name="visible" value="$EXP[Home_TrailerOn]"/>
+					<param name="onup" value="9000"/>
+					<param name="ondown" value="$VAR[Home_DownFromHero]"/>
+					<param name="onback" value="9000"/>
+					<param name="onleft" value="9111"/>
+					<param name="onright_pre" value="SetFocus(9111)"/>
+					<param name="onright_pre_if" value="$EXP[Home_HeroMany] + String.IsEmpty(Container(9101).ListItem(1).Trailer)"/>
+					<param name="onright" value="Control.Move(9101,1)"/>
+					<param name="onright_if" value="$EXP[Home_HeroMany]"/>
+				</include>
+				<!-- pick dots (one per pick, the current one accent), after the last visible button -->
+				<control type="grouplist">
+					<left>446</left>
+					<top>24</top>
+					<width>120</width>
+					<height>8</height>
+					<orientation>horizontal</orientation>
+					<itemgap>8</itemgap>
+					<visible>$EXP[Home_HeroMany]</visible>
+					<animation effect="slide" end="-143,0" time="0" condition="!$EXP[Home_TrailerOn]">Conditional</animation>
+					<include content="Home_HeroDot"><param name="n" value="1"/></include>
+					<include content="Home_HeroDot"><param name="n" value="2"/></include>
+					<include content="Home_HeroDot"><param name="n" value="3"/></include>
+					<include content="Home_HeroDot"><param name="n" value="4"/></include>
+					<include content="Home_HeroDot"><param name="n" value="5"/></include>
+				</control>
+			</control>
+
+			<!-- empty state -->
+			<control type="group">
+				<left>56</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>home_hero_h</height>
+				<visible>!$EXP[Home_HasHero] + !Container(9101).IsUpdating</visible>
+				<control type="label">
+					<left>0</left>
+					<top>110</top>
+					<width>1000</width>
+					<height>60</height>
+					<font>serif_34</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[Home_EmptyHero]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>170</top>
+					<width>1000</width>
+					<height>34</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31227]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<include name="Home_HeroDot">
+		<definition>
+			<control type="image">
+				<width>8</width>
+				<height>8</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+				<visible>String.IsEqual(Container(9101).CurrentItem,$PARAM[n])</visible>
+			</control>
+			<control type="image">
+				<width>8</width>
+				<height>8</height>
+				<texture colordiffuse="$VAR[DL_Line2]">daylight/circle_12.png</texture>
+				<visible>!String.IsEqual(Container(9101).CurrentItem,$PARAM[n]) + Integer.IsGreaterOrEqual(Container(9101).NumItems,$PARAM[n])</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- 0.9.11: Films hidden = no hero: the nav goes straight to the first card that is shown -->
+	<variable name="Home_DownFromNav">
+		<value condition="$EXP[Home_HeroOn]">SetFocus(9110)</value>
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromHero">
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_PlayLabel">
+		<value condition="$EXP[Home_HasHero]">$LOCALIZE[208]</value>
+		<value>Films</value>
+	</variable>
+	<variable name="Home_PlayIcon">
+		<value condition="$EXP[Home_HasHero]">daylight/icons/play.png</value>
+		<value>daylight/icons/film.png</value>
+	</variable>
+	<variable name="Home_PlayAction">
+		<value condition="$EXP[Home_HasHero]">PlayMedia($ESCINFO[Container(9101).ListItem.FilenameAndPath])</value>
+		<value>ActivateWindow(Videos,videodb://movies/titles/,return)</value>
+	</variable>
+
+	<!-- ============================================================ cards -->
+	<!-- Card header: icon + Fraunces title. params: icon, title, id (the card's list), hasnext.
+	     While the card's list has focus the title turns accent and a down chevron shows that Down
+	     goes on to the next card (0.9.2: Up/Down step card to card from any item). -->
+	<include name="Home_CardHeader">
+		<param name="hasnext">false</param>
+		<definition>
+		<control type="image">
+			<left>28</left>
+	        <top>30</top>
+			<width>28</width>
+			<height>28</height>
+			<texture colordiffuse="$VAR[DL_Accent]">$PARAM[icon]</texture>
+		</control>
+		<control type="label">
+			<left>68</left>
+			<top>26</top>
+			<width>400</width>
+			<height>36</height>
+			<font>serif_28</font>
+			<textcolor>$VAR[DL_Ink]</textcolor>
+			<label>$PARAM[title]</label>
+			<visible>!Control.HasFocus($PARAM[id])</visible>
+		</control>
+		<control type="label">
+			<left>68</left>
+			<top>26</top>
+			<width>400</width>
+			<height>36</height>
+			<font>serif_28</font>
+			<textcolor>$VAR[DL_AccentText]</textcolor>
+			<label>$PARAM[title]</label>
+			<visible>Control.HasFocus($PARAM[id])</visible>
+		</control>
+		<control type="image">
+			<left>484</left>
+			<top>32</top>
+			<width>24</width>
+			<height>24</height>
+			<texture colordiffuse="$VAR[DL_AccentText]">daylight/icons/chevron_down.png</texture>
+			<visible>Control.HasFocus($PARAM[id]) + $PARAM[hasnext]</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		</definition>
+	</include>
+
+	<!-- Poster inside a card row. params: caption, focused, art, ismore (custom rows: false, add-on folders are no "More...") -->
+	<include name="Home_CardPoster">
+		<param name="focused">false</param>
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="ismore">$EXP[Home_IsMoreItem]</param>
+		<definition>
+			<control type="group">
+				<left>home_pad</left>
+				<top>home_pad</top>
+				<width>home_poster_w</width>
+				<height>home_poster_h</height>
+				<include condition="$PARAM[focused]">Anim_FocusZoom</include>
+				<control type="group">
+					<visible>![$PARAM[ismore]]</visible>
+					<include content="DL_Artwork">
+						<param name="art" value="$PARAM[art]"/>
+						<param name="mask_round" value="daylight/mask_poster_s.png"/>
+					</include>
+					<include>DL_WatchedMarkers</include>
+				</control>
+				<control type="group">
+					<visible>$PARAM[ismore]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<right>0</right>
+						<bottom>0</bottom>
+						<texture border="20" colordiffuse="$VAR[DL_Raised]">daylight/card16.png</texture>
+					</control>
+					<control type="label">
+						<left>0</left>
+						<top>0</top>
+						<right>0</right>
+						<bottom>0</bottom>
+						<align>center</align>
+						<font>ui_22_semibold</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$LOCALIZE[31228]</label>
+					</control>
+				</control>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="16"/>
+					<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>home_pad</left>
+				<top>242</top>
+				<width>home_poster_w</width>
+				<height>26</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$PARAM[caption]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- A poster card (A or C). params: id, x, title, icon, content, caption, onleft, onright, empty -->
+	<include name="Home_PosterCard">
+		<param name="sortby">none</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="onup">SetFocus(9110)</param>
+		<param name="ondown">noop</param>
+		<param name="hasnext">false</param>
+		<param name="delay">80</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[x]</left>
+				<top>home_cards_y</top>
+				<width>home_card_w</width>
+				<height>home_card_h</height>
+				<visible>!Skin.HasSetting(HideMenu.Movies)</visible>
+				<include content="Anim_RowStagger"><param name="delay" value="$PARAM[delay]"/></include>
+				<include>DL_Card</include>
+				<include content="Home_CardHeader">
+					<param name="icon" value="$PARAM[icon]"/>
+					<param name="title" value="$PARAM[title]"/>
+					<param name="id" value="$PARAM[id]"/>
+					<param name="hasnext" value="$PARAM[hasnext]"/>
+				</include>
+				<control type="label">
+					<left>28</left>
+					<top>110</top>
+					<width>480</width>
+					<height>90</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$PARAM[empty]</label>
+					<visible>!Integer.IsGreater(Container($PARAM[id]).NumItems,0) + !Container($PARAM[id]).IsUpdating</visible>
+				</control>
+				<control type="list" id="$PARAM[id]">
+					<left>14</left>
+					<top>64</top>
+					<width>508</width>
+					<height>272</height>
+					<orientation>horizontal</orientation>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onback>9000</onback>
+					<onfocus>SetProperty(TMDbHelper.WidgetContainer,$PARAM[id],home)</onfocus>
+					<preloaditems>2</preloaditems>
+					<scrolltime tween="cubic" easing="out">240</scrolltime>
+					<itemlayout width="170" height="272">
+						<include content="Home_CardPoster">
+							<param name="id" value="$PARAM[id]"/>
+							<param name="caption" value="$PARAM[caption]"/>
+						</include>
+					</itemlayout>
+					<focusedlayout width="170" height="272">
+						<include content="Home_CardPoster">
+							<param name="id" value="$PARAM[id]"/>
+							<param name="caption" value="$PARAM[caption]"/>
+							<param name="focused" value="true"/>
+						</include>
+					</focusedlayout>
+					<content target="videos" limit="12" sortby="$PARAM[sortby]" sortorder="descending">$PARAM[content]</content>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Episode tile (226x127 thumb + 3 lines under it, 2 tiles per card). params: id, focused.
+	     0.9.2: card B is a horizontal strip like A and C, so Left/Right scroll every card and
+	     Up/Down step card to card. -->
+	<include name="Home_EpItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>home_pad</left>
+				<top>home_pad</top>
+				<width>226</width>
+				<height>127</height>
+				<include condition="$PARAM[focused]">Anim_FocusZoom</include>
+				<include content="DL_Artwork">
+					<param name="art" value="$VAR[Home_EpArt]"/>
+					<param name="mask_round" value="daylight/mask_thumb.png"/>
+					<param name="title" value="$VAR[Home_EpShow]"/>
+				</include>
+				<control type="progress">
+					<left>12</left>
+					<right>12</right>
+					<bottom>10</bottom>
+					<height>8</height>
+					<texturebg border="4,0,4,0" colordiffuse="$VAR[DL_ScrimTrack]">daylight/track_8.png</texturebg>
+					<midtexture border="4,0,4,0" colordiffuse="$VAR[DL_Accent]">daylight/track_8.png</midtexture>
+					<info>ListItem.PercentPlayed</info>
+					<visible>Integer.IsGreater(ListItem.PercentPlayed,0)</visible>
+				</control>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="16"/>
+					<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>home_pad</left>
+				<top>154</top>
+				<width>226</width>
+				<height>30</height>
+				<font>ui_24_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[Home_EpShow]</label>
+			</control>
+			<control type="label">
+				<left>home_pad</left>
+				<top>186</top>
+				<width>226</width>
+				<height>26</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[Home_EpLine]</label>
+			</control>
+			<control type="label">
+				<left>home_pad</left>
+				<top>214</top>
+				<width>226</width>
+				<height>26</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[Home_EpNoteColor]</textcolor>
+				<label>$VAR[Home_EpNote]</label>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Home_Cards">
+		<include content="Home_PosterCard">
+			<param name="id" value="9120"/>
+			<param name="x" value="page_margin"/>
+			<param name="title" value="$VAR[DL_RowA_Title]"/>
+			<param name="icon" value="$VAR[DL_RowA_Icon]"/>
+			<param name="content" value="$VAR[DL_RowA_Path]"/>
+			<param name="sortby" value="$VAR[DL_RowA_Sort]"/>
+			<param name="caption" value="$VAR[Home_PosterCaption]"/>
+			<param name="onright" value="$VAR[Home_RightFromA]"/>
+			<param name="onup" value="SetFocus(9110)"/>
+			<param name="ondown" value="$VAR[Home_DownFromA]"/>
+			<param name="hasnext" value="[$EXP[Home_HasB] | $EXP[Home_HasC] | $EXP[CustomRowsAnyOn]]"/>
+			<param name="empty" value="Nothing unwatched fits this slot. Try Films for everything."/>
+			<param name="delay" value="80"/>
+		</include>
+		<!-- card B: Next up -->
+		<control type="group">
+			<left>home_card_b_x</left>
+			<top>home_cards_y</top>
+			<width>home_card_w</width>
+			<height>home_card_h</height>
+			<visible>!Skin.HasSetting(HideMenu.TVShows)</visible>
+			<!-- 0.9.11: Films hidden = no hero and no card A: card B moves to the first slot, under the greeting -->
+			<animation effect="slide" start="0,0" end="-572,-388" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+			<include content="Anim_RowStagger"><param name="delay" value="120"/></include>
+			<include>DL_Card</include>
+			<include content="Home_CardHeader">
+				<param name="icon" value="daylight/icons/nextup.png"/>
+				<param name="title" value="$VAR[DL_RowB_Title]"/>
+				<param name="id" value="9130"/>
+				<param name="hasnext" value="[$EXP[Home_HasC] | $EXP[CustomRowsAnyOn]]"/>
+			</include>
+			<control type="label">
+				<left>28</left>
+				<top>110</top>
+				<width>480</width>
+				<height>90</height>
+				<font>ui_24</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$LOCALIZE[31229]</label>
+				<visible>!$EXP[Home_HasB] + !Container(9130).IsUpdating</visible>
+			</control>
+			<control type="list" id="9130">
+				<left>14</left>
+				<top>64</top>
+				<width>508</width>
+				<height>272</height>
+				<orientation>horizontal</orientation>
+				<onup>$VAR[Home_UpFromB]</onup>
+				<ondown>$VAR[Home_DownFromBRow]</ondown>
+				<onleft>$VAR[Home_LeftFromB]</onleft>
+				<onright>$VAR[Home_DownFromB]</onright>
+				<onback>9000</onback>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9130,home)</onfocus>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">240</scrolltime>
+				<itemlayout width="254" height="272">
+					<include content="Home_EpItem"><param name="id" value="9130"/></include>
+				</itemlayout>
+				<focusedlayout width="254" height="272">
+					<include content="Home_EpItem"><param name="id" value="9130"/><param name="focused" value="true"/></include>
+				</focusedlayout>
+				<content target="videos" limit="10">$VAR[DL_RowB_Path]</content>
+			</control>
+		</control>
+		<include content="Home_PosterCard">
+			<param name="id" value="9140"/>
+			<param name="x" value="home_card_c_x"/>
+			<param name="title" value="$VAR[DL_RowC_Title]"/>
+			<param name="icon" value="$VAR[DL_RowC_Icon]"/>
+			<param name="content" value="$VAR[DL_RowC_Path]"/>
+			<param name="sortby" value="$VAR[DL_RowC_Sort]"/>
+			<param name="caption" value="$VAR[Home_PosterCaptionC]"/>
+			<param name="onleft" value="$VAR[Home_LeftFromC]"/>
+			<param name="onup" value="$VAR[Home_UpFromC]"/>
+			<param name="ondown" value="$VAR[Home_DownFromC]"/>
+			<param name="empty" value="Nothing here yet."/>
+			<param name="hasnext" value="$EXP[CustomRowsAnyOn]"/>
+			<param name="delay" value="160"/>
+		</include>
+	</include>
+	<!-- Card-to-card navigation (0.9.2). The cards are one sequence, hero, A, B, C:
+	     Down = next card, Up = previous card (the hero from A), from ANY item; Left/Right scroll
+	     the strip inside a card and spill into the neighbour at its ends. Empty cards are skipped.
+	     Lists keep their own selected item, so SetFocus(card) lands where you left it. -->
+	<variable name="Home_RightFromA">
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_UpFromB">
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="!$EXP[Home_HeroOn]">SetFocus(9000)</value>
+		<value>SetFocus(9110)</value>
+	</variable>
+	<variable name="Home_LeftFromB">
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromB">
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_UpFromC">
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="!$EXP[Home_HeroOn]">SetFocus(9000)</value>
+		<value>SetFocus(9110)</value>
+	</variable>
+	<variable name="Home_LeftFromC">
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value>noop</value>
+	</variable>
+
+	<!-- ============================================================ shared with Search -->
+	<!-- Rounded art with placeholder (search results). params: art, diffuse, mask_round, title -->
+	<include name="Home_Art">
+		<param name="diffuse">$VAR[DL_ArtDim]</param>
+		<param name="mask_round">masks/poster_round8.png</param>
+		<param name="mask_square">masks/poster_square.png</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<definition>
+			<include content="DL_Artwork">
+				<param name="art" value="$PARAM[art]"/>
+				<param name="mask_round" value="$PARAM[mask_round]"/>
+				<param name="title" value="$PARAM[title]"/>
+			</include>
+		</definition>
+	</include>
+	<!-- ============================================================ custom rows (0.9.11) -->
+	<!-- Opt-in rows from Skin settings > Custom rows (Includes_CustomRows.xml, generated). They continue the
+	     card sequence below the first page: Down from the last card (or from the hero / the nav when the cards
+	     are hidden) scrolls the page one screen up to them; each is a full-width Daylight card (header with
+	     icon + Fraunces title, accent + chevron while focused) holding a strip of card-A posters with their
+	     titles. Up = previous row (the last card from row 1), Back = nav. Nothing changes until a row has
+	     items: the block sits below the screen and empty rows draw nothing. -->
+	<include name="Home_CustomRow">
+		<definition>
+			<control type="group">
+				<left>page_margin</left>
+				<top>0</top>
+				<width>1680</width>
+				<height>home_card_h</height>
+				<animation effect="slide" start="0,0" end="0,384" time="0" condition="$PARAM[after1] + $EXP[CustomRow1On]">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,384" time="0" condition="$PARAM[after2] + $EXP[CustomRow2On]">Conditional</animation>
+				<control type="group">
+					<visible>$EXP[CustomRow$PARAM[n]On]</visible>
+					<include>DL_Card</include>
+					<include content="Home_CardHeader">
+						<param name="icon" value="daylight/icons/home.png"/>
+						<param name="title" value="$VAR[CustomRow_Title$PARAM[n]]"/>
+						<param name="id" value="$PARAM[id]"/>
+						<param name="hasnext" value="$PARAM[hasnext]"/>
+					</include>
+					<control type="label">
+						<left>1100</left>
+						<top>30</top>
+						<width>552</width>
+						<height>28</height>
+						<align>right</align>
+						<font>small_20</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$VAR[CustomRow_Count$PARAM[n]]</label>
+					</control>
+				</control>
+				<control type="list" id="$PARAM[id]">
+					<left>14</left>
+					<top>64</top>
+					<width>1652</width>
+					<height>272</height>
+					<orientation>horizontal</orientation>
+					<onup>$VAR[Home_UpFromCustom$PARAM[n]]</onup>
+					<ondown>$VAR[Home_DownFromCustom$PARAM[n]]</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>9000</onback>
+					<onfocus>SetProperty(TMDbHelper.WidgetContainer,$PARAM[id],home)</onfocus>
+					<preloaditems>2</preloaditems>
+					<scrolltime tween="cubic" easing="out">240</scrolltime>
+					<itemlayout width="170" height="272">
+						<include content="Home_CardPoster">
+							<param name="id" value="$PARAM[id]"/>
+							<param name="caption" value="$INFO[ListItem.Label]"/>
+							<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+							<param name="ismore" value="false"/>
+						</include>
+					</itemlayout>
+					<focusedlayout width="170" height="272">
+						<include content="Home_CardPoster">
+							<param name="id" value="$PARAM[id]"/>
+							<param name="caption" value="$INFO[ListItem.Label]"/>
+							<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+							<param name="ismore" value="false"/>
+							<param name="focused" value="true"/>
+						</include>
+					</focusedlayout>
+					<include content="CustomRow_Content"><param name="row" value="$PARAM[n]"/></include>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- the block: one screen below the first page (top 1080 + 60) inside the Home.xml page wrapper -->
+	<include name="Home_CustomRows">
+		<control type="group">
+			<left>0</left>
+			<top>1140</top>
+			<include content="Home_CustomRow"><param name="n" value="1"/><param name="id" value="9881"/><param name="after1" value="false"/><param name="after2" value="false"/><param name="hasnext" value="[$EXP[CustomRow2On] | $EXP[CustomRow3On]]"/></include>
+			<include content="Home_CustomRow"><param name="n" value="2"/><param name="id" value="9882"/><param name="after1" value="true"/><param name="after2" value="false"/><param name="hasnext" value="$EXP[CustomRow3On]"/></include>
+			<include content="Home_CustomRow"><param name="n" value="3"/><param name="id" value="9883"/><param name="after1" value="true"/><param name="after2" value="true"/><param name="hasnext" value="false"/></include>
+		</control>
+	</include>
+	<!-- page wrapper animation: one screen up while a custom row has focus, 144 px more for a third row -->
+	<include name="Home_CustomRowsPageAnim">
+		<animation effect="slide" start="0,0" end="0,-1080" time="280" tween="cubic" easing="out" condition="$EXP[CustomRowsFocus] + !$EXP[ReduceMotion]">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-1080" time="0" condition="$EXP[CustomRowsFocus] + $EXP[ReduceMotion]">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-144" time="240" tween="cubic" easing="out" condition="Control.HasFocus(9883) + $EXP[CustomRow1On] + $EXP[CustomRow2On] + !$EXP[ReduceMotion]">Conditional</animation>
+		<animation effect="slide" start="0,0" end="0,-144" time="0" condition="Control.HasFocus(9883) + $EXP[CustomRow1On] + $EXP[CustomRow2On] + $EXP[ReduceMotion]">Conditional</animation>
+	</include>
+	<!-- Up from a custom row: the row above with items, else the last card shown, else the hero / nav -->
+	<variable name="Home_UpFromCustom1">
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="$EXP[Home_HeroOn]">SetFocus(9110)</value>
+		<value>SetFocus(9000)</value>
+	</variable>
+	<variable name="Home_UpFromCustom2">
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="$EXP[Home_HeroOn]">SetFocus(9110)</value>
+		<value>SetFocus(9000)</value>
+	</variable>
+	<variable name="Home_UpFromCustom3">
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasA]">SetFocus(9120)</value>
+		<value condition="$EXP[Home_HeroOn]">SetFocus(9110)</value>
+		<value>SetFocus(9000)</value>
+	</variable>
+	<variable name="Home_DownFromCustom1">
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromCustom2">
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromCustom3">
+		<value>noop</value>
+	</variable>
+	<!-- Down (only) from cards A / B / C: the next card, else the custom rows (Right keeps the old variables) -->
+	<variable name="Home_DownFromA">
+		<value condition="$EXP[Home_HasB]">SetFocus(9130)</value>
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromBRow">
+		<value condition="$EXP[Home_HasC]">SetFocus(9140)</value>
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_DownFromC">
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+</includes>

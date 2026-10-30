@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Player controls (0.9.4 Daylight card): the small panel Kodi opens with the PlayerControls builtin
+	while something plays outside fullscreen (e.g. music started from the library). Same language as
+	the music OSD: soft rounded card, rounded cover, Fraunces title, rounded track, circle transport
+	buttons (DLOSD_Circle) and fixed-width pills (DLOSD_Pill).
+
+	Id contract (Estuary Omega PlayerControls.xml, skin-side ids): 201 transport row, 600 previous,
+	602 play/pause, 603 stop, 605 next, 704 repeat, 607 shuffle, 87 hidden seek stepper (Up).
+	Order (Omar's OSD rule): Play/Pause, Stop, Previous, Next | Repeat, Shuffle (audio only).
+	Focus map: open -> 602; Left/Right walk the row (wraps), Up -> 87 (Left/Right step seek, the track
+	lights up), Down from 87 -> row. Back closes (Kodi).
+-->
+<window>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<visible>Player.HasMedia + Window.IsActive(PlayerControls) + !Window.IsActive(FullscreenVideo) + !Window.IsActive(FullscreenGame) + !Window.IsActive(Visualisation)</visible>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1040</width>
+			<height>380</height>
+			<!-- page dim, as on every Daylight dialog (DL_GenericDialog): the card reads over the dark night Home -->
+			<control type="image">
+				<left>-2000</left>
+				<top>-2000</top>
+				<width>6000</width>
+				<height>6000</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="$VAR[DL_DimDialog]">common/white.png</texture>
+			</control>
+			<include>DL_Card</include>
+
+			<!-- cover: rounded, raised placeholder underneath -->
+			<control type="image">
+				<left>40</left>
+				<top>40</top>
+				<width>200</width>
+				<height>200</height>
+				<texture diffuse="daylight/mask_cover.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>40</top>
+				<width>200</width>
+				<height>200</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true" diffuse="daylight/mask_cover.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[OSD_PlayerArt]</texture>
+			</control>
+
+			<!-- kicker, title, meta -->
+			<control type="grouplist">
+				<left>272</left>
+				<top>40</top>
+				<width>728</width>
+				<height>28</height>
+				<orientation>horizontal</orientation>
+				<itemgap>10</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="image">
+					<top>9</top>
+					<width>10</width>
+					<height>10</height>
+					<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+				</control>
+				<control type="label">
+					<width max="700">auto</width>
+					<height>28</height>
+					<font>small_20_bold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[PC_Kicker]</label>
+				</control>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>76</top>
+				<width>728</width>
+				<height>50</height>
+				<font>serif_34</font>
+				<label>$VAR[OSD_Title]</label>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>128</top>
+				<width>728</width>
+				<height>32</height>
+				<font>ui_24</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[OSD_Meta]</label>
+			</control>
+
+			<!-- rounded track + times -->
+			<control type="image">
+				<left>262</left>
+				<top>188</top>
+				<width>748</width>
+				<height>28</height>
+				<texture border="14,0,14,0" colordiffuse="$VAR[DL_Halo]">daylight/pill_44_line.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+			<control type="progress">
+				<left>272</left>
+				<top>198</top>
+				<width>728</width>
+				<height>8</height>
+				<info>Player.Progress</info>
+				<texturebg border="4,0,4,0" colordiffuse="$VAR[DL_Line2]">daylight/track_8.png</texturebg>
+				<midtexture border="4,0,4,0" colordiffuse="$VAR[DL_Accent]">daylight/track_8.png</midtexture>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>216</top>
+				<width>360</width>
+				<height>28</height>
+				<font>num_20</font>
+				<label>$VAR[OSD_SeekTimeLabel]</label>
+			</control>
+			<control type="label">
+				<left>640</left>
+				<top>216</top>
+				<width>360</width>
+				<height>28</height>
+				<align>right</align>
+				<font>num_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$INFO[Player.TimeRemaining,−,]$INFO[Player.FinishTime,  ·  ends ,]</label>
+			</control>
+
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>DL_Hidden</include>
+				<onup>noop</onup>
+				<ondown>201</ondown>
+				<onleft>StepBack</onleft>
+				<onright>StepForward</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+
+			<!-- transport -->
+			<control type="grouplist" id="201">
+				<left>264</left>  <!-- 272 - 8: DLOSD_Circle / DLOSD_Pill carry left/top 8 of zoom room -->
+				<top>268</top>
+				<width>760</width>
+				<height>80</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="DLOSD_Circle">
+					<param name="id" value="602"/>
+					<param name="icon" value="$VAR[DLOSD_PlayIcon]"/>
+					<param name="icon_size" value="26"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="onleft" value="607"/>
+					<param name="onleft_if" value="Player.HasAudio"/>
+					<param name="onleft2" value="605"/>
+					<param name="onleft2_if" value="!Player.HasAudio"/>
+					<param name="onright" value="603"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="603"/>
+					<param name="icon" value="daylight/icons/stop.png"/>
+					<param name="icon_size" value="24"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="600"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="600"/>
+					<param name="icon" value="daylight/icons/prev.png"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="605"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="605"/>
+					<param name="icon" value="daylight/icons/next.png"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onleft" value="600"/>
+					<param name="onright" value="704"/>
+					<param name="onright_if" value="Player.HasAudio"/>
+					<param name="onright2" value="602"/>
+					<param name="onright2_if" value="!Player.HasAudio"/>
+				</include>
+				<!-- divider -->
+				<control type="group">
+					<left>8</left>
+					<width>34</width>
+					<height>80</height>
+					<visible>Player.HasAudio</visible>
+					<control type="image">
+						<left>16</left>
+						<top>24</top>
+						<width>2</width>
+						<height>32</height>
+						<texture colordiffuse="$VAR[DL_Line2]">common/white.png</texture>
+					</control>
+				</control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="704"/>
+					<param name="width" value="164"/>
+					<param name="label" value="$VAR[NP_RepeatLabel]"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+					<param name="visible" value="Player.HasAudio"/>
+					<param name="onleft" value="605"/>
+					<param name="onright" value="607"/>
+				</include>
+				<control type="group"><width>2</width><height>10</height><visible>Player.HasAudio</visible></control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="607"/>
+					<param name="width" value="164"/>
+					<param name="label" value="$VAR[NP_ShuffleLabel]"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+					<param name="visible" value="Player.HasAudio"/>
+					<param name="onleft" value="704"/>
+					<param name="onright" value="602"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>

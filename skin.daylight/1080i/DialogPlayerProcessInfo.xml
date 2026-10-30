@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Player process info (M3, Builder D) - "is the Shield doing what I think?" panel: source video,
+	HDR type, decoder (HW/SW), pixel format, display mode + refresh rate, audio passthrough /
+	decoder, GUI fps, CPU / memory. One left column on a left scrim; the seek bar stays visible at
+	the bottom. Opened from the OSD "Player / Stats" button (Action(PlayerProcessInfo)) or Kodi's
+	PlayerProcessInfo key; OK, Back or the same key closes it.
+
+	Id contract: none hard-coded by Kodi (Estuary's 5550-5554 tab buttons are skin-only). 5553 is
+	kept as the focus holder so the modeless dialog receives OK/Back.
+-->
+<window>
+	<defaultcontrol always="true">5553</defaultcontrol>
+	<include content="Anim_SidePanel">
+		<param name="offset" value="-80"/>
+	</include>
+	<controls>
+		<control type="button" id="5553">
+			<description>focus holder: OK closes</description>
+			<include>DL_Hidden</include>
+			<onclick>Dialog.Close(playerprocessinfo)</onclick>
+			<onup>noop</onup>
+			<ondown>noop</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+		</control>
+
+		<!-- the stats card (panel colour), above the seek bar panel -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>120</top>
+			<width>960</width>
+			<height>700</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<include content="DL_Card">
+				<param name="color" value="$VAR[DL_Panel]"/>
+			</include>
+			<control type="label">
+				<left>40</left>
+				<top>32</top>
+				<width>880</width>
+				<height>30</height>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$LOCALIZE[31215]</label>
+			</control>
+			<control type="label">
+				<left>40</left>
+				<top>64</top>
+				<width>880</width>
+				<height>48</height>
+				<font>serif_34</font>
+				<label>$VAR[OSD_Title]</label>
+			</control>
+			<control type="label">
+				<left>40</left>
+				<top>648</top>
+				<width>880</width>
+				<height>30</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$LOCALIZE[31216]</label>
+			</control>
+		</control>
+
+		<control type="grouplist">
+			<left>160</left>
+			<top>250</top>
+			<width>880</width>
+			<height>520</height>
+			<orientation>vertical</orientation>
+			<!-- video -->
+			<include content="OSD_InfoRow">
+				<param name="key" value="Source"/>
+				<param name="value" value="$INFO[Player.Process(videowidth),,x]$INFO[Player.Process(videoheight)]$INFO[Player.Process(videoscantype)]$INFO[Player.Process(videofps),  ·  , fps]$INFO[Player.Process(videodar),  ·  , AR]"/>
+				<param name="visible" value="Player.HasVideo"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Dynamic range"/>
+				<param name="value" value="$VAR[OSD_DynamicRange]"/>
+				<param name="visible" value="Player.HasVideo"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Video"/>
+				<param name="value" value="$VAR[OSD_FlagVideoCodec]$INFO[VideoPlayer.VideoBitrate,  ·  , kb/s]"/>
+				<param name="visible" value="Player.HasVideo + !String.IsEmpty(VideoPlayer.VideoCodec)"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Decoder"/>
+				<param name="value" value="$INFO[Player.Process(videodecoder)]  ·  $VAR[OSD_DecoderType]"/>
+				<param name="visible" value="Player.HasVideo + !String.IsEmpty(Player.Process(videodecoder))"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Pixel format"/>
+				<param name="value" value="$INFO[Player.Process(pixformat)]"/>
+				<param name="visible" value="Player.HasVideo + !String.IsEmpty(Player.Process(pixformat))"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Deinterlace"/>
+				<param name="value" value="$INFO[Player.Process(deintmethod)]"/>
+				<param name="visible" value="Player.HasVideo + !String.IsEmpty(Player.Process(deintmethod))"/>
+			</include>
+			<!-- display -->
+			<include content="OSD_InfoRow">
+				<param name="key" value="Display"/>
+				<param name="value" value="$INFO[System.ScreenResolution]"/>
+			</include>
+			<!-- audio -->
+			<include content="OSD_InfoRow">
+				<param name="key" value="Audio"/>
+				<param name="value" value="$VAR[OSD_FlagAudio]$INFO[VideoPlayer.AudioLanguage,  ·  ,]$INFO[VideoPlayer.AudioBitrate,  ·  , kb/s]"/>
+				<param name="visible" value="Player.HasVideo + !String.IsEmpty(VideoPlayer.AudioCodec)"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Audio output"/>
+				<param name="value" value="$INFO[Player.Process(audiodecoder)]$INFO[Player.Process(audiochannels),  ·  ,]$INFO[Player.Process(audiosamplerate),  ·  , Hz]$INFO[Player.Process(audiobitspersample),  ·  , bit]"/>
+				<param name="visible" value="!String.IsEmpty(Player.Process(audiodecoder))"/>
+			</include>
+			<include content="OSD_InfoRow">
+				<param name="key" value="Subtitles"/>
+				<param name="value" value="$VAR[OSD_SubtitleValue]"/>
+				<param name="visible" value="Player.HasVideo"/>
+			</include>
+			<!-- system -->
+			<include content="OSD_InfoRow">
+				<param name="key" value="Interface"/>
+				<param name="value" value="$INFO[System.FPS,, fps]$INFO[System.CpuUsage,  ·  CPU ,]$INFO[System.Memory(used.percent),  ·  memory ,]"/>
+			</include>
+		</control>
+
+	</controls>
+</window>

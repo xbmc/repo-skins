@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Library panel (Custom_1160_LibraryPanel.xml) and view picker (Custom_1161_ViewPicker.xml): shared
+	variables and the picker card. docs/requests/library-panel/BRIEF.md.
+	Window(Home) properties:
+	  daylight.libmode   empty = the panel of the library underneath (Videos / Music window);
+	                     update / clean = opened from the System menu (choose Films and shows or Music)
+	  daylight.libclean  video / music = the Clean library confirmation is showing
+	Both are cleared when the panel closes.
+	Inside these dialogs Container.* (Content, Viewmode, SortMethod, ViewCount, PluginName) reads the
+	media window underneath; Control.IsVisible / Container(id) would look in the dialog itself.
+-->
+<includes>
+	<!-- Sets row (Library panel): films in the library (not inside a set already, not a plug-in folder) and the library has sets -->
+	<expression name="LibPanel_ShowSets">Window.IsActive(videos) + [Container.Content(movies) | String.IsEqual(Container.FolderPath,videodb://movies/) | String.IsEqual(Container.FolderPath,library://video/movies/)] + !String.StartsWith(Container.FolderPath,videodb://movies/sets/) + String.IsEmpty(Container.PluginName) + Library.HasContent(moviesets)</expression>
+	<variable name="LibPanel_Title">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.libclean))">Clean library?</value>
+		<value condition="String.IsEqual(Window(Home).Property(daylight.libmode),update)">Update library</value>
+		<value condition="String.IsEqual(Window(Home).Property(daylight.libmode),clean)">Clean library</value>
+		<value>Options</value>
+	</variable>
+	<variable name="LibPanel_Where">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.libmode)) | !String.IsEmpty(Window(Home).Property(daylight.libclean))"></value>
+		<value condition="Container.Content(movies) | Container.Content(sets) | String.StartsWith(Container.FolderPath,videodb://movies)">Films</value>
+		<value condition="Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | String.StartsWith(Container.FolderPath,videodb://tvshows)">Shows</value>
+		<value condition="Container.Content(musicvideos)">Music videos</value>
+		<value condition="Window.IsActive(music)">Music</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+	</variable>
+	<variable name="LibPanel_Unwatched">
+		<value condition="System.Setting(hidewatched)">On</value>
+		<value>Off</value>
+	</variable>
+	<variable name="LibPanel_Direction">
+		<value condition="Container.SortDirection(descending)">Descending</value>
+		<value>Ascending</value>
+	</variable>
+	<variable name="LibPanel_CleanText">
+		<value condition="String.IsEqual(Window(Home).Property(daylight.libclean),music)">Kodi takes out the songs, albums and artists it can no longer find. Your files stay where they are.</value>
+		<value>Kodi takes out the films, shows and episodes it can no longer find. Your files stay where they are.</value>
+	</variable>
+
+	<!-- view picker: "Current" under the view the library shows now (Container.Viewmode = viewtype label) -->
+	<variable name="Pick_Cur_Grid"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31312])">Current</value></variable>
+	<variable name="Pick_Cur_Wall"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31313])">Current</value></variable>
+	<variable name="Pick_Cur_Episodes"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31314])">Current</value></variable>
+	<variable name="Pick_Cur_Spotlight"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31320])">Current</value></variable>
+	<variable name="Pick_Cur_Wide"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31321])">Current</value></variable>
+	<variable name="Pick_Cur_Time"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31322])">Current</value></variable>
+	<variable name="Pick_Cur_Rows"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31329])">Current</value></variable>
+	<variable name="Pick_Cur_List"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[535])">Current</value></variable>
+
+	<!-- One preview: seven white-alpha layers tinted with the live mood colours
+	     (_src/make_view_previews.py), so it matches the page at any time of day. Icon = media/views/<name>. -->
+	<include name="Pick_Layers">
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Ground]">$INFO[ListItem.Property(prev)]_ground.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Surface]">$INFO[ListItem.Property(prev)]_surface.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Raised]">$INFO[ListItem.Property(prev)]_raised.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Ink]">$INFO[ListItem.Property(prev)]_ink.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Ink2]">$INFO[ListItem.Property(prev)]_ink2.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_Accent]">$INFO[ListItem.Property(prev)]_accent.png</texture></control>
+		<control type="image"><left>0</left><top>0</top><width>240</width><height>135</height><texture colordiffuse="$VAR[DL_OnAccent]">$INFO[ListItem.Property(prev)]_onaccent.png</texture></control>
+	</include>
+	<!-- One picker card: preview, name, accent dot + "Current". Focus = Daylight's accent ring + 6 %. -->
+	<include name="Pick_Item">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>20</left>
+				<top>24</top>
+				<width>240</width>
+				<height>135</height>
+				<animation type="Focus" reversible="true" condition="$PARAM[focused] + !$EXP[ReduceMotion]">
+					<effect type="zoom" start="100" end="106" center="auto" time="160" tween="cubic" easing="out"/>
+				</animation>
+				<!-- reduce motion: a time-0 Conditional, not a second Focus animation (Kodi resets only the first Focus on
+				     unfocus, so a time-0 twin stayed at 106 %; LESSONS, Groove device pass 2) -->
+				<animation effect="zoom" start="100" end="106" center="auto" time="0" condition="$PARAM[focused] + $EXP[ReduceMotion] + Control.HasFocus(100)">Conditional</animation>
+				<include>Pick_Layers</include>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="14"/>
+					<param name="visible" value="Control.HasFocus(100)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>174</top>
+				<width>240</width>
+				<height>34</height>
+				<font>ui_25_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<selectedcolor>$VAR[DL_Ink2]</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(100)</visible>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>174</top>
+				<width>240</width>
+				<height>34</height>
+				<font>ui_25_bold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<selectedcolor>$VAR[DL_Ink]</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(100)</visible>
+			</control>
+			<control type="image">
+				<left>21</left>
+				<top>222</top>
+				<width>12</width>
+				<height>12</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+				<visible>!String.IsEmpty(ListItem.Label2)</visible>
+			</control>
+			<control type="label">
+				<left>42</left>
+				<top>214</top>
+				<width>220</width>
+				<height>28</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<selectedcolor>$VAR[DL_AccentText]</selectedcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+</includes>

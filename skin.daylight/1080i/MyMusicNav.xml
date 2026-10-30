@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library (Daylight). Layout and ids: Includes_Views_Music.xml.
+	Kodi id contract (Estuary Omega MyMusicNav.xml / GUIWindowMusicNav.cpp): views in <views>, menucontrol
+	9000, 3 sort by, 4 sort order (hidden). Reserved by Kodi and not reused: 2, 5, 8, 12, 15, 16, 17, 19, 20.
+	Focus map: nav 9400 -Down-> header 9000 (tabs 9001 / pills 9002) -Down-> view. Back is Kodi's.
+	Tabs (0.9.2) swap the window with ReplaceWindow(Music,<node>,return): the tab becomes the start
+	folder and the window history stays Home > Music, so one Back from any tab returns Home (with
+	Container.Update every tab hop added a Back step). The tab sets daylight.musictab so focus comes
+	back to it after the swap.
+-->
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<onload condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating">SetFocus(9000)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(daylight.musictab),9320)">SetFocus(9320)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(daylight.musictab),9321)">SetFocus(9321)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(daylight.musictab),9322)">SetFocus(9322)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(daylight.musictab),9323)">SetFocus(9323)</onload>
+	<onload>ClearProperty(daylight.musictab,home)</onload>
+	<onload condition="$EXP[DL_ArtColourOn] + !Skin.HasSetting(TMDbHelper.EnableColors)">Skin.SetBool(TMDbHelper.EnableColors)</onload>
+	<onload condition="$EXP[DL_ArtColourOn]">Skin.SetString(TMDbHelper.Colors.Luminance,$VAR[DL_ColorLum])</onload>
+	<onload condition="$EXP[DL_ArtColourOn]">Skin.SetString(TMDbHelper.Colors.Saturation,$VAR[DL_ColorSat])</onload>
+	<onload condition="$EXP[DL_ArtColourOn]">SetProperty(TMDbHelper.Colors.SourceImage,Art(thumb)||Art(album.thumb)||Art(fanart),home)</onload>
+	<backgroundcolor>ff000000</backgroundcolor>
+	<views>504,508,507,50</views>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>DL_Background</include>
+		<control type="group">
+			<left>vv_card_x</left>
+			<top>vv_top</top>
+			<width>vv_card_w</width>
+			<height>vv_card_h</height>
+			<visible>!$EXP[MusicView_Wide]</visible>
+			<include>DL_Card</include>
+		</control>
+		<!-- 0.9.15: Wall / Spotlight span the page -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>vv_top</top>
+			<width>page_width</width>
+			<height>vv_card_h</height>
+			<visible>$EXP[MusicView_Wide]</visible>
+			<include>DL_Card</include>
+		</control>
+		<include>MusicView_Detail</include>
+		<include>Music_View_504</include>
+		<include>Music_View_508</include>
+		<include>Music_View_507</include>
+		<include>Music_View_50</include>
+		<control type="image">
+			<left>vv_card_x</left>
+			<top>866</top>
+			<width>vv_card_w</width>
+			<height>150</height>
+			<texture diffuse="daylight/mask_fade_card.png" colordiffuse="$VAR[DL_Surface]">daylight/fade_bottom_150.png</texture>
+			<visible>!$EXP[MusicView_Wide]</visible>
+		</control>
+		<control type="image">
+			<left>page_margin</left>
+			<top>866</top>
+			<width>page_width</width>
+			<height>150</height>
+			<texture diffuse="daylight/mask_fade_wide.png" colordiffuse="$VAR[DL_Surface]">daylight/fade_bottom_150.png</texture>
+			<visible>Control.IsVisible(508)</visible>
+		</control>
+		<!-- empty folder -->
+		<control type="group">
+			<left>720</left>
+			<top>300</top>
+			<width>1040</width>
+			<height>120</height>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<!-- audit 2026-10-30: the ".." row of List and the ".." tile of Grid sat on the message -->
+			<animation effect="slide" start="0,0" end="0,90" time="0" condition="Container.HasParent + Control.IsVisible(50)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,300" time="0" condition="Container.HasParent + Control.IsVisible(504)">Conditional</animation>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1040</width>
+				<height>48</height>
+				<font>serif_34</font>
+				<label>$LOCALIZE[31230]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>60</top>
+				<width>1040</width>
+				<height>34</height>
+				<font>ui_24</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$LOCALIZE[31248]</label>
+			</control>
+		</control>
+		<include>MusicView_Header</include>
+		<include content="DL_LibraryTopLine">
+			<param name="gid" value="9400"/>
+			<param name="p" value="940"/>
+			<param name="ondown" value="9000"/>
+			<param name="active4" value="true"/>
+			<param name="options" value="true"/>
+		</include>
+	</controls>
+</window>

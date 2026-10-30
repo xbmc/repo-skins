@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Fullscreen info - info on demand during playback (Daylight): the OSD's rounded panel, taller, with
+	the plot and "Next" in place of the buttons. Title row + bedtime line, 3-line plot, media flags +
+	next item, progress row. Opened by Kodi's Info action in fullscreen video and by the OSD "Info" pill;
+	Info again or Back closes it (GUIDialogFullScreenInfo.cpp).
+
+	Id contract (Estuary Omega DialogFullScreenInfo.xml): 999 = full-screen invisible focus button
+	(default, always): Left/Right step seek, Up/Down chapter or big step, OK opens the OSD.
+-->
+<window>
+	<include>DLOSD_BedTickOnload</include>
+	<defaultcontrol always="true">999</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="button" id="999">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<label></label>
+			<texturefocus />
+			<onright>StepForward</onright>
+			<onleft>StepBack</onleft>
+			<onup>ChapterOrBigStepForward</onup>
+			<ondown>ChapterOrBigStepBack</ondown>
+			<onclick>OSD</onclick>
+		</control>
+		<control type="group">
+			<visible>!Window.IsVisible(sliderdialog) + !Window.IsVisible(selectdialog) + !Window.IsVisible(osdsubtitlesettings) + !Window.IsVisible(osdaudiosettings) + !Window.IsVisible(osdvideosettings)</visible>
+			<include>DLOSD_Scrims</include>
+			<include>DL_MoodLine</include>
+			<include>DL_ClockOnly</include>
+			<include content="DLOSD_Panel">
+				<param name="top" value="590"/>
+				<param name="height" value="426"/>
+			</include>
+			<include content="DLOSD_TitleRow">
+				<param name="top" value="626"/>
+			</include>
+			<!-- plot, 3 lines exactly -->
+			<control type="textbox">
+				<left>268</left>
+				<top>756</top>
+				<width>1484</width>
+				<height>108</height>
+				<font>body_24</font>
+				<label>$INFO[VideoPlayer.Plot]</label>
+				<autoscroll delay="6000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+			<!-- flags (left) + next item (right) -->
+			<control type="grouplist">
+				<left>268</left>
+				<top>880</top>
+				<width>900</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<itemgap>8</itemgap>
+				<include content="DLOSD_Flag">
+					<param name="label" value="$VAR[OSD_FlagResolution]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoResolution)"/>
+				</include>
+				<include content="DLOSD_Flag">
+					<param name="label" value="$VAR[OSD_FlagHDR]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.HdrType)"/>
+				</include>
+				<include content="DLOSD_Flag">
+					<param name="label" value="$VAR[OSD_FlagVideoCodec]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoCodec)"/>
+				</include>
+				<include content="DLOSD_Flag">
+					<param name="label" value="$VAR[OSD_FlagAudio]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.AudioCodec)"/>
+				</include>
+			</control>
+			<control type="grouplist">
+				<left>1000</left>
+				<top>880</top>
+				<width>752</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>12</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<visible>$EXP[OSD_HasNext]</visible>
+				<control type="image">
+					<top>8</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">daylight/icons/nextup.png</texture>
+				</control>
+				<control type="label">
+					<width max="700">auto</width>
+					<height>40</height>
+					<font>ui_22_semibold</font>
+					<label>Next  ·  $VAR[OSD_NextLabel]</label>
+				</control>
+			</control>
+			<include content="DLOSD_ProgressRow">
+				<param name="top" value="950"/>
+			</include>
+			<include content="DLOSD_Bubble">
+				<param name="top" value="904"/>
+				<param name="visible" value="$EXP[OSD_SeekActive] + Player.SeekEnabled"/>
+			</include>
+		</control>
+	</controls>
+</window>

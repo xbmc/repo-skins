@@ -1,0 +1,965 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	DialogVideoInfo pieces (Daylight): a big hero card (poster, title, meta, buttons, fanart fading in
+	from the right), a Story card and a When-to-watch card underneath, the cast on a second "page".
+	Shared labels: Includes_Views_Video.xml (VidView_*). Prefix VidInfo_.
+-->
+<includes>
+	<!-- Collection button (0.9.2 Back audit): inside the library the set opens in place (one Back returns
+	     to the grid); from Home it opens the library window with return (one Back returns Home). Opening it
+	     with ActivateWindow from the library left Back walking up through videodb nodes. -->
+	<variable name="VidInfo_CollectionAction">
+		<value condition="Window.IsActive(Videos)">Container.Update(videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId])</value>
+		<value>ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId],return)</value>
+	</variable>
+	<!-- ================================================================== variables -->
+	<variable name="VidInfo_Kicker">
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]$INFO[ListItem.TVShowTitle,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.TVShowTitle]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">TV show$INFO[ListItem.Studio,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Collection$VAR[PL_Total_Film]</value>
+		<value condition="!String.IsEmpty(ListItem.Set)">Film  ·  $INFO[ListItem.Set]</value>
+		<value>$VAR[VidView_Status]$INFO[ListItem.Studio,  ·  ,]</value>
+	</variable>
+	<variable name="VidInfo_Title">
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="VidInfo_Poster">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="VidInfo_Fanart">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.fanart))">$INFO[ListItem.Art(tvshow.fanart)]</value>
+		<value>$INFO[ListItem.Art(landscape)]</value>
+	</variable>
+	<variable name="VidInfo_EndLine">
+		<value condition="ListItem.IsResumable">Resume now: done by $INFO[ListItem.EndTimeResume]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">Start now: ends $INFO[ListItem.EndTime]</value>
+	</variable>
+	<variable name="VidInfo_CastHeader">
+		<value condition="String.IsEqual(ListItem.DBType,set)">Films in this collection</value>
+		<value>Cast</value>
+	</variable>
+	<variable name="VidInfo_CastCount">
+		<value condition="String.IsEqual(ListItem.DBType,set)">$VAR[PL_Container_50_NumItems_Film]</value>
+		<value>$VAR[PL_Container_50_NumItems_Person]</value>
+	</variable>
+	<variable name="VidInfo_Hint">
+		<value condition="Control.HasFocus(9001)">OK reads the whole story</value>
+		<value condition="ControlGroup(9100).HasFocus()">Up or Back returns to the buttons</value>
+		<value condition="Integer.IsGreater(Container(50).NumItems,0)">Down for $VAR[VidInfo_CastHeaderLower]</value>
+	</variable>
+	<variable name="VidInfo_CastHeaderLower">
+		<value condition="String.IsEqual(ListItem.DBType,set)">the films</value>
+		<value>the cast</value>
+	</variable>
+	<variable name="VidInfo_CastArt">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="VidInfo_CastLine2">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Year]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+	<!-- media flags (values checked against reference skins) -->
+	<variable name="VidInfo_FlagRes">
+		<value condition="String.IsEqual(ListItem.VideoResolution,8K)">8K</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,4K) | String.IsEqual(ListItem.VideoResolution,2160)">4K</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,1080)">1080p</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,720)">720p</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,576) | String.IsEqual(ListItem.VideoResolution,540) | String.IsEqual(ListItem.VideoResolution,480)">SD</value>
+		<value>$INFO[ListItem.VideoResolution]</value>
+	</variable>
+	<variable name="VidInfo_FlagHDR">
+		<value condition="String.IsEqual(ListItem.HdrType,dolbyvision)">Dolby Vision</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hdr10)">HDR10</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hlg)">HLG</value>
+		<value>$INFO[ListItem.HdrType]</value>
+	</variable>
+	<variable name="VidInfo_FlagVideo">
+		<value condition="String.IsEqual(ListItem.VideoCodec,hevc) | String.IsEqual(ListItem.VideoCodec,h265) | String.IsEqual(ListItem.VideoCodec,hev1) | String.IsEqual(ListItem.VideoCodec,hvc1)">HEVC</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,h264) | String.IsEqual(ListItem.VideoCodec,avc1) | String.IsEqual(ListItem.VideoCodec,avc)">H.264</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,av1)">AV1</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,mpeg2video) | String.IsEqual(ListItem.VideoCodec,mpeg2)">MPEG-2</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,vc1) | String.IsEqual(ListItem.VideoCodec,wvc1) | String.IsEqual(ListItem.VideoCodec,vc-1)">VC-1</value>
+		<value>$INFO[ListItem.VideoCodec]</value>
+	</variable>
+	<variable name="VidInfo_AudioCodec">
+		<value condition="String.IsEqual(ListItem.AudioCodec,truehd_atmos)">TrueHD Atmos</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,truehd)">TrueHD</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,eac3_ddp_atmos)">DD+ Atmos</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,eac3)">DD+</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,ac3) | String.IsEqual(ListItem.AudioCodec,dolbydigital)">Dolby Digital</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,dtshd_ma_x) | String.IsEqual(ListItem.AudioCodec,dtshd_ma_x_imax)">DTS:X</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,dtshd_ma) | String.IsEqual(ListItem.AudioCodec,dtsma)">DTS-HD MA</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,dtshd_hra)">DTS-HD HRA</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,dts) | String.IsEqual(ListItem.AudioCodec,dca)">DTS</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,aac) | String.StartsWith(ListItem.AudioCodec,he_aac)">AAC</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,pcm)">PCM</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,mp3)">MP3</value>
+		<value>$INFO[ListItem.AudioCodec]</value>
+	</variable>
+	<variable name="VidInfo_AudioChannels">
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,8)"> 7.1</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,7)"> 6.1</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,6)"> 5.1</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,3)"> 2.1</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,2)"> 2.0</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,1)"> 1.0</value>
+	</variable>
+
+	<!-- ==================================================================== buttons -->
+	<expression name="VidInfo_ShowResume">Control.IsEnabled(9) + !$EXP[VidView_IsFolderType]</expression>
+	<expression name="VidInfo_ShowPlay">!Control.IsEnabled(9) + !$EXP[VidView_IsFolderType]</expression>
+	<expression name="VidInfo_ShowTrailer">$EXP[ShowTrailerButton] + !String.IsEmpty(ListItem.Trailer)</expression>
+	<!-- shared nav for buttons in the row. params: left1..left4 (+ _if), right1..right2 (+ _if) -->
+	<include name="VidInfo_ButtonNav">
+		<param name="left1">noop</param>
+		<param name="left1_if">false</param>
+		<param name="left2">noop</param>
+		<param name="left2_if">false</param>
+		<param name="left3">noop</param>
+		<param name="left3_if">false</param>
+		<param name="left4">noop</param>
+		<param name="left4_if">false</param>
+		<param name="right1">noop</param>
+		<param name="right1_if">false</param>
+		<param name="right2">noop</param>
+		<param name="right2_if">false</param>
+		<param name="down1">9001</param>
+		<param name="down2">50</param>
+		<definition>
+			<onleft condition="$PARAM[left1_if]">$PARAM[left1]</onleft>
+			<onleft condition="$PARAM[left2_if]">$PARAM[left2]</onleft>
+			<onleft condition="$PARAM[left3_if]">$PARAM[left3]</onleft>
+			<onleft condition="$PARAM[left4_if]">$PARAM[left4]</onleft>
+			<onright condition="$PARAM[right1_if]">$PARAM[right1]</onright>
+			<onright condition="$PARAM[right2_if]">$PARAM[right2]</onright>
+			<onup>noop</onup>
+			<ondown condition="Control.IsVisible($PARAM[down1])">$PARAM[down1]</ondown>
+			<ondown condition="!Control.IsVisible($PARAM[down1]) + Control.IsVisible($PARAM[down2])">$PARAM[down2]</ondown>
+		</definition>
+	</include>
+	<!-- Pill button in the row (group padded 24 px for the halo). params: id, width, label, icon
+	     (empty = centred text), onclick, visible + nav -->
+	<include name="VidInfo_Button">
+		<param name="icon"></param>
+		<param name="text_x">56</param>
+		<param name="align">left</param>
+		<param name="onclick">noop</param>
+		<param name="visible">true</param>
+		<param name="left1">noop</param>
+		<param name="left1_if">false</param>
+		<param name="left2">noop</param>
+		<param name="left2_if">false</param>
+		<param name="left3">noop</param>
+		<param name="left3_if">false</param>
+		<param name="left4">noop</param>
+		<param name="left4_if">false</param>
+		<param name="right1">noop</param>
+		<param name="right1_if">false</param>
+		<param name="right2">noop</param>
+		<param name="right2_if">false</param>
+		<param name="down1">9001</param>
+		<param name="down2">50</param>
+		<param name="onclick2">noop</param>
+		<definition>
+			<control type="group">
+				<left>24</left>
+				<top>24</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<animation type="Conditional" condition="Control.HasFocus($PARAM[id]) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="105" center="auto" time="160" tween="cubic" easing="out"/>
+				</animation>
+				<control type="group">
+					<visible>Control.HasFocus($PARAM[id])</visible>
+					<include>DL_PillHalo</include>
+				</control>
+				<control type="button" id="$PARAM[id]">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>button_h</height>
+					<label></label>
+					<textcolor>00ffffff</textcolor>
+					<focusedcolor>00ffffff</focusedcolor>
+					<disabledcolor>00ffffff</disabledcolor>
+					<include>DL_Tex_ButtonPrimary</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<include content="VidInfo_ButtonNav">
+						<param name="left1" value="$PARAM[left1]"/>
+						<param name="left1_if" value="$PARAM[left1_if]"/>
+						<param name="left2" value="$PARAM[left2]"/>
+						<param name="left2_if" value="$PARAM[left2_if]"/>
+						<param name="left3" value="$PARAM[left3]"/>
+						<param name="left3_if" value="$PARAM[left3_if]"/>
+						<param name="left4" value="$PARAM[left4]"/>
+						<param name="left4_if" value="$PARAM[left4_if]"/>
+						<param name="right1" value="$PARAM[right1]"/>
+						<param name="right1_if" value="$PARAM[right1_if]"/>
+						<param name="right2" value="$PARAM[right2]"/>
+						<param name="right2_if" value="$PARAM[right2_if]"/>
+						<param name="down1" value="$PARAM[down1]"/>
+						<param name="down2" value="$PARAM[down2]"/>
+					</include>
+				</control>
+				<control type="image">
+					<left>24</left>
+					<top>17</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="$VAR[DL_OnAccent]">$PARAM[icon]</texture>
+					<visible>Control.HasFocus($PARAM[id])</visible>
+				</control>
+				<control type="image">
+					<left>24</left>
+					<top>17</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="$VAR[DL_Ink]">$PARAM[icon]</texture>
+					<visible>!Control.HasFocus($PARAM[id])</visible>
+				</control>
+				<control type="label">
+					<left>$PARAM[text_x]</left>
+					<top>0</top>
+					<right>20</right>
+					<height>button_h</height>
+					<align>$PARAM[align]</align>
+					<font>button_22</font>
+					<textcolor>$VAR[DL_OnAccent]</textcolor>
+					<label>$PARAM[label]</label>
+					<visible>Control.HasFocus($PARAM[id])</visible>
+				</control>
+				<control type="label">
+					<left>$PARAM[text_x]</left>
+					<top>0</top>
+					<right>20</right>
+					<height>button_h</height>
+					<align>$PARAM[align]</align>
+					<font>button_22</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$PARAM[label]</label>
+					<visible>!Control.HasFocus($PARAM[id])</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- "More" row pill. params: id, label, onclick, onclick2, visible -->
+	<include name="VidInfo_MoreButton">
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<include>VidView_PillLook</include>
+				<height>44</height>
+				<font>ui_22_semibold</font>
+				<texturefocus border="22,0,22,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_44.png</texturefocus>
+				<texturenofocus border="22,0,22,0" colordiffuse="$VAR[DL_Ground]">daylight/pill_44.png</texturenofocus>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- media flag pill (enabled, never navigated to). params: label, visible -->
+	<include name="VidInfo_Flag">
+		<param name="visible">true</param>
+		<definition>
+			<control type="button">
+				<width>auto</width>
+				<height>40</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<focusedcolor>$VAR[DL_Ink2]</focusedcolor>
+				<textoffsetx>16</textoffsetx>
+				<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Line2]">daylight/pill_40_line.png</texturefocus>
+				<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Line2]">daylight/pill_40_line.png</texturenofocus>
+				<label>$PARAM[label]</label>
+				<onup>9000</onup>
+				<ondown>9000</ondown>
+				<onleft>9000</onleft>
+				<onright>9000</onright>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ page sections -->
+	<!-- Hero card: art, poster, kicker, title, meta, buttons -->
+	<include name="VidInfo_Hero">
+		<control type="group">
+			<left>page_margin</left>
+			<top>168</top>
+			<width>page_width</width>
+			<height>520</height>
+			<include>DL_Card</include>
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>520</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<include>Anim_BackgroundCrossfade</include>
+				<texture background="true" diffuse="daylight/mask_hero_tall.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[VidInfo_Fanart]</texture>
+			</control>
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>520</height>
+				<texture colordiffuse="$VAR[DL_Surface]">daylight/hero_fade.png</texture>
+			</control>
+			<!-- poster -->
+			<control type="group">
+				<left>48</left>
+				<top>65</top>
+				<width>260</width>
+				<height>390</height>
+				<control type="image">
+					<left>-120</left>
+					<top>-90</top>
+					<right>-120</right>
+					<bottom>-150</bottom>
+					<texture border="120" colordiffuse="$VAR[DL_Shadow]">daylight/card_shadow.png</texture>
+				</control>
+				<include content="VidView_ArtFallback">
+					<param name="mask" value="daylight/mask_poster_info.png"/>
+					<param name="label" value="$VAR[VidInfo_Title]"/>
+					<param name="label_visible" value="String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster)) + String.IsEmpty(ListItem.Art(thumb))"/>
+				</include>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidInfo_Poster]"/>
+					<param name="mask" value="daylight/mask_poster_info.png"/>
+					<param name="fade" value="160"/>
+				</include>
+			</control>
+			<!-- text column -->
+			<control type="group">
+				<left>352</left>
+				<top>56</top>
+				<width>700</width>
+				<height>340</height>
+				<control type="image">
+					<left>0</left>
+					<top>9</top>
+					<width>10</width>
+					<height>10</height>
+					<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+				</control>
+				<control type="label">
+					<left>20</left>
+					<top>0</top>
+					<width>680</width>
+					<height>28</height>
+					<font>ui_22_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[VidInfo_Kicker]</label>
+				</control>
+				<control type="grouplist">
+					<left>0</left>
+					<top>40</top>
+					<width>700</width>
+					<height>300</height>
+					<orientation>vertical</orientation>
+					<itemgap>0</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<!-- measuring copy (transparent): the meta follows a 1- or 2-line title -->
+					<include content="T_VidInfo_Measure">
+						<param name="label" value="$VAR[VidInfo_Title]"/>
+					</include>
+					<control type="image"><width>10</width><height>16</height><texture></texture></control>
+					<control type="grouplist">
+						<width>700</width>
+						<height>34</height>
+						<orientation>horizontal</orientation>
+						<itemgap>10</itemgap>
+						<usecontrolcoords>true</usecontrolcoords>
+						<control type="label">
+							<width max="520">auto</width>
+							<height>34</height>
+							<font>ui_24_semibold</font>
+							<textcolor>$VAR[DL_Ink]</textcolor>
+							<label>$VAR[VidView_MetaLeft]</label>
+						</control>
+						<control type="label">
+							<width>auto</width>
+							<height>34</height>
+							<font>ui_24_semibold</font>
+							<textcolor>$VAR[DL_Ink2]</textcolor>
+							<label>·</label>
+							<visible>$EXP[VidView_HasRating]</visible>
+						</control>
+						<control type="image">
+							<top>6</top>
+							<width>22</width>
+							<height>22</height>
+							<texture colordiffuse="$VAR[DL_Accent]">daylight/icons/star.png</texture>
+							<visible>$EXP[VidView_HasRating]</visible>
+						</control>
+						<control type="label">
+							<width>auto</width>
+							<height>34</height>
+							<font>ui_24_semibold</font>
+							<textcolor>$VAR[DL_Ink]</textcolor>
+							<label>$INFO[ListItem.Rating]</label>
+							<visible>$EXP[VidView_HasRating]</visible>
+						</control>
+					</control>
+					<control type="label">
+						<width>700</width>
+						<height>32</height>
+						<font>ui_22</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$INFO[ListItem.Genre]</label>
+					</control>
+					<control type="image"><width>10</width><height>10</height><texture></texture></control>
+					<control type="grouplist">
+						<width>700</width>
+						<height>32</height>
+						<orientation>horizontal</orientation>
+						<itemgap>10</itemgap>
+						<usecontrolcoords>true</usecontrolcoords>
+						<visible>!String.IsEmpty(ListItem.Duration)</visible>
+						<control type="label">
+							<width max="420">auto</width>
+							<height>32</height>
+							<font>ui_22</font>
+							<textcolor>$VAR[DL_Ink2]</textcolor>
+							<label>$VAR[VidInfo_EndLine]</label>
+						</control>
+						<control type="image">
+							<top>5</top>
+							<width>22</width>
+							<height>22</height>
+							<texture colordiffuse="$VAR[DL_AccentText]">daylight/icons/check.png</texture>
+							<visible>$EXP[DL_ItemFits]</visible>
+						</control>
+						<control type="label">
+							<width max="300">auto</width>
+							<height>32</height>
+							<font>ui_22_semibold</font>
+							<textcolor>$VAR[DL_AccentText]</textcolor>
+							<label>fits before $VAR[DL_BedWord]</label>
+							<visible>$EXP[DL_ItemFits]</visible>
+						</control>
+					</control>
+				</control>
+				<!-- visible title, unclipped -->
+				<control type="group">
+					<left>0</left>
+					<top>40</top>
+					<width>700</width>
+					<include content="T_VidInfo_Title">
+						<param name="label" value="$VAR[VidInfo_Title]"/>
+						<param name="color" value="$VAR[DL_Ink]"/>
+					</include>
+				</control>
+			</control>
+			<include>VidInfo_Buttons</include>
+		</control>
+	</include>
+
+	<!-- Buttons (inside the hero card, y 420 card-local). Kodi ids: 8 play (from the beginning when 9
+	     exists), 9 resume, 11 trailer. Browse (tvshow/season/set) and From start re-send 8. -->
+	<include name="VidInfo_Buttons">
+		<control type="grouplist" id="9000">
+			<left>328</left>
+			<top>396</top>
+			<width>1300</width>
+			<height>104</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>-4</itemgap>
+			<onup>noop</onup>
+			<ondown condition="Control.IsVisible(9001)">9001</ondown>
+			<ondown condition="!Control.IsVisible(9001) + Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<include content="VidInfo_Button">
+				<param name="id" value="9"/>
+				<param name="width" value="160"/>
+				<param name="label" value="Resume"/>
+				<param name="icon" value="daylight/icons/play.png"/>
+				<param name="visible" value="$EXP[VidInfo_ShowResume]"/>
+				<param name="right1" value="9013"/>
+				<param name="right1_if" value="true"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="8"/>
+				<param name="width" value="140"/>
+				<param name="label" value="Play"/>
+				<param name="icon" value="daylight/icons/play.png"/>
+				<param name="visible" value="$EXP[VidInfo_ShowPlay]"/>
+				<param name="right1" value="11"/>
+				<param name="right1_if" value="$EXP[VidInfo_ShowTrailer]"/>
+				<param name="right2" value="9010"/>
+				<param name="right2_if" value="!$EXP[VidInfo_ShowTrailer]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9013"/>
+				<param name="width" value="160"/>
+				<param name="label" value="From start"/>
+				<param name="text_x" value="20"/>
+				<param name="align" value="center"/>
+				<param name="onclick" value="SendClick(8)"/>
+				<param name="visible" value="$EXP[VidInfo_ShowResume]"/>
+				<param name="left1" value="9"/>
+				<param name="left1_if" value="true"/>
+				<param name="right1" value="11"/>
+				<param name="right1_if" value="$EXP[VidInfo_ShowTrailer]"/>
+				<param name="right2" value="9010"/>
+				<param name="right2_if" value="!$EXP[VidInfo_ShowTrailer]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9012"/>
+				<param name="width" value="160"/>
+				<param name="label" value="Browse"/>
+				<param name="icon" value="daylight/icons/chevron_right.png"/>
+				<param name="onclick" value="SendClick(8)"/>
+				<param name="visible" value="$EXP[VidView_IsFolderType]"/>
+				<param name="right1" value="11"/>
+				<param name="right1_if" value="$EXP[VidInfo_ShowTrailer]"/>
+				<param name="right2" value="9010"/>
+				<param name="right2_if" value="!$EXP[VidInfo_ShowTrailer]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="11"/>
+				<param name="width" value="123"/>
+				<param name="label" value="Trailer"/>
+				<param name="text_x" value="20"/>
+				<param name="align" value="center"/>
+				<param name="visible" value="$EXP[VidInfo_ShowTrailer]"/>
+				<param name="left1" value="9013"/>
+				<param name="left1_if" value="$EXP[VidInfo_ShowResume]"/>
+				<param name="left2" value="8"/>
+				<param name="left2_if" value="$EXP[VidInfo_ShowPlay]"/>
+				<param name="left3" value="9012"/>
+				<param name="left3_if" value="$EXP[VidView_IsFolderType]"/>
+				<param name="right1" value="9010"/>
+				<param name="right1_if" value="true"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9010"/>
+				<param name="width" value="111"/>
+				<param name="label" value="More"/>
+				<param name="text_x" value="20"/>
+				<param name="align" value="center"/>
+				<param name="onclick" value="SetFocus(9100)"/>
+				<param name="left1" value="11"/>
+				<param name="left1_if" value="$EXP[VidInfo_ShowTrailer]"/>
+				<param name="left2" value="9013"/>
+				<param name="left2_if" value="!$EXP[VidInfo_ShowTrailer] + $EXP[VidInfo_ShowResume]"/>
+				<param name="left3" value="8"/>
+				<param name="left3_if" value="!$EXP[VidInfo_ShowTrailer] + $EXP[VidInfo_ShowPlay]"/>
+				<param name="left4" value="9012"/>
+				<param name="left4_if" value="!$EXP[VidInfo_ShowTrailer] + $EXP[VidView_IsFolderType]"/>
+			</include>
+		</control>
+	</include>
+
+	<!-- Story card (OK = full plot) + When-to-watch / progress card -->
+	<include name="VidInfo_LowerCards">
+		<control type="group">
+			<visible>!ControlGroup(9100).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- story -->
+			<control type="group">
+				<left>page_margin</left>
+				<top>724</top>
+				<width>1040</width>
+				<height>292</height>
+				<include>DL_Card</include>
+				<include content="DL_FocusRing">
+					<param name="r" value="28"/>
+					<param name="gap" value="$VAR[DL_Ground]"/>
+					<param name="visible" value="Control.HasFocus(9001)"/>
+				</include>
+				<control type="label">
+					<left>40</left>
+					<top>28</top>
+					<width>600</width>
+					<height>36</height>
+					<font>serif_28</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[VidInfo_StoryTitle]</label>
+				</control>
+				<control type="label">
+					<left>640</left>
+					<top>28</top>
+					<width>360</width>
+					<height>36</height>
+					<align>right</align>
+					<font>small_20_semibold</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[VidInfo_Hint]</label>
+				</control>
+				<control type="textbox">
+					<left>40</left>
+					<top>80</top>
+					<width>960</width>
+					<height>180</height>
+					<font>body_24</font>
+					<textcolor>$VAR[DL_Body]</textcolor>
+					<label>$VAR[VidInfo_Story]</label>
+					<autoscroll delay="8000" time="3000" repeat="10000">!Control.HasFocus(9001)</autoscroll>
+				</control>
+				<control type="button" id="9001">
+					<description>story: OK opens the full plot</description>
+					<left>0</left>
+					<top>0</top>
+					<width>1040</width>
+					<height>292</height>
+					<label></label>
+					<texturefocus />
+					<texturenofocus />
+					<onup>9000</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onclick>SetFocus(61)</onclick>
+					<visible>!String.IsEmpty(ListItem.Plot)</visible>
+				</control>
+			</control>
+			<!-- when to watch / progress + flags -->
+			<control type="group">
+				<left>1196</left>
+				<top>724</top>
+				<width>604</width>
+				<height>292</height>
+				<include>DL_Card</include>
+				<control type="image">
+					<left>36</left>
+					<top>32</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">$VAR[VidView_WhenIcon]</texture>
+				</control>
+				<control type="label">
+					<left>70</left>
+					<top>28</top>
+					<width>500</width>
+					<height>32</height>
+					<font>small_20_bold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[VidView_WhenHeading]</label>
+				</control>
+				<control type="label">
+					<left>36</left>
+					<top>70</top>
+					<width>540</width>
+					<height>42</height>
+					<font>serif_30</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[VidView_WhenBig]</label>
+				</control>
+				<control type="textbox">
+					<left>36</left>
+					<top>118</top>
+					<width>540</width>
+					<height>62</height>
+					<font>ui_22_reg</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[VidView_WhenSmall]</label>
+				</control>
+				<control type="progress">
+					<left>36</left>
+					<top>162</top>
+					<width>532</width>
+					<height>8</height>
+					<texturebg border="4,0,4,0" colordiffuse="$VAR[DL_Line]">daylight/track_8.png</texturebg>
+					<midtexture border="4,0,4,0" colordiffuse="$VAR[DL_Accent]">daylight/track_8.png</midtexture>
+					<info>ListItem.Property(WatchedEpisodePercent)</info>
+					<visible>$EXP[VidView_IsTVType]</visible>
+				</control>
+				<control type="grouplist">
+					<left>36</left>
+					<top>220</top>
+					<width>540</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<itemgap>8</itemgap>
+					<include content="VidInfo_Flag">
+						<param name="label" value="$VAR[VidInfo_FlagRes]"/>
+						<param name="visible" value="!String.IsEmpty(ListItem.VideoResolution)"/>
+					</include>
+					<include content="VidInfo_Flag">
+						<param name="label" value="$VAR[VidInfo_FlagHDR]"/>
+						<param name="visible" value="!String.IsEmpty(ListItem.HdrType)"/>
+					</include>
+					<include content="VidInfo_Flag">
+						<param name="label" value="$VAR[VidInfo_FlagVideo]"/>
+						<param name="visible" value="!String.IsEmpty(ListItem.VideoCodec)"/>
+					</include>
+					<include content="VidInfo_Flag">
+						<param name="label" value="$VAR[VidInfo_AudioCodec]$VAR[VidInfo_AudioChannels]"/>
+						<param name="visible" value="!String.IsEmpty(ListItem.AudioCodec)"/>
+					</include>
+				</control>
+			</control>
+		</control>
+	</include>
+	<variable name="VidInfo_StoryTitle">
+		<value condition="!String.IsEmpty(ListItem.Tagline)">$INFO[ListItem.Tagline]</value>
+		<value>Story</value>
+	</variable>
+	<variable name="VidInfo_Story">
+		<value condition="!String.IsEmpty(ListItem.Plot)">$INFO[ListItem.Plot]</value>
+		<value>No story written for this one yet.</value>
+	</variable>
+
+	<!-- More row: Kodi's own info-dialog buttons (ids per Estuary Omega / CGUIDialogVideoInfo) -->
+	<include name="VidInfo_MoreRow">
+		<control type="group">
+			<left>page_margin</left>
+			<top>724</top>
+			<width>page_width</width>
+			<height>200</height>
+			<visible>ControlGroup(9100).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<include>DL_Card</include>
+			<control type="label">
+				<left>40</left>
+				<top>28</top>
+				<width>800</width>
+				<height>36</height>
+				<font>serif_28</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$LOCALIZE[31244]</label>
+			</control>
+		</control>
+		<control type="grouplist" id="9100">
+			<left>160</left>
+			<top>800</top>
+			<width>1600</width>
+			<height>44</height>
+			<orientation>horizontal</orientation>
+			<itemgap>12</itemgap>
+			<onup>9010</onup>
+			<ondown>9010</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>9010</onback>
+			<visible allowhiddenfocus="true">ControlGroup(9100).HasFocus()</visible>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="443"/>
+				<param name="label" value="Collection"/>
+				<param name="onclick" value="Dialog.Close(all,true)"/>
+				<param name="onclick2" value="$VAR[VidInfo_CollectionAction]"/>
+				<param name="visible" value="!String.IsEmpty(ListItem.SetID)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="13"/>
+				<param name="label" value="More by the director"/>
+				<param name="visible" value="!String.IsEmpty(ListItem.Director)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="7"/>
+				<param name="label" value="My rating$INFO[ListItem.UserRating,: ,]"/>
+				<param name="visible" value="Control.IsEnabled(7)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="14"/>
+				<param name="label" value="Versions"/>
+				<param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="15"/>
+				<param name="label" value="Extras"/>
+				<param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="10"/>
+				<param name="label" value="Choose art"/>
+				<param name="visible" value="Control.IsEnabled(10)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="12"/>
+				<param name="label" value="Choose fanart"/>
+				<param name="visible" value="Control.IsEnabled(12)"/>
+			</include>
+			<include content="VidInfo_MoreButton">
+				<param name="id" value="6"/>
+				<param name="label" value="Refresh"/>
+				<param name="visible" value="Control.IsEnabled(6)"/>
+			</include>
+		</control>
+	</include>
+
+	<!-- Cast (or the films of a collection): Kodi fills container 50. The page slides up 440 px
+	     while it has focus. -->
+	<include name="VidInfo_CastRow">
+		<control type="group">
+			<left>page_margin</left>
+			<top>1060</top>
+			<width>page_width</width>
+			<height>396</height>
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<include>DL_Card</include>
+			<control type="label">
+				<left>40</left>
+				<top>26</top>
+				<width>900</width>
+				<height>36</height>
+				<font>serif_28</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[VidInfo_CastHeader]</label>
+			</control>
+			<control type="label">
+				<left>900</left>
+				<top>28</top>
+				<width>740</width>
+				<height>32</height>
+				<align>right</align>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[VidInfo_CastCount]</label>
+			</control>
+			<control type="list" id="50">
+				<left>22</left>
+				<top>66</top>
+				<width>1636</width>
+				<height>320</height>
+				<orientation>horizontal</orientation>
+				<preloaditems>1</preloaditems>
+				<scrolltime tween="cubic" easing="out">220</scrolltime>
+				<onup condition="Control.IsVisible(9001)">9001</onup>
+				<onup condition="!Control.IsVisible(9001)">9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<itemlayout width="182" height="320">
+					<include>VidInfo_CastItem</include>
+				</itemlayout>
+				<focusedlayout width="182" height="320">
+					<include content="VidInfo_CastItem">
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+	<include name="VidInfo_CastItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>18</left>
+				<top>18</top>
+				<width>146</width>
+				<height>219</height>
+				<include condition="$PARAM[focused]">Anim_FocusZoom</include>
+				<include content="VidView_ArtFallback">
+					<param name="label_visible" value="false"/>
+					<param name="mask" value="daylight/mask_poster_s.png"/>
+				</include>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidInfo_CastArt]"/>
+					<param name="mask" value="daylight/mask_poster_s.png"/>
+				</include>
+				<include>DL_WatchedMarkers</include>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="16"/>
+					<param name="visible" value="Control.HasFocus(50)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>18</left>
+				<top>250</top>
+				<width>146</width>
+				<height>28</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>18</left>
+				<top>278</top>
+				<width>146</width>
+				<height>26</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[VidInfo_CastLine2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Full story overlay: shown while scrollbar 61 (inside group 9200) has focus. -->
+	<include name="VidInfo_FullPlot">
+		<control type="group" id="9200">
+			<visible allowhiddenfocus="true">ControlGroup(9200).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[DL_DimDialog]">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>300</left>
+				<top>110</top>
+				<width>1320</width>
+				<height>860</height>
+				<include>DL_Card</include>
+				<control type="label">
+					<left>60</left>
+					<top>48</top>
+					<width>1200</width>
+					<height>28</height>
+					<font>ui_22_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[VidInfo_Kicker]</label>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>84</top>
+					<width>1200</width>
+					<height>76</height>
+					<font>display_52</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[VidInfo_Title]</label>
+				</control>
+				<control type="textbox">
+					<left>60</left>
+					<top>186</top>
+					<width>1180</width>
+					<height>576</height>
+					<font>body_26</font>
+					<textcolor>$VAR[DL_Body]</textcolor>
+					<pagecontrol>61</pagecontrol>
+					<label>$INFO[ListItem.Plot]</label>
+				</control>
+				<control type="scrollbar" id="61">
+					<left>1268</left>
+					<top>186</top>
+					<width>8</width>
+					<height>576</height>
+					<orientation>vertical</orientation>
+					<showonepage>false</showonepage>
+					<onleft>9001</onleft>
+					<onright>9001</onright>
+					<onback>9001</onback>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>786</top>
+					<width>1200</width>
+					<height>30</height>
+					<font>small_20</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31234]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+</includes>

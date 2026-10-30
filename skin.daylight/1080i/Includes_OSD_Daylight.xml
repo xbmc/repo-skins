@@ -1,0 +1,799 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Daylight video OSD (mockup DaylightOSD): soft rounded bottom panel, title row with the bedtime
+	line ("ends 11:41 PM · 11 min past your bedtime"), rounded progress, circle transport buttons,
+	pills, and "Sleep after this" (70060, Custom_1155_SleepAfter.xml does the work).
+	Prefix DLOSD_. The engine's OSD_* variables (Includes_OSD.xml) are reused for labels.
+
+	Panel geometry (1920x1080): panel 120,686 1680x330; inner box 168..1752.
+	  title row y 722 (108), progress row y 860 (30, track x 292..1622 = 1330 px), controls y 920 (64).
+-->
+<includes>
+	<constant name="dlosd_track_x">292</constant>
+	<constant name="dlosd_track_w">1330</constant>
+
+	<variable name="DLOSD_Sub">
+		<value condition="VideoPlayer.Content(episodes)">[COLOR $VAR[DL_Ink]][B]$INFO[VideoPlayer.Season,S, · ]$INFO[VideoPlayer.Episode,E,][/B][/COLOR]$INFO[VideoPlayer.Title,  ·  ,]</value>
+		<value condition="VideoPlayer.Content(musicvideos)">$INFO[VideoPlayer.Artist]$INFO[VideoPlayer.Album,  ·  ,]</value>
+		<value>$INFO[VideoPlayer.Year]$VAR[DLOSD_MPAAMeta]$INFO[VideoPlayer.Director,  ·  ,]$INFO[VideoPlayer.Genre,  ·  ,]</value>
+	</variable>
+	<variable name="DLOSD_MPAAMeta">
+		<value condition="!String.IsEmpty(VideoPlayer.mpaa)">  ·  $VAR[OSD_MPAA]</value>
+	</variable>
+	<variable name="DLOSD_Poster">
+		<value condition="!String.IsEmpty(Player.Art(tvshow.poster))">$INFO[Player.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(Player.Art(poster))">$INFO[Player.Art(poster)]</value>
+		<value>$INFO[Player.Art(thumb)]</value>
+	</variable>
+	<variable name="DLOSD_EndLine">
+		<value condition="!String.IsEmpty(Player.FinishTime)">ends $INFO[Player.FinishTime]$VAR[DL_BedLine]</value>
+	</variable>
+	<variable name="DLOSD_SleepLabel">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">Sleeping after this</value>
+		<value>Sleep after this</value>
+	</variable>
+	<variable name="DLOSD_State">
+		<value condition="Player.Caching">Buffering$INFO[Player.CacheLevel, ,%]</value>
+		<value condition="!String.IsEmpty(Player.SeekNumeric)">Go to $INFO[Player.SeekNumeric]</value>
+		<value condition="!String.IsEmpty(Player.SeekStepSize)">Skip $VAR[OSD_SkipValue]</value>
+		<value condition="Player.Forwarding">Forward $VAR[OSD_Speed]</value>
+		<value condition="Player.Rewinding">Rewind $VAR[OSD_Speed]</value>
+		<value condition="Player.Paused">Paused</value>
+	</variable>
+	<variable name="DLOSD_PlayIcon">
+		<value condition="Player.Paused | Player.Forwarding | Player.Rewinding">daylight/icons/play.png</value>
+		<value>daylight/icons/pause.png</value>
+	</variable>
+	<!-- PlayerControls kicker (0.9.4): state, then what's playing -->
+	<variable name="PC_Kicker">
+		<value condition="[Player.Paused | Player.Caching | Player.Forwarding | Player.Rewinding | !String.IsEmpty(Player.SeekStepSize)] + Player.HasAudio + Integer.IsGreater(Playlist.Length(music),1)">$VAR[DLOSD_State]  ·  $INFO[Playlist.Position(music)] of $INFO[Playlist.Length(music)]</value>
+		<value condition="Player.Paused | Player.Caching | Player.Forwarding | Player.Rewinding | !String.IsEmpty(Player.SeekStepSize)">$VAR[DLOSD_State]</value>
+		<value condition="Player.HasAudio + Integer.IsGreater(Playlist.Length(music),1)">Now playing  ·  $INFO[Playlist.Position(music)] of $INFO[Playlist.Length(music)]</value>
+		<value>Now playing  ·  $VAR[OSD_Type]</value>
+	</variable>
+	<expression name="DLOSD_ShowBedtime">System.Time(17:00,05:00) + Player.HasVideo</expression>
+
+	<!-- ============================================================ pieces -->
+	<!-- night-style scrims (pre-rendered, dithered), each with its own fades -->
+	<include name="DLOSD_Scrims">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>240</height>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			<texture colordiffuse="$VAR[DL_Scrim]">daylight/osd_scrim_top.png</texture>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>520</top>
+			<width>screen_w</width>
+			<height>560</height>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			<texture colordiffuse="$VAR[DL_Scrim]">daylight/osd_scrim_bottom.png</texture>
+		</control>
+	</include>
+
+	<!-- the rounded panel (shadow + 94 % surface) -->
+	<include name="DLOSD_Panel">
+		<param name="top">686</param>
+		<param name="height">330</param>
+		<definition>
+			<control type="group">
+				<left>page_margin</left>
+				<top>$PARAM[top]</top>
+				<width>page_width</width>
+				<height>$PARAM[height]</height>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+				<include content="DL_Card">
+					<param name="color" value="$VAR[DL_Panel]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- title row: poster, title, sub line; bedtime block on the right -->
+	<include name="DLOSD_TitleRow">
+		<param name="top">722</param>
+		<definition>
+			<control type="group">
+				<left>168</left>
+				<top>$PARAM[top]</top>
+				<width>1584</width>
+				<height>108</height>
+				<control type="group">
+					<width>72</width>
+					<height>108</height>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>72</width>
+						<height>108</height>
+						<texture diffuse="daylight/mask_poster_xs.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>72</width>
+						<height>108</height>
+						<aspectratio scalediffuse="false">scale</aspectratio>
+						<texture background="true" diffuse="daylight/mask_poster_xs.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[DLOSD_Poster]</texture>
+					</control>
+				</control>
+				<control type="group">
+					<left>100</left>
+					<top>4</top>
+					<width>900</width>
+					<include content="T_OSD_Title">
+						<param name="label" value="$VAR[OSD_Title]"/>
+						<param name="color" value="$VAR[DL_Ink]"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>100</left>
+					<top>68</top>
+					<width>900</width>
+					<height>32</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[DLOSD_Sub]</label>
+				</control>
+				<!-- bedtime block -->
+				<control type="grouplist">
+					<left>900</left>
+					<top>16</top>
+					<width>684</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<align>right</align>
+					<itemgap>10</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="image">
+						<top>7</top>
+						<width>26</width>
+						<height>26</height>
+						<texture colordiffuse="$VAR[DL_AccentText]">$VAR[DL_MoodIcon]</texture>
+					</control>
+					<control type="label">
+						<width max="640">auto</width>
+						<height>40</height>
+						<font>ui_26_semibold</font>
+						<textcolor>$VAR[DL_AccentText]</textcolor>
+						<label>$VAR[DLOSD_EndLine]</label>
+					</control>
+				</control>
+				<control type="label">
+					<left>900</left>
+					<top>62</top>
+					<width>684</width>
+					<height>30</height>
+					<align>right</align>
+					<font>small_20</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[DLOSD_BedtimeNote]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="DLOSD_BedtimeNote">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">Sleeps when this ends  ·  bedtime $VAR[DL_BedtimeLabelLong]</value>
+		<value condition="$EXP[DLOSD_ShowBedtime]">Bedtime $VAR[DL_BedtimeLabelLong]</value>
+		<value>$INFO[System.Time]</value>
+	</variable>
+
+	<!-- progress row: elapsed, rounded track with playhead, remaining. param top -->
+	<include name="DLOSD_ProgressRow">
+		<param name="top">860</param>
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>screen_w</width>
+				<height>30</height>
+				<control type="label">
+					<left>168</left>
+					<top>0</top>
+					<width>110</width>
+					<height>30</height>
+					<font>num_22</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[OSD_SeekTimeLabel]</label>
+				</control>
+				<control type="label">
+					<left>1636</left>
+					<top>0</top>
+					<width>116</width>
+					<height>30</height>
+					<align>right</align>
+					<font>num_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[Player.TimeRemaining,−,]</label>
+				</control>
+				<include>DLOSD_Track</include>
+			</control>
+		</definition>
+	</include>
+	<!-- track at (dlosd_track_x, +9), 12 px, rounded ends -->
+	<include name="DLOSD_Track">
+		<control type="group">
+			<left>dlosd_track_x</left>
+			<top>9</top>
+			<width>dlosd_track_w</width>
+			<height>12</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>dlosd_track_w</width>
+				<height>12</height>
+				<texture border="6,0,6,0" colordiffuse="$VAR[DL_Line2]">daylight/track_12.png</texture>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<top>0</top>
+				<width>dlosd_track_w</width>
+				<height>12</height>
+				<info>Player.ProgressCache</info>
+				<texturebg colordiffuse="clear">common/white.png</texturebg>
+				<midtexture border="6,0,6,0" colordiffuse="$VAR[DL_Line2]">daylight/track_12.png</midtexture>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<top>0</top>
+				<width>dlosd_track_w</width>
+				<height>12</height>
+				<info>Player.SeekBar</info>
+				<texturebg colordiffuse="clear">common/white.png</texturebg>
+				<midtexture border="6,0,6,0" colordiffuse="$VAR[DL_Accent]">daylight/track_12.png</midtexture>
+			</control>
+			<!-- bedtime tick: where your bedtime falls in the film (daylight.bedpct, set when the OSD /
+			     seek bar / info opens; 1 % = 13.3 px, same slide trick as the bubble) -->
+			<control type="group">
+				<left>-3</left>
+				<top>-9</top>
+				<width>6</width>
+				<height>30</height>
+				<visible>$EXP[DLOSD_ShowBedtime] + !String.IsEmpty(Window(Home).Property(daylight.bedpct))</visible>
+				<include>DLOSD_BedTickSlide</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>6</width>
+					<height>30</height>
+					<texture colordiffuse="$VAR[DL_Ink]">daylight/tick_bed.png</texture>
+				</control>
+				<control type="image">
+					<left>-8</left>
+					<top>-28</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">daylight/icons/moon.png</texture>
+				</control>
+			</control>
+			<control type="ranges">
+				<left>0</left>
+				<top>-6</top>
+				<width>dlosd_track_w</width>
+				<height>24</height>
+				<texturebg>osd/slider_bg.png</texturebg>
+				<lefttexture />
+				<midtexture />
+				<righttexture colordiffuse="$VAR[DL_Ink2]">osd/tick.png</righttexture>
+				<info>Player.Chapters</info>
+				<visible>$EXP[OSD_HasChapters]</visible>
+			</control>
+			<control type="slider">
+				<left>-20</left>
+				<top>-14</top>
+				<width>1370</width>
+				<height>40</height>
+				<info>Player.SeekBar</info>
+				<texturesliderbar>osd/slider_bg.png</texturesliderbar>
+				<textureslidernib colordiffuse="$VAR[DL_Ink]">daylight/nib.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="$VAR[DL_Ink]">daylight/nib.png</textureslidernibfocus>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- time bubble above the playhead while seeking (100 cumulative 1 % slides of 13.3 px) -->
+	<include name="DLOSD_Bubble">
+		<param name="top">0</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="group">
+				<left>232</left>
+				<top>$PARAM[top]</top>
+				<width>120</width>
+				<height>40</height>
+				<visible>$PARAM[visible]</visible>
+				<include>DLOSD_BubbleSlide</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>120</width>
+					<height>40</height>
+					<texture border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>120</width>
+					<height>40</height>
+					<align>center</align>
+					<font>num_21</font>
+					<textcolor>$VAR[DL_OnAccent]</textcolor>
+					<label>$VAR[OSD_SeekTimeLabel]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- bedtime maths for the tick: past first, then the percentage (onload actions run in order and
+	     each resolves its $VAR when it runs) -->
+	<include name="DLOSD_BedTickOnload">
+		<onload>SetProperty(daylight.bedpast,$VAR[DL_BedPastMins],home)</onload>
+		<onload>SetProperty(daylight.bedpct,$VAR[DL_BedPct],home)</onload>
+	</include>
+	<include name="DLOSD_BubbleSlide">
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,0)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,1)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,2)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,3)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,4)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,5)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,6)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,7)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,8)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,9)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,10)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,11)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,12)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,13)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,14)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,15)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,16)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,17)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,18)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,19)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,20)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,21)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,22)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,23)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,24)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,25)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,26)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,27)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,28)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,29)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,30)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,31)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,32)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,33)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,34)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,35)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,36)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,37)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,38)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,39)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,40)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,41)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,42)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,43)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,44)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,45)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,46)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,47)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,48)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,49)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,50)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,51)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,52)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,53)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,54)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,55)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,56)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,57)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,58)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,59)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,60)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,61)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,62)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,63)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,64)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,65)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,66)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,67)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,68)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,69)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,70)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,71)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,72)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,73)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,74)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,75)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,76)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,77)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,78)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,79)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,80)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,81)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,82)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,83)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,84)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,85)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,86)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,87)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,88)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,89)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,90)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,91)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,92)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,93)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,94)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,95)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,96)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,97)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,98)">Conditional</animation>
+		<animation effect="slide" end="13.3,0" time="0" condition="Integer.IsGreater(Player.SeekBar,99)">Conditional</animation>
+	</include>
+
+	<!-- media flag pill (display only). params: label, visible -->
+	<include name="DLOSD_Flag">
+		<param name="visible">true</param>
+		<definition>
+			<control type="button">
+				<width>auto</width>
+				<height>40</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<disabledcolor>$VAR[DL_Ink2]</disabledcolor>
+				<textoffsetx>16</textoffsetx>
+				<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Line2]">daylight/pill_40_line.png</texturefocus>
+				<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Line2]">daylight/pill_40_line.png</texturenofocus>
+				<label>$PARAM[label]</label>
+				<enable>false</enable>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- circle transport button 64. params: id, icon, onclick, visible, nav (onleft/onright pairs) -->
+	<include name="DLOSD_Circle">
+		<param name="visible">true</param>
+		<param name="onleft2">noop</param>
+		<param name="onleft2_if">false</param>
+		<param name="onright2">noop</param>
+		<param name="onright2_if">false</param>
+		<param name="onleft3">noop</param>
+		<param name="onleft3_if">false</param>
+		<param name="onright3">noop</param>
+		<param name="onright3_if">false</param>
+		<param name="onleft_if">true</param>
+		<param name="onright_if">true</param>
+		<param name="icon_size">28</param>
+		<definition>
+			<control type="group">
+				<left>8</left>
+				<top>8</top>
+				<width>64</width>
+				<height>64</height>
+				<visible>$PARAM[visible]</visible>
+				<animation type="Conditional" condition="Control.HasFocus($PARAM[id]) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="106" center="auto" time="150" tween="cubic" easing="out"/>
+				</animation>
+				<control type="button" id="$PARAM[id]">
+					<left>0</left>
+					<top>0</top>
+					<width>64</width>
+					<height>64</height>
+					<label></label>
+					<texturefocus colordiffuse="$VAR[DL_Accent]">daylight/circle_64.png</texturefocus>
+					<texturenofocus colordiffuse="$VAR[DL_Raised]">daylight/circle_64.png</texturenofocus>
+					<onclick>$PARAM[onclick]</onclick>
+					<onleft condition="$PARAM[onleft_if]">$PARAM[onleft]</onleft>
+					<onleft condition="$PARAM[onleft2_if]">$PARAM[onleft2]</onleft>
+					<onleft condition="$PARAM[onleft3_if]">$PARAM[onleft3]</onleft>
+					<onright condition="$PARAM[onright_if]">$PARAM[onright]</onright>
+					<onright condition="$PARAM[onright2_if]">$PARAM[onright2]</onright>
+					<onright condition="$PARAM[onright3_if]">$PARAM[onright3]</onright>
+					<onup condition="Player.SeekEnabled">87</onup>
+					<ondown>noop</ondown>
+				</control>
+				<control type="image">
+					<centerleft>32</centerleft>
+					<centertop>32</centertop>
+					<width>$PARAM[icon_size]</width>
+					<height>$PARAM[icon_size]</height>
+					<texture colordiffuse="$VAR[DL_OnAccent]">$PARAM[icon]</texture>
+					<visible>Control.HasFocus($PARAM[id])</visible>
+				</control>
+				<control type="image">
+					<centerleft>32</centerleft>
+					<centertop>32</centertop>
+					<width>$PARAM[icon_size]</width>
+					<height>$PARAM[icon_size]</height>
+					<texture colordiffuse="$VAR[DL_Ink]">$PARAM[icon]</texture>
+					<visible>!Control.HasFocus($PARAM[id])</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- text pill 64 high. params: id, width, label, onclick, visible, nav -->
+	<include name="DLOSD_Pill">
+		<param name="visible">true</param>
+		<param name="onleft2">noop</param>
+		<param name="onleft2_if">false</param>
+		<param name="onright2">noop</param>
+		<param name="onright2_if">false</param>
+		<param name="onleft3">noop</param>
+		<param name="onleft3_if">false</param>
+		<param name="onright3">noop</param>
+		<param name="onright3_if">false</param>
+		<param name="onleft_if">true</param>
+		<param name="onright_if">true</param>
+		<param name="onclick2">noop</param>
+		<definition>
+			<control type="group">
+				<left>8</left>
+				<top>8</top>
+				<width>$PARAM[width]</width>
+				<height>64</height>
+				<visible>$PARAM[visible]</visible>
+				<animation type="Conditional" condition="Control.HasFocus($PARAM[id]) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="105" center="auto" time="150" tween="cubic" easing="out"/>
+				</animation>
+				<control type="button" id="$PARAM[id]">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>64</height>
+					<label>$PARAM[label]</label>
+					<font>ui_22_semibold</font>
+					<align>center</align>
+					<textoffsetx>0</textoffsetx>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<focusedcolor>$VAR[DL_OnAccent]</focusedcolor>
+					<texturefocus border="32,0,32,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_64.png</texturefocus>
+					<texturenofocus border="32,0,32,0" colordiffuse="$VAR[DL_Raised]">daylight/pill_64.png</texturenofocus>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onleft condition="$PARAM[onleft_if]">$PARAM[onleft]</onleft>
+					<onleft condition="$PARAM[onleft2_if]">$PARAM[onleft2]</onleft>
+					<onleft condition="$PARAM[onleft3_if]">$PARAM[onleft3]</onleft>
+					<onright condition="$PARAM[onright_if]">$PARAM[onright]</onright>
+					<onright condition="$PARAM[onright2_if]">$PARAM[onright2]</onright>
+					<onright condition="$PARAM[onright3_if]">$PARAM[onright3]</onright>
+					<onup condition="Player.SeekEnabled">87</onup>
+					<ondown>noop</ondown>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- controls row (group 200). param top -->
+	<include name="DLOSD_Controls">
+		<param name="top">920</param>
+		<definition>
+			<control type="group" id="200">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>screen_w</width>
+				<height>64</height>
+				<control type="grouplist">
+					<left>160</left>
+					<top>-8</top>
+					<width>1300</width>
+					<height>80</height>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>true</usecontrolcoords>
+					<itemgap>0</itemgap>
+					<!-- 0.9.3 (Omar): Play/Pause, Stop, then Previous / Next (chapters or playlist); no seek
+					     buttons (Left/Right seek without the OSD, Up lights the track) -->
+					<include content="DLOSD_Circle">
+						<param name="id" value="602"/>
+						<param name="icon" value="$VAR[DLOSD_PlayIcon]"/>
+						<param name="icon_size" value="26"/>
+						<param name="onclick" value="PlayerControl(Play)"/>
+						<param name="onleft" value="70060"/>
+						<param name="onright" value="603"/>
+					</include>
+					<control type="group"><width>8</width><height>10</height></control>
+					<include content="DLOSD_Circle">
+						<param name="id" value="603"/>
+						<param name="icon" value="daylight/icons/stop.png"/>
+						<param name="icon_size" value="24"/>
+						<param name="onclick" value="PlayerControl(Stop)"/>
+						<param name="onleft" value="602"/>
+						<param name="onright" value="600"/>
+						<param name="onright_if" value="$EXP[OSD_HasPrevNext]"/>
+						<param name="onright2" value="70046"/>
+						<param name="onright2_if" value="!$EXP[OSD_HasPrevNext]"/>
+					</include>
+					<control type="group"><width>8</width><height>10</height><visible>$EXP[OSD_HasPrevNext]</visible></control>
+					<include content="DLOSD_Circle">
+						<param name="id" value="600"/>
+						<param name="icon" value="daylight/icons/prev.png"/>
+						<param name="onclick" value="PlayerControl(Previous)"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+						<param name="onleft" value="603"/>
+						<param name="onright" value="607"/>
+					</include>
+					<control type="group"><width>8</width><height>10</height><visible>$EXP[OSD_HasPrevNext]</visible></control>
+					<include content="DLOSD_Circle">
+						<param name="id" value="607"/>
+						<param name="icon" value="daylight/icons/next.png"/>
+						<param name="onclick" value="PlayerControl(Next)"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+						<param name="onleft" value="600"/>
+						<param name="onright" value="70046"/>
+					</include>
+					<!-- divider -->
+					<control type="group">
+						<left>8</left>
+						<width>34</width>
+						<height>80</height>
+						<control type="image">
+							<left>16</left>
+							<top>24</top>
+							<width>2</width>
+							<height>32</height>
+							<texture colordiffuse="$VAR[DL_Line2]">common/white.png</texture>
+						</control>
+					</control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70046"/>
+						<param name="width" value="134"/>
+						<param name="label" value="Subtitles"/>
+						<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+						<param name="onleft" value="607"/>
+						<param name="onleft_if" value="$EXP[OSD_HasPrevNext]"/>
+						<param name="onleft2" value="603"/>
+						<param name="onleft2_if" value="!$EXP[OSD_HasPrevNext]"/>
+						<param name="onright" value="70049"/>
+					</include>
+					<control type="group"><width>2</width><height>10</height></control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70049"/>
+						<param name="width" value="103"/>
+						<param name="label" value="Audio"/>
+						<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+						<param name="onleft" value="70046"/>
+						<param name="onright" value="70048"/>
+					</include>
+					<control type="group"><width>2</width><height>10</height></control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70048"/>
+						<param name="width" value="105"/>
+						<param name="label" value="Video"/>
+						<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+						<param name="onleft" value="70049"/>
+						<param name="onright" value="70044"/>
+						<param name="onright_if" value="$EXP[OSD_HasChapters]"/>
+						<param name="onright2" value="70043"/>
+						<param name="onright2_if" value="!$EXP[OSD_HasChapters]"/>
+					</include>
+					<control type="group"><width>2</width><height>10</height><visible>$EXP[OSD_HasChapters]</visible></control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70044"/>
+						<param name="width" value="137"/>
+						<param name="label" value="Chapters"/>
+						<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+						<param name="visible" value="$EXP[OSD_HasChapters]"/>
+						<param name="onleft" value="70048"/>
+						<param name="onright" value="70043"/>
+					</include>
+					<control type="group"><width>2</width><height>10</height></control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70043"/>
+						<param name="width" value="84"/>
+						<param name="label" value="Info"/>
+						<param name="onclick" value="Action(Info,fullscreenvideo)"/>
+						<param name="onleft" value="70044"/>
+						<param name="onleft_if" value="$EXP[OSD_HasChapters]"/>
+						<param name="onleft2" value="70048"/>
+						<param name="onleft2_if" value="!$EXP[OSD_HasChapters]"/>
+						<param name="onright" value="70051"/>
+					</include>
+					<control type="group"><width>2</width><height>10</height></control>
+					<include content="DLOSD_Pill">
+						<param name="id" value="70051"/>
+						<param name="width" value="97"/>
+						<param name="label" value="Stats"/>
+						<param name="onclick" value="Action(PlayerProcessInfo)"/>
+						<param name="onleft" value="70043"/>
+						<param name="onright" value="70060"/>
+					</include>
+				</control>
+				<!-- Sleep after this (the single "evening" action, right) -->
+				<control type="group">
+					<left>1472</left>
+					<top>0</top>
+					<width>280</width>
+					<height>64</height>
+					<animation type="Conditional" condition="Control.HasFocus(70060) + !$EXP[ReduceMotion]" reversible="true">
+						<effect type="zoom" start="100" end="105" center="auto" time="150" tween="cubic" easing="out"/>
+					</animation>
+					<control type="group">
+						<visible>Control.HasFocus(70060)</visible>
+						<control type="image">
+							<left>-24</left>
+							<top>-14</top>
+							<right>-24</right>
+							<bottom>-34</bottom>
+							<texture border="56,0,56,0" colordiffuse="$VAR[DL_Halo]">daylight/pill_64_glow.png</texture>
+						</control>
+						<control type="image">
+							<left>-5</left>
+							<top>-5</top>
+							<right>-5</right>
+							<bottom>-5</bottom>
+							<texture border="37,0,37,0" colordiffuse="$VAR[DL_Halo]">daylight/pill_64_ring.png</texture>
+						</control>
+					</control>
+					<control type="button" id="70060">
+						<left>0</left>
+						<top>0</top>
+						<width>280</width>
+						<height>64</height>
+						<label></label>
+						<texturefocus border="32,0,32,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_64.png</texturefocus>
+						<texturenofocus border="32,0,32,0" colordiffuse="$VAR[DLOSD_SleepRest]">daylight/pill_64.png</texturenofocus>
+						<onclick condition="String.IsEmpty(Window(Home).Property(daylight.sleepafter))">SetProperty(daylight.sleepafter,1,home)</onclick>
+						<onclick condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">CancelAlarm(daylightsleep,silent)</onclick>
+						<onclick condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">ClearProperty(daylight.sleepafter,home)</onclick>
+						<onleft>70051</onleft>
+						<onright>602</onright>
+						<onup condition="Player.SeekEnabled">87</onup>
+						<ondown>noop</ondown>
+					</control>
+					<control type="image">
+						<left>26</left>
+						<top>20</top>
+						<width>24</width>
+						<height>24</height>
+						<texture colordiffuse="$VAR[DL_OnAccent]">daylight/icons/sleep.png</texture>
+						<visible>Control.HasFocus(70060)</visible>
+					</control>
+					<control type="image">
+						<left>26</left>
+						<top>20</top>
+						<width>24</width>
+						<height>24</height>
+						<texture colordiffuse="$VAR[DLOSD_SleepInk]">daylight/icons/sleep.png</texture>
+						<visible>!Control.HasFocus(70060)</visible>
+					</control>
+					<control type="label">
+						<left>62</left>
+						<top>0</top>
+						<width>210</width>
+						<height>64</height>
+						<font>button_22</font>
+						<textcolor>$VAR[DL_OnAccent]</textcolor>
+						<label>$VAR[DLOSD_SleepLabel]</label>
+						<visible>Control.HasFocus(70060)</visible>
+					</control>
+					<control type="label">
+						<left>62</left>
+						<top>0</top>
+						<width>210</width>
+						<height>64</height>
+						<font>button_22</font>
+						<textcolor>$VAR[DLOSD_SleepInk]</textcolor>
+						<label>$VAR[DLOSD_SleepLabel]</label>
+						<visible>!Control.HasFocus(70060)</visible>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="DLOSD_SleepRest">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">$VAR[DL_Halo]</value>
+		<value>$VAR[DL_Raised]</value>
+	</variable>
+	<variable name="DLOSD_SleepInk">
+		<value condition="!String.IsEmpty(Window(Home).Property(daylight.sleepafter))">$VAR[DL_AccentText]</value>
+		<value>$VAR[DL_Ink]</value>
+	</variable>
+</includes>

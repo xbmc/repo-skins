@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD (mockup DaylightOSD). Pieces: Includes_OSD_Daylight.xml (DLOSD_*).
+
+	Id contract (Estuary Omega VideoOSD.xml): 602 play/pause (default), 603 stop (focus when pause is
+	not possible), 600 previous / 607 next (chapter or playlist item; 0.9.3 order Play/Pause, Stop,
+	Previous, Next, no 601 / 606 seek buttons), 87 hidden seek stepper (Left/Right = StepBack/StepForward, frame advance
+	when paused), 200 = controls group, 70043 info, 70044 chapters, 70046 subtitles, 70048 video
+	settings, 70049 audio, 70051 player stats. Daylight: 70060 Sleep after this.
+
+	Focus map: open -> 602. Left/Right walk the row (wraps). Up from any button -> 87 (the track
+	lights up, the bubble shows the target); Down from 87 -> back to the row (group 200).
+	The chrome hides while a playback dialog is on top ($EXP[OSD_PanelOpen]).
+-->
+<window>
+	<include>DLOSD_BedTickOnload</include>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+			<include>DLOSD_Scrims</include>
+			<!-- top line: same system line as Home, no nav -->
+			<include>DL_MoodLine</include>
+			<include>DL_ClockOnly</include>
+			<include>DLOSD_Panel</include>
+			<include>DLOSD_TitleRow</include>
+			<include>DLOSD_ProgressRow</include>
+			<include content="DLOSD_Bubble">
+				<param name="top" value="814"/>
+				<param name="visible" value="$EXP[OSD_SeekActive] + Player.SeekEnabled"/>
+			</include>
+			<!-- state chip (paused, skipping, buffering) at the track's left end -->
+			<control type="grouplist">
+				<left>168</left>
+				<top>632</top>
+				<width>800</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<visible>!String.IsEmpty(Player.SeekStepSize) | Player.Paused | Player.Caching | Player.Forwarding | Player.Rewinding</visible>
+				<control type="button">
+					<width>auto</width>
+					<height>40</height>
+					<label>$VAR[DLOSD_State]</label>
+					<font>small_20_bold</font>
+					<textoffsetx>18</textoffsetx>
+					<disabledcolor>$VAR[DL_OnAccent]</disabledcolor>
+					<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturenofocus>
+					<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturefocus>
+					<enable>false</enable>
+				</control>
+			</control>
+
+			<!-- seek stepper (invisible; the lit track + bubble show it) -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>DL_Hidden</include>
+				<onup>noop</onup>
+				<ondown>200</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<control type="image">
+				<left>282</left>
+				<top>859</top>
+				<width>1350</width>
+				<height>32</height>
+				<texture border="16,0,16,0" colordiffuse="$VAR[DL_Halo]">daylight/pill_44_line.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+			<include>DLOSD_Controls</include>
+		</control>
+	</controls>
+</window>

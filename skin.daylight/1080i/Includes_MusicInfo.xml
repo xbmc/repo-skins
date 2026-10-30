@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	DialogMusicInfo pieces (Daylight): the same page as the film info (hero card with cover, title,
+	meta and pill buttons; artist fanart fading in from the right), then a Tracklist / Discography
+	card (left) and an About card (right). The page slides up 440 px while the list has focus so the
+	tall list card fits. Buttons reuse VidInfo_Button (Includes_VideoInfo.xml). Prefix MusInfo_.
+-->
+<includes>
+	<variable name="MusInfo_Cover">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(album.thumb))">$INFO[ListItem.Art(album.thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+	<variable name="MusInfo_Fanart">
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(artist.fanart))">$INFO[ListItem.Art(artist.fanart)]</value>
+	</variable>
+	<variable name="MusInfo_CoverMask">
+		<value condition="$EXP[Music_InfoIsArtist]">daylight/mask_circle.png</value>
+		<value>daylight/mask_cover.png</value>
+	</variable>
+	<variable name="MusInfo_Meta">
+		<value condition="$EXP[Music_InfoIsArtist]">$INFO[ListItem.Genre]$INFO[ListItem.Property(Artist_Born),  ·  born ,]$INFO[ListItem.Property(Artist_Formed),  ·  formed ,]</value>
+		<value condition="$EXP[Music_InfoIsSong]">$INFO[ListItem.Year,,  ·  ]$INFO[ListItem.Duration]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value>$INFO[ListItem.Year,,  ·  ]$VAR[PL_Container_50_NumItems_Track]$INFO[ListItem.Genre,  ·  ,]</value>
+	</variable>
+	<variable name="MusInfo_EndLine">
+		<value condition="$EXP[Music_InfoIsArtist]">$VAR[PL_Container_50_NumItems_Album]</value>
+		<value condition="$EXP[Music_InfoIsAlbum] + !String.IsEmpty(ListItem.Duration)">$INFO[ListItem.Duration(mins),, minutes of music]</value>
+		<value condition="!String.IsEmpty(ListItem.EndTime)">Start now, done by $INFO[ListItem.EndTime]</value>
+	</variable>
+	<variable name="MusInfo_InfoLabel">
+		<value condition="$EXP[Music_InfoIsSong]">Album info</value>
+		<value>Artist info</value>
+	</variable>
+	<variable name="MusInfo_AboutTitle">
+		<value condition="$EXP[Music_InfoIsArtist]">About the artist</value>
+		<value condition="$EXP[Music_InfoIsSong]">About the song</value>
+		<value>About the album</value>
+	</variable>
+	<variable name="MusInfo_Hint">
+		<value condition="Control.HasFocus(9001)">OK reads all of it</value>
+		<value condition="Control.HasFocus(50)">Up returns to the buttons</value>
+		<value condition="Control.IsVisible(9001)">Right for the full story</value>
+	</variable>
+	<variable name="MusInfo_RowArt">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+
+	<!-- ============================================================ hero card -->
+	<include name="MusInfo_Hero">
+		<control type="group">
+			<left>page_margin</left>
+			<top>168</top>
+			<width>page_width</width>
+			<height>520</height>
+			<include>DL_Card</include>
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>520</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<include>Anim_BackgroundCrossfade</include>
+				<texture background="true" diffuse="daylight/mask_hero_tall.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[MusInfo_Fanart]</texture>
+				<visible>!String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(artist.fanart))</visible>
+			</control>
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>520</height>
+				<texture colordiffuse="$VAR[DL_Surface]">daylight/hero_fade.png</texture>
+				<visible>!String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(artist.fanart))</visible>
+			</control>
+			<!-- cover (square for albums / songs, round for artists) -->
+			<control type="group">
+				<left>48</left>
+				<top>65</top>
+				<width>390</width>
+				<height>390</height>
+				<control type="image">
+					<left>-120</left>
+					<top>-90</top>
+					<right>-120</right>
+					<bottom>-150</bottom>
+					<texture border="120" colordiffuse="$VAR[DL_Shadow]">daylight/card_shadow.png</texture>
+					<visible>!$EXP[Music_InfoIsArtist]</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>390</width>
+					<height>390</height>
+					<texture diffuse="$VAR[MusInfo_CoverMask]" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+				</control>
+				<control type="image">
+					<left>143</left>
+					<top>143</top>
+					<width>104</width>
+					<height>104</height>
+					<texture colordiffuse="$VAR[DL_Ink3]">daylight/icons/music.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>390</width>
+					<height>390</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<fadetime>160</fadetime>
+					<texture background="true" diffuse="$VAR[MusInfo_CoverMask]">$VAR[MusInfo_Cover]</texture>
+				</control>
+			</control>
+			<!-- text column -->
+			<control type="group">
+				<left>486</left>
+				<top>56</top>
+				<width>660</width>
+				<height>330</height>
+				<control type="image">
+					<left>0</left>
+					<top>9</top>
+					<width>10</width>
+					<height>10</height>
+					<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+				</control>
+				<control type="label">
+					<left>20</left>
+					<top>0</top>
+					<width>640</width>
+					<height>28</height>
+					<font>ui_22_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[Music_InfoKicker]</label>
+				</control>
+				<control type="grouplist">
+					<left>0</left>
+					<top>40</top>
+					<width>660</width>
+					<height>300</height>
+					<orientation>vertical</orientation>
+					<itemgap>0</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<!-- measuring copy (transparent): the lines below follow a 1- or 2-line title -->
+					<include content="T_MusInfo_Measure">
+						<param name="label" value="$VAR[Music_InfoTitle]"/>
+					</include>
+					<control type="image"><width>10</width><height>14</height><texture></texture></control>
+					<control type="label">
+						<width>660</width>
+						<height>36</height>
+						<font>ui_26_semibold</font>
+						<textcolor>$VAR[DL_Ink]</textcolor>
+						<label>$VAR[Music_InfoSubline]</label>
+					</control>
+					<control type="label">
+						<width>660</width>
+						<height>34</height>
+						<font>ui_22</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$VAR[MusInfo_Meta]</label>
+					</control>
+					<control type="image"><width>10</width><height>8</height><texture></texture></control>
+					<control type="label">
+						<width>660</width>
+						<height>32</height>
+						<font>ui_22</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$VAR[MusInfo_EndLine]</label>
+					</control>
+				</control>
+				<control type="group">
+					<left>0</left>
+					<top>40</top>
+					<width>660</width>
+					<include content="T_MusInfo_Title">
+						<param name="label" value="$VAR[Music_InfoTitle]"/>
+						<param name="color" value="$VAR[DL_Ink]"/>
+					</include>
+				</control>
+			</control>
+			<include>MusInfo_Buttons</include>
+		</control>
+	</include>
+
+	<!-- Buttons. Kodi ids: 8 play (hidden for artists), 12 artist / album info (hidden for artists),
+	     6 refresh (hidden for songs). Daylight: 9012 play all (artist), 9011 shuffle. The wrapper
+	     groups mirror Kodi's hide rules so no label floats without its button. Down: the list first. -->
+	<include name="MusInfo_Buttons">
+		<control type="grouplist" id="9000">
+			<left>462</left>
+			<top>396</top>
+			<width>1200</width>
+			<height>104</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>-4</itemgap>
+			<onup>noop</onup>
+			<ondown condition="Control.IsVisible(50)">50</ondown>
+			<ondown condition="!Control.IsVisible(50) + Control.IsVisible(9001)">9001</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<include content="VidInfo_Button">
+				<param name="id" value="8"/>
+				<param name="width" value="140"/>
+				<param name="label" value="Play"/>
+				<param name="icon" value="daylight/icons/play.png"/>
+				<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+				<param name="down1" value="50"/>
+				<param name="down2" value="9001"/>
+				<param name="right1" value="9011"/>
+				<param name="right1_if" value="$EXP[Music_InfoIsAlbum]"/>
+				<param name="right2" value="12"/>
+				<param name="right2_if" value="!$EXP[Music_InfoIsAlbum]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9012"/>
+				<param name="width" value="166"/>
+				<param name="label" value="Play all"/>
+				<param name="icon" value="daylight/icons/play.png"/>
+				<param name="onclick" value="PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)"/>
+				<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)"/>
+				<param name="down1" value="50"/>
+				<param name="down2" value="9001"/>
+				<param name="right1" value="9011"/>
+				<param name="right1_if" value="true"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9011"/>
+				<param name="width" value="166"/>
+				<param name="label" value="Shuffle"/>
+				<param name="icon" value="daylight/icons/shuffle.png"/>
+				<param name="onclick" value="$VAR[Music_InfoShuffleAction]"/>
+				<param name="onclick2" value="PlayerControl(RandomOn)"/>
+				<param name="visible" value="[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)"/>
+				<param name="down1" value="50"/>
+				<param name="down2" value="9001"/>
+				<param name="left1" value="8"/>
+				<param name="left1_if" value="$EXP[Music_InfoIsAlbum]"/>
+				<param name="left2" value="9012"/>
+				<param name="left2_if" value="$EXP[Music_InfoIsArtist]"/>
+				<param name="right1" value="12"/>
+				<param name="right1_if" value="$EXP[Music_InfoIsAlbum]"/>
+				<param name="right2" value="6"/>
+				<param name="right2_if" value="$EXP[Music_InfoIsArtist]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="12"/>
+				<param name="width" value="170"/>
+				<param name="label" value="$VAR[MusInfo_InfoLabel]"/>
+				<param name="text_x" value="20"/>
+				<param name="align" value="center"/>
+				<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+				<param name="down1" value="50"/>
+				<param name="down2" value="9001"/>
+				<param name="left1" value="9011"/>
+				<param name="left1_if" value="$EXP[Music_InfoIsAlbum]"/>
+				<param name="left2" value="8"/>
+				<param name="left2_if" value="$EXP[Music_InfoIsSong]"/>
+				<param name="right1" value="6"/>
+				<param name="right1_if" value="!$EXP[Music_InfoIsSong]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="6"/>
+				<param name="width" value="140"/>
+				<param name="label" value="Refresh"/>
+				<param name="text_x" value="20"/>
+				<param name="align" value="center"/>
+				<param name="visible" value="!$EXP[Music_InfoIsSong]"/>
+				<param name="down1" value="50"/>
+				<param name="down2" value="9001"/>
+				<param name="left1" value="12"/>
+				<param name="left1_if" value="$EXP[Music_InfoIsAlbum]"/>
+				<param name="left2" value="9011"/>
+				<param name="left2_if" value="$EXP[Music_InfoIsArtist]"/>
+			</include>
+		</control>
+	</include>
+	<!-- ============================================================ lower cards -->
+	<include name="MusInfo_ListCard">
+		<control type="group">
+			<left>page_margin</left>
+			<top>724</top>
+			<width>1040</width>
+			<height>732</height>
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<include>DL_Card</include>
+			<control type="label">
+				<left>40</left>
+				<top>26</top>
+				<width>600</width>
+				<height>36</height>
+				<font>serif_28</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[Music_InfoListCaption]</label>
+			</control>
+			<control type="label">
+				<left>600</left>
+				<top>28</top>
+				<width>400</width>
+				<height>32</height>
+				<align>right</align>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[MusInfo_Hint]</label>
+			</control>
+			<control type="list" id="50">
+				<left>20</left>
+				<top>80</top>
+				<width>1000</width>
+				<height>632</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright condition="Control.IsVisible(9001)">9001</onright>
+				<onright condition="!Control.IsVisible(9001)">noop</onright>
+				<itemlayout width="1000" height="70">
+					<include>MusInfo_Row</include>
+				</itemlayout>
+				<focusedlayout width="1000" height="70">
+					<include content="MusInfo_Row">
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+	<!-- list row: track (number, title, length) or album (cover, title, year). param focused -->
+	<include name="MusInfo_Row">
+		<param name="focused">false</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>3</top>
+				<width>1000</width>
+				<height>64</height>
+				<texture border="20" colordiffuse="$VAR[DL_Accent]">daylight/card16.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(50)</visible>
+			</control>
+			<!-- track number / album cover -->
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<width>50</width>
+				<height>70</height>
+				<font>num_22</font>
+				<textcolor>$VAR[DL_Ink3]</textcolor>
+				<label>$INFO[ListItem.TrackNumber]</label>
+				<visible>String.IsEqual(ListItem.DBType,song) + [!$PARAM[focused] | !Control.HasFocus(50)]</visible>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<width>50</width>
+				<height>70</height>
+				<font>num_22</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<label>$INFO[ListItem.TrackNumber]</label>
+				<visible>String.IsEqual(ListItem.DBType,song) + $PARAM[focused] + Control.HasFocus(50)</visible>
+			</control>
+			<control type="group">
+				<left>14</left>
+				<top>11</top>
+				<width>48</width>
+				<height>48</height>
+				<visible>!String.IsEqual(ListItem.DBType,song)</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>48</width>
+					<height>48</height>
+					<texture diffuse="daylight/mask_cover_s.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+				</control>
+				<control type="image">
+					<left>12</left>
+					<top>12</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_Ink3]">daylight/icons/music.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>48</width>
+					<height>48</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<texture background="true" diffuse="daylight/mask_cover_s.png">$VAR[MusInfo_RowArt]</texture>
+				</control>
+			</control>
+			<!-- title -->
+			<control type="label">
+				<left>84</left>
+				<top>0</top>
+				<width>760</width>
+				<height>70</height>
+				<font>ui_24</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[MusInfo_RowTitle]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(50)</visible>
+			</control>
+			<control type="label">
+				<left>84</left>
+				<top>0</top>
+				<width>760</width>
+				<height>70</height>
+				<font>ui_24_semibold</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<scroll>true</scroll>
+				<label>$VAR[MusInfo_RowTitle]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(50)</visible>
+			</control>
+			<!-- length / year -->
+			<control type="label">
+				<left>850</left>
+				<top>0</top>
+				<width>126</width>
+				<height>70</height>
+				<align>right</align>
+				<font>num_22</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[MusInfo_RowRight]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(50)</visible>
+			</control>
+			<control type="label">
+				<left>850</left>
+				<top>0</top>
+				<width>126</width>
+				<height>70</height>
+				<align>right</align>
+				<font>num_22</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<label>$VAR[MusInfo_RowRight]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(50)</visible>
+			</control>
+			<control type="image">
+				<left>20</left>
+				<top>69</top>
+				<width>960</width>
+				<height>1</height>
+				<texture colordiffuse="$VAR[DL_Line]">common/white.png</texture>
+				<visible>!$PARAM[focused] | !Control.HasFocus(50)</visible>
+			</control>
+		</definition>
+	</include>
+	<variable name="MusInfo_RowTitle">
+		<value condition="String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="MusInfo_RowRight">
+		<value condition="String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Duration]</value>
+		<value>$INFO[ListItem.Year]</value>
+	</variable>
+
+	<!-- About card (description, OK = full text) or, without one, a Details card -->
+	<include name="MusInfo_AboutCard">
+		<control type="group">
+			<left>1196</left>
+			<top>724</top>
+			<width>604</width>
+			<height>292</height>
+			<include>DL_Card</include>
+			<include content="DL_FocusRing">
+				<param name="r" value="28"/>
+				<param name="gap" value="$VAR[DL_Ground]"/>
+				<param name="visible" value="Control.HasFocus(9001)"/>
+			</include>
+			<control type="label">
+				<left>36</left>
+				<top>28</top>
+				<width>532</width>
+				<height>36</height>
+				<font>serif_28</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[MusInfo_AboutTitle]</label>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+			</control>
+			<control type="textbox">
+				<left>36</left>
+				<top>78</top>
+				<width>532</width>
+				<height>180</height>
+				<font>body_24</font>
+				<textcolor>$VAR[DL_Body]</textcolor>
+				<label>$VAR[Music_InfoDescription]</label>
+				<autoscroll delay="8000" time="3000" repeat="10000">!Control.HasFocus(9001)</autoscroll>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+			</control>
+			<!-- details (no description) -->
+			<control type="group">
+				<visible>!$EXP[Music_InfoHasDescription]</visible>
+				<control type="label">
+					<left>36</left>
+					<top>28</top>
+					<width>532</width>
+					<height>36</height>
+					<font>serif_28</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$LOCALIZE[31105]</label>
+				</control>
+				<control type="grouplist">
+					<left>36</left>
+					<top>80</top>
+					<width>532</width>
+					<height>190</height>
+					<orientation>vertical</orientation>
+					<itemgap>6</itemgap>
+					<include content="MusInfo_Fact">
+						<param name="label" value="Added"/>
+						<param name="info" value="ListItem.DateAdded"/>
+					</include>
+					<include content="MusInfo_Fact">
+						<param name="label" value="Last played"/>
+						<param name="info" value="ListItem.LastPlayed"/>
+					</include>
+					<include content="MusInfo_Fact">
+						<param name="label" value="Plays"/>
+						<param name="info" value="ListItem.PlayCount"/>
+					</include>
+					<include content="MusInfo_Fact">
+						<param name="label" value="Label"/>
+						<param name="info" value="ListItem.Property(Album_Label)"/>
+					</include>
+					<include content="MusInfo_Fact">
+						<param name="label" value="Mood"/>
+						<param name="info" value="ListItem.Property(Album_Mood)"/>
+					</include>
+					<control type="label">
+						<width>532</width>
+						<height>34</height>
+						<font>ui_22</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>$LOCALIZE[31233]</label>
+						<visible>String.IsEmpty(ListItem.DateAdded) + String.IsEmpty(ListItem.LastPlayed) + String.IsEmpty(ListItem.Property(Album_Label))</visible>
+					</control>
+				</control>
+			</control>
+			<control type="button" id="9001">
+				<description>about: OK opens the full text</description>
+				<left>0</left>
+				<top>0</top>
+				<width>604</width>
+				<height>292</height>
+				<label></label>
+				<texturefocus />
+				<texturenofocus />
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft condition="Control.IsVisible(50)">50</onleft>
+				<onleft condition="!Control.IsVisible(50)">noop</onleft>
+				<onright>noop</onright>
+				<onclick>SetFocus(61)</onclick>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+			</control>
+		</control>
+	</include>
+	<!-- caption + value row; hides when the value is empty. params: label, info (infolabel name) -->
+	<include name="MusInfo_Fact">
+		<control type="grouplist">
+			<width>532</width>
+			<height>32</height>
+			<orientation>horizontal</orientation>
+			<itemgap>12</itemgap>
+			<visible>!String.IsEmpty($PARAM[info])</visible>
+			<visible>!String.IsEqual($PARAM[info],0)</visible>
+			<control type="label">
+				<width>auto</width>
+				<height>32</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="label">
+				<width max="400">auto</width>
+				<height>32</height>
+				<font>ui_22</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$INFO[$PARAM[info]]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- Full text overlay: shown while scrollbar 61 (group 9200) has focus -->
+	<include name="MusInfo_FullText">
+		<control type="group" id="9200">
+			<visible allowhiddenfocus="true">ControlGroup(9200).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[DL_DimDialog]">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>300</left>
+				<top>110</top>
+				<width>1320</width>
+				<height>860</height>
+				<include>DL_Card</include>
+				<control type="label">
+					<left>60</left>
+					<top>48</top>
+					<width>1200</width>
+					<height>28</height>
+					<font>ui_22_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[MusInfo_AboutTitle]</label>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>84</top>
+					<width>1200</width>
+					<height>76</height>
+					<font>display_52</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[Music_InfoTitle]</label>
+				</control>
+				<control type="textbox">
+					<left>60</left>
+					<top>186</top>
+					<width>1180</width>
+					<height>576</height>
+					<font>body_26</font>
+					<textcolor>$VAR[DL_Body]</textcolor>
+					<pagecontrol>61</pagecontrol>
+					<label>$VAR[Music_InfoDescription]</label>
+				</control>
+				<control type="scrollbar" id="61">
+					<left>1268</left>
+					<top>186</top>
+					<width>8</width>
+					<height>576</height>
+					<orientation>vertical</orientation>
+					<showonepage>false</showonepage>
+					<onleft>9001</onleft>
+					<onright>9001</onright>
+					<onback>9001</onback>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>786</top>
+					<width>1200</width>
+					<height>30</height>
+					<font>small_20</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31234]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+</includes>

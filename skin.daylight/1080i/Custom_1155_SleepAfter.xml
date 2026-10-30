@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	"Sleep after this" engine (OSD button 70060 sets Window(Home).Property(daylight.sleepafter)).
+	An empty dialog that opens itself through its window-level <visible> (same pattern as the OSD
+	auto-hide, Custom_1152) whenever the state needs a nudge, does it in onload, and closes again
+	because the condition is no longer true:
+	  playing, no alarm yet   -> AlarmClock(daylightsleep, PlayerControl(Stop), <time remaining>, silent)
+	                             (stops before Up Next / the playlist can start the next item)
+	  paused with an alarm    -> CancelAlarm (re-armed with the new remaining time on resume)
+	  seek / skip / chapter jump / fast-forward / rewind / buffering with an alarm
+	                          -> CancelAlarm; it is re-armed with the new remaining time 3 s after
+	                             playback runs normally again (0.9.14, Greptile on repo-skins #506:
+	                             a seek back or a stall used to stop playback before the ending)
+	  playback has ended      -> clear the request, cancel the alarm, ActivateScreensaver
+	Builtins verified in Kodi 21 Omega source: AlarmClock (hh:mm:ss accepted, GUIBuiltins.cpp),
+	CancelAlarm, System.HasAlarm(name) (GUIInfoManager), ActivateScreensaver (SystemBuiltins.cpp).
+	Player.HasPerformedSeek(3) = CDataCacheCore::HasPerformedSeek, set by every VideoPlayer seek
+	(time seeks, chapter jumps, skip steps). The "moving" state keeps the dialog closed for its
+	3 s, so the re-arm opens it afresh (onload runs only when the dialog opens).
+	Conditions written out in full (window-level visible does not expand $EXP).
+-->
+<window type="dialog" id="1155">
+	<visible>!String.IsEmpty(Window(Home).Property(daylight.sleepafter)) + [[Player.HasVideo + !Player.Paused + !Player.Caching + !Player.Seeking + !Player.HasPerformedSeek(3) + !Player.Forwarding + !Player.Rewinding + !System.HasAlarm(daylightsleep) + Integer.IsGreater(Player.TimeRemaining(secs),5)] | [System.HasAlarm(daylightsleep) + [Player.Paused | [Player.Caching | Player.Seeking | Player.HasPerformedSeek(3) | Player.Forwarding | Player.Rewinding]]] | !Player.HasMedia]</visible>
+	<onload condition="Player.HasVideo + !Player.Paused + !Player.Caching + !Player.Seeking + !Player.HasPerformedSeek(3) + !Player.Forwarding + !Player.Rewinding + !System.HasAlarm(daylightsleep)">AlarmClock(daylightsleep,PlayerControl(Stop),$INFO[Player.TimeRemaining(hh:mm:ss)],silent)</onload>
+	<onload condition="System.HasAlarm(daylightsleep) + [Player.Paused | [Player.Caching | Player.Seeking | Player.HasPerformedSeek(3) | Player.Forwarding | Player.Rewinding]]">CancelAlarm(daylightsleep,silent)</onload>
+	<onload condition="!Player.HasMedia">CancelAlarm(daylightsleep,silent)</onload>
+	<onload condition="!Player.HasMedia">ClearProperty(daylight.sleepafter,home)</onload>
+	<onload condition="!Player.HasMedia">ActivateScreensaver</onload>
+	<controls/>
+</window>

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD (Daylight). Floats a soft panel over Now playing's Up next card (120,816 1680x200) with
+	the same circle transport buttons and pills as the film OSD. Up lights Now playing's track for
+	seeking. Pieces: DLOSD_Circle / DLOSD_Pill (Includes_OSD_Daylight.xml), NP_* (Includes_NowPlaying.xml).
+
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (603 stop when pause is not
+	possible), 87 seek stepper, group 200 holding the transport (602 play-pause, 603 stop, 600 previous,
+	607 next; 0.9.3 dropped the 601 / 606 seek buttons) and 70054 shuffle, 70053 repeat, 70051 queue, 70056 visualiser presets (Daylight id; only with a
+	visualisation that has presets).
+	Not shipped: 608 record and 70040-70050 PVR / RDS (radio unused), 70052 rating, 70055 lyrics.
+
+	Focus map: Left/Right walk the row (wraps; hidden buttons are skipped through the _if pairs;
+	Left from Play/Pause = Visualiser presets when shown).
+	Up -> 87 (Left/Right seek, Down back to the row). Back closes the OSD (Kodi).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<include content="DLOSD_Panel">
+			<param name="top" value="816"/>
+			<param name="height" value="200"/>
+		</include>
+		<control type="label">
+			<left>168</left>
+			<top>840</top>
+			<width>900</width>
+			<height>30</height>
+			<font>small_20_bold</font>
+			<textcolor>$VAR[DL_AccentText]</textcolor>
+			<label>$VAR[NP_Kicker]</label>
+		</control>
+		<control type="label">
+			<left>1000</left>
+			<top>840</top>
+			<width>752</width>
+			<height>30</height>
+			<align>right</align>
+			<font>small_20</font>
+			<textcolor>$VAR[DL_Ink2]</textcolor>
+			<label>$INFO[MusicPlayer.offset(1).Title,Up next  ,]$INFO[MusicPlayer.offset(1).Artist,  ·  ,]</label>
+		</control>
+
+		<!-- seek stepper: invisible; the halo around Now playing's track shows its focus -->
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>DL_Hidden</include>
+			<onup>noop</onup>
+			<ondown>200</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+			<visible>Player.SeekEnabled</visible>
+		</control>
+		<control type="group">
+			<visible>Control.HasFocus(87)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>774</left>
+				<top>680</top>
+				<width>1036</width>
+				<height>32</height>
+				<texture border="16,0,16,0" colordiffuse="$VAR[DL_Halo]">daylight/pill_44_line.png</texture>
+			</control>
+			<control type="label">
+				<left>np_col_x</left>
+				<top>640</top>
+				<width>np_col_w</width>
+				<height>30</height>
+				<align>right</align>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$LOCALIZE[31247]</label>
+			</control>
+		</control>
+
+		<control type="group" id="200">
+			<left>0</left>
+			<top>888</top>
+			<width>screen_w</width>
+			<height>64</height>
+			<control type="grouplist">
+				<left>160</left>
+				<top>-8</top>
+				<width>1600</width>
+				<height>80</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<!-- 0.9.3 (Omar): Play/Pause, Stop, Previous, Next; no seek buttons (Up lights the track,
+				     Left/Right seek there). A hidden 602 hands Left/Right on through its own nav. -->
+				<include content="DLOSD_Circle">
+					<param name="id" value="602"/>
+					<param name="icon" value="$VAR[DLOSD_PlayIcon]"/>
+					<param name="icon_size" value="26"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="visible" value="Player.PauseEnabled"/>
+					<param name="onleft" value="70056"/>
+					<param name="onleft_if" value="Visualisation.Enabled + Visualisation.HasPresets"/>
+					<param name="onleft2" value="70051"/>
+					<param name="onleft2_if" value="[!Visualisation.Enabled | !Visualisation.HasPresets] + Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onleft3" value="70053"/>
+					<param name="onleft3_if" value="[!Visualisation.Enabled | !Visualisation.HasPresets] + !Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onright" value="603"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height><visible>Player.PauseEnabled</visible></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="603"/>
+					<param name="icon" value="daylight/icons/stop.png"/>
+					<param name="icon_size" value="24"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="600"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="600"/>
+					<param name="icon" value="daylight/icons/prev.png"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="607"/>
+				</include>
+				<control type="group"><width>8</width><height>10</height></control>
+				<include content="DLOSD_Circle">
+					<param name="id" value="607"/>
+					<param name="icon" value="daylight/icons/next.png"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onleft" value="600"/>
+					<param name="onright" value="70054"/>
+				</include>
+				<!-- divider -->
+				<control type="group">
+					<left>8</left>
+					<width>34</width>
+					<height>80</height>
+					<control type="image">
+						<left>16</left>
+						<top>24</top>
+						<width>2</width>
+						<height>32</height>
+						<texture colordiffuse="$VAR[DL_Line2]">common/white.png</texture>
+					</control>
+				</control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="70054"/>
+					<param name="width" value="164"/>
+					<param name="label" value="$VAR[NP_ShuffleLabel]"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+					<param name="visible" value="!MusicPartyMode.Enabled"/>
+					<param name="onleft" value="607"/>
+					<param name="onright" value="70053"/>
+				</include>
+				<control type="group"><width>2</width><height>10</height></control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="70053"/>
+					<param name="width" value="164"/>
+					<param name="label" value="$VAR[NP_RepeatLabel]"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+					<param name="visible" value="!MusicPartyMode.Enabled"/>
+					<param name="onleft" value="70054"/>
+					<param name="onright" value="70051"/>
+					<param name="onright_if" value="Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onright2" value="70056"/>
+					<param name="onright2_if" value="!Integer.IsGreater(Playlist.Length(music),0) + Visualisation.Enabled + Visualisation.HasPresets"/>
+					<param name="onright3" value="602"/>
+					<param name="onright3_if" value="!Integer.IsGreater(Playlist.Length(music),0) + [!Visualisation.Enabled | !Visualisation.HasPresets]"/>
+				</include>
+				<control type="group"><width>2</width><height>10</height></control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="70051"/>
+					<param name="width" value="196"/>
+					<param name="label" value="$INFO[Playlist.Length(music),Queue  ·  ,]"/>
+					<param name="onclick" value="Dialog.Close(all,true)"/>
+					<param name="onclick2" value="ActivateWindow(musicplaylist)"/>
+					<param name="visible" value="Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onleft" value="70053"/>
+					<param name="onright" value="70056"/>
+					<param name="onright_if" value="Visualisation.Enabled + Visualisation.HasPresets"/>
+					<param name="onright2" value="602"/>
+					<param name="onright2_if" value="[!Visualisation.Enabled | !Visualisation.HasPresets]"/>
+				</include>
+				<!-- 0.9.10: Visualiser presets (Kodi's preset list in DialogSelect), only for a running
+				     visualisation with presets; Left from Play/Pause reaches it in one press -->
+				<control type="group"><width>2</width><height>10</height><visible>Visualisation.Enabled + Visualisation.HasPresets</visible></control>
+				<include content="DLOSD_Pill">
+					<param name="id" value="70056"/>
+					<param name="width" value="220"/>
+					<param name="label" value="$LOCALIZE[31318]"/>
+					<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+					<param name="visible" value="Visualisation.Enabled + Visualisation.HasPresets"/>
+					<param name="onleft" value="70051"/>
+					<param name="onleft_if" value="Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onleft2" value="70053"/>
+					<param name="onleft2_if" value="!Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onright" value="602"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>

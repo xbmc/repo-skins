@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Subtitle search / download (M3, Builder D). Mockup: docs/skin.daylight/mockups/SubDownload.dc.html.
+	Right-hand 1180px panel over the dimmed frame: kicker + "Find subtitles", left column = services
+	(selected one marked with an accent square) + Kodi's status line + manual search, right column =
+	results with a language tag, file name, language/rating meta, HI badge and accent SYNC badge.
+
+	Id contract (Estuary Omega DialogSubtitles.xml / GUIDialogSubtitles.cpp): 100 service name label,
+	110 service logo, 120 results list (items: Label = language, Label2 = file name, Thumb = language
+	code, ActualIcon = rating 0-5, Property(sync), Property(hearing_imp)), 130 "file already has
+	subtitles" note (Kodi shows/hides it), 140 status label, 150 services list, 160 manual search
+	button, 73 results scrollbar. Kodi moves focus to 150 itself when there are no results.
+
+	Gap vs mockup: Kodi exposes no infolabel for the preferred subtitle languages, so the mockup's
+	"LANGUAGES: English, Russian" block shows Kodi's live status line (140) instead.
+-->
+<window>
+	<defaultcontrol always="true">120</defaultcontrol>
+	<include>Anim_SidePanel</include>
+	<controls>
+		<!-- dim the paused frame -->
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<!-- own fades: without them Kodi draws this dim over the dialog (seen on Shield 2026-10-18) -->
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="$VAR[DL_DimDialog]">common/white.png</texture>
+		</control>
+
+		<control type="group">
+			<left>740</left>
+			<top>0</top>
+			<width>1180</width>
+			<height>screen_h</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1180</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[DL_Ground]">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[DL_Line]">common/hairline_v.png</texture>
+			</control>
+
+			<!-- Kodi-filled service name / logo: not part of the design, kept hidden -->
+			<control type="label" id="100">
+				<left>72</left>
+				<top>0</top>
+				<width>10</width>
+				<height>10</height>
+				<visible>false</visible>
+			</control>
+			<control type="image" id="110">
+				<left>72</left>
+				<top>0</top>
+				<width>10</width>
+				<height>10</height>
+				<visible>false</visible>
+			</control>
+
+			<!-- ====== header -->
+			<control type="label">
+				<left>72</left>
+				<top>62</top>
+				<width>1036</width>
+				<height>28</height>
+				<font>cap_21</font>
+				<textcolor>$VAR[DL_Accent]</textcolor>
+				<label>Download subtitles$VAR[OSD_ShortTitle,  ·  ,]</label>
+			</control>
+			<control type="label">
+				<left>72</left>
+				<top>98</top>
+				<width>1036</width>
+				<height>52</height>
+				<font>serif_34</font>
+				<label>$LOCALIZE[31217]</label>
+			</control>
+
+			<!-- ====== left column: service + status + manual search -->
+			<control type="group">
+				<left>72</left>
+				<top>178</top>
+				<width>280</width>
+				<height>846</height>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>280</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<textcolor>$VAR[DL_Ink3]</textcolor>
+					<label>$LOCALIZE[31218]</label>
+				</control>
+				<include content="DL_Rule">
+					<param name="top" value="31"/>
+					<param name="left" value="0"/>
+					<param name="width" value="280"/>
+					<param name="color" value="$VAR[DL_Line]"/>
+				</include>
+				<control type="list" id="150">
+					<left>0</left>
+					<top>32</top>
+					<width>280</width>
+					<height>180</height>
+					<onleft>noop</onleft>
+					<onright>120</onright>
+					<onup>150</onup>
+					<ondown>160</ondown>
+					<scrolltime tween="cubic" easing="out">200</scrolltime>
+					<itemlayout width="280" height="60">
+						<control type="image">
+							<left>14</left>
+							<top>26</top>
+							<width>8</width>
+							<height>8</height>
+							<texture colordiffuse="$VAR[DL_Accent]">common/white.png</texture>
+							<visible>ListItem.IsSelected</visible>
+						</control>
+						<control type="label">
+							<left>34</left>
+							<top>0</top>
+							<width>232</width>
+							<height>59</height>
+							<font>ui_22_bold</font>
+							<label>$INFO[ListItem.Label]</label>
+							<visible>ListItem.IsSelected</visible>
+						</control>
+						<control type="label">
+							<left>34</left>
+							<top>0</top>
+							<width>232</width>
+							<height>59</height>
+							<font>ui_22</font>
+							<textcolor>$VAR[DL_Ink2]</textcolor>
+							<label>$INFO[ListItem.Label]</label>
+							<visible>!ListItem.IsSelected</visible>
+						</control>
+						<control type="image">
+							<left>0</left>
+							<bottom>0</bottom>
+							<width>280</width>
+							<height>rule_h</height>
+							<texture colordiffuse="$VAR[DL_Line]">common/hairline.png</texture>
+						</control>
+					</itemlayout>
+					<focusedlayout width="280" height="60">
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>280</width>
+							<height>60</height>
+							<texture border="20" colordiffuse="$VAR[DL_Raised]">daylight/card16.png</texture>
+							<visible>Control.HasFocus(150)</visible>
+						</control>
+						<control type="image">
+							<left>14</left>
+							<top>26</top>
+							<width>8</width>
+							<height>8</height>
+							<texture colordiffuse="$VAR[DL_Accent]">common/white.png</texture>
+							<visible>ListItem.IsSelected</visible>
+						</control>
+						<control type="label">
+							<left>34</left>
+							<top>0</top>
+							<width>232</width>
+							<height>59</height>
+							<font>ui_22_bold</font>
+							<label>$INFO[ListItem.Label]</label>
+						</control>
+						<control type="image">
+							<left>0</left>
+							<bottom>0</bottom>
+							<width>280</width>
+							<height>rule_h</height>
+							<texture colordiffuse="$VAR[DL_Line]">common/hairline.png</texture>
+						</control>
+						<control type="image">
+							<left>0</left>  <!-- inside the row: lists clip, so -1 lost an edge of the 3px frame -->
+							<top>0</top>
+							<width>280</width>
+							<height>60</height>
+							<texture border="16" colordiffuse="$VAR[DL_Accent]">$VAR[FocusFrameAlways]</texture>
+							<visible>Control.HasFocus(150)</visible>
+						</control>
+					</focusedlayout>
+				</control>
+
+				<control type="label">
+					<left>0</left>
+					<top>238</top>
+					<width>280</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<textcolor>$VAR[DL_Ink3]</textcolor>
+					<label>$LOCALIZE[31219]</label>
+				</control>
+				<include content="DL_Rule">
+					<param name="top" value="269"/>
+					<param name="left" value="0"/>
+					<param name="width" value="280"/>
+					<param name="color" value="$VAR[DL_Line]"/>
+				</include>
+				<control type="label" id="140">
+					<description>Kodi status: searching / n subtitles found / downloading</description>
+					<left>0</left>
+					<top>282</top>
+					<width>280</width>
+					<height>64</height>
+					<aligny>top</aligny>
+					<wrapmultiline>true</wrapmultiline>
+					<font>ui_22_reg</font>
+				</control>
+				<control type="label" id="130">
+					<description>shown by Kodi when the file already has subtitle streams</description>
+					<left>0</left>
+					<top>356</top>
+					<width>280</width>
+					<height>44</height>
+					<aligny>top</aligny>
+					<wrapmultiline>true</wrapmultiline>
+					<font>cap_20</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31220]</label>
+				</control>
+
+				<control type="group">
+					<left>0</left>
+					<top>786</top>
+					<width>280</width>
+					<height>button_h</height>
+					<include content="DL_ButtonSecondary">
+						<param name="id" value="160"/>
+						<param name="left" value="0"/>
+						<param name="width" value="280"/>
+						<param name="label" value="Search manually…"/>
+						<param name="onclick" value="noop"/>
+						<param name="onup" value="150"/>
+						<param name="onright" value="120"/>
+					</include>
+				</control>
+			</control>
+
+			<!-- ====== right column: results -->
+			<control type="group">
+				<left>400</left>
+				<top>178</top>
+				<width>708</width>
+				<height>846</height>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>500</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<textcolor>$VAR[DL_Ink3]</textcolor>
+					<label>$VAR[PL_Container_120_NumItems_Result]</label>
+					<visible>Integer.IsGreater(Container(120).NumItems,0)</visible>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>708</width>
+					<height>24</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>$VAR[DL_Ink3]</textcolor>
+					<label>$LOCALIZE[31221]</label>
+				</control>
+				<include content="DL_Rule">
+					<param name="top" value="31"/>
+					<param name="left" value="0"/>
+					<param name="width" value="708"/>
+					<param name="color" value="$VAR[DL_Line]"/>
+				</include>
+				<!-- empty state (Kodi's status line explains why) -->
+				<control type="label">
+					<left>0</left>
+					<top>60</top>
+					<width>696</width>
+					<height>40</height>
+					<font>ui_22_reg</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31222]</label>
+					<visible>Integer.IsEqual(Container(120).NumItems,0)</visible>
+				</control>
+
+				<control type="list" id="120">
+					<left>0</left>
+					<top>32</top>
+					<width>696</width>
+					<height>756</height>
+					<onleft>150</onleft>
+					<onright>73</onright>
+					<onup>120</onup>
+					<ondown>120</ondown>
+					<pagecontrol>73</pagecontrol>
+					<scrolltime tween="cubic" easing="out">200</scrolltime>
+					<itemlayout width="696" height="84">
+						<include content="OSD_SubtitleRow">
+							<param name="focused" value="false"/>
+						</include>
+					</itemlayout>
+					<focusedlayout width="696" height="84">
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>696</width>
+							<height>84</height>
+							<texture border="20" colordiffuse="$VAR[DL_Raised]">daylight/card16.png</texture>
+							<visible>Control.HasFocus(120)</visible>
+						</control>
+						<include content="OSD_SubtitleRow">
+							<param name="focused" value="true"/>
+						</include>
+						<control type="image">
+							<left>0</left>  <!-- inside the row: lists clip, so -1 lost an edge of the 3px frame -->
+							<top>0</top>
+							<width>696</width>
+							<height>84</height>
+							<texture border="16" colordiffuse="$VAR[DL_Accent]">$VAR[FocusFrameAlways]</texture>
+							<visible>Control.HasFocus(120)</visible>
+						</control>
+					</focusedlayout>
+				</control>
+				<include content="DL_Scrollbar">
+					<param name="id" value="73"/>
+					<param name="left" value="704"/>
+					<param name="top" value="32"/>
+					<param name="height" value="756"/>
+					<param name="onleft" value="120"/>
+					<param name="onright" value="noop"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,1842 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video library (mockup DaylightFilms): detail panel on the left, a soft card on the right with the
+	grid / list. Used by MyVideoNav.xml; shared label variables are also used by DialogVideoInfo.
+
+	View ids (each gates itself with Container.Content so VIEW only cycles valid views):
+	  500 Grid + detail (movies, sets, tvshows, seasons, music videos)   184x276 posters, 5 columns
+	  501 Wall (same content, no detail panel, 8 columns)
+	  503 Episodes (episodes)                                              thumb rows in the card
+	  509 Rows (0.9.18: shows, seasons)                                    the Episodes row with the show's wide picture
+	      (typed bigwide, last in <views>: 503 is typed list and comes before List 50, so offering 503 itself for
+	      shows would have made it the shows default; docs/VIEWS_PER_SECTION_2026-10-28.md)
+	  50  List (everything: files, add-ons, genres, years ...)             rows in the card
+
+	Kodi id contract (Estuary Omega MyVideoNav.xml + CGUIWindowVideoNav): views listed in <views>;
+	3 sort-by / 4 sort-order (hidden, clicked by the header pills); 14 watched toggle (SendClick).
+	Daylight ids: 9400 nav pills group (9401 For now ... 9406 system menu, 9407 Options = Library panel 1160),
+	9000 card header pills
+	(menucontrol): 9322 Unwatched toggle, 9323 In progress (TV root), 9324 Sort, 9325 order, 9326 View (9327 in episodes, wider).
+
+	Focus map: nav 9400 -Down-> header pills 9000 -Down-> view. View -Up (top row)-> 9000 -Up-> 9400.
+	0.9.8: Library panel 1160 = Left / Right past the edges of any view, past either end of the pills,
+	or Options (9407, top line). View pills 9326 / 9327 open the view picker 1161.
+	Back = Kodi parent folder; Back on the pills returns to the view.
+	Borrowed colour: TMDb Helper reads the focused item of the media window (ListItem prefix).
+-->
+<includes>
+	<!-- ================================================================== constants -->
+	<constant name="vv_top">168</constant>
+	<constant name="vv_panel_w">500</constant>
+	<constant name="vv_card_x">680</constant>
+	<constant name="vv_card_w">1120</constant>
+	<constant name="vv_card_h">848</constant>
+	<constant name="vv_grid_x">702</constant>       <!-- card x + 40 - 18 pad -->
+	<constant name="vv_grid_y">262</constant>       <!-- card y + 112 - 18 pad -->
+	<constant name="vv_grid_w">1070</constant>      <!-- 5 x 214 -->
+	<constant name="vv_grid_h">754</constant>       <!-- to the card bottom (1016) -->
+
+	<!-- ================================================================== expressions -->
+	<expression name="VidView_IsInProgressTV">String.StartsWith(Container.FolderPath,videodb://inprogresstvshows)</expression>
+	<expression name="VidView_IsMoviesRoot">Container.Content(movies) + String.StartsWith(Container.FolderPath,videodb://movies/titles)</expression>
+	<expression name="VidView_IsTVRoot">Container.Content(tvshows) + String.StartsWith(Container.FolderPath,videodb://tvshows/titles)</expression>
+	<expression name="VidView_IsLibraryVideo">Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</expression>
+	<expression name="VidView_IsFilmsPage">Container.Content(movies) | Container.Content(sets) | String.StartsWith(Container.FolderPath,videodb://movies)</expression>
+	<expression name="VidView_IsShowsPage">Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | String.StartsWith(Container.FolderPath,videodb://tvshows) | $EXP[VidView_IsInProgressTV]</expression>
+	<expression name="VidView_IsFolderType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,set)</expression>
+	<expression name="VidView_IsTVType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)</expression>
+	<expression name="VidView_HasRating">!String.IsEmpty(ListItem.Rating) + !String.IsEqual(ListItem.Rating,0.0) + !String.IsEqual(ListItem.Rating,0)</expression>
+	<expression name="VidView_TVDone">Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0) + Integer.IsGreater(ListItem.Property(TotalEpisodes),0)</expression>
+	<expression name="VidView_SetDone">String.IsEqual(ListItem.DBType,set) + !String.IsEmpty(ListItem.Property(Total)) + String.IsEqual(ListItem.Property(Watched),ListItem.Property(Total))</expression>
+	<expression name="VidView_IsPlayable">String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,episode) | String.IsEqual(ListItem.DBType,musicvideo)</expression>
+	<expression name="VidView_DetailOn">!$EXP[VidView_Wide] + Integer.IsGreater(Container.NumItems,0)</expression>
+	<!-- 0.9.15: full-width views (no detail panel, the card spans the page) and the ones that scroll under the bottom fade -->
+	<expression name="VidView_Wide">Control.IsVisible(501) | Control.IsVisible(502) | Control.IsVisible(505) | Control.IsVisible(506)</expression>
+	<expression name="VidView_WideFade">Control.IsVisible(501) | Control.IsVisible(505) | Control.IsVisible(506)</expression>
+
+	<!-- ================================================================== variables -->
+	<variable name="VidView_Title">
+		<value condition="$EXP[VidView_IsMoviesRoot]">Films</value>
+		<value condition="$EXP[VidView_IsTVRoot]">Shows</value>
+		<value condition="$EXP[VidView_IsInProgressTV]">Shows in progress</value>
+		<value condition="Container.Content(seasons) + !String.IsEmpty(Container.ListItem.TVShowTitle)">$INFO[Container.ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<variable name="VidView_Caption">
+		<value condition="$EXP[VidView_IsTVRoot] + Integer.IsGreater(Container.NumItems,0)">$INFO[Container.CurrentItem,, of ]$INFO[Container.NumItems]</value>
+		<value condition="Integer.IsGreater(Container.NumItems,0) + Integer.IsGreater(Container.TotalUnWatched,0)">$INFO[Container.CurrentItem,, of ]$INFO[Container.NumItems]  ·  $INFO[Container.TotalUnWatched,, unwatched]</value>
+		<value condition="Integer.IsGreater(Container.NumItems,0)">$INFO[Container.CurrentItem,, of ]$INFO[Container.NumItems]</value>
+	</variable>
+	<variable name="VidView_FilterLabel">
+		<value condition="System.Setting(hidewatched)">Unwatched only</value>
+		<value>All</value>
+	</variable>
+	<variable name="VidView_SortArrow">
+		<value condition="Container.SortDirection(descending)">↓</value>
+		<value>↑</value>
+	</variable>
+	<!-- Kodi stores US certifications as "Rated PG-13": show the bare code -->
+	<variable name="VidView_MPAA">
+		<value condition="String.IsEqual(ListItem.MPAA,Rated R)">R</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated PG-13)">PG-13</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated PG)">PG</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated G)">G</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated NR)">NR</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated NC-17)">NC-17</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated TV-MA)">TV-MA</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated TV-14)">TV-14</value>
+		<value condition="String.IsEqual(ListItem.MPAA,Rated TV-PG)">TV-PG</value>
+		<value>$INFO[ListItem.MPAA]</value>
+	</variable>
+	<variable name="VidView_MPAAMeta">
+		<value condition="!String.IsEmpty(ListItem.MPAA)">  ·  $VAR[VidView_MPAA]</value>
+	</variable>
+	<variable name="VidView_Status">
+		<value condition="String.IsEqual(ListItem.DBType,set) + $EXP[VidView_SetDone]">Watched</value>
+		<value condition="String.IsEqual(ListItem.DBType,set) + Integer.IsGreater(ListItem.Property(Watched),0)">In progress</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Unwatched</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + !String.IsEmpty(ListItem.Status)">$INFO[ListItem.Status]</value>
+		<value condition="$EXP[VidView_IsTVType] + $EXP[VidView_TVDone]">Watched</value>
+		<value condition="$EXP[VidView_IsTVType] + Integer.IsGreater(ListItem.Property(WatchedEpisodes),0)">In progress</value>
+		<value condition="$EXP[VidView_IsTVType]">Unwatched</value>
+		<value condition="ListItem.IsResumable">Resume at $INFO[ListItem.PercentPlayed]%</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)">Watched</value>
+		<value>Unwatched</value>
+	</variable>
+	<variable name="VidView_EpCode">
+		<value condition="String.IsEmpty(ListItem.Episode)"></value>
+		<value>S$INFO[ListItem.Season] · E$INFO[ListItem.Episode]</value>
+	</variable>
+	<variable name="VidView_ItemTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<!-- detail panel kicker -->
+	<variable name="VidView_Kicker">
+		<value condition="ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]$INFO[ListItem.TVShowTitle,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.TVShowTitle]$VAR[PL_TotalEpisodes_Episode]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$VAR[VidView_Status]$VAR[VidView_SeasonsWord]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Collection$VAR[PL_Total_Film]</value>
+		<value condition="$EXP[VidView_IsPlayable]">$VAR[VidView_Status]$INFO[ListItem.DateAdded,  ·  added ,]</value>
+		<value>$INFO[Container.FolderName]</value>
+	</variable>
+	<variable name="VidView_SeasonsWord">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalSeasons),1)">  ·  1 season</value>
+		<value condition="Integer.IsGreater(ListItem.Property(TotalSeasons),1)">$INFO[ListItem.Property(TotalSeasons),  ·  , seasons]</value>
+	</variable>
+	<!-- meta line before the rating star: 2026 · PG-13 · 2h 25m · -->
+	<variable name="VidView_MetaLeft">
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.Premiered,Aired ,]$INFO[ListItem.Duration(mins),  ·  , min]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$VAR[PL_TotalEpisodes_Episode]$INFO[ListItem.Studio,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.Year]$INFO[ListItem.Property(WatchedEpisodes),  ·  , watched]</value>
+		<value>$INFO[ListItem.Year]$VAR[VidView_MPAAMeta]$VAR[VidView_RuntimeMeta]</value>
+	</variable>
+	<variable name="VidView_RuntimeMeta">
+		<value condition="Integer.IsGreater(ListItem.Duration(h),0)">  ·  $INFO[ListItem.Duration(h),,h ]$INFO[ListItem.Duration(m),,m]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">  ·  $INFO[ListItem.Duration(m),,m]</value>
+	</variable>
+	<variable name="VidView_Credits">
+		<value condition="!String.IsEmpty(ListItem.Director)">Directed by [COLOR $VAR[DL_Ink]]$INFO[ListItem.Director][/COLOR]</value>
+		<value condition="!String.IsEmpty(ListItem.Studio)">$INFO[ListItem.Studio]</value>
+	</variable>
+	<!-- When to watch (movies, episodes) -->
+	<variable name="VidView_WhenTitle">
+		<value condition="ListItem.IsResumable">$INFO[ListItem.Duration(mins),, min]  ·  pick it up again</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),30)">$INFO[ListItem.Duration(mins),, min]  ·  a quick one</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),95)">$INFO[ListItem.Duration(mins),, min]  ·  fits tonight</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),125)">$INFO[ListItem.Duration(mins),, min]  ·  an easy evening</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),150)">$INFO[ListItem.Duration(mins),, min]  ·  a full evening</value>
+		<value>$INFO[ListItem.Duration(mins),, min]  ·  a long one</value>
+	</variable>
+	<variable name="VidView_WhenLine">
+		<value condition="ListItem.IsResumable + $EXP[DL_CountdownOn]">Resume now and you're done by $INFO[ListItem.EndTimeResume].</value>
+		<value condition="ListItem.IsResumable">Resume now and you're done by $INFO[ListItem.EndTimeResume].</value>
+		<value condition="$EXP[DL_ItemFits]">Start now and it ends at $INFO[ListItem.EndTime], before $VAR[DL_BedWord].</value>
+		<value condition="$EXP[DL_CountdownOn]">Start now and it ends at $INFO[ListItem.EndTime], after $VAR[DL_BedWord].</value>
+		<value>Start now and you're done by $INFO[ListItem.EndTime].</value>
+	</variable>
+	<variable name="VidView_ProgressTitle">
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Property(Watched),, of ]$VAR[PL_Total_Film2]</value>
+		<value condition="$EXP[VidView_TVDone] + Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">1 of 1 episode watched</value>
+		<value condition="$EXP[VidView_TVDone]">All $INFO[ListItem.Property(TotalEpisodes)] episodes watched</value>
+		<value>$INFO[ListItem.Property(WatchedEpisodes),, of ]$VAR[PL_TotalEpisodes_Episode2]</value>
+	</variable>
+	<variable name="VidView_ProgressLine">
+		<value condition="String.IsEqual(ListItem.DBType,set)">A collection: OK opens its films.</value>
+		<value condition="$EXP[VidView_TVDone]">Nothing left: a good time for something new.</value>
+		<value>$INFO[ListItem.Property(UnWatchedEpisodes),, still to watch]</value>
+	</variable>
+	<!-- episode row line -->
+	<variable name="VidView_EpLine">
+		<value condition="ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsGreater(ListItem.Property(WatchedEpisodes),0)">$VAR[PL_TotalEpisodes_Episode3]$INFO[ListItem.Property(WatchedEpisodes),  ·  , watched]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$VAR[PL_TotalEpisodes_Episode3]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.Duration(mins),, min]$INFO[ListItem.Premiered,  ·  aired ,]$INFO[ListItem.Rating,  ·  rated ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$VAR[PL_TotalEpisodes_Episode3]$INFO[ListItem.Property(WatchedEpisodes),  ·  , watched]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+	<variable name="VidView_EpKicker">
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)">$INFO[ListItem.Year]$VAR[VidView_SeasonsWord]  ·  $INFO[ListItem.Property(UnWatchedEpisodes),, unwatched]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$VAR[VidView_SeasonsWord]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.Property(UnWatchedEpisodes),, unwatched]</value>
+	</variable>
+	<variable name="VidView_ThumbArt">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value>$INFO[ListItem.Art(fanart)]</value>
+	</variable>
+	<variable name="VidView_PosterArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+
+	<!-- ================================================================== art pieces -->
+	<!-- ".." parent item tile: raised rounded block + back chevron -->
+	<include name="VidView_ParentTile">
+		<param name="icon">40</param>
+		<param name="caption_visible">false</param>
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<visible>ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture border="24" colordiffuse="$VAR[DL_Raised]">daylight/card20.png</texture>
+				</control>
+				<control type="image">
+					<centerleft>50%</centerleft>
+					<centertop>46%</centertop>
+					<width>$PARAM[icon]</width>
+					<height>$PARAM[icon]</height>
+					<texture colordiffuse="$VAR[DL_Ink2]">daylight/icons/back.png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<right>0</right>
+					<bottom>24</bottom>
+					<height>26</height>
+					<align>center</align>
+					<font>small_20_semibold</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$LOCALIZE[31245]</label>
+					<visible>$PARAM[caption_visible]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- Placeholder under the art (and the ".." tile). params: mask, label, label_visible -->
+	<include name="VidView_ArtFallback">
+		<param name="mask">masks/poster_round8.png</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label_visible">String.IsEmpty(ListItem.Art(poster))</param>
+		<param name="parent_icon">40</param>
+		<param name="parent_caption">true</param>
+		<definition>
+			<include content="VidView_ParentTile">
+				<param name="icon" value="$PARAM[parent_icon]"/>
+				<param name="caption_visible" value="$PARAM[parent_caption]"/>
+			</include>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<visible>!ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture diffuse="$PARAM[mask]" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+				</control>
+				<control type="textbox">
+					<left>16</left>
+					<right>16</right>
+					<top>14</top>
+					<height>78</height>
+					<font>small_20_semibold</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$PARAM[label]</label>
+					<visible>$PARAM[label_visible]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- One artwork image with a rounded mask. params: art, mask, color, visible, aspect, fade -->
+	<include name="VidView_ArtImage">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask">masks/poster_round8.png</param>
+		<param name="color">$VAR[DL_ArtDim]</param>
+		<param name="visible">true</param>
+		<param name="aspect">scale</param>
+		<param name="fade">0</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio scalediffuse="false">$PARAM[aspect]</aspectratio>
+				<fadetime>$PARAM[fade]</fadetime>
+				<texture background="true" diffuse="$PARAM[mask]" colordiffuse="$PARAM[color]">$PARAM[art]</texture>
+				<visible>$PARAM[visible] + !ListItem.IsParentFolder</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- Show / season markers: unwatched count chip or a watched check -->
+	<include name="VidView_TVMarkers">
+		<!-- unwatched episodes: accent disc (1-2 digits) or a wider pill (3 digits); list layouts can't
+		     hold grouplists (Kodi drops them: "unsupported control type"), so widths are fixed -->
+		<control type="group">
+			<right>10</right>
+			<top>10</top>
+			<width>40</width>
+			<height>40</height>
+			<visible>$EXP[ShowUnwatchedMarkers] + $EXP[VidView_IsTVType] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0) + Integer.IsLess(ListItem.Property(UnWatchedEpisodes),100)</visible>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>40</width>
+				<height>40</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_38.png</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>40</width>
+				<height>40</height>
+				<align>center</align>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
+			</control>
+		</control>
+		<control type="group">
+			<right>10</right>
+			<top>10</top>
+			<width>60</width>
+			<height>40</height>
+			<visible>$EXP[ShowUnwatchedMarkers] + $EXP[VidView_IsTVType] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),99)</visible>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>60</width>
+				<height>40</height>
+				<texture border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>60</width>
+				<height>40</height>
+				<align>center</align>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<label>$INFO[ListItem.Property(UnWatchedEpisodes)]</label>
+			</control>
+		</control>
+		<control type="image">
+			<right>8</right>
+			<top>8</top>
+			<width>40</width>
+			<height>40</height>
+			<texture>markers/watched.png</texture>
+			<visible>$EXP[ShowWatchedMarkers] + [[$EXP[VidView_IsTVType] + $EXP[VidView_TVDone]] | $EXP[VidView_SetDone]]</visible>
+		</control>
+	</include>
+
+	<!-- One grid poster (500 / 501). params: id, w, h, pad, focused -->
+	<expression name="VidView_GenreCard">Container.Content(genres) + !ListItem.IsParentFolder + String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(thumb)) + [String.IsEmpty(ListItem.Icon) | String.StartsWith(ListItem.Icon,Default)]</expression>
+	<include name="VidView_GridItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[pad]</left>
+				<top>$PARAM[pad]</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<animation type="Focus" reversible="true" condition="$PARAM[focused] + !$EXP[ReduceMotion]">
+					<effect type="zoom" start="100" end="106" center="auto" time="160" tween="cubic" easing="out"/>
+				</animation>
+				<include content="VidView_ArtFallback">
+					<param name="label_visible" value="String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster)) + String.IsEmpty(ListItem.Art(thumb)) + !$EXP[VidView_GenreCard]"/>
+				</include>
+				<!-- 0.9.18: a genre without a picture (Kodi's icon DefaultGenre.png, not shipped): its name centred on the card -->
+				<control type="textbox">
+					<left>8</left>
+					<right>8</right>
+					<top>20</top>
+					<bottom>20</bottom>
+					<font>ui_22_semibold</font>  <!-- 152 px on the Wall's 168 card: "Documentary" is 137 (+1 a glyph); 26 broke it mid-word -->
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$INFO[ListItem.Label]</label>
+					<visible>$EXP[VidView_GenreCard]</visible>
+				</control>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_PosterArt]"/>
+				</include>
+				<control type="group">
+					<visible>!ListItem.IsParentFolder</visible>
+					<include>DL_WatchedMarkers</include>
+					<include>VidView_TVMarkers</include>
+				</control>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="20"/>
+					<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================== window pieces -->
+	<!-- The soft card behind the views: next to the detail panel, or full width for the Wall -->
+	<include name="VidView_Card">
+		<control type="group">
+			<left>vv_card_x</left>
+			<top>vv_top</top>
+			<width>vv_card_w</width>
+			<height>vv_card_h</height>
+			<visible>!$EXP[VidView_Wide]</visible>
+			<include>DL_Card</include>
+		</control>
+		<control type="group">
+			<left>page_margin</left>
+			<top>vv_top</top>
+			<width>page_width</width>
+			<height>vv_card_h</height>
+			<visible>$EXP[VidView_Wide]</visible>
+			<include>DL_Card</include>
+		</control>
+	</include>
+	<!-- fade at the card bottom so the third row reads as "more below" -->
+	<include name="VidView_CardFade">
+		<control type="image">
+			<left>vv_card_x</left>
+			<top>866</top>
+			<width>vv_card_w</width>
+			<height>150</height>
+			<texture border="0,0,0,0" diffuse="daylight/mask_fade_card.png" colordiffuse="$VAR[DL_Surface]">daylight/fade_bottom_150.png</texture>
+			<visible>!$EXP[VidView_Wide]</visible>
+		</control>
+		<control type="image">
+			<left>page_margin</left>
+			<top>866</top>
+			<width>page_width</width>
+			<height>150</height>
+			<texture diffuse="daylight/mask_fade_wide.png" colordiffuse="$VAR[DL_Surface]">daylight/fade_bottom_150.png</texture>
+			<visible>$EXP[VidView_WideFade]</visible>
+		</control>
+	</include>
+
+	<!-- Card header: title + caption on the left, filter / sort / view pills on the right -->
+	<include name="VidView_CardHeader">
+		<control type="group">
+			<left>vv_card_x</left>
+			<top>vv_top</top>
+			<width>vv_card_w</width>
+			<height>112</height>
+			<visible>!$EXP[VidView_Wide]</visible>
+			<control type="grouplist">
+				<left>40</left>
+				<top>32</top>
+				<width>410</width>  <!-- 0.9.4: ends at 1130, before the widest pill row outside the TV root (episodes, 1150); the TV root caption is count-only -->
+				<height>48</height>
+				<orientation>horizontal</orientation>
+				<itemgap>18</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="300">auto</width>
+					<height>48</height>
+					<font>serif_32</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[VidView_Title]</label>
+				</control>
+				<control type="label">
+					<width max="300">auto</width>
+					<height>48</height>
+					<font>small_20_semibold</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[VidView_Caption]</label>
+				</control>
+			</control>
+		</control>
+		<control type="grouplist">
+			<left>160</left>  <!-- 0.9.15: on the card's 40 px inset, like the posters (was flush with the card edge) -->
+			<top>200</top>
+			<width>820</width>  <!-- ends at 980, before the pills (TV root starts at 1000 with the 172 px View pill) -->
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<itemgap>18</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[VidView_Wide]</visible>
+			<control type="label">
+				<width max="500">auto</width>
+				<height>48</height>
+				<font>serif_32</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[VidView_Title]</label>
+			</control>
+			<control type="label">
+				<width max="560">auto</width>
+				<height>48</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[VidView_WideCaption]</label>
+			</control>
+		</control>
+		<!-- header pills (menucontrol) -->
+		<control type="grouplist" id="9000">
+			<left>1000</left>
+			<top>204</top>
+			<width>760</width>
+			<height>40</height>
+			<orientation>horizontal</orientation>
+			<align>right</align>
+			<itemgap>10</itemgap>
+			<onup>9400</onup>
+			<ondown>50</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.8: past either end of the pills = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<onback>50</onback>
+			<control type="button" id="9323">
+				<include content="VidView_PillFixed"><param name="w" value="128"/></include>
+				<label>$VAR[VidView_InProgressLabel]</label>
+				<onclick condition="$EXP[VidView_IsInProgressTV]">Action(ParentDir)</onclick>
+				<onclick condition="!$EXP[VidView_IsInProgressTV]">Container.Update(videodb://inprogresstvshows/)</onclick>
+				<visible>$EXP[VidView_IsTVRoot] | $EXP[VidView_IsInProgressTV]</visible>
+			</control>
+			<control type="button" id="9322">
+				<include content="VidView_PillFixed"><param name="w" value="176"/></include>
+				<label>$VAR[VidView_FilterLabel]</label>
+				<onclick>SendClick(14)</onclick>
+				<visible>$EXP[VidView_IsLibraryVideo] + !$EXP[VidView_IsInProgressTV]</visible>
+			</control>
+			<control type="button" id="9324">
+				<include content="VidView_PillFixed"><param name="w" value="200"/></include>
+				<label>Sort: $INFO[Container.SortMethod]</label>
+				<onclick>SendClick(3)</onclick>
+				<visible>Control.IsEnabled(3)</visible>
+			</control>
+			<control type="button" id="9325">
+				<include content="VidView_PillFixed"><param name="w" value="44"/></include>
+				<label>$VAR[VidView_SortArrow]</label>
+				<onclick>SendClick(4)</onclick>
+				<visible>Control.IsEnabled(4)</visible>
+			</control>
+			<control type="button" id="9326">
+				<include content="VidView_PillFixed"><param name="w" value="172"/></include>  <!-- 0.9.15: "View: Spotlight" -->
+				<label>View: $INFO[Container.Viewmode]</label>
+				<onclick>ActivateWindow(1161)</onclick>
+				<visible>Integer.IsGreater(Container.ViewCount,1) + !Container.Content(episodes)</visible>
+			</control>
+			<!-- episodes: Episodes / List -->
+			<control type="button" id="9327">
+				<include content="VidView_PillFixed"><param name="w" value="164"/></include>
+				<label>View: $INFO[Container.Viewmode]</label>
+				<onclick>ActivateWindow(1161)</onclick>
+				<visible>Integer.IsGreater(Container.ViewCount,1) + Container.Content(episodes)</visible>
+			</control>
+		</control>
+		<!-- Kodi media-window buttons the pills click into -->
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>DL_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>DL_Hidden</include>
+		</control>
+	</include>
+	<!-- full-width header caption: the Wall names the focused film (no detail panel, no labels under its
+	     posters); Spotlight, Wide and Time show the item themselves -->
+	<variable name="VidView_WideCaption">
+		<value condition="Control.IsVisible(501) + Integer.IsGreater(Container.NumItems,0) + !ListItem.IsParentFolder">$INFO[ListItem.Label]$INFO[ListItem.Year,  ·  ,]  ·  $VAR[VidView_Caption]</value>
+		<value>$VAR[VidView_Caption]</value>
+	</variable>
+	<variable name="VidView_InProgressLabel">
+		<value condition="$EXP[VidView_IsInProgressTV]">All shows</value>
+		<value>In progress</value>
+	</variable>
+	<!-- 0.9.3: fixed-width header pill for labels that change in place (All / Unwatched only,
+	     In progress / All shows, View: ...), so the right-aligned row doesn't reflow (Omar rule 5).
+	     Width = widest label (Figtree SemiBold 20, PIL getlength) + 24. param w -->
+	<include name="VidView_PillFixed">
+		<param name="w">160</param>
+		<definition>
+			<width>$PARAM[w]</width>
+			<height>40</height>
+			<font>small_20_semibold</font>
+			<textcolor>$VAR[DL_Ink]</textcolor>
+			<focusedcolor>$VAR[DL_OnAccent]</focusedcolor>
+			<align>center</align>
+			<textoffsetx>12</textoffsetx>
+			<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturefocus>
+			<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Ground]">daylight/pill_40.png</texturenofocus>
+		</definition>
+	</include>
+	<!-- small header pill: ground-tinted rest state (as on the mockup card), accent on focus -->
+	<include name="VidView_PillLook">
+		<width>auto</width>
+		<height>40</height>
+		<font>small_20_semibold</font>
+		<textcolor>$VAR[DL_Ink]</textcolor>
+		<focusedcolor>$VAR[DL_OnAccent]</focusedcolor>
+		<textoffsetx>18</textoffsetx>
+		<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturefocus>
+		<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Ground]">daylight/pill_40.png</texturenofocus>
+	</include>
+
+	<!-- Detail panel (left, 500 wide): kicker, title, meta, genres, plot, credits, when-to-watch card -->
+	<include name="VidView_Detail">
+		<control type="group">
+			<left>page_margin</left>
+			<top>vv_top</top>
+			<width>vv_panel_w</width>
+			<height>vv_card_h</height>
+			<visible>$EXP[VidView_DetailOn]</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- kicker -->
+			<control type="image">
+				<left>0</left>
+				<top>9</top>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<width>480</width>
+				<height>28</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$VAR[VidView_Kicker]</label>
+			</control>
+			<!-- title + everything under it flows: a transparent measuring copy of the title sits in the
+			     grouplist (1 or 2 lines), the visible copy is drawn unclipped on top (LESSONS 3) -->
+			<control type="grouplist">
+				<left>0</left>
+				<top>42</top>
+				<width>vv_panel_w</width>
+				<height>600</height>
+				<orientation>vertical</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="T_VidView_Measure">
+					<param name="label" value="$VAR[VidView_ItemTitle]"/>
+				</include>
+				<control type="image"><width>10</width><height>18</height><texture></texture></control>
+				<!-- meta: year · rating code · runtime · ★ 8.2 -->
+				<control type="grouplist">
+					<width>vv_panel_w</width>
+					<height>32</height>
+					<orientation>horizontal</orientation>
+					<itemgap>10</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<visible>!ListItem.IsParentFolder</visible>
+					<control type="label">
+						<width max="400">auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink]</textcolor>
+						<label>$VAR[VidView_MetaLeft]</label>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>·</label>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+					<control type="image">
+						<top>5</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="$VAR[DL_Accent]">daylight/icons/star.png</texture>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink]</textcolor>
+						<label>$INFO[ListItem.Rating]</label>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+				</control>
+				<control type="image"><width>10</width><height>6</height><texture></texture></control>
+				<control type="label">
+					<width>vv_panel_w</width>
+					<height>30</height>
+					<font>ui_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[ListItem.Genre]</label>
+					<visible>!String.IsEmpty(ListItem.Genre)</visible>
+				</control>
+				<control type="image"><width>10</width><height>22</height><texture></texture></control>
+				<control type="textbox">
+					<width>vv_panel_w</width>
+					<height>180</height>
+					<font>body_24</font>
+					<textcolor>$VAR[DL_Body]</textcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="8000" time="3000" repeat="10000">!Container.Scrolling</autoscroll>
+					<visible>!String.IsEmpty(ListItem.Plot)</visible>
+				</control>
+				<control type="image"><width>10</width><height>18</height><texture></texture></control>
+				<control type="label">
+					<width>vv_panel_w</width>
+					<height>32</height>
+					<font>ui_22_reg</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[VidView_Credits]</label>
+					<visible>!String.IsEmpty(ListItem.Director) | !String.IsEmpty(ListItem.Studio)</visible>
+				</control>
+				<control type="textbox">
+					<width>vv_panel_w</width>
+					<height>32</height>
+					<font>ui_22_reg</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[ListItem.Cast,With ,]</label>
+					<visible>!String.IsEmpty(ListItem.Cast)</visible>
+				</control>
+			</control>
+			<!-- visible title, unclipped (taller than 2 lines so descenders survive), clamps at 2 -->
+			<control type="group">
+				<left>0</left>
+				<top>42</top>
+				<width>vv_panel_w</width>
+				<include content="T_VidView_Title">
+					<param name="label" value="$VAR[VidView_ItemTitle]"/>
+					<param name="color" value="$VAR[DL_Ink]"/>
+				</include>
+			</control>
+			<!-- the "when to watch" card -->
+			<control type="group">
+				<left>0</left>
+				<top>654</top>
+				<width>vv_panel_w</width>
+				<height>194</height>
+				<visible>[$EXP[VidView_IsPlayable] + !String.IsEmpty(ListItem.Duration)] | String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,set)</visible>
+				<include>DL_Card</include>
+				<control type="image">
+					<left>30</left>
+					<top>28</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">$VAR[VidView_WhenIcon]</texture>
+				</control>
+				<control type="label">
+					<left>64</left>
+					<top>24</top>
+					<width>400</width>
+					<height>32</height>
+					<font>small_20_bold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[VidView_WhenHeading]</label>
+				</control>
+				<control type="label">
+					<left>30</left>
+					<top>64</top>
+					<width>440</width>
+					<height>42</height>
+					<font>serif_30</font>
+					<textcolor>$VAR[DL_Ink]</textcolor>
+					<label>$VAR[VidView_WhenBig]</label>
+				</control>
+				<control type="textbox">
+					<left>30</left>
+					<top>112</top>
+					<width>440</width>
+					<height>60</height>
+					<font>ui_22_reg</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$VAR[VidView_WhenSmall]</label>
+				</control>
+				<control type="progress">
+					<left>30</left>
+					<top>156</top>
+					<width>440</width>
+					<height>8</height>
+					<texturebg border="4,0,4,0" colordiffuse="$VAR[DL_Line]">daylight/track_8.png</texturebg>
+					<midtexture border="4,0,4,0" colordiffuse="$VAR[DL_Accent]">daylight/track_8.png</midtexture>
+					<info>ListItem.Property(WatchedEpisodePercent)</info>
+					<visible>$EXP[VidView_IsTVType]</visible>
+				</control>
+			</control>
+		</control>
+	</include>
+	<variable name="VidView_WhenIcon">
+		<value condition="$EXP[VidView_IsPlayable] + [$EXP[DL_IsNight] | $EXP[DL_IsEvening]]">daylight/icons/moon.png</value>
+		<value condition="$EXP[VidView_IsPlayable]">daylight/icons/sun.png</value>
+		<value>daylight/icons/nextup.png</value>
+	</variable>
+	<variable name="VidView_WhenHeading">
+		<value condition="$EXP[VidView_IsPlayable]">When to watch</value>
+		<value>Progress</value>
+	</variable>
+	<variable name="VidView_WhenBig">
+		<value condition="$EXP[VidView_IsPlayable]">$VAR[VidView_WhenTitle]</value>
+		<value>$VAR[VidView_ProgressTitle]</value>
+	</variable>
+	<variable name="VidView_WhenSmall">
+		<value condition="$EXP[VidView_IsPlayable]">$VAR[VidView_WhenLine]</value>
+		<value condition="$EXP[VidView_IsTVType]"></value>
+		<value>$VAR[VidView_ProgressLine]</value>
+	</variable>
+
+	<!-- Empty folder (or everything filtered away) -->
+	<include name="VidView_Empty">
+		<control type="group">
+			<left>720</left>
+			<top>300</top>
+			<width>1040</width>
+			<height>200</height>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<!-- 0.9.15: in Time the ".." row sits where the message was -->
+			<animation effect="slide" start="0,0" end="0,150" time="0" condition="Control.IsVisible(506)">Conditional</animation>
+			<!-- audit 2026-10-30: the ".." row / tile of List, Grid, Episodes and Rows sat on the message too -->
+			<animation effect="slide" start="0,0" end="0,80" time="0" condition="Container.HasParent + Control.IsVisible(50)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,300" time="0" condition="Container.HasParent + Control.IsVisible(500)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,160" time="0" condition="Container.HasParent + [Control.IsVisible(503) | Control.IsVisible(509)]">Conditional</animation>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1040</width>
+				<height>48</height>
+				<font>serif_34</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$LOCALIZE[31230]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>60</top>
+				<width>1040</width>
+				<height>34</height>
+				<font>ui_24</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$LOCALIZE[31246]</label>
+				<visible>System.Setting(hidewatched)</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== View 500 -->
+	<include name="VidView_500_Grid">
+		<control type="group">
+		<visible>Control.IsVisible(500)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="panel" id="500">
+			<left>vv_grid_x</left>
+			<top>vv_grid_y</top>
+			<width>vv_grid_w</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.8: past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<viewtype label="31312">icon</viewtype>
+			<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)</visible>
+			<itemlayout width="214" height="306">
+				<include content="VidView_GridItem">
+					<param name="id" value="500"/><param name="w" value="184"/><param name="h" value="276"/><param name="pad" value="18"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="214" height="306">
+				<include content="VidView_GridItem">
+					<param name="id" value="500"/><param name="w" value="184"/><param name="h" value="276"/><param name="pad" value="18"/><param name="focused" value="true"/>
+				</include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== View 501 -->
+	<include name="VidView_501_Wall">
+		<control type="group">
+		<visible>Control.IsVisible(501)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="panel" id="501">
+			<left>142</left>
+			<top>vv_grid_y</top>
+			<width>1636</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.8: past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<viewtype label="31313">wrap</viewtype>
+			<!-- 0.9.18: also genres / years / tags (a name card; the genre's picture when the library has one) -->
+			<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos) | Container.Content(genres)</visible>
+			<itemlayout width="204" height="292">
+				<include content="VidView_GridItem">
+					<param name="id" value="501"/><param name="w" value="168"/><param name="h" value="252"/><param name="pad" value="18"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="204" height="292">
+				<include content="VidView_GridItem">
+					<param name="id" value="501"/><param name="w" value="168"/><param name="h" value="252"/><param name="pad" value="18"/><param name="focused" value="true"/>
+				</include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== View 503 -->
+	<!-- params: focused, id (503 Episodes / 509 Rows), wide (509: the show's landscape / fanart, else its poster kept
+	     whole on the raised card, a glyph when there is nothing; 503 keeps the episode still) -->
+	<include name="VidView_EpisodeRow">
+		<param name="focused">false</param>
+		<param name="id">503</param>
+		<param name="wide">false</param>
+		<definition>
+			<control type="image">
+				<left>4</left>
+				<top>4</top>
+				<width>1068</width>
+				<height>160</height>
+				<texture border="24" colordiffuse="$VAR[DL_Raised]">daylight/card20.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus($PARAM[id])</visible>
+			</control>
+			<control type="group">
+				<left>22</left>
+				<top>21</top>
+				<width>224</width>
+				<height>126</height>
+				<include content="VidView_ArtFallback">
+					<param name="mask" value="daylight/mask_thumb.png"/>
+					<param name="label_visible" value="false"/>
+					<param name="parent_caption" value="false"/>
+				</include>
+				<include content="VidView_ArtImage" condition="!$PARAM[wide]">
+					<param name="art" value="$VAR[VidView_ThumbArt]"/>
+					<param name="mask" value="daylight/mask_thumb.png"/>
+				</include>
+				<include content="VidView_ArtImage" condition="$PARAM[wide]">
+					<param name="art" value="$VAR[VidView_WideArt]"/>
+					<param name="mask" value="daylight/mask_thumb.png"/>
+					<param name="visible" value="$EXP[VidView_WideHasArt]"/>
+				</include>
+				<include content="VidView_ArtImage" condition="$PARAM[wide]">
+					<param name="art" value="$VAR[VidView_WideIcon]"/>
+					<param name="mask" value="daylight/mask_thumb.png"/>
+					<param name="aspect" value="keep"/>
+					<param name="visible" value="!$EXP[VidView_WideHasArt] + $EXP[VidView_WideHasIcon]"/>
+				</include>
+				<control type="image">
+					<centerleft>50%</centerleft>
+					<centertop>50%</centertop>
+					<width>40</width>
+					<height>40</height>
+					<texture colordiffuse="$VAR[DL_Ink3]">$VAR[VidView_WideGlyph]</texture>
+					<visible>$PARAM[wide] + !ListItem.IsParentFolder + !$EXP[VidView_WideHasArt] + !$EXP[VidView_WideHasIcon]</visible>
+				</control>
+				<control type="group">
+					<visible>!ListItem.IsParentFolder</visible>
+					<include>DL_WatchedMarkers</include>
+				</control>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>20</top>
+				<width>780</width>
+				<height>26</height>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$VAR[VidView_EpKicker]</label>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>46</top>
+				<width>780</width>
+				<height>36</height>
+				<font>ui_26_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<label>$VAR[VidView_ItemTitle]</label>
+			</control>
+			<control type="label">
+				<left>272</left>
+				<top>84</top>
+				<width>780</width>
+				<height>28</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<label>$VAR[VidView_EpLine]</label>
+			</control>
+			<control type="textbox">
+				<left>272</left>
+				<top>114</top>
+				<width>780</width>
+				<height>30</height>
+				<font>ui_22_reg</font>
+				<textcolor>$VAR[DL_Body]</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_503_Episodes">
+		<!-- the fade lives on a wrapper group (Majan pattern): with it directly on this list the view
+		     stayed hidden after navigating into a show (Control.IsVisible(503) false, 8 items) -->
+		<control type="group">
+		<visible>Control.IsVisible(503)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="list" id="503">
+			<left>702</left>
+			<top>vv_grid_y</top>
+			<width>1076</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.8: past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">220</scrolltime>
+			<viewtype label="31314">list</viewtype>
+			<visible>Container.Content(episodes)</visible>
+			<itemlayout width="1076" height="168">
+				<include>VidView_EpisodeRow</include>
+			</itemlayout>
+			<focusedlayout width="1076" height="168">
+				<include content="VidView_EpisodeRow"><param name="focused" value="true"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== View 509 (0.9.18) -->
+	<include name="VidView_509_Rows">
+		<control type="group">
+		<visible>Control.IsVisible(509)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="list" id="509">
+			<left>702</left>
+			<top>vv_grid_y</top>
+			<width>1076</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">220</scrolltime>
+			<viewtype label="31329">bigwide</viewtype>
+			<visible>Container.Content(tvshows) | Container.Content(seasons)</visible>
+			<itemlayout width="1076" height="168">
+				<include content="VidView_EpisodeRow"><param name="id" value="509"/><param name="wide" value="true"/></include>
+			</itemlayout>
+			<focusedlayout width="1076" height="168">
+				<include content="VidView_EpisodeRow"><param name="focused" value="true"/><param name="id" value="509"/><param name="wide" value="true"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== View 50 -->
+	<include name="VidView_50_List">
+		<control type="group">
+		<visible>Control.IsVisible(50)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="list" id="50">
+			<left>702</left>
+			<top>vv_grid_y</top>
+			<width>1076</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.8: past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<viewtype label="535">list</viewtype>
+			<itemlayout width="1076" height="76">
+				<include>DL_LibListRow</include>
+			</itemlayout>
+			<focusedlayout width="1076" height="76">
+				<include content="DL_LibListRow"><param name="focused" value="true"/><param name="id" value="50"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== 0.9.15 views
+	     502 Spotlight  the page as Home's hero: the focused item large (fanart melting into the card, Fraunces
+	                    title, meta, plot, when-to-watch line) over a strip of posters (list 502).
+	     505 Wide       a 4-column panel of landscape cards: series, episodes, sets, add-ons, plug-ins, files.
+	     506 Time       a timeline: each film / episode is a bar from now to the moment it ends, 4 px a
+	                    minute; past bedtime the timeline falls into shade (the bedtime countdown hours).
+	     All three span the page in the wide card (VidView_Wide) with the usual header pills. Left / Right
+	     past the ends = Library panel; Up = header pills; Back = Kodi's parent folder. -->
+
+	<!-- ============================================================ Spotlight (502) -->
+	<expression name="VidView_SpotHasFanart">!ListItem.IsParentFolder + [!String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(tvshow.fanart)) | !String.IsEmpty(ListItem.Art(landscape))]</expression>
+	<variable name="VidView_SpotFanart">
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.fanart))">$INFO[ListItem.Art(tvshow.fanart)]</value>
+		<value>$INFO[ListItem.Art(landscape)]</value>
+	</variable>
+	<!-- caption under each strip poster: when it ends (Daylight's question), else progress / count / year -->
+	<variable name="VidView_StripCaption">
+		<value condition="ListItem.IsParentFolder">$LOCALIZE[31245]</value>
+		<value condition="ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)">ends $INFO[ListItem.EndTimeResume]</value>
+		<value condition="$EXP[VidView_IsPlayable] + Integer.IsGreater(ListItem.Duration(mins),0)">ends $INFO[ListItem.EndTime]</value>
+		<value condition="$EXP[VidView_IsTVType] + Integer.IsGreater(ListItem.Property(UnWatchedEpisodes),0)">$INFO[ListItem.Property(UnWatchedEpisodes),, to watch]</value>
+		<value condition="$EXP[VidView_IsTVType] + $EXP[VidView_TVDone]">Watched</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$VAR[PL_Total_Film3]</value>
+		<value>$INFO[ListItem.Year]</value>
+	</variable>
+	<variable name="VidView_SpotWhen">
+		<value condition="$EXP[VidView_IsPlayable] + Integer.IsGreater(ListItem.Duration(mins),0)">$VAR[VidView_WhenLine]</value>
+		<value condition="$EXP[VidView_IsTVType] | String.IsEqual(ListItem.DBType,set)">$VAR[VidView_ProgressTitle]</value>
+	</variable>
+	<include name="VidView_SpotHero">
+		<control type="group">
+			<left>page_margin</left>
+			<top>vv_top</top>
+			<width>page_width</width>
+			<height>520</height>
+			<visible>Control.IsVisible(502) + Integer.IsGreater(Container.NumItems,0)</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- fanart: top-right of the card, fading into it on the left and above the strip -->
+			<control type="image">
+				<left>540</left>
+				<top>0</top>
+				<width>1140</width>
+				<height>520</height>
+				<aspectratio scalediffuse="false">scale</aspectratio>
+				<fadetime>240</fadetime>
+				<texture background="true" diffuse="daylight/mask_spot.png" colordiffuse="$VAR[DL_ArtDim]">$VAR[VidView_SpotFanart]</texture>
+				<visible>$EXP[VidView_SpotHasFanart]</visible>
+			</control>
+			<!-- no fanart: the poster stands on the card instead (as on the info page) -->
+			<control type="group">
+				<left>1300</left>
+				<top>96</top>
+				<width>220</width>
+				<height>330</height>
+				<visible>!$EXP[VidView_SpotHasFanart] + !ListItem.IsParentFolder + [!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(tvshow.poster))]</visible>
+				<control type="image">
+					<left>-120</left>
+					<top>-90</top>
+					<right>-120</right>
+					<bottom>-150</bottom>
+					<texture border="120" colordiffuse="$VAR[DL_Shadow]">daylight/card_shadow.png</texture>
+				</control>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_PosterArt]"/>
+					<param name="mask" value="daylight/mask_poster_info.png"/>
+					<param name="fade" value="200"/>
+				</include>
+			</control>
+			<!-- kicker -->
+			<control type="image">
+				<left>40</left>
+				<top>113</top>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="$VAR[DL_Accent]">daylight/circle_12.png</texture>
+			</control>
+			<control type="label">
+				<left>60</left>
+				<top>104</top>
+				<width>740</width>
+				<height>28</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$VAR[VidView_Kicker]</label>
+			</control>
+			<!-- title (fitted) + meta + genres + plot flow under it -->
+			<control type="grouplist">
+				<left>40</left>
+				<top>140</top>
+				<width>760</width>
+				<height>336</height>
+				<orientation>vertical</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<include content="T_Spot_Measure">
+					<param name="label" value="$VAR[VidView_ItemTitle]"/>
+				</include>
+				<control type="image"><width>10</width><height>12</height><texture></texture></control>
+				<control type="grouplist">
+					<width>760</width>
+					<height>32</height>
+					<orientation>horizontal</orientation>
+					<itemgap>10</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<visible>!ListItem.IsParentFolder</visible>
+					<control type="label">
+						<width max="600">auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink]</textcolor>
+						<label>$VAR[VidView_MetaLeft]</label>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink2]</textcolor>
+						<label>·</label>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+					<control type="image">
+						<top>5</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="$VAR[DL_Accent]">daylight/icons/star.png</texture>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>32</height>
+						<font>ui_24_semibold</font>
+						<textcolor>$VAR[DL_Ink]</textcolor>
+						<label>$INFO[ListItem.Rating]</label>
+						<visible>$EXP[VidView_HasRating]</visible>
+					</control>
+				</control>
+				<control type="image"><width>10</width><height>6</height><texture></texture></control>
+				<control type="label">
+					<width>760</width>
+					<height>30</height>
+					<font>ui_22</font>
+					<textcolor>$VAR[DL_Ink2]</textcolor>
+					<label>$INFO[ListItem.Genre]</label>
+					<visible>!String.IsEmpty(ListItem.Genre)</visible>
+				</control>
+				<control type="image"><width>10</width><height>14</height><texture></texture></control>
+				<control type="textbox">
+					<width>720</width>
+					<height>108</height>
+					<font>body_24</font>
+					<textcolor>$VAR[DL_Body]</textcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="8000" time="3000" repeat="10000">!Container.Scrolling</autoscroll>
+					<visible>!String.IsEmpty(ListItem.Plot)</visible>
+				</control>
+			</control>
+			<control type="group">
+				<left>40</left>
+				<top>140</top>
+				<width>760</width>
+				<include content="T_Spot_Title">
+					<param name="label" value="$VAR[VidView_ItemTitle]"/>
+					<param name="color" value="$VAR[DL_Ink]"/>
+				</include>
+			</control>
+			<!-- when to watch (films, episodes) or progress (shows, seasons, sets) -->
+			<control type="group">
+				<left>40</left>
+				<top>484</top>
+				<width>800</width>
+				<height>32</height>
+				<visible>!ListItem.IsParentFolder + [[$EXP[VidView_IsPlayable] + Integer.IsGreater(ListItem.Duration(mins),0)] | $EXP[VidView_IsTVType] | String.IsEqual(ListItem.DBType,set)]</visible>
+				<control type="image">
+					<left>0</left>
+					<top>4</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">$VAR[VidView_WhenIcon]</texture>
+				</control>
+				<control type="label">
+					<left>36</left>
+					<top>0</top>
+					<width>764</width>
+					<height>32</height>
+					<font>ui_22_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[VidView_SpotWhen]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+	<!-- One strip poster (502): 140x210 like Home's cards, caption under it -->
+	<include name="VidView_StripItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>18</left>
+				<top>18</top>
+				<width>140</width>
+				<height>210</height>
+				<animation type="Focus" reversible="true" condition="$PARAM[focused] + !$EXP[ReduceMotion]">
+					<effect type="zoom" start="100" end="106" center="auto" time="160" tween="cubic" easing="out"/>
+				</animation>
+				<include content="VidView_ArtFallback">
+					<param name="mask" value="daylight/mask_poster_s.png"/>
+					<param name="label_visible" value="String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster)) + String.IsEmpty(ListItem.Art(thumb))"/>
+					<param name="parent_icon" value="36"/>
+					<param name="parent_caption" value="false"/>
+				</include>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_PosterArt]"/>
+					<param name="mask" value="daylight/mask_poster_s.png"/>
+				</include>
+				<control type="group">
+					<visible>!ListItem.IsParentFolder</visible>
+					<include>DL_WatchedMarkers</include>
+					<include>VidView_TVMarkers</include>
+				</control>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="16"/>
+					<param name="visible" value="Control.HasFocus(502)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>242</top>
+				<width>152</width>
+				<height>28</height>
+				<align>center</align>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<selectedcolor>$VAR[DL_Ink2]</selectedcolor>
+				<label>$VAR[VidView_StripCaption]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(502)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>242</top>
+				<width>152</width>
+				<height>28</height>
+				<align>center</align>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<selectedcolor>$VAR[DL_AccentText]</selectedcolor>
+				<label>$VAR[VidView_StripCaption]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(502)</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_502_Spotlight">
+		<include>VidView_SpotHero</include>
+		<control type="group">
+		<visible>Control.IsVisible(502)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="list" id="502">
+			<left>142</left>
+			<top>694</top>
+			<width>1584</width>
+			<height>312</height>
+			<orientation>horizontal</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- past the first / last poster = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<viewtype label="31320">biginfo</viewtype>
+			<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)</visible>
+			<itemlayout width="176" height="312">
+				<include>VidView_StripItem</include>
+			</itemlayout>
+			<focusedlayout width="176" height="312">
+				<include content="VidView_StripItem"><param name="focused" value="true"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ Wide (505) -->
+	<!-- library items: a real landscape picture (episode still, landscape, fanart; never a generated
+	     image://video@ frame grab, which often never loads); add-ons: their fanart. Everything else
+	     (plug-in items, files, add-ons without fanart) shows its thumb or icon whole ("keep") on a raised card. -->
+	<expression name="VidView_WideHasArt">!ListItem.IsParentFolder + [[String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb)) + !String.StartsWith(ListItem.Art(thumb),image://video@)] | [!String.IsEmpty(ListItem.DBType) + [!String.IsEmpty(ListItem.Art(landscape)) | !String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(tvshow.landscape)) | !String.IsEmpty(ListItem.Art(tvshow.fanart))]] | [Container.Content(addons) + !String.IsEmpty(ListItem.Art(fanart))]]</expression>
+	<expression name="VidView_WideHasIcon">!ListItem.IsParentFolder + [!String.IsEmpty(ListItem.Art(thumb)) | !String.IsEmpty(ListItem.Art(poster)) | [!String.IsEmpty(ListItem.Art(icon)) + !String.StartsWith(ListItem.Art(icon),Default)]]</expression>
+	<variable name="VidView_WideArt">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb)) + !String.StartsWith(ListItem.Art(thumb),image://video@)">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.DBType) + !String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value condition="!String.IsEmpty(ListItem.DBType) + !String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.DBType) + !String.IsEmpty(ListItem.Art(tvshow.landscape))">$INFO[ListItem.Art(tvshow.landscape)]</value>
+		<value condition="!String.IsEmpty(ListItem.DBType) + !String.IsEmpty(ListItem.Art(tvshow.fanart))">$INFO[ListItem.Art(tvshow.fanart)]</value>
+		<value condition="Container.Content(addons)">$INFO[ListItem.Art(fanart)]</value>
+	</variable>
+	<variable name="VidView_WideIcon">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(icon)]</value>
+	</variable>
+	<!-- no art at all: a Daylight glyph for the kind of thing, on the raised card -->
+	<variable name="VidView_WideGlyph">
+		<value condition="String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,set)">daylight/icons/film.png</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,episode)">daylight/icons/tv.png</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">daylight/icons/music.png</value>
+		<value>daylight/icons/sparkle.png</value>
+	</variable>
+	<variable name="VidView_WideSub">
+		<value condition="ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]$INFO[ListItem.Duration(mins),  ·  , min]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$VAR[VidView_SeasonsWord]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$VAR[PL_TotalEpisodes_Episode3]$INFO[ListItem.Property(WatchedEpisodes),  ·  , watched]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Collection$VAR[PL_Total_Film]</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,musicvideo)">$INFO[ListItem.Year]$VAR[VidView_RuntimeMeta]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+	<include name="VidView_WideItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>18</left>
+				<top>18</top>
+				<width>373</width>
+				<height>210</height>
+				<animation type="Focus" reversible="true" condition="$PARAM[focused] + !$EXP[ReduceMotion]">
+					<effect type="zoom" start="100" end="104" center="auto" time="160" tween="cubic" easing="out"/>
+				</animation>
+				<include content="VidView_ArtFallback">
+					<param name="mask" value="masks/landscape_round8.png"/>
+					<param name="label_visible" value="false"/>
+					<param name="parent_icon" value="44"/>
+					<param name="parent_caption" value="false"/>
+				</include>
+				<control type="image">
+					<centerleft>50%</centerleft>
+					<centertop>50%</centertop>
+					<width>48</width>
+					<height>48</height>
+					<texture colordiffuse="$VAR[DL_Ink3]">$VAR[VidView_WideGlyph]</texture>
+					<visible>!$EXP[VidView_WideHasArt] + !$EXP[VidView_WideHasIcon] + !ListItem.IsParentFolder</visible>
+				</control>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_WideArt]"/>
+					<param name="mask" value="masks/landscape_round8.png"/>
+					<param name="visible" value="$EXP[VidView_WideHasArt]"/>
+				</include>
+				<control type="image">
+					<left>20</left>
+					<top>14</top>
+					<right>20</right>
+					<bottom>14</bottom>
+					<aspectratio>keep</aspectratio>
+					<texture background="true" colordiffuse="$VAR[DL_ArtDim]">$VAR[VidView_WideIcon]</texture>
+					<visible>!$EXP[VidView_WideHasArt] + $EXP[VidView_WideHasIcon]</visible>
+				</control>
+				<control type="group">
+					<visible>!ListItem.IsParentFolder</visible>
+					<include>DL_WatchedMarkers</include>
+					<include>VidView_TVMarkers</include>
+				</control>
+				<include content="DL_FocusRing" condition="$PARAM[focused]">
+					<param name="r" value="16"/>
+					<param name="visible" value="Control.HasFocus(505)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>18</left>
+				<top>240</top>
+				<width>373</width>
+				<height>30</height>
+				<font>ui_22_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<selectedcolor>$VAR[DL_Ink]</selectedcolor>
+				<label>$VAR[VidView_ItemTitle]</label>
+			</control>
+			<control type="label">
+				<left>18</left>
+				<top>270</top>
+				<width>373</width>
+				<height>26</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<selectedcolor>$VAR[DL_Ink2]</selectedcolor>
+				<label>$VAR[VidView_WideSub]</label>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_505_Wide">
+		<control type="group">
+		<visible>Control.IsVisible(505)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="panel" id="505">
+			<left>142</left>
+			<top>vv_grid_y</top>
+			<width>1636</width>
+			<height>vv_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- past the first / last column = Library panel -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<viewtype label="31321">wide</viewtype>
+			<itemlayout width="409" height="306">
+				<include>VidView_WideItem</include>
+			</itemlayout>
+			<focusedlayout width="409" height="306">
+				<include content="VidView_WideItem"><param name="focused" value="true"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ Time (506) -->
+	<!-- Axis: x 760 = now, 4 px a minute, 1720 = four hours from now. Bars: one texture per 5-minute bucket
+	     (_src/make_view_textures.py), chosen by VidView_TimeBar. Bedtime: daylight.leftmins (minutes left,
+	     15-minute steps, set by the window's onload) moves the line and the shade with time-0 slides. -->
+	<expression name="VidView_TimeHasRun">!ListItem.IsParentFolder + Integer.IsGreater(ListItem.Duration(mins),0)</expression>
+	<expression name="VidView_TimeBedOn">$EXP[DL_CountdownOn] + Integer.IsLessOrEqual(Window(Home).Property(daylight.leftmins),240)</expression>
+	<variable name="VidView_TimeEnd">
+		<value condition="ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)">ends $INFO[ListItem.EndTimeResume]</value>
+		<value>ends $INFO[ListItem.EndTime]</value>
+	</variable>
+	<variable name="VidView_TimeSub">
+		<value condition="ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]$INFO[ListItem.TVShowTitle,  ·  ,]</value>
+		<value condition="ListItem.IsResumable">$INFO[ListItem.PercentPlayed,Resume at ,%]$INFO[ListItem.Year,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">$INFO[ListItem.Artist]$INFO[ListItem.Year,  ·  ,]</value>
+		<value>$INFO[ListItem.Year]$INFO[ListItem.Genre,  ·  ,]</value>
+	</variable>
+	<!-- Time view bar per 5-minute bucket (textures from _src/make_view_textures.py) -->
+	<variable name="VidView_TimeBar">
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),5)">daylight/timebar/bar_005.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),10)">daylight/timebar/bar_010.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),15)">daylight/timebar/bar_015.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),20)">daylight/timebar/bar_020.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),25)">daylight/timebar/bar_025.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),30)">daylight/timebar/bar_030.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),35)">daylight/timebar/bar_035.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),40)">daylight/timebar/bar_040.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),45)">daylight/timebar/bar_045.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),50)">daylight/timebar/bar_050.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),55)">daylight/timebar/bar_055.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),60)">daylight/timebar/bar_060.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),65)">daylight/timebar/bar_065.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),70)">daylight/timebar/bar_070.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),75)">daylight/timebar/bar_075.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),80)">daylight/timebar/bar_080.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),85)">daylight/timebar/bar_085.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),90)">daylight/timebar/bar_090.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),95)">daylight/timebar/bar_095.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),100)">daylight/timebar/bar_100.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),105)">daylight/timebar/bar_105.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),110)">daylight/timebar/bar_110.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),115)">daylight/timebar/bar_115.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),120)">daylight/timebar/bar_120.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),125)">daylight/timebar/bar_125.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),130)">daylight/timebar/bar_130.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),135)">daylight/timebar/bar_135.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),140)">daylight/timebar/bar_140.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),145)">daylight/timebar/bar_145.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),150)">daylight/timebar/bar_150.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),155)">daylight/timebar/bar_155.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),160)">daylight/timebar/bar_160.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),165)">daylight/timebar/bar_165.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),170)">daylight/timebar/bar_170.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),175)">daylight/timebar/bar_175.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),180)">daylight/timebar/bar_180.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),185)">daylight/timebar/bar_185.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),190)">daylight/timebar/bar_190.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),195)">daylight/timebar/bar_195.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),200)">daylight/timebar/bar_200.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),205)">daylight/timebar/bar_205.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),210)">daylight/timebar/bar_210.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),215)">daylight/timebar/bar_215.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),220)">daylight/timebar/bar_220.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),225)">daylight/timebar/bar_225.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),230)">daylight/timebar/bar_230.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),235)">daylight/timebar/bar_235.png</value>
+		<value condition="Integer.IsLessOrEqual(ListItem.Duration(mins),240)">daylight/timebar/bar_240.png</value>
+		<value>daylight/timebar/bar_max.png</value>
+	</variable>
+	<include name="VidView_TimeRow">
+		<param name="focused">false</param>
+		<definition>
+			<control type="image">
+				<left>4</left>
+				<top>4</top>
+				<width>1628</width>
+				<height>88</height>
+				<texture border="24" colordiffuse="$VAR[DL_Raised]">daylight/card20.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(506)</visible>
+			</control>
+			<!-- art: an episode still, otherwise a poster -->
+			<control type="group">
+				<left>22</left>
+				<top>12</top>
+				<width>128</width>
+				<height>72</height>
+				<visible>String.IsEqual(ListItem.DBType,episode) | ListItem.IsParentFolder</visible>
+				<include content="VidView_ArtFallback">
+					<param name="mask" value="daylight/mask_thumb.png"/>
+					<param name="label_visible" value="false"/>
+					<param name="parent_icon" value="28"/>
+					<param name="parent_caption" value="false"/>
+				</include>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_ThumbArt]"/>
+					<param name="mask" value="daylight/mask_thumb.png"/>
+				</include>
+			</control>
+			<control type="group">
+				<left>58</left>
+				<top>6</top>
+				<width>56</width>
+				<height>84</height>
+				<visible>!String.IsEqual(ListItem.DBType,episode) + !ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture diffuse="daylight/mask_poster_xs.png" colordiffuse="$VAR[DL_Raised]">common/white.png</texture>
+				</control>
+				<include content="VidView_ArtImage">
+					<param name="art" value="$VAR[VidView_PosterArt]"/>
+					<param name="mask" value="daylight/mask_poster_xs.png"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>174</left>
+				<top>14</top>
+				<width>420</width>
+				<height>34</height>
+				<font>ui_24_semibold</font>
+				<textcolor>$VAR[DL_Ink]</textcolor>
+				<selectedcolor>$VAR[DL_Ink]</selectedcolor>
+				<label>$VAR[VidView_ItemTitle]</label>
+			</control>
+			<control type="label">
+				<left>174</left>
+				<top>50</top>
+				<width>420</width>
+				<height>28</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<selectedcolor>$VAR[DL_Ink2]</selectedcolor>
+				<label>$VAR[VidView_TimeSub]</label>
+			</control>
+			<!-- the bar: now -> end, accent; "ends ..." inside when it fits, after it when the bar is short -->
+			<control type="image">
+				<left>618</left>
+				<top>34</top>
+				<width>960</width>
+				<height>28</height>
+				<texture colordiffuse="$VAR[DL_Accent]">$VAR[VidView_TimeBar]</texture>
+				<visible>$EXP[VidView_TimeHasRun]</visible>
+			</control>
+			<control type="label">
+				<left>632</left>
+				<top>34</top>
+				<width>300</width>
+				<height>28</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_OnAccent]</textcolor>
+				<selectedcolor>$VAR[DL_OnAccent]</selectedcolor>
+				<label>$VAR[VidView_TimeEnd]</label>
+				<visible>$EXP[VidView_TimeHasRun] + Integer.IsGreater(ListItem.Duration(mins),44)</visible>
+			</control>
+			<control type="label">
+				<left>810</left>
+				<top>34</top>
+				<width>300</width>
+				<height>28</height>
+				<font>small_20_semibold</font>
+				<textcolor>$VAR[DL_Ink2]</textcolor>
+				<selectedcolor>$VAR[DL_Ink2]</selectedcolor>
+				<label>$VAR[VidView_TimeEnd]</label>
+				<visible>$EXP[VidView_TimeHasRun] + !Integer.IsGreater(ListItem.Duration(mins),44)</visible>
+			</control>
+			<control type="label">
+				<left>618</left>
+				<top>34</top>
+				<width>400</width>
+				<height>28</height>
+				<font>small_20</font>
+				<textcolor>$VAR[DL_Ink3]</textcolor>
+				<selectedcolor>$VAR[DL_Ink3]</selectedcolor>
+				<label>$LOCALIZE[31323]</label>
+				<visible>!ListItem.IsParentFolder + !$EXP[VidView_TimeHasRun]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_TimeAxis">
+		<control type="group">
+			<left>0</left>
+			<top>0</top>
+			<visible>Control.IsVisible(506) + Integer.IsGreater(Container.NumItems,0)</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- hour lines, under the rows (none in an empty folder: the message sits there) -->
+			<control type="image"><left>759</left><top>300</top><width>2</width><height>716</height><texture colordiffuse="$VAR[DL_Line2]">common/white.png</texture></control>
+			<control type="image"><left>999</left><top>300</top><width>2</width><height>716</height><texture colordiffuse="$VAR[DL_Line]">common/white.png</texture></control>
+			<control type="image"><left>1239</left><top>300</top><width>2</width><height>716</height><texture colordiffuse="$VAR[DL_Line]">common/white.png</texture></control>
+			<control type="image"><left>1479</left><top>300</top><width>2</width><height>716</height><texture colordiffuse="$VAR[DL_Line]">common/white.png</texture></control>
+			<control type="image"><left>1719</left><top>300</top><width>2</width><height>716</height><texture colordiffuse="$VAR[DL_Line]">common/white.png</texture></control>
+			<!-- labels -->
+			<control type="label">
+				<left>760</left>
+				<top>264</top>
+				<width>230</width>
+				<height>28</height>
+				<font>small_20_bold</font>
+				<textcolor>$VAR[DL_AccentText]</textcolor>
+				<label>$LOCALIZE[31324]  ·  $INFO[System.Time]</label>
+			</control>
+			<control type="label"><left>900</left><top>264</top><width>200</width><height>28</height><align>center</align><font>small_20_semibold</font><textcolor>$VAR[DL_Ink2]</textcolor><label>$LOCALIZE[31325]</label></control>
+			<control type="label"><left>1140</left><top>264</top><width>200</width><height>28</height><align>center</align><font>small_20_semibold</font><textcolor>$VAR[DL_Ink2]</textcolor><label>$LOCALIZE[31326]</label></control>
+			<control type="label"><left>1380</left><top>264</top><width>200</width><height>28</height><align>center</align><font>small_20_semibold</font><textcolor>$VAR[DL_Ink2]</textcolor><label>$LOCALIZE[31327]</label></control>
+			<control type="label"><left>1520</left><top>264</top><width>200</width><height>28</height><align>right</align><font>small_20_semibold</font><textcolor>$VAR[DL_Ink2]</textcolor><label>$LOCALIZE[31328]</label></control>
+		</control>
+	</include>
+	<!-- Bedtime: everything right of the line falls into shade; a moon chip names the time. Drawn over the rows. -->
+	<include name="VidView_TimeBedtime">
+		<control type="group">
+			<left>0</left>
+			<top>0</top>
+			<visible>Control.IsVisible(506) + $EXP[VidView_TimeBedOn] + Integer.IsGreater(Container.NumItems,0)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image"><left>760</left><top>300</top><width>1020</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),0) + Integer.IsLess(Window(Home).Property(daylight.leftmins),15)</visible></control>
+			<control type="image"><left>820</left><top>300</top><width>960</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),15) + Integer.IsLess(Window(Home).Property(daylight.leftmins),30)</visible></control>
+			<control type="image"><left>880</left><top>300</top><width>900</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),30) + Integer.IsLess(Window(Home).Property(daylight.leftmins),45)</visible></control>
+			<control type="image"><left>940</left><top>300</top><width>840</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),45) + Integer.IsLess(Window(Home).Property(daylight.leftmins),60)</visible></control>
+			<control type="image"><left>1000</left><top>300</top><width>780</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),60) + Integer.IsLess(Window(Home).Property(daylight.leftmins),75)</visible></control>
+			<control type="image"><left>1060</left><top>300</top><width>720</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),75) + Integer.IsLess(Window(Home).Property(daylight.leftmins),90)</visible></control>
+			<control type="image"><left>1120</left><top>300</top><width>660</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),90) + Integer.IsLess(Window(Home).Property(daylight.leftmins),105)</visible></control>
+			<control type="image"><left>1180</left><top>300</top><width>600</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),105) + Integer.IsLess(Window(Home).Property(daylight.leftmins),120)</visible></control>
+			<control type="image"><left>1240</left><top>300</top><width>540</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),120) + Integer.IsLess(Window(Home).Property(daylight.leftmins),135)</visible></control>
+			<control type="image"><left>1300</left><top>300</top><width>480</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),135) + Integer.IsLess(Window(Home).Property(daylight.leftmins),150)</visible></control>
+			<control type="image"><left>1360</left><top>300</top><width>420</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),150) + Integer.IsLess(Window(Home).Property(daylight.leftmins),165)</visible></control>
+			<control type="image"><left>1420</left><top>300</top><width>360</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),165) + Integer.IsLess(Window(Home).Property(daylight.leftmins),180)</visible></control>
+			<control type="image"><left>1480</left><top>300</top><width>300</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),180) + Integer.IsLess(Window(Home).Property(daylight.leftmins),195)</visible></control>
+			<control type="image"><left>1540</left><top>300</top><width>240</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),195) + Integer.IsLess(Window(Home).Property(daylight.leftmins),210)</visible></control>
+			<control type="image"><left>1600</left><top>300</top><width>180</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),210) + Integer.IsLess(Window(Home).Property(daylight.leftmins),240)</visible></control>
+			<control type="image"><left>1660</left><top>300</top><width>120</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),225) + Integer.IsLess(Window(Home).Property(daylight.leftmins),240)</visible></control>
+			<control type="image"><left>1720</left><top>300</top><width>60</width><height>716</height><texture colordiffuse="$VAR[DL_Surface]">daylight/shade55.png</texture><visible>Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),240)</visible></control>
+			<control type="group">
+				<left>760</left>
+				<top>0</top>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),15)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),30)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),45)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),60)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),75)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),90)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),105)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),120)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),135)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),150)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),165)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),180)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),195)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),210)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),225)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="60,0" time="0" condition="Integer.IsGreaterOrEqual(Window(Home).Property(daylight.leftmins),240)">Conditional</animation>
+				<control type="image">
+					<left>-1</left>
+					<top>300</top>
+					<width>2</width>
+					<height>716</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">common/white.png</texture>
+				</control>
+				<control type="image">
+					<left>-84</left>
+					<top>260</top>
+					<width>168</width>
+					<height>36</height>
+					<texture border="18,0,18,0" colordiffuse="$VAR[DL_Surface]">daylight/pill_40.png</texture>
+				</control>
+				<control type="image">
+					<left>-84</left>
+					<top>260</top>
+					<width>168</width>
+					<height>36</height>
+					<texture border="18,0,18,0" colordiffuse="$VAR[DL_Line2]">daylight/pill_40_line.png</texture>
+				</control>
+				<control type="image">
+					<left>-68</left>
+					<top>268</top>
+					<width>20</width>
+					<height>20</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">daylight/icons/moon.png</texture>
+				</control>
+				<control type="label">
+					<left>-44</left>
+					<top>260</top>
+					<width>120</width>
+					<height>36</height>
+					<font>small_20_bold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[DL_BedtimeLabel]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+	<include name="VidView_506_Time">
+		<include>VidView_TimeAxis</include>
+		<control type="group">
+		<visible>Control.IsVisible(506)</visible>
+		<include>Anim_FadeVisible</include>
+		<control type="list" id="506">
+			<left>142</left>
+			<top>300</top>
+			<width>1636</width>
+			<height>716</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>ActivateWindow(1160)</onleft>  <!-- Left / Right = Library panel, as in the List view -->
+			<onright>ActivateWindow(1160)</onright>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">220</scrolltime>
+			<viewtype label="31322">biglist</viewtype>
+			<visible>Container.Content(movies) | Container.Content(episodes) | Container.Content(musicvideos)</visible>
+			<itemlayout width="1636" height="96">
+				<include>VidView_TimeRow</include>
+			</itemlayout>
+			<focusedlayout width="1636" height="96">
+				<include content="VidView_TimeRow"><param name="focused" value="true"/></include>
+			</focusedlayout>
+		</control>
+		</control>
+		<include>VidView_TimeBedtime</include>
+	</include>
+
+	<!-- ============================================================ window composition -->
+	<include name="VidView_Window">
+		<include>DL_Background</include>
+		<include>VidView_Card</include>
+		<include>VidView_Detail</include>
+		<include>VidView_500_Grid</include>
+		<include>VidView_501_Wall</include>
+		<include>VidView_502_Spotlight</include>
+		<include>VidView_503_Episodes</include>
+		<include>VidView_509_Rows</include>
+		<include>VidView_505_Wide</include>
+		<include>VidView_506_Time</include>
+		<include>VidView_50_List</include>
+		<include>VidView_CardFade</include>
+		<include>VidView_Empty</include>
+		<include>VidView_CardHeader</include>
+		<include content="DL_LibraryTopLine">
+			<param name="gid" value="9400"/>
+			<param name="p" value="940"/>
+			<param name="ondown" value="9000"/>
+			<param name="active2" value="$EXP[VidView_IsFilmsPage]"/>
+			<param name="active3" value="$EXP[VidView_IsShowsPage]"/>
+			<param name="options" value="true"/>
+		</include>
+	</include>
+</includes>

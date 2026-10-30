@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Seek bar (Daylight): a compact rounded panel at the bottom while seeking / paused without the OSD:
+	title + "ends 11:41 PM · 11 min past your bedtime", rounded track with playhead, times, a state chip.
+
+	Id contract (Estuary Omega DialogSeekBar.xml / GUIDialogSeekBar.cpp): 401 = progress slider Kodi
+	selects to the seek target; 402/403 are PVR only (omitted). Window visibility conditions copied from
+	Estuary Omega. The content steps aside while the OSD, the fullscreen info or a playback dialog is up
+	(they draw their own progress): OSD_SeekBarHidden.
+-->
+<window>
+	<include>DLOSD_BedTickOnload</include>
+	<visible>Window.IsActive(fullscreenvideo)</visible>
+	<visible>![Window.IsActive(sliderdialog) | Window.IsActive(pvrosdchannels) | Window.IsActive(pvrchannelguide) | Window.IsActive(pvrguideinfo)]</visible>
+	<visible>Player.Seeking | Player.HasPerformedSeek(3) | [Player.Paused + !Player.Caching] | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsActive(fullscreeninfo) | Player.ShowTime | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(playerprocessinfo) | !String.IsEmpty(Player.SeekNumeric)</visible>
+	<zorder>0</zorder>
+	<include>Anim_Toast</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_SeekBarHidden]</visible>
+			<visible>!Player.HasGame</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>700</top>
+				<width>screen_w</width>
+				<height>380</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="$VAR[DL_Scrim]">daylight/osd_scrim_bottom.png</texture>
+			</control>
+			<include content="DLOSD_Panel">
+				<param name="top" value="862"/>
+				<param name="height" value="154"/>
+			</include>
+			<!-- title + end line -->
+			<control type="label">
+				<left>168</left>
+				<top>890</top>
+				<width>900</width>
+				<height>40</height>
+				<font>ui_28_semibold</font>
+				<label>$VAR[OSD_ShortTitle]</label>
+			</control>
+			<control type="grouplist">
+				<left>900</left>
+				<top>890</top>
+				<width>852</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>10</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="image">
+					<top>8</top>
+					<width>24</width>
+					<height>24</height>
+					<texture colordiffuse="$VAR[DL_AccentText]">$VAR[DL_MoodIcon]</texture>
+				</control>
+				<control type="label">
+					<width max="800">auto</width>
+					<height>40</height>
+					<font>ui_24_semibold</font>
+					<textcolor>$VAR[DL_AccentText]</textcolor>
+					<label>$VAR[DLOSD_EndLine]</label>
+				</control>
+			</control>
+			<include content="DLOSD_ProgressRow">
+				<param name="top" value="954"/>
+			</include>
+			<!-- Kodi selects 401 to the seek target; drawn invisible (the track shows the same value) -->
+			<control type="slider" id="401">
+				<left>dlosd_track_x</left>
+				<top>953</top>
+				<width>dlosd_track_w</width>
+				<height>32</height>
+				<texturesliderbar>osd/slider_bg.png</texturesliderbar>
+				<textureslidernib colordiffuse="clear">osd/slider_nib.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="clear">osd/slider_nib.png</textureslidernibfocus>
+			</control>
+			<include content="DLOSD_Bubble">
+				<param name="top" value="806"/>
+				<param name="visible" value="Player.SeekEnabled + [$EXP[OSD_SeekActive] | Player.Forwarding | Player.Rewinding]"/>
+			</include>
+			<!-- state chip -->
+			<control type="grouplist">
+				<left>168</left>
+				<top>808</top>
+				<width>800</width>
+				<height>40</height>
+				<orientation>horizontal</orientation>
+				<visible>!$EXP[OSD_SeekActive] + [Player.Paused | Player.Forwarding | Player.Rewinding | Player.Caching]</visible>
+				<control type="button">
+					<width>auto</width>
+					<height>40</height>
+					<label>$VAR[DLOSD_State]</label>
+					<font>small_20_bold</font>
+					<textoffsetx>18</textoffsetx>
+					<disabledcolor>$VAR[DL_OnAccent]</disabledcolor>
+					<texturenofocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturenofocus>
+					<texturefocus border="20,0,20,0" colordiffuse="$VAR[DL_Accent]">daylight/pill_40.png</texturefocus>
+					<enable>false</enable>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>
