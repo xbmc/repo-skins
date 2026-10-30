@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library views (Builder C, SPEC 6). Listed in MyMusicNav <views>50,504,505</views>.
+	  50  List      - songs, genres, years, roots, playlists, files (always valid: generic fallback)
+	  504 Grid      - albums, artists, songs (Music.dc.html): 7 columns of square covers + title / artist
+	  505 Big album - albums (MusicStage.dc.html): 380 squares, focus fixed in slot 2, zoom 5 %,
+	                  passed slot dimmed .45, slots ahead .80 by fixed-slot overlays (covers opaque),
+	                  artist fanart stage behind
+	The ".." parent item (Omar has filelists.showparentdiritems on) is a hairline back tile labelled Back.
+	Each container gates itself with Container.Content so VIEW only cycles valid views.
+	Back is Kodi's: up a folder / back through tab history (Container.Update keeps history), and
+	out of the window at the start node.
+-->
+<includes>
+	<!-- ================================================================ 504 Grid -->
+	<include name="Music_GridItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>music_pad</left>
+				<top>music_pad</top>
+				<width>music_tile</width>
+				<height>music_tile</height>
+				<include condition="$PARAM[focused]">Anim_FocusZoom</include>
+				<include content="Music_Cover">
+					<param name="title" value="$VAR[SDV_Title]"/>
+					<param name="mask_round" value="masks/square_round8.png"/>
+					<param name="parent_icon" value="48"/>
+					<param name="parent_caption" value="true"/>
+				</include>
+				<include content="SD_FocusFrame" condition="$PARAM[focused]">
+					<param name="visible" value="Control.HasFocus(504)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>music_pad</left>
+				<top>245</top>
+				<width>music_tile</width>
+				<height>25</height>
+				<font>xb_20</font>
+				<textcolor>ink</textcolor>
+				<scroll>$PARAM[focused]</scroll>
+				<label>$VAR[SDV_Title]</label>
+			</control>
+			<control type="label">
+				<left>music_pad</left>
+				<top>273</top>
+				<width>music_tile</width>
+				<height>21</height>
+				<font>reg_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[ListItem.Artist]</label>
+				<visible>!String.IsEqual(ListItem.DBType,artist) + !ListItem.IsParentFolder</visible>
+			</control>
+			<control type="label">
+				<left>music_pad</left>
+				<top>273</top>
+				<width>music_tile</width>
+				<height>21</height>
+				<font>reg_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[ListItem.Genre]</label>
+				<visible>String.IsEqual(ListItem.DBType,artist) + !ListItem.IsParentFolder</visible>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Music_View_504">
+		<control type="panel" id="504">
+			<left>music_grid_left</left>
+			<top>music_grid_top</top>
+			<width>music_grid_w</width>
+			<height>music_grid_h</height>
+			<orientation>vertical</orientation>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<preloaditems>1</preloaditems>
+			<viewtype label="31247">icon</viewtype>
+			<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
+			<include>Anim_FadeVisible</include>
+			<itemlayout width="251" height="310">
+				<include content="Music_GridItem">
+					<param name="focused" value="false"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="251" height="310">
+				<include content="Music_GridItem">
+					<param name="focused" value="true"/>
+				</include>
+			</focusedlayout>
+		</control>
+	</include>
+
+	<!-- ============================================================= 505 Big album -->
+	<!-- Focused cover only: soft shadow (DESIGN 6, Big Album exception) + halo over Soft/Visible art
+	     (DESIGN 2.5). Included conditionally so unfocused items carry no extra controls. -->
+	<include name="Music_BigFocusUnderlay">
+		<control type="image">
+			<left>-128</left>
+			<top>-98</top>
+			<width>636</width>
+			<height>636</height>
+			<texture border="128" colordiffuse="shadow">common/shadow_soft.png</texture>
+			<!-- the ".." tile is see-through: its shadow showed as a dark square through it -->
+			<visible>!ListItem.IsParentFolder</visible>
+		</control>
+		<control type="image">
+			<left>-32</left>
+			<top>-32</top>
+			<width>444</width>
+			<height>444</height>
+			<texture border="32" colordiffuse="clear">focus/halo.png</texture>
+			<visible>$EXP[Music_ArtStrong] + Control.HasFocus(505)</visible>
+		</control>
+	</include>
+
+	<include name="Music_BigItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>music_big_pad_x</left>
+				<top>music_big_pad_y</top>
+				<width>music_big</width>
+				<height>music_big</height>
+				<include condition="$PARAM[focused]">Anim_FocusZoom</include>
+				<include condition="$PARAM[focused]">Music_BigFocusUnderlay</include>
+				<include content="Music_Cover">
+					<param name="mask_round" value="masks/square_round8_large.png"/>
+					<param name="parent_icon" value="64"/>
+					<param name="parent_caption" value="true"/>
+				</include>
+				<include content="SD_FocusFrame" condition="$PARAM[focused]">
+					<param name="visible" value="Control.HasFocus(505)"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Music_View_505">
+		<control type="fixedlist" id="505">
+			<left>music_big_left</left>
+			<top>music_big_top</top>
+			<width>music_big_w</width>
+			<height>music_big_h</height>
+			<orientation>horizontal</orientation>
+			<focusposition>1</focusposition>
+			<movement>0</movement>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<preloaditems>2</preloaditems>
+			<viewtype label="31248">wrap</viewtype>
+			<visible>Container.Content(albums)</visible>
+			<include>Anim_FadeVisible</include>
+			<itemlayout width="408" height="668">
+				<include content="Music_BigItem">
+					<param name="focused" value="false"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="408" height="668">
+				<include content="Music_BigItem">
+					<param name="focused" value="true"/>
+				</include>
+			</focusedlayout>
+		</control>
+		<!-- fixed-slot dimming: slot 1 (x 96) = previous, slots 3+ = ahead; focused slot 2 (x 504) untouched -->
+		<include content="Music_SlotDim">
+			<param name="offset" value="-1"/>
+			<param name="left" value="96"/>
+			<param name="tex" value="vidview/dim_passed.png"/>
+		</include>
+		<include content="Music_SlotDim">
+			<param name="offset" value="1"/>
+			<param name="left" value="912"/>
+		</include>
+		<include content="Music_SlotDim">
+			<param name="offset" value="2"/>
+			<param name="left" value="1320"/>
+		</include>
+		<include content="Music_SlotDim">
+			<param name="offset" value="3"/>
+			<param name="left" value="1728"/>
+		</include>
+		<!-- details under the row, aligned to the focused cover (x 504) -->
+		<control type="group">
+			<visible>Control.IsVisible(505) + Integer.IsGreater(Container(505).NumItems,0)</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- left column: previous album (hidden at the start of the list) -->
+			<control type="group">
+				<left>page_margin</left>
+				<top>music_details_y</top>
+				<width>music_big</width>
+				<visible>!String.IsEmpty(Container(505).ListItemNoWrap(-1).Label)</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>music_big</width>
+					<height>24</height>
+					<font>caps_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$VAR[Music_PrevCaption]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>32</top>
+					<width>music_big</width>
+					<height>24</height>
+					<font>semi_20</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[Music_PrevTitle]</label>
+				</control>
+			</control>
+			<!-- focused ".." item: no details, just what OK does -->
+			<control type="group">
+				<left>music_details_x</left>
+				<top>music_details_y</top>
+				<width>1320</width>
+				<visible>Container(505).ListItem.IsParentFolder</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>1320</width>
+					<height>26</height>
+					<font>caps_20</font>
+					<textcolor>ink</textcolor>
+					<label>$LOCALIZE[31283]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>36</top>
+					<width>1320</width>
+					<height>84</height>
+					<font>disp_76</font>
+					<textcolor>ink</textcolor>
+					<label>$LOCALIZE[31284]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>136</top>
+					<width>1320</width>
+					<height>26</height>
+					<font>caps_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31285]</label>
+				</control>
+			</control>
+			<!-- focused album -->
+			<control type="group">
+				<left>music_details_x</left>
+				<top>music_details_y</top>
+				<width>1320</width>
+				<visible>!Container(505).ListItem.IsParentFolder</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>1320</width>
+					<height>26</height>
+					<font>caps_20</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[Music_BigKicker]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>36</top>
+					<width>1320</width>
+					<height>84</height>
+					<font>disp_76</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[Container(505).ListItem.Label]</label>
+				</control>
+				<control type="grouplist">
+					<left>0</left>
+					<top>130</top>
+					<width>1320</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<itemgap>0</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width max="1100">auto</width>
+						<height>40</height>
+						<font>semi_28</font>
+						<textcolor>ink</textcolor>
+						<label>$INFO[Container(505).ListItem.Artist]</label>
+					</control>
+					<control type="label">
+						<top>4</top>
+						<width max="220">auto</width>
+						<height>36</height>
+						<font>caps_21</font>
+						<textcolor>ink2</textcolor>
+						<label>$INFO[Container(505).ListItem.Year,  ·  ,]</label>
+					</control>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>180</top>
+					<width>1320</width>
+					<height>26</height>
+					<font>caps_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[Container(505).ListItem.Genre]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== 50 List -->
+	<include name="Music_View_50">
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="list" id="50">
+				<left>page_margin</left>
+				<top>music_list_top</top>
+				<width>list_w</width>
+				<height>music_list_h</height>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<include>Lib_OpenLeft</include>
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<viewtype label="535">list</viewtype>
+				<include content="Music_SongLayout">
+					<param name="condition" value="Container.Content(songs)"/>
+				</include>
+				<include content="Music_RowLayout">
+					<param name="condition" value="!Container.Content(songs)"/>
+				</include>
+			</control>
+			<include content="SD_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1196"/>
+				<param name="top" value="160"/>
+				<param name="height" value="792"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="SetProperty(sixdegrees.lib.from,view,home)"/>
+				<param name="onright2" value="SetFocus(9801,0,absolute)"/>
+			</include>
+			<include>Music_ListPanel</include>
+		</control>
+	</include>
+</includes>

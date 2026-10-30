@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Six Degrees Search (Custom_1150_Search.xml, SPEC 5 / T16). Owner: Builder A.
+	Library-only: four result rows fed by library paths filtered with ?xsp= JSON (title / album / artist
+	"contains" the query). No online search, no helper add-on.
+	The query is the text of edit control 9001: $INFO[Control.GetLabel(9001).index(1)]. Paths are empty
+	until something is typed, so opening the window costs nothing.
+	Rows never hide (a hidden container is not processed, so it could never load the next query's
+	results); an empty row shows "No matches" and focus skips it (empty containers can't take focus).
+	Ids: 9001 edit, 9101 movies, 9102 TV shows, 9103 albums, 9104 artists.
+-->
+<includes>
+	<!-- ================================================================ constants -->
+	<constant name="search_query_y">160</constant>
+	<constant name="search_edit_y">184</constant>
+	<constant name="search_edit_h">80</constant>
+	<constant name="search_poster_w">100</constant>
+	<constant name="search_poster_h">150</constant>
+	<constant name="search_poster_pitch">120</constant>  <!-- gap 20 -->
+	<constant name="search_cover_w">120</constant>
+	<constant name="search_cover_pitch">140</constant>
+	<constant name="search_artist_w">240</constant>
+	<constant name="search_artist_h">56</constant>
+	<constant name="search_artist_pitch">256</constant>
+	<constant name="search_pad">22</constant>             <!-- zoom/lift/frame room inside the list clip rect -->
+	<constant name="search_list_x">84</constant>          <!-- items start at 96 -->
+
+	<!-- ================================================================ expressions -->
+	<expression name="Search_HasQuery">!String.IsEmpty(Control.GetLabel(9001).index(1))</expression>
+
+	<!-- The query, URL-encoded for the ?xsp= paths: script.skinvariables' get_encoded_string (quote_plus) runs
+	     whenever the query changes (this list's content path holds it) and writes
+	     Window(Home).Property(SixDegrees.Search.Encoded). Kodi URL-decodes the xsp option once, so & | + % in a query
+	     now reach the library as typed. The query goes in as $ESCINFO (a JSON string literal: Kodi escapes backslashes and quotes and adds the
+	     quotes), so a query holding a double quote searches fine too; esc=%25 keeps Kodi from turning those
+	     backslashes into slashes (CUtil::ValidatePath leaves URLs with a % alone). 2026-10-25.
+	     The list must stay visible: hidden containers never load. -->
+	<include name="Search_Encoder">
+		<control type="list" id="9095">
+			<left>0</left>
+			<top>0</top>
+			<width>1</width>
+			<height>1</height>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content>plugin://script.skinvariables/?info=get_encoded_string&amp;unencoded_paths=true&amp;esc=%25&amp;window_prop=SixDegrees.Search.Encoded&amp;window_id=home&amp;&amp;$ESCINFO[Control.GetLabel(9001).index(1)]</content>
+		</control>
+	</include>
+
+	<!-- ================================================================ paths -->
+	<!-- xsp JSON, URL-encoded; the query is the encoder's output (Search_Encoder above), quotes included. -->
+	<variable name="Search_PathMovies">
+		<value condition="$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(SixDegrees.Search.Encoded))">videodb://movies/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(SixDegrees.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D</value>
+	</variable>
+	<variable name="Search_PathTV">
+		<value condition="$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(SixDegrees.Search.Encoded))">videodb://tvshows/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(SixDegrees.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D</value>
+	</variable>
+	<variable name="Search_PathAlbums">
+		<value condition="$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(SixDegrees.Search.Encoded))">musicdb://albums/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22album%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(SixDegrees.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D</value>
+	</variable>
+	<variable name="Search_PathArtists">
+		<value condition="$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(SixDegrees.Search.Encoded))">musicdb://artists/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22artist%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(SixDegrees.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D</value>
+	</variable>
+
+	<!-- ================================================================ pieces -->
+	<!-- Row header: rule, title 24/700, mono count + focused item on the right.
+	     params: id, top, title, detail (focused item line) -->
+	<include name="Search_RowHeader">
+		<definition>
+			<control type="group">
+				<top>$PARAM[top]</top>
+				<include content="SD_Rule">
+					<param name="top" value="0"/>
+					<param name="color" value="hair_strong"/>
+				</include>
+				<control type="grouplist">
+					<left>page_margin</left>
+					<top>8</top>
+					<width>900</width>
+					<height>30</height>
+					<orientation>horizontal</orientation>
+					<itemgap>16</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width>auto</width>
+						<height>30</height>
+						<font>caps_22</font>
+						<textcolor>ink</textcolor>
+						<label>$PARAM[title]</label>
+					</control>
+					<control type="label">
+						<top>4</top>
+						<width>auto</width>
+						<height>24</height>
+						<font>caps_20</font>
+						<textcolor>ink</textcolor>
+						<label>$INFO[Container($PARAM[id]).NumItems]</label>
+						<visible>Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+					</control>
+					<control type="label">
+						<top>4</top>
+						<width>auto</width>
+						<height>24</height>
+						<font>caps_20</font>
+						<textcolor>ink2</textcolor>
+						<label>$LOCALIZE[31260]</label>
+						<visible>!Integer.IsGreater(Container($PARAM[id]).NumItems,0) + !Container($PARAM[id]).IsUpdating + !String.IsEmpty(Window(Home).Property(SixDegrees.Search.Encoded))</visible>
+					</control>
+					<control type="label">
+						<top>4</top>
+						<width>auto</width>
+						<height>24</height>
+						<font>caps_20</font>
+						<textcolor>ink2</textcolor>
+						<label>$LOCALIZE[31261]</label>
+						<visible>Container($PARAM[id]).IsUpdating</visible>
+					</control>
+				</control>
+				<!-- focused item detail, right-aligned (only while the row has focus) -->
+				<control type="label">
+					<left>page_margin</left>
+					<top>12</top>
+					<width>page_width</width>
+					<height>24</height>
+					<align>right</align>
+					<font>caps_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[detail]</label>
+					<visible>Control.HasFocus($PARAM[id])</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- One results row. params: id, top (list top = header top + 40 - pad), w, h, pitch, path, target,
+	     art, mask_round, mask_square, onup, ondown -->
+	<include name="Search_Row">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask_round">masks/poster_round8.png</param>
+		<param name="mask_square">masks/poster_square.png</param>
+		<param name="target">videos</param>
+		<definition>
+			<control type="list" id="$PARAM[id]">
+				<left>search_list_x</left>
+				<top>$PARAM[top]</top>
+				<width>1836</width>
+				<height>$PARAM[list_h]</height>
+				<orientation>horizontal</orientation>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback>9001</onback>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="$PARAM[pitch]" height="$PARAM[list_h]">
+					<control type="group">
+						<left>12</left>
+						<top>search_pad</top>
+						<width>$PARAM[w]</width>
+						<height>$PARAM[h]</height>
+						<include content="Home_Art">
+							<param name="art" value="$PARAM[art]"/>
+							<param name="mask_round" value="$PARAM[mask_round]"/>
+							<param name="mask_square" value="$PARAM[mask_square]"/>
+						</include>
+						<include>SD_WatchedMarkers</include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="$PARAM[pitch]" height="$PARAM[list_h]">
+					<control type="group">
+						<left>12</left>
+						<top>search_pad</top>
+						<width>$PARAM[w]</width>
+						<height>$PARAM[h]</height>
+						<include>Anim_FocusLift</include>
+						<include content="Home_Art">
+							<param name="art" value="$PARAM[art]"/>
+							<param name="mask_round" value="$PARAM[mask_round]"/>
+							<param name="mask_square" value="$PARAM[mask_square]"/>
+						</include>
+						<include>SD_WatchedMarkers</include>
+						<include content="SD_FocusFrame">
+							<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+						</include>
+					</control>
+				</focusedlayout>
+				<content target="$PARAM[target]" limit="30">$PARAM[path]</content>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Artists row: name tiles (0 of 155 artists have a thumb today, DATA 4.9), thumb when present -->
+	<include name="Search_ArtistRow">
+		<definition>
+			<control type="list" id="$PARAM[id]">
+				<left>80</left>  <!-- search_list_x - 4: tile zoom 6 + frame 7 needs 13px+ of clip room (items at 16) -->
+				<top>$PARAM[top]</top>
+				<width>1840</width>
+				<height>100</height>
+				<orientation>horizontal</orientation>
+				<onup>$PARAM[onup]</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback>9001</onback>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="search_artist_pitch" height="100">
+					<control type="group">
+						<left>16</left>
+						<top>search_pad</top>
+						<width>search_artist_w</width>
+						<height>search_artist_h</height>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>search_artist_w</width>
+							<height>search_artist_h</height>
+							<texture border="10" colordiffuse="hair">$VAR[ButtonOutline]</texture>
+						</control>
+						<control type="label">
+							<left>20</left>
+							<top>0</top>
+							<width>200</width>
+							<height>search_artist_h</height>
+							<font>xb_22</font>
+							<textcolor>ink2</textcolor>
+							<label>$INFO[ListItem.Label]</label>
+						</control>
+					</control>
+				</itemlayout>
+				<focusedlayout width="search_artist_pitch" height="100">
+					<control type="group">
+						<left>16</left>
+						<top>search_pad</top>
+						<width>search_artist_w</width>
+						<height>search_artist_h</height>
+						<include>Anim_FocusLift</include>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>search_artist_w</width>
+							<height>search_artist_h</height>
+							<texture border="10" colordiffuse="hair">$VAR[ButtonOutline]</texture>
+						</control>
+						<control type="label">
+							<left>20</left>
+							<top>0</top>
+							<width>200</width>
+							<height>search_artist_h</height>
+							<font>xb_22</font>
+							<textcolor>ink</textcolor>
+							<label>$INFO[ListItem.Label]</label>
+						</control>
+						<include content="SD_FocusFrameAlways">
+							<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+						</include>
+					</control>
+				</focusedlayout>
+				<content target="music" limit="30">$PARAM[path]</content>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ layout -->
+	<!-- Query block: mono kicker, big edit field (opens DialogKeyboard on OK), hairline (accent when focused) -->
+	<include name="Search_Query">
+		<control type="label">
+			<left>page_margin</left>
+			<top>search_query_y</top>
+			<width>page_width</width>
+			<height>20</height>
+			<font>caps_20</font>
+			<textcolor>ink</textcolor>
+			<label>$LOCALIZE[31262]</label>
+		</control>
+		<control type="edit" id="9001">
+			<left>page_margin</left>
+			<top>search_edit_y</top>
+			<width>page_width</width>
+			<height>search_edit_h</height>
+			<font>disp_60</font>
+			<textcolor>ink</textcolor>
+			<focusedcolor>ink</focusedcolor>
+			<disabledcolor>ink2</disabledcolor>
+			<textoffsetx>0</textoffsetx>
+			<aligny>center</aligny>
+			<label></label>
+			<hinttext>$LOCALIZE[31263]</hinttext>
+			<texturefocus />
+			<texturenofocus />
+			<onup>noop</onup>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<ondown>9101</ondown>
+		</control>
+		<control type="image">
+			<left>page_margin</left>
+			<top>265</top>
+			<width>page_width</width>
+			<height>2</height>
+			<texture colordiffuse="ink">common/white.png</texture>
+			<visible>Control.HasFocus(9001)</visible>
+		</control>
+		<include content="SD_Rule">
+			<param name="top" value="266"/>
+			<param name="color" value="hair_strong"/>
+		</include>
+		<control type="label">
+			<left>page_margin</left>
+			<top>278</top>
+			<width>page_width</width>
+			<height>22</height>
+			<font>caps_20</font>
+			<textcolor>ink2</textcolor>
+			<label>$LOCALIZE[31264]</label>
+			<visible>Control.HasFocus(9001)</visible>
+		</control>
+	</include>
+
+	<!-- Results: Movies 100x150 · TV shows 100x150 · Albums 120x120 · Artists name tiles.
+	     Fixed slots from y 316; items start 48 px under each header rule (fits 1080 without scrolling) -->
+	<include name="Search_Results">
+		<control type="group">
+			<visible>$EXP[Search_HasQuery]</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="Search_RowHeader">
+				<param name="id" value="9101"/>
+				<param name="top" value="316"/>
+				<param name="title" value="$LOCALIZE[342]"/>
+				<param name="detail" value="$INFO[Container(9101).ListItem.Label]$INFO[Container(9101).ListItem.Year,  ·  ,]"/>
+			</include>
+			<include content="Search_Row">
+				<param name="id" value="9101"/>
+				<param name="top" value="342"/>
+				<param name="list_h" value="194"/>
+				<param name="w" value="search_poster_w"/>
+				<param name="h" value="search_poster_h"/>
+				<param name="pitch" value="search_poster_pitch"/>
+				<param name="path" value="$VAR[Search_PathMovies]"/>
+				<param name="onup" value="9001"/>
+				<param name="ondown" value="9102"/>
+			</include>
+			<include content="Search_RowHeader">
+				<param name="id" value="9102"/>
+				<param name="top" value="534"/>
+				<param name="title" value="$LOCALIZE[20343]"/>
+				<param name="detail" value="$INFO[Container(9102).ListItem.Label]$INFO[Container(9102).ListItem.Year,  ·  ,]"/>
+			</include>
+			<include content="Search_Row">
+				<param name="id" value="9102"/>
+				<param name="top" value="560"/>
+				<param name="list_h" value="194"/>
+				<param name="w" value="search_poster_w"/>
+				<param name="h" value="search_poster_h"/>
+				<param name="pitch" value="search_poster_pitch"/>
+				<param name="path" value="$VAR[Search_PathTV]"/>
+				<param name="onup" value="9101"/>
+				<param name="ondown" value="9103"/>
+			</include>
+			<include content="Search_RowHeader">
+				<param name="id" value="9103"/>
+				<param name="top" value="752"/>
+				<param name="title" value="$LOCALIZE[132]"/>
+				<param name="detail" value="$INFO[Container(9103).ListItem.Label]$INFO[Container(9103).ListItem.Artist,  ·  ,]"/>
+			</include>
+			<include content="Search_Row">
+				<param name="id" value="9103"/>
+				<param name="top" value="778"/>
+				<param name="list_h" value="164"/>
+				<param name="w" value="search_cover_w"/>
+				<param name="h" value="search_cover_w"/>
+				<param name="pitch" value="search_cover_pitch"/>
+				<param name="path" value="$VAR[Search_PathAlbums]"/>
+				<param name="target" value="music"/>
+				<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+				<param name="mask_round" value="masks/square_round8.png"/>
+				<param name="mask_square" value="masks/square_square.png"/>
+				<param name="onup" value="9102"/>
+				<param name="ondown" value="9104"/>
+			</include>
+			<include content="Search_RowHeader">
+				<param name="id" value="9104"/>
+				<param name="top" value="940"/>
+				<param name="title" value="$LOCALIZE[133]"/>
+				<param name="detail" value=""/>
+			</include>
+			<include content="Search_ArtistRow">
+				<param name="id" value="9104"/>
+				<param name="top" value="966"/>
+				<param name="path" value="$VAR[Search_PathArtists]"/>
+				<param name="onup" value="9103"/>
+			</include>
+		</control>
+		<!-- empty state -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>330</top>
+			<width>page_width</width>
+			<height>30</height>
+			<font>reg_22</font>
+			<textcolor>ink2</textcolor>
+			<label>$LOCALIZE[31265]</label>
+			<visible>!$EXP[Search_HasQuery]</visible>
+		</control>
+	</include>
+</includes>

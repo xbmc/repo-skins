@@ -1,0 +1,166 @@
+{
+    "infolabels": {
+        "fav": "Container({list}).ListItemAbsolute({index}).FolderPath",
+        "label": "Container({list}).ListItemAbsolute({index}).Label",
+        "icon": "Container({list}).ListItemAbsolute({index}).Icon"
+    },
+    "operations": [
+        {
+            "regex": {
+                "cmd": {
+                    "regex": "^favourites://",
+                    "value": "",
+                    "input": "{fav}"
+                }
+            }
+        },
+        {
+            "decode": {
+                "cmd": "{cmd}"
+            }
+        },
+        {
+            "regex": {
+                "cmd": {
+                    "regex": "\\)\\s*/$",
+                    "value": ")",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "cmd": {
+                    "regex": "^\\s+|\\s+$",
+                    "value": "",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "target": {
+                    "regex": "(?is)^\\s*activatewindow\\(\\s*\"?([^,\")]*?)\"?\\s*,.*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "path": {
+                    "regex": "(?is)^\\s*activatewindow\\([^,]*,\\s*\"?(.*?)\"?\\s*(,\\s*return\\s*)?\\)\\s*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "kind": {
+                    "regex": "(?is)^\\s*activatewindow\\([^,]*,\\s*\"?[a-z]+://.*$",
+                    "value": "folder",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "kind": {
+                    "regex": "(?s)^(?!folder$).*$",
+                    "value": "other",
+                    "input": "{kind}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "label": {
+                    "regex": "\"",
+                    "value": "'",
+                    "input": "{label}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon_a": {
+                    "regex": "(?is)^.*?plugin://([^/?\"\\s,)]+).*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon_a": {
+                    "regex": "(?s)^.*[(/:\\s\"',].*$",
+                    "value": "",
+                    "input": "{addon_a}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon_b": {
+                    "regex": "(?is)^\\s*run(?:addon|script)\\(\\s*\"?([^\",)/\\s]+)/?\"?\\s*[,)].*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon_b": {
+                    "regex": "(?s)^.*[(/:\\s\"',].*$",
+                    "value": "",
+                    "input": "{addon_b}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon": {
+                    "regex": "^$",
+                    "value": "{addon_b}",
+                    "input": "{addon_a}"
+                }
+            }
+        }
+    ],
+    "actions": [
+        {
+            "rules": [
+                "{addon}!=",
+                "!System.HasAddon({addon})"
+            ],
+            "value": [
+                "Notification({heading},{msgaddon},5000)"
+            ]
+        },
+        {
+            "rules": [
+                "{kind}==folder"
+            ],
+            "value": [
+                "Skin.SetString(CustomMenu.{item}.Path,\"{path}\")",
+                "Skin.SetString(CustomMenu.{item}.Target,{target})",
+                "Skin.SetString(CustomMenu.{item}.Label,\"{label}\")",
+                "Skin.SetString(CustomMenu.{item}.Icon,\"{icon}\")",
+                "Skin.SetString(CustomMenu.{item}.Addon,{addon})"
+            ]
+        },
+        {
+            "rules": [
+                "{kind}==other"
+            ],
+            "value": [
+                "Skin.SetString(CustomMenu.{item}.Path,{cmd})",
+                "Skin.Reset(CustomMenu.{item}.Target)",
+                "Skin.SetString(CustomMenu.{item}.Label,\"{label}\")",
+                "Skin.SetString(CustomMenu.{item}.Icon,\"{icon}\")",
+                "Skin.SetString(CustomMenu.{item}.Addon,{addon})"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	More views (docs/VIEWS_BRIEF_2026-10-27.md), drawn on the transit map.
+
+	Video (MyVideoNav):
+	  506 Network      4 x 3 wide stations: 16:9 pictures (episode stills, landscape, fanart) hung on grey lines, a stop
+	                   under each one, the name below; posters / icons sit whole on the wash, never cropped. Every
+	                   content type (series, episodes, sets, add-ons, genres, files).
+	  507 Interchange  the stops of a line run down the left (dot + name, the focused stop an ink pill); the focused
+	                   one is the interchange: its picture in the ink ring, title, facts and the plot. Library video and
+	                   add-on listings.
+	  (502 Wall now also takes films, sets and music videos: the dense poster wall.)
+	Music (MyMusicNav):
+	  507 Interchange  the same for artists, albums and songs: fanart in the ring (the cover or photo whole when there is
+	                   none). Video genres / years / people: the stop's films hang on a line through the ring (list 5075).
+	viewtypes bigwide / bigwrap are never a node's default type (Kodi defaults: list, icon, big icon, info, big info,
+	auto = info / list), so the view a node opens in by default is unchanged.
+-->
+<includes>
+	<!-- ================================================================ art -->
+	<expression name="SDV_HasLand">[String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb))] | !String.IsEmpty(ListItem.Art(landscape)) | !String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(tvshow.fanart))</expression>
+	<expression name="SDV_HasMat">!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(tvshow.poster)) | !String.IsEmpty(ListItem.Art(thumb))</expression>
+	<expression name="SDV_IsNode">Container.Content(genres) | Container.Content(years) | Container.Content(actors) | Container.Content(directors) | Container.Content(studios) | Container.Content(countries) | Container.Content(tags)</expression>
+	<expression name="SDV_ShowInterchange">$EXP[VidView_IsLibraryVideo] | !String.IsEmpty(Container.PluginName) | $EXP[SDV_IsNode]</expression>
+	<!-- a genre / year / person is a line: its films (or series) hang in the ring; the empty playlist while ".." or scrolling -->
+	<variable name="SDV_NodeLine">
+		<value condition="$EXP[SDV_IsNode] + !Container(507).ListItem.IsParentFolder + !String.IsEmpty(Container(507).ListItem.FolderPath) + !Container(507).Scrolling">$INFO[Container(507).ListItem.FolderPath]</value>
+		<value>special://skin/playlists/sd_none.xsp</value>
+	</variable>
+	<variable name="SDV_LandArt">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value>$INFO[ListItem.Art(tvshow.fanart)]</value>
+	</variable>
+	<variable name="SDV_MatArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="SDV_Title">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="SDV_StopName">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Episode)">$INFO[ListItem.Season,,x]$INFO[ListItem.Episode]  $INFO[ListItem.Title]</value>
+		<value condition="String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="SDV_Facts">
+		<value condition="ListItem.IsParentFolder">PARENT FOLDER · OK GOES UP ONE LEVEL</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.TVShowTitle,, · ]$INFO[ListItem.Premiered]$INFO[ListItem.Duration(mins), · , min]$INFO[ListItem.Rating, · ★ ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$INFO[ListItem.Studio, · ,]$VAR[SDV_Seasons]$VAR[SDV_Episodes]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.TVShowTitle]$VAR[SDV_Episodes]$INFO[ListItem.Property(WatchedEpisodes), · , watched]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$VAR[SDV_SetFilms]$INFO[ListItem.Genre, · ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,album)">$INFO[ListItem.Artist]$INFO[ListItem.Year, · ,]$INFO[ListItem.Genre, · ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">$INFO[ListItem.Genre]</value>
+		<value condition="String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Artist]$INFO[ListItem.Album, · ,]$INFO[ListItem.Duration, · ,]</value>
+		<value condition="$EXP[SDV_IsNode] + Integer.IsGreater(Container(5075).NumItems,0)">$INFO[Container(5075).NumItems,, on this line]$INFO[Container(5075).ListItem.Title,   ·   ,]$INFO[Container(5075).ListItem.Year, · ,]</value>
+		<value condition="!String.IsEmpty(ListItem.Year)">$INFO[ListItem.Year]$INFO[ListItem.Duration(mins), · , min]$INFO[ListItem.Rating, · ★ ,]$INFO[ListItem.Genre, · ,]</value>
+		<value>$INFO[ListItem.Genre]</value>
+	</variable>
+	<variable name="SDV_Text">
+		<value condition="!String.IsEmpty(ListItem.Plot)">$INFO[ListItem.Plot]</value>
+		<value condition="String.IsEqual(ListItem.DBType,album)">$INFO[ListItem.Property(Album_Description)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">$INFO[ListItem.Property(Artist_Description)]</value>
+	</variable>
+
+	<!-- A picture with honest fallbacks, inside a group at the art rect: the art (scale, rounded mask) when it exists,
+	     else the poster / cover / icon whole on the wash (keep), else the name. params: art, has_art, mat, has_mat, mask,
+	     label, font, inset -->
+	<include name="SDV_Picture">
+		<param name="font">xb_20</param>
+		<param name="inset">12</param>
+		<definition>
+			<include content="VidView_ParentTile">
+				<param name="icon" value="48"/>
+			</include>
+			<control type="group">
+				<visible>!ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture diffuse="$PARAM[mask]" colordiffuse="wash">common/white.png</texture>
+				</control>
+				<control type="label">
+					<left>18</left>
+					<right>18</right>
+					<top>14</top>
+					<bottom>14</bottom>
+					<align>center</align>
+					<aligny>center</aligny>
+					<wrapmultiline>true</wrapmultiline>
+					<font>$PARAM[font]</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[label]</label>
+					<visible>![$PARAM[has_art]] + ![$PARAM[has_mat]]</visible>
+				</control>
+				<control type="image">
+					<left>$PARAM[inset]</left>
+					<top>$PARAM[inset]</top>
+					<right>$PARAM[inset]</right>
+					<bottom>$PARAM[inset]</bottom>
+					<aspectratio>keep</aspectratio>
+					<fadetime>120</fadetime>
+					<texture background="true">$PARAM[mat]</texture>
+					<visible>![$PARAM[has_art]] + [$PARAM[has_mat]]</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<fadetime>120</fadetime>
+					<texture background="true" diffuse="$PARAM[mask]">$PARAM[art]</texture>
+					<visible>$PARAM[has_art]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ 506 network -->
+	<!-- cell 448 x 284: picture 400 x 225 at (24, 8), the line at y 240 (8 px), the stop on it, the name below -->
+	<include name="SDV_NetworkCell">
+		<param name="focused">false</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>236</top>
+				<width>448</width>
+				<height>8</height>
+				<texture colordiffuse="hair_strong">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>24</left>
+				<top>8</top>
+				<width>400</width>
+				<height>225</height>
+				<include content="SDV_Picture">
+					<param name="art" value="$VAR[SDV_LandArt]"/>
+					<param name="has_art" value="$EXP[SDV_HasLand]"/>
+					<param name="mat" value="$VAR[SDV_MatArt]"/>
+					<param name="has_mat" value="$EXP[SDV_HasMat]"/>
+					<param name="mask" value="sd/mask_400x225.png"/>
+					<param name="label" value="$VAR[SDV_Title]"/>
+				</include>
+				<include>VidView_Markers</include>
+				<include>VidView_TVMarkers</include>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_506_Network">
+		<control type="group">
+			<visible>Control.IsVisible(506)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="panel" id="506">
+				<left>64</left>
+				<top>164</top>
+				<width>1792</width>
+				<height>852</height>
+				<orientation>vertical</orientation>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31357">bigwide</viewtype>
+				<itemlayout width="448" height="284">
+					<include content="SDV_NetworkCell"/>
+					<control type="image">
+						<left>213</left>
+						<top>229</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="white">sd/disc_22.png</texture>
+					</control>
+					<control type="image">
+						<left>213</left>
+						<top>229</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="l_route">sd/ring_22_6.png</texture>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>250</top>
+						<width>400</width>
+						<height>32</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>semi_20</font>
+						<textcolor>ink2</textcolor>
+						<selectedcolor>ink2</selectedcolor>
+						<label>$VAR[SDV_Title]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="448" height="284">
+					<include content="SDV_NetworkCell"/>
+					<control type="image">
+						<left>11</left>
+						<top>-5</top>
+						<width>426</width>
+						<height>251</height>
+						<texture border="20" colordiffuse="ink">sd/ringf_6.png</texture>
+						<visible>Control.HasFocus(506)</visible>
+					</control>
+					<control type="image">
+						<left>207</left>
+						<top>223</top>
+						<width>34</width>
+						<height>34</height>
+						<texture colordiffuse="ink">sd/disc_34.png</texture>
+						<visible>Control.HasFocus(506)</visible>
+					</control>
+					<control type="image">
+						<left>207</left>
+						<top>223</top>
+						<width>34</width>
+						<height>34</height>
+						<texture colordiffuse="white">sd/ring_34_8.png</texture>
+						<visible>Control.HasFocus(506)</visible>
+					</control>
+					<control type="image">
+						<left>213</left>
+						<top>229</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="white">sd/disc_22.png</texture>
+						<visible>!Control.HasFocus(506)</visible>
+					</control>
+					<control type="image">
+						<left>213</left>
+						<top>229</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="l_route">sd/ring_22_6.png</texture>
+						<visible>!Control.HasFocus(506)</visible>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>250</top>
+						<width>400</width>
+						<height>32</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>semi_20</font>
+						<textcolor>ink2</textcolor>
+						<selectedcolor>ink2</selectedcolor>
+						<label>$VAR[SDV_Title]</label>
+						<visible>!Control.HasFocus(506)</visible>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>250</top>
+						<width>400</width>
+						<height>32</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>xb_20</font>
+						<textcolor>ink</textcolor>
+						<selectedcolor>ink</selectedcolor>
+						<scroll>true</scroll>
+						<label>$VAR[SDV_Title]</label>
+						<visible>Control.HasFocus(506)</visible>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ 507 interchange -->
+	<!-- the stops: one row of 66 per item on a vertical grey line at x 100 (same stop language as Index) -->
+	<include name="SDV_StopRow">
+		<control type="image"><left>36</left><top>0</top><width>8</width><height>66</height><texture colordiffuse="hair_strong">common/white.png</texture></control>
+		<control type="image"><left>25</left><top>18</top><width>30</width><height>30</height><texture colordiffuse="white">sd/disc_24.png</texture><visible>!Integer.IsGreater(ListItem.PlayCount,0)</visible></control>
+		<control type="image"><left>25</left><top>18</top><width>30</width><height>30</height><texture colordiffuse="l_route">sd/ring_24_6.png</texture></control>
+		<control type="image"><left>25</left><top>18</top><width>30</width><height>30</height><texture colordiffuse="l_route">sd/disc_24.png</texture><visible>Integer.IsGreater(ListItem.PlayCount,0)</visible></control>
+		<control type="label"><left>76</left><top>0</top><width>480</width><height>66</height><font>semi_24</font><textcolor>ink</textcolor><selectedcolor>ink</selectedcolor><label>$PARAM[label]</label></control>
+	</include>
+	<include name="SDV_Interchange">
+		<param name="id">507</param>
+		<param name="top">164</param>
+		<param name="height">858</param>
+		<param name="art">$VAR[SDV_LandArt]</param>
+		<param name="has_art">$EXP[SDV_HasLand]</param>
+		<param name="mat">$VAR[SDV_MatArt]</param>
+		<param name="has_mat">$EXP[SDV_HasMat]</param>
+		<param name="label">$VAR[SDV_StopName]</param>
+		<param name="text_visible">true</param>
+		<definition>
+			<control type="list" id="$PARAM[id]">
+				<left>64</left>
+				<top>$PARAM[top]</top>
+				<width>600</width>
+				<height>$PARAM[height]</height>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31358">bigwrap</viewtype>
+				<visible>$PARAM[visible]</visible>
+				<itemlayout width="600" height="66">
+					<include content="SDV_StopRow">
+						<param name="label" value="$PARAM[label]"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="600" height="66">
+					<control type="group">
+						<visible>!Control.HasFocus($PARAM[id])</visible>
+						<include content="SDV_StopRow">
+							<param name="label" value="$PARAM[label]"/>
+						</include>
+					</control>
+					<control type="group">
+						<visible>Control.HasFocus($PARAM[id])</visible>
+						<control type="image"><left>36</left><top>0</top><width>8</width><height>66</height><texture colordiffuse="hair_strong">common/white.png</texture></control>
+						<control type="image"><left>0</left><top>5</top><width>600</width><height>56</height><texture border="28" colordiffuse="ink">sd/pill_56.png</texture></control>
+						<control type="image"><left>21</left><top>14</top><width>38</width><height>38</height><texture colordiffuse="ink">sd/disc_32.png</texture></control>
+						<control type="image"><left>21</left><top>14</top><width>38</width><height>38</height><texture colordiffuse="white">sd/ring_32_8.png</texture></control>
+						<control type="label"><left>76</left><top>0</top><width>500</width><height>66</height><font>xb_24</font><textcolor>white</textcolor><selectedcolor>white</selectedcolor><scroll>true</scroll><label>$PARAM[label]</label></control>
+					</control>
+				</focusedlayout>
+			</control>
+			<!-- the interchange: picture in the ink ring, title, facts, text -->
+			<control type="group">
+				<left>752</left>
+				<top>$PARAM[top]</top>
+				<visible>!ListItem.IsParentFolder + Integer.IsGreater(Container.NumItems,0)</visible>
+				<control type="image"><left>-72</left><top>-50</top><width>1184</width><height>729</height><texture border="100" colordiffuse="shadow">sd/shadow_big.png</texture></control>
+				<control type="image"><left>-14</left><top>-14</top><width>1068</width><height>613</height><texture border="24" colordiffuse="ground">sd/ring_centre_fill.png</texture></control>
+				<control type="image"><left>-14</left><top>-14</top><width>1068</width><height>613</height><texture border="24" colordiffuse="ink">sd/ring_centre.png</texture></control>
+				<control type="group">
+					<left>0</left>
+					<top>0</top>
+					<width>1040</width>
+					<height>585</height>
+					<include content="SDV_Picture">
+						<param name="art" value="$PARAM[art]"/>
+						<param name="has_art" value="$PARAM[has_art]"/>
+						<param name="mat" value="$PARAM[mat]"/>
+						<param name="has_mat" value="$PARAM[has_mat]"/>
+						<param name="mask" value="sd/mask_1040x585.png"/>
+						<param name="label" value="$VAR[SDV_Title]"/>
+						<param name="font" value="disp_52"/>
+						<param name="inset" value="24"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>612</top>
+					<width>1040</width>
+					<height>60</height>
+					<font>disp_44</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[SDV_Title]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>674</top>
+					<width>1040</width>
+					<height>32</height>
+					<font>semi_22</font>
+					<textcolor>ink2</textcolor>
+					<label>$VAR[SDV_Facts]</label>
+				</control>
+				<!-- the text: 3 whole lines of reg_24 (34 px pitch, so 102: at 101 Kodi counted 2 lines a page and
+				     scrolled even a 3-line plot), read from its start; a longer one ends in "…" (the station
+				     page's pattern), no autoscroll that leaves it mid-sentence -->
+				<control type="group">
+					<visible>$PARAM[text_visible]</visible>
+					<control type="textbox" id="5079">
+						<left>0</left>
+						<top>716</top>
+						<width>1040</width>
+						<height>102</height>
+						<font>reg_24</font>
+						<textcolor>body</textcolor>
+						<label>$VAR[SDV_Text]</label>
+					</control>
+					<control type="image">
+						<left>890</left>
+						<top>784</top>
+						<width>150</width>
+						<height>34</height>
+						<texture colordiffuse="ground">common/gradient_right.png</texture>
+						<visible>Integer.IsGreater(Container(5079).NumPages,1)</visible>
+					</control>
+					<control type="image">
+						<left>1000</left>
+						<top>784</top>
+						<width>40</width>
+						<height>34</height>
+						<texture colordiffuse="ground">common/white.png</texture>
+						<visible>Integer.IsGreater(Container(5079).NumPages,1)</visible>
+					</control>
+					<control type="label">
+						<left>1000</left>
+						<top>784</top>
+						<width>40</width>
+						<height>34</height>
+						<font>reg_24</font>
+						<textcolor>body</textcolor>
+						<align>right</align>
+						<aligny>center</aligny>
+						<label>…</label>
+						<visible>Integer.IsGreater(Container(5079).NumPages,1)</visible>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_507_Interchange">
+		<control type="group">
+			<visible>Control.IsVisible(507)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="SDV_Interchange">
+				<param name="visible" value="$EXP[SDV_ShowInterchange]"/>
+			</include>
+			<!-- genres / years / people: the films of the focused stop on a line through the ring (never focused) -->
+			<control type="group">
+				<left>752</left>
+				<top>164</top>
+				<visible>$EXP[SDV_IsNode]</visible>
+				<control type="group">
+					<visible>!Container(507).ListItem.IsParentFolder + Integer.IsGreater(Container(5075).NumItems,0)</visible>
+					<control type="image"><left>0</left><top>0</top><width>1040</width><height>585</height><texture diffuse="sd/mask_1040x585.png" colordiffuse="ground">common/white.png</texture></control>
+					<control type="label"><left>40</left><top>26</top><width>960</width><height>30</height><font>caps_21</font><textcolor>ink2</textcolor><label>$INFO[Container(507).ListItem.Label]</label></control>
+					<control type="image"><left>0</left><top>390</top><width>1040</width><height>8</height><texture colordiffuse="l_route">common/white.png</texture></control>
+				</control>
+				<control type="list" id="5075">
+					<left>40</left>
+					<top>96</top>
+					<width>960</width>
+					<height>440</height>
+					<orientation>horizontal</orientation>
+					<preloaditems>1</preloaditems>
+					<scrolltime>0</scrolltime>
+					<itemlayout width="160" height="440">
+						<control type="image"><left>5</left><top>0</top><width>150</width><height>225</height><texture diffuse="sd/mask_164x246.png" colordiffuse="wash">common/white.png</texture></control>
+						<control type="label"><left>13</left><top>8</top><width>134</width><height>120</height><font>semi_20</font><textcolor>ink2</textcolor><aligny>top</aligny><wrapmultiline>true</wrapmultiline><label>$INFO[ListItem.Label]</label></control>
+						<control type="image"><left>5</left><top>0</top><width>150</width><height>225</height><aspectratio>scale</aspectratio><fadetime>120</fadetime><texture background="true" diffuse="sd/mask_164x246.png">$VAR[ListItemArt]</texture></control>
+						<control type="image"><left>69</left><top>283</top><width>22</width><height>22</height><texture colordiffuse="white">sd/disc_16.png</texture></control>
+						<control type="image"><left>69</left><top>283</top><width>22</width><height>22</height><texture colordiffuse="l_route">sd/ring_24_6.png</texture></control>
+						<control type="label"><left>0</left><top>316</top><width>160</width><height>30</height><align>center</align><font>reg_20</font><textcolor>ink2</textcolor><label>$INFO[ListItem.Year]</label></control>
+					</itemlayout>
+					<focusedlayout width="160" height="440">
+						<control type="image"><left>5</left><top>0</top><width>150</width><height>225</height><texture diffuse="sd/mask_164x246.png" colordiffuse="wash">common/white.png</texture></control>
+						<control type="label"><left>13</left><top>8</top><width>134</width><height>120</height><font>semi_20</font><textcolor>ink2</textcolor><aligny>top</aligny><wrapmultiline>true</wrapmultiline><label>$INFO[ListItem.Label]</label></control>
+						<control type="image"><left>5</left><top>0</top><width>150</width><height>225</height><aspectratio>scale</aspectratio><fadetime>120</fadetime><texture background="true" diffuse="sd/mask_164x246.png">$VAR[ListItemArt]</texture></control>
+						<control type="image"><left>69</left><top>283</top><width>22</width><height>22</height><texture colordiffuse="white">sd/disc_16.png</texture></control>
+						<control type="image"><left>69</left><top>283</top><width>22</width><height>22</height><texture colordiffuse="l_route">sd/ring_24_6.png</texture></control>
+						<control type="label"><left>0</left><top>316</top><width>160</width><height>30</height><align>center</align><font>reg_20</font><textcolor>ink2</textcolor><label>$INFO[ListItem.Year]</label></control>
+					</focusedlayout>
+					<content sortby="rating" sortorder="descending" limit="6">$VAR[SDV_NodeLine]</content>
+				</control>
+			</control>
+		</control>
+	</include>
+	<!-- music: fanart in the ring, the cover / photo whole when there is none -->
+	<expression name="SDV_MusicHasFanart">!String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(artist.fanart))</expression>
+	<variable name="SDV_MusicFanart">
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value>$INFO[ListItem.Art(artist.fanart)]</value>
+	</variable>
+	<include name="Music_View_507">
+		<control type="group">
+			<visible>Control.IsVisible(507)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="SDV_Interchange">
+				<param name="top" value="music_list_top"/>
+				<param name="height" value="792"/>
+				<param name="visible" value="Container.Content(artists) | Container.Content(albums) | Container.Content(songs)"/>
+				<param name="art" value="$VAR[SDV_MusicFanart]"/>
+				<param name="has_art" value="$EXP[SDV_MusicHasFanart]"/>
+				<param name="mat" value="$INFO[ListItem.Art(thumb)]"/>
+				<param name="has_mat" value="!String.IsEmpty(ListItem.Art(thumb))"/>
+				<param name="label" value="$VAR[SDV_Title]"/>
+				<param name="text_visible" value="!Player.HasMedia"/>
+			</include>
+		</control>
+	</include>
+</includes>

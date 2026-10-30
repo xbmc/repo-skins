@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	The library panel, the view picker and the clean-library confirmation (docs/requests/library-panel/BRIEF.md).
+	They live INSIDE the windows that use them (MyVideoNav, MyMusicNav, the map 1160), so Kodi's own ids (3 sort by,
+	4 sort order, 14 watched toggle) and Control.IsVisible(<view>) work exactly as they do for the header pills.
+
+	Ids: 9800 panel group, 9801 panel list (a line of stations, Dlg_IndexListLayout), 9850 picker group, 9851 picker
+	list, 9890 confirm group (9891 No, 9892 / 9894 Yes), 9832 the "Options" station pill in the header, 9326 the
+	header's "View" pill.
+	Opening: SetFocus(9801 | 9851 | 9891). The cards are always "visible" (a hidden static list never fills its rows
+	and can't take focus) and fade in / out with focus (Conditional fades), so focus never sits on something unseen.
+	Where you came from: Window(Home).Property(sixdegrees.lib.from) = view | rail, (sixdegrees.pick.from) = panel | rail.
+	Back on a card = a numeric onback to where you came from (a view keeps its item).
+	Clean library: Kodi's CleanLibrary() builtin does NOT ask (verified in the Omega source), so the panel asks first,
+	with No focused.
+-->
+<includes>
+	<expression name="Lib_LibraryActions">!Container.Content(addons) + String.IsEmpty(Container.PluginName)</expression>
+	<!-- Sets row (2026-10-21): only while the Videos window browses films and the library has sets -->
+	<expression name="Lib_ShowSets">Window.IsActive(videos) + [Container.Content(movies) | String.IsEqual(Container.FolderPath,videodb://movies/) | String.IsEqual(Container.FolderPath,library://video/movies/)] + Library.HasContent(moviesets)</expression>
+
+	<!-- Options reach v2 (2026-10-29): an ITEM menu in Videos / Music (one of Kodi's buttons 1001-1020 reads Add to /
+	     Remove from favourites, 14076 / 14077: not the resume prompt, the select-action chooser or Play using...) gets
+	     one extra first row, DialogContextMenu 990, that opens this panel on View. Not over the information dialogs
+	     (the panel lives in the media window). -->
+	<expression name="Lib_IsItemMenu">String.IsEqual(Control.GetLabel(1001),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1001),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1002),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1002),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1003),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1003),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1004),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1004),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1005),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1005),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1006),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1006),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1007),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1007),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1008),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1008),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1009),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1009),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1010),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1010),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1011),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1011),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1012),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1012),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1013),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1013),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1014),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1014),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1015),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1015),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1016),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1016),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1017),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1017),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1018),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1018),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1019),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1019),$LOCALIZE[14077]) | String.IsEqual(Control.GetLabel(1020),$LOCALIZE[14076]) | String.IsEqual(Control.GetLabel(1020),$LOCALIZE[14077])</expression>
+	<expression name="Lib_CtxRow">[Window.IsActive(videos) | Window.IsActive(music)] + !Window.IsVisible(movieinformation) + !Window.IsVisible(musicinformation) + !Window.IsVisible(songinformation) + $EXP[Lib_IsItemMenu]</expression>
+
+	<variable name="Lib_SortOrder">
+		<value condition="Container.SortDirection(descending)">$LOCALIZE[585]</value>
+		<value>$LOCALIZE[584]</value>
+	</variable>
+	<variable name="Lib_UpdateVideo">
+		<value condition="Library.IsScanningVideo">$LOCALIZE[13353]</value>
+		<value>Movies and TV</value>
+	</variable>
+	<variable name="Lib_UpdateMusic">
+		<value condition="Library.IsScanningMusic">$LOCALIZE[13353]</value>
+		<value>$LOCALIZE[2]</value>
+	</variable>
+	<variable name="Lib_Unwatched">
+		<value condition="System.Setting(hidewatched)">On</value>
+		<value>Off</value>
+	</variable>
+	<variable name="Lib_MapSection">
+		<value condition="String.IsEqual(Window(Home).Property(sixdegrees.kind),tvshows)">TV shows</value>
+		<value condition="String.IsEqual(Window(Home).Property(sixdegrees.kind),albums)">Albums</value>
+		<value>Movies</value>
+	</variable>
+
+	<!-- Open the panel from a view's outer edge (builtins only: they run in order). -->
+	<include name="Lib_OpenLeft">
+		<onleft>SetProperty(sixdegrees.lib.from,view,home)</onleft>
+		<onleft>SetFocus(9801,0,absolute)</onleft>
+	</include>
+	<!-- the TV root's Next up strip: Back returns to the strip, not the wall -->
+	<include name="Lib_OpenNextUp">
+		<onleft>SetProperty(sixdegrees.lib.from,nextup,home)</onleft>
+		<onleft>SetFocus(9801,0,absolute)</onleft>
+		<onright>SetProperty(sixdegrees.lib.from,nextup,home)</onright>
+		<onright>SetFocus(9801,0,absolute)</onright>
+	</include>
+	<include name="Lib_OpenRight">
+		<onright>SetProperty(sixdegrees.lib.from,view,home)</onright>
+		<onright>SetFocus(9801,0,absolute)</onright>
+	</include>
+
+	<!-- Show only while a card has focus: a Conditional fade (normal / reduced twins, fades only). -->
+	<include name="Lib_FadeGate">
+		<animation effect="fade" start="100" end="0" time="140" tween="cubic" easing="out" condition="![$PARAM[show]] + !Skin.HasSetting(sixdegrees.reducemotion)">Conditional</animation>
+		<animation effect="fade" start="100" end="0" time="60" condition="![$PARAM[show]] + Skin.HasSetting(sixdegrees.reducemotion)">Conditional</animation>
+	</include>
+	<include name="Lib_Dim">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="veil">common/white.png</texture>
+		</control>
+	</include>
+	<!-- A white card with the dialogs' soft shadow. params: left, top, width, height -->
+	<include name="Lib_Card">
+		<control type="image">
+			<left>$PARAM[sl]</left>
+			<top>$PARAM[st]</top>
+			<width>$PARAM[sw]</width>
+			<height>$PARAM[sh]</height>
+			<texture border="90" colordiffuse="shadow">sd/shadow_card.png</texture>
+			<visible>$PARAM[visible]</visible>
+		</control>
+		<control type="image">
+			<left>$PARAM[left]</left>
+			<top>$PARAM[top]</top>
+			<width>$PARAM[width]</width>
+			<height>$PARAM[height]</height>
+			<texture border="20" colordiffuse="card">sd/rr20.png</texture>
+			<visible>$PARAM[visible]</visible>
+		</control>
+	</include>
+
+	<!-- ============================================================ header pills -->
+	<!-- The station-style "Options" pill: a roundel at the left of the pill (ink fill + white ring on focus).
+	     Lives at the end of the header grouplist 9000. params: height (46 | 36), font -->
+	<include name="Lib_OptionsPill">
+		<param name="height">46</param>
+		<param name="width">156</param>
+		<param name="offset">22</param>
+		<param name="font">semi_22</param>
+		<definition>
+			<control type="button" id="9832">
+				<include content="Lib_OptionsPillLook">
+					<param name="height" value="$PARAM[height]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="offset" value="$PARAM[offset]"/>
+					<param name="font" value="$PARAM[font]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<!-- the same pill outside a grouplist (music header: beside the clock), with its own navigation -->
+	<include name="Lib_OptionsPillAt">
+		<param name="height">36</param>
+		<param name="width">162</param>
+		<param name="offset">18</param>
+		<param name="font">caps_20</param>
+		<definition>
+			<control type="button" id="9832">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<include content="Lib_OptionsPillLook">
+					<param name="height" value="$PARAM[height]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="offset" value="$PARAM[offset]"/>
+					<param name="font" value="$PARAM[font]"/>
+				</include>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>noop</onright>
+				<onup>noop</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onback>$PARAM[ondown]</onback>
+			</control>
+		</definition>
+	</include>
+	<!-- label right-aligned after the roundel: a button clips its label to width - 2 x textoffsetx, so the width is
+	     roundel (= height) + text + Kodi's per-glyph slack + the right pad (offset) -->
+	<include name="Lib_OptionsPillLook">
+		<width>$PARAM[width]</width>
+		<height>$PARAM[height]</height>
+		<font>$PARAM[font]</font>
+		<textcolor>ink</textcolor>
+		<focusedcolor>on_ink</focusedcolor>
+		<align>right</align>
+		<aligny>center</aligny>
+		<textoffsetx>$PARAM[offset]</textoffsetx>
+		<texturefocus border="$PARAM[height],0,23,0" colordiffuse="ink">sd/pill_station_$PARAM[height].png</texturefocus>
+		<texturenofocus border="$PARAM[height],0,23,0" colordiffuse="ink">sd/pill_station_$PARAM[height]_off.png</texturenofocus>
+		<label>$LOCALIZE[31240]</label>
+		<onclick>SetProperty(sixdegrees.lib.from,rail,home)</onclick>
+		<onclick>SetFocus(9801,0,absolute)</onclick>
+	</include>
+
+	<!-- ============================================================ the library panel -->
+	<!-- The system menu's card: a line of stations (one row per action), value on the right.
+	     params: section, view_name, order_click, pick_focus, is_video, video_cond / music_cond (which library) -->
+	<include name="Lib_Panel">
+		<param name="is_video">true</param>
+		<param name="video_cond">true</param>
+		<param name="music_cond">false</param>
+		<param name="section"></param>
+		<param name="view_name"></param>
+		<param name="order_click">SendClick(4)</param>
+		<param name="pick_focus">Lib_PickFocusNone</param>
+		<definition>
+			<control type="group" id="9800">
+				<include content="Lib_FadeGate">
+					<param name="show" value="Control.HasFocus(9801) | ControlGroup(9890).HasFocus()"/>
+				</include>
+				<include>Lib_Dim</include>
+				<control type="group">
+					<left>660</left>
+					<top>190</top>
+					<width>600</width>
+					<height>770</height>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="516"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="396"/>
+						<param name="visible" value="!Integer.IsGreater(Container(9801).NumItems,5)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="584"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="464"/>
+						<param name="visible" value="Integer.IsEqual(Container(9801).NumItems,6)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="652"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="532"/>
+						<param name="visible" value="Integer.IsEqual(Container(9801).NumItems,7)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="720"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="600"/>
+						<param name="visible" value="Integer.IsEqual(Container(9801).NumItems,8)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="788"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="668"/>
+						<param name="visible" value="Integer.IsEqual(Container(9801).NumItems,9)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="720"/><param name="sh" value="856"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="600"/><param name="height" value="736"/>
+						<param name="visible" value="Integer.IsGreaterOrEqual(Container(9801).NumItems,10)"/>
+					</include>
+					<control type="label">
+						<left>24</left>
+						<top>0</top>
+						<width>360</width>
+						<height>56</height>
+						<font>caps_20</font>
+						<textcolor>ink</textcolor>
+						<label>$LOCALIZE[14022]</label>
+					</control>
+					<control type="label">
+						<left>216</left>
+						<top>0</top>
+						<width>360</width>
+						<height>56</height>
+						<align>right</align>
+						<font>semi_20</font>
+						<textcolor>ink2</textcolor>
+						<label>$PARAM[section]</label>
+					</control>
+					<control type="list" id="9801">
+						<left>12</left>
+						<top>56</top>
+						<width>576</width>
+						<height>680</height>
+						<onup>9801</onup>
+						<ondown>9801</ondown>
+						<onleft>noop</onleft>
+						<onright>noop</onright>
+						<onback condition="String.IsEqual(Window(Home).Property(sixdegrees.lib.from),rail)">9832</onback>
+						<onback condition="String.IsEqual(Window(Home).Property(sixdegrees.lib.from),nextup)">9310</onback>
+						<onback>50</onback>
+						<scrolltime tween="cubic" easing="out">200</scrolltime>
+						<include content="Dlg_IndexListLayout">
+							<param name="width" value="576"/>
+							<param name="height" value="68"/>
+							<param name="list_id" value="9801"/>
+						</include>
+						<content>
+							<item>
+								<label>$LOCALIZE[31011]</label>
+								<label2>$PARAM[view_name]</label2>
+								<onclick>SetProperty(sixdegrees.pick.from,panel,home)</onclick>
+								<include content="$PARAM[pick_focus]"/>
+								<visible>Integer.IsGreater(Container.ViewCount,1)</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[31010]</label>
+								<label2>$INFO[Container.SortMethod]</label2>
+								<onclick>SendClick(3)</onclick>
+								<visible>Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[31241]</label>
+								<label2>$VAR[Lib_SortOrder]</label2>
+								<onclick>$PARAM[order_click]</onclick>
+								<visible>Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[31081]</label>
+								<label2>$VAR[Lib_Unwatched]</label2>
+								<onclick>SendClick(14)</onclick>
+								<visible>$PARAM[is_video] + $EXP[VidView_IsLibraryVideo] + !$EXP[VidView_IsInProgressTV]</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[20434]</label>
+								<label2>$LOCALIZE[31242]</label2>
+								<onclick>SetFocus(50)</onclick>
+								<onclick>Container.Update(videodb://movies/sets/)</onclick>
+								<visible>$PARAM[is_video] + $EXP[Lib_ShowSets]</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[137]</label>
+								<label2>$LOCALIZE[31243]</label2>
+								<onclick>ActivateWindow(1150)</onclick>
+							</item>
+							<item>
+								<label>$LOCALIZE[653]</label>
+								<label2>$VAR[Lib_UpdateVideo]</label2>
+								<onclick>UpdateLibrary(video)</onclick>
+								<visible>$PARAM[video_cond] + $EXP[Lib_LibraryActions]</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[653]</label>
+								<label2>$VAR[Lib_UpdateMusic]</label2>
+								<onclick>UpdateLibrary(music)</onclick>
+								<visible>$PARAM[music_cond] + $EXP[Lib_LibraryActions]</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[14247]</label>
+								<label2>$PARAM[section]</label2>
+								<onclick>SetFocus(9891)</onclick>
+								<visible>$EXP[Lib_LibraryActions]</visible>
+							</item>
+							<item>
+								<label>$LOCALIZE[14212]</label>
+								<label2>Kodi</label2>
+								<onclick>ActivateWindow(MediaSettings)</onclick>
+							</item>
+						</content>
+					</control>
+				</control>
+			</control>
+			<!-- clean: Kodi does not ask, so we do (No is focused) -->
+			<control type="group" id="9890">
+				<include content="Lib_FadeGate">
+					<param name="show" value="ControlGroup(9890).HasFocus()"/>
+				</include>
+				<include>Lib_Dim</include>
+				<control type="group">
+					<left>480</left>
+					<top>380</top>
+					<width>960</width>
+					<height>320</height>
+					<include content="Lib_Card">
+						<param name="sl" value="-60"/><param name="st" value="-46"/><param name="sw" value="1080"/><param name="sh" value="440"/>
+						<param name="left" value="0"/><param name="top" value="0"/><param name="width" value="960"/><param name="height" value="320"/>
+						<param name="visible" value="true"/>
+					</include>
+					<control type="label">
+						<left>40</left>
+						<top>0</top>
+						<width>880</width>
+						<height>88</height>
+						<aligny>center</aligny>
+						<font>xb_28</font>
+						<textcolor>ink</textcolor>
+						<label>$LOCALIZE[333]</label>
+					</control>
+					<control type="image">
+						<left>40</left>
+						<top>88</top>
+						<width>880</width>
+						<height>2</height>
+						<texture colordiffuse="hair">common/white.png</texture>
+					</control>
+					<control type="label">
+						<left>40</left>
+						<top>108</top>
+						<width>880</width>
+						<height>90</height>
+						<font>reg_24</font>
+						<textcolor>body</textcolor>
+						<wrapmultiline>true</wrapmultiline>
+						<label>$LOCALIZE[31207]</label>
+					</control>
+					<control type="grouplist" id="9893">
+						<left>40</left>
+						<top>224</top>
+						<width>880</width>
+						<height>64</height>
+						<orientation>horizontal</orientation>
+						<align>right</align>
+						<itemgap>16</itemgap>
+						<onleft>9893</onleft>
+						<onright>9893</onright>
+						<onup>noop</onup>
+						<ondown>noop</ondown>
+						<onback>9801</onback>
+						<include content="SD_DialogButton">
+							<param name="id" value="9892"/>
+							<param name="width" value="240"/>
+							<param name="label" value="$LOCALIZE[107]"/>
+							<param name="onclick" value="CleanLibrary(video)"/>
+							<param name="onclick2" value="SetFocus(9801)"/>
+							<param name="visible" value="$PARAM[video_cond]"/>
+						</include>
+						<include content="SD_DialogButton">
+							<param name="id" value="9894"/>
+							<param name="width" value="240"/>
+							<param name="label" value="$LOCALIZE[107]"/>
+							<param name="onclick" value="CleanLibrary(music)"/>
+							<param name="onclick2" value="SetFocus(9801)"/>
+							<param name="visible" value="$PARAM[music_cond]"/>
+						</include>
+						<include content="SD_DialogButton">
+							<param name="id" value="9891"/>
+							<param name="width" value="240"/>
+							<param name="label" value="$LOCALIZE[106]"/>
+							<param name="onclick" value="SetFocus(9801)"/>
+						</include>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Lib_PickFocusNone">
+		<onclick>SetFocus(9851,0,absolute)</onclick>
+	</include>
+
+	<!-- ============================================================ the view picker -->
+	<!-- Schematic previews on a card; the focused one wears the ink ring, the current one says "You are here"
+	     with a station dot (the map's own words). OK = Container.SetViewMode + back to the view. -->
+	<include name="Lib_PickerItemLayout">
+		<itemlayout width="352" height="300">
+			<control type="image">
+				<left>32</left>
+				<top>24</top>
+				<width>288</width>
+				<height>162</height>
+				<texture>$INFO[ListItem.Icon]</texture>
+			</control>
+			<control type="image">
+				<left>32</left>
+				<top>24</top>
+				<width>288</width>
+				<height>162</height>
+				<texture border="12" colordiffuse="hair_strong">sd/rr12_o2.png</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>204</top>
+				<width>352</width>
+				<height>40</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>semi_24</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="group">
+				<top>250</top>
+				<visible>$PARAM[current]</visible>
+				<control type="image">
+					<left>106</left>
+					<top>6</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="ink">sd/ring_22_6.png</texture>
+				</control>
+				<control type="label">
+					<left>136</left>
+					<top>0</top>
+					<width>200</width>
+					<height>34</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>ink</textcolor>
+					<label>$LOCALIZE[31244]</label>
+				</control>
+			</control>
+		</itemlayout>
+		<focusedlayout width="352" height="300">
+			<control type="image">
+				<left>32</left>
+				<top>24</top>
+				<width>288</width>
+				<height>162</height>
+				<texture>$INFO[ListItem.Icon]</texture>
+			</control>
+			<control type="image">
+				<left>32</left>
+				<top>24</top>
+				<width>288</width>
+				<height>162</height>
+				<texture border="12" colordiffuse="hair_strong">sd/rr12_o2.png</texture>
+				<visible>!Control.HasFocus(9851)</visible>
+			</control>
+			<control type="image">
+				<left>18</left>
+				<top>10</top>
+				<width>316</width>
+				<height>190</height>
+				<texture border="20" colordiffuse="ink">sd/ringf_6.png</texture>
+				<visible>Control.HasFocus(9851)</visible>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>204</top>
+				<width>352</width>
+				<height>40</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>xb_24</font>
+				<textcolor>ink</textcolor>
+				<selectedcolor>ink</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="group">
+				<top>250</top>
+				<visible>$PARAM[current]</visible>
+				<control type="image">
+					<left>106</left>
+					<top>6</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="ink">sd/ring_22_6.png</texture>
+				</control>
+				<control type="label">
+					<left>136</left>
+					<top>0</top>
+					<width>200</width>
+					<height>34</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>ink</textcolor>
+					<selectedcolor>ink</selectedcolor>
+					<label>$LOCALIZE[31244]</label>
+				</control>
+			</control>
+		</focusedlayout>
+	</include>
+
+	<include name="Lib_Picker">
+		<definition>
+			<control type="group" id="9850">
+				<include content="Lib_FadeGate">
+					<param name="show" value="Control.HasFocus(9851)"/>
+				</include>
+				<include>Lib_Dim</include>
+				<control type="group">
+					<left>256</left>
+					<top>340</top>
+					<!-- centre the card on the number of views: 5+ = 1808 wide at 56, 4 = 1456 at 232, 3 = 1104 at 408,
+					     2 = 752 at 584, 1 = 400 at 760 (five previews at once; more scroll) -->
+					<animation effect="slide" start="0,0" end="-352,0" time="0" condition="Integer.IsGreaterOrEqual(Container(9851).NumItems,5)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-176,0" time="0" condition="Integer.IsEqual(Container(9851).NumItems,4)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="176,0" time="0" condition="Integer.IsEqual(Container(9851).NumItems,2)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="352,0" time="0" condition="Integer.IsEqual(Container(9851).NumItems,1)">Conditional</animation>
+					<include content="Lib_Card">
+						<param name="sl" value="92"/><param name="st" value="-46"/><param name="sw" value="1224"/><param name="sh" value="520"/>
+						<param name="left" value="152"/><param name="top" value="0"/><param name="width" value="1104"/><param name="height" value="400"/>
+						<param name="visible" value="Integer.IsEqual(Container(9851).NumItems,3)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="92"/><param name="st" value="-46"/><param name="sw" value="1576"/><param name="sh" value="520"/>
+						<param name="left" value="152"/><param name="top" value="0"/><param name="width" value="1456"/><param name="height" value="400"/>
+						<param name="visible" value="Integer.IsEqual(Container(9851).NumItems,4)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="92"/><param name="st" value="-46"/><param name="sw" value="1928"/><param name="sh" value="520"/>
+						<param name="left" value="152"/><param name="top" value="0"/><param name="width" value="1808"/><param name="height" value="400"/>
+						<param name="visible" value="Integer.IsGreaterOrEqual(Container(9851).NumItems,5)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="92"/><param name="st" value="-46"/><param name="sw" value="872"/><param name="sh" value="520"/>
+						<param name="left" value="152"/><param name="top" value="0"/><param name="width" value="752"/><param name="height" value="400"/>
+						<param name="visible" value="Integer.IsEqual(Container(9851).NumItems,2)"/>
+					</include>
+					<include content="Lib_Card">
+						<param name="sl" value="92"/><param name="st" value="-46"/><param name="sw" value="520"/><param name="sh" value="520"/>
+						<param name="left" value="152"/><param name="top" value="0"/><param name="width" value="400"/><param name="height" value="400"/>
+						<param name="visible" value="Integer.IsLess(Container(9851).NumItems,2)"/>
+					</include>
+					<control type="label">
+						<left>192</left>
+						<top>0</top>
+						<width>320</width>
+						<height>72</height>
+						<aligny>center</aligny>
+						<font>caps_20</font>
+						<textcolor>ink</textcolor>
+						<label>$LOCALIZE[31011]</label>
+					</control>
+					<control type="label">
+						<left>792</left>
+						<top>0</top>
+						<width>424</width>
+						<height>72</height>
+						<align>right</align>
+						<aligny>center</aligny>
+						<font>semi_20</font>
+						<textcolor>ink2</textcolor>
+						<label>$PARAM[section]</label>
+						<visible>Integer.IsGreaterOrEqual(Container(9851).NumItems,3)</visible>
+						<animation effect="slide" start="0,0" end="704,0" time="0" condition="Integer.IsGreaterOrEqual(Container(9851).NumItems,5)">Conditional</animation>
+						<animation effect="slide" start="0,0" end="352,0" time="0" condition="Integer.IsEqual(Container(9851).NumItems,4)">Conditional</animation>
+					</control>
+					<control type="list" id="9851">
+						<left>176</left>
+						<top>72</top>
+						<width>1760</width>
+						<height>310</height>
+						<orientation>horizontal</orientation>
+						<onleft>noop</onleft>
+						<onright>noop</onright>
+						<onup>noop</onup>
+						<ondown>noop</ondown>
+						<onback condition="String.IsEqual(Window(Home).Property(sixdegrees.pick.from),panel)">9801</onback>
+						<onback>9326</onback>
+						<scrolltime tween="cubic" easing="out">160</scrolltime>
+						<include content="$PARAM[items]"/>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- picker focus = the view that is showing (absolute positions among the visible items) -->
+	<include name="Lib_PickFocusVideo">
+		<onclick condition="Control.IsVisible(500) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(501) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(502) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,4,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + [Container.Content(movies) | Container.Content(sets)]">SetFocus(9851,5,absolute)</onclick>
+		<onclick condition="Control.IsVisible(508) + Container.Content(tvshows)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(502) + Container.Content(tvshows)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(503) + Container.Content(tvshows)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + Container.Content(tvshows)">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(tvshows)">SetFocus(9851,4,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(tvshows)">SetFocus(9851,5,absolute)</onclick>
+		<onclick condition="Control.IsVisible(502) + Container.Content(seasons)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(503) + Container.Content(seasons)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + Container.Content(seasons)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(seasons)">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(seasons)">SetFocus(9851,4,absolute)</onclick>
+		<onclick condition="Control.IsVisible(503) + Container.Content(episodes)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + Container.Content(episodes)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(episodes)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(episodes)">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(502) + Container.Content(musicvideos)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + Container.Content(musicvideos)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(musicvideos)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(musicvideos)">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + !$EXP[VidView_IsLibraryVideo] + [!String.IsEmpty(Container.PluginName) | $EXP[SDV_IsNode]]">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + !$EXP[VidView_IsLibraryVideo] + [!String.IsEmpty(Container.PluginName) | $EXP[SDV_IsNode]]">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + !$EXP[VidView_IsLibraryVideo] + [!String.IsEmpty(Container.PluginName) | $EXP[SDV_IsNode]]">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(506) + !$EXP[VidView_IsLibraryVideo] + String.IsEmpty(Container.PluginName) + !$EXP[SDV_IsNode]">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + !$EXP[VidView_IsLibraryVideo] + String.IsEmpty(Container.PluginName) + !$EXP[SDV_IsNode]">SetFocus(9851,1,absolute)</onclick>
+	</include>
+	<include name="Lib_PickFocusMusic">
+		<onclick condition="Control.IsVisible(504) + Container.Content(albums)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(505) + Container.Content(albums)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(albums)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(albums)">SetFocus(9851,3,absolute)</onclick>
+		<onclick condition="Control.IsVisible(504) + Container.Content(artists)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(artists)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(artists)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="Control.IsVisible(504) + Container.Content(songs)">SetFocus(9851,0,absolute)</onclick>
+		<onclick condition="Control.IsVisible(507) + Container.Content(songs)">SetFocus(9851,1,absolute)</onclick>
+		<onclick condition="Control.IsVisible(50) + Container.Content(songs)">SetFocus(9851,2,absolute)</onclick>
+		<onclick condition="!Container.Content(albums) + !Container.Content(artists) + !Container.Content(songs)">SetFocus(9851,0,absolute)</onclick>
+	</include>
+
+	<!-- video: Line 500 + Platform 501 (movies, sets), Line 508 (tvshows), Wall 502 (tvshows, seasons, movies, sets,
+	     music videos), Episodes 503 (episodes, seasons, tvshows), Network 506 (everything), Interchange 507 (library +
+	     add-on listings + genres / years / people), Index 50 -->
+	<include name="Lib_PickerVideo">
+		<include content="Lib_PickerItemLayout">
+			<param name="current" value="[String.IsEqual(ListItem.Property(view),v500) + Control.IsVisible(500)] | [String.IsEqual(ListItem.Property(view),v508) + Control.IsVisible(508)] | [String.IsEqual(ListItem.Property(view),v501) + Control.IsVisible(501)] | [String.IsEqual(ListItem.Property(view),v502) + Control.IsVisible(502)] | [String.IsEqual(ListItem.Property(view),v503) + Control.IsVisible(503)] | [String.IsEqual(ListItem.Property(view),v506) + Control.IsVisible(506)] | [String.IsEqual(ListItem.Property(view),v507) + Control.IsVisible(507)] | [String.IsEqual(ListItem.Property(view),v50) + Control.IsVisible(50)]"/>
+		</include>
+		<content>
+			<item>
+				<label>$LOCALIZE[31201]</label>
+				<icon>sd/views/line.png</icon>
+				<property name="view">v500</property>
+				<onclick>Container.SetViewMode(500)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(movies) | Container.Content(sets)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31201]</label>
+				<icon>sd/views/line.png</icon>
+				<property name="view">v508</property>
+				<onclick>Container.SetViewMode(508)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(tvshows)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31202]</label>
+				<icon>sd/views/platform.png</icon>
+				<property name="view">v501</property>
+				<onclick>Container.SetViewMode(501)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(movies) | Container.Content(sets)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31245]</label>
+				<icon>sd/views/wall.png</icon>
+				<property name="view">v502</property>
+				<onclick>Container.SetViewMode(502)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(tvshows) | Container.Content(seasons) | Container.Content(movies) | Container.Content(sets) | Container.Content(musicvideos)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31246]</label>
+				<icon>sd/views/episodes.png</icon>
+				<property name="view">v503</property>
+				<onclick>Container.SetViewMode(503)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(episodes) | Container.Content(seasons) | Container.Content(tvshows)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31357]</label>
+				<icon>sd/views/network.png</icon>
+				<property name="view">v506</property>
+				<onclick>Container.SetViewMode(506)</onclick>
+				<onclick>SetFocus(50)</onclick>
+			</item>
+			<item>
+				<label>$LOCALIZE[31358]</label>
+				<icon>sd/views/interchange.png</icon>
+				<property name="view">v507</property>
+				<onclick>Container.SetViewMode(507)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>$EXP[SDV_ShowInterchange]</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31200]</label>
+				<icon>sd/views/index_video.png</icon>
+				<property name="view">v50</property>
+				<onclick>Container.SetViewMode(50)</onclick>
+				<onclick>SetFocus(50)</onclick>
+			</item>
+		</content>
+	</include>
+
+	<!-- music: Grid 504 + Interchange 507 (albums, artists, songs), Big album 505 (albums), List 50 -->
+	<include name="Lib_PickerMusic">
+		<include content="Lib_PickerItemLayout">
+			<param name="current" value="[String.IsEqual(ListItem.Property(view),v504) + Control.IsVisible(504)] | [String.IsEqual(ListItem.Property(view),v505) + Control.IsVisible(505)] | [String.IsEqual(ListItem.Property(view),v507) + Control.IsVisible(507)] | [String.IsEqual(ListItem.Property(view),v50) + Control.IsVisible(50)]"/>
+		</include>
+		<content>
+			<item>
+				<label>$LOCALIZE[31247]</label>
+				<icon>sd/views/grid.png</icon>
+				<property name="view">v504</property>
+				<onclick>Container.SetViewMode(504)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31248]</label>
+				<icon>sd/views/big_album.png</icon>
+				<property name="view">v505</property>
+				<onclick>Container.SetViewMode(505)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(albums)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[31358]</label>
+				<icon>sd/views/interchange_music.png</icon>
+				<property name="view">v507</property>
+				<onclick>Container.SetViewMode(507)</onclick>
+				<onclick>SetFocus(50)</onclick>
+				<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
+			</item>
+			<item>
+				<label>$LOCALIZE[535]</label>
+				<icon>sd/views/index_music.png</icon>
+				<property name="view">v50</property>
+				<onclick>Container.SetViewMode(50)</onclick>
+				<onclick>SetFocus(50)</onclick>
+			</item>
+		</content>
+	</include>
+</includes>
