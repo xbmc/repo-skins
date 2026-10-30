@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Fold motion: nothing slides or fades in on its own, it unfolds on a hinge (docs/skin.fold/DESIGN.md, motion).
+	Kodi conventions (proven on the Shield 2026-10-19): rotatey center="x" (+angle = the side right of the hinge
+	comes toward you), rotatex center="y" (-angle = the side above the hinge comes toward you); centres and
+	<camera> are in the PARENT's coordinate space; the default camera is the screen centre, 1080 px away.
+
+	Budget: every fold <= 450 ms (the info spread uses the whole 440 ms; notes and windows 200-260 ms),
+	focus lifts 240-280 ms with a small "back" overshoot. Closing is faster than opening.
+	Reduce motion (Skin.HasSetting(fold.reducemotion)): every trigger has a short-fade twin, no rotation.
+	Animation-level conditions only (Kodi ignores effect-level conditions).
+	Engine note: during a WindowOpen / Visible animation's DELAY Kodi does not draw the control at all
+	(CGUIControl::UpdateStates -> DELAYED). Give a control that must show during the delay an effect at delay 0.
+-->
+<includes>
+	<!-- ================================================================= windows -->
+	<!-- Full-screen windows (library, settings): the page stands up from the table (rotatex about the
+	     bottom edge) while it fades in. Direct child of <window>. -->
+	<include name="Anim_WindowOpenClose">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+			<effect type="rotatex" start="9" end="0" center="1080" time="240" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Dialogs are folded notes: they open flat from their centre crease (rotatex about the screen's
+	     middle line, the crease shading on the note fades as it lands). Direct child of <window>. -->
+	<include name="Anim_DialogOpenClose">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="78" end="0" center="540" time="250" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="110"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="0" end="70" center="540" time="170" tween="cubic" easing="in"/>
+			<effect type="fade" start="100" end="0" delay="90" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Right-hand panels (track pickers, OSD settings): a flap hinged on the screen's right edge swings in
+	     (rotatey about x 1920, its free left edge comes toward you and lays down). -->
+	<include name="Anim_SidePanel">
+		<param name="offset" default="80"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+				<effect type="rotatey" start="-75" end="0" center="1920" time="260" tween="cubic" easing="out"/>
+				<effect type="fade" start="0" end="100" time="100"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+				<effect type="rotatey" start="0" end="-70" center="1920" time="170" tween="cubic" easing="in"/>
+				<effect type="fade" start="100" end="0" delay="100" time="70"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+				<effect type="fade" start="100" end="0" time="60"/>
+			</animation>
+		</definition>
+	</include>
+
+	<!-- Toasts (notification, busy, progress, volume): a slip that folds down from the top edge of its note. -->
+	<include name="Anim_Toast">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="-70" end="0" center="120" time="220" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="100"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- ================================================================= OSD -->
+	<!-- The OSD is a cream strip that folds up from the bottom edge: rotatex hinge at y 1080, the strip's top
+	     edge starts turned away from you and comes up flat (shading fades in sync on the strip itself). -->
+	<include name="Anim_OSDSlideUp">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="88" end="0" center="1080" time="300" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="90"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="0" end="88" center="1080" time="200" tween="cubic" easing="in"/>
+			<effect type="fade" start="100" end="0" delay="140" time="60"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Top strip (OSD title note, info strips): folds down from the top edge (hinge y 0). -->
+	<include name="Anim_TopStrip">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="-80" end="0" center="0" time="260" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="90"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Visible" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="-80" end="0" center="0" time="260" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="90"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="0" end="-80" center="0" time="180" tween="cubic" easing="in"/>
+			<effect type="fade" start="100" end="0" delay="120" time="60"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="rotatex" start="0" end="-80" center="0" time="180" tween="cubic" easing="in"/>
+			<effect type="fade" start="100" end="0" delay="120" time="60"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- ================================================================= content regions -->
+	<include name="Anim_FadeVisible">
+		<animation type="Visible" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(fold.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+	</include>
+
+	<!-- A row / panel that stands up from the table (hinge at its own bottom edge, param bottom = y in the
+	     parent's space) when it becomes visible. -->
+	<include name="Anim_StandUp">
+		<param name="bottom">1080</param>
+		<definition>
+			<animation type="Visible" condition="!Skin.HasSetting(fold.reducemotion)">
+				<effect type="rotatex" start="80" end="0" center="$PARAM[bottom]" time="300" tween="cubic" easing="out"/>
+				<effect type="fade" start="0" end="100" time="140"/>
+			</animation>
+			<animation type="Visible" condition="Skin.HasSetting(fold.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(fold.reducemotion)">
+				<effect type="rotatex" start="80" end="0" center="$PARAM[bottom]" time="300" tween="cubic" easing="out"/>
+				<effect type="fade" start="0" end="100" time="140"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(fold.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+		</definition>
+	</include>
+
+	<!-- ================================================================= focus -->
+	<!-- Lift: a springy rise (back tween) of the focused item. -->
+	<include name="Anim_FocusLift">
+		<animation type="Focus" reversible="true" condition="!Skin.HasSetting(fold.reducemotion)">
+			<effect type="zoom" start="100" end="105" center="auto" time="240" tween="back" easing="out"/>
+			<effect type="slide" start="0,0" end="0,-8" time="240" tween="back" easing="out"/>
+		</animation>
+	</include>
+
+</includes>

@@ -1,0 +1,144 @@
+{
+    "infolabels": {
+        "fav": "Container({list}).ListItemAbsolute({index}).FolderPath",
+        "label": "Container({list}).ListItemAbsolute({index}).Label"
+    },
+    "operations": [
+        {
+            "regex": {
+                "cmd": {
+                    "regex": "^favourites://",
+                    "value": "",
+                    "input": "{fav}"
+                }
+            }
+        },
+        {
+            "decode": {
+                "cmd": "{cmd}"
+            }
+        },
+        {
+            "regex": {
+                "cmd": {
+                    "regex": "\\)\\s*/$",
+                    "value": ")",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "target": {
+                    "regex": "(?is)^\\s*activatewindow\\(\\s*\"?([^,\")]*?)\"?\\s*,.*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "path": {
+                    "regex": "(?is)^\\s*activatewindow\\([^,]*,\\s*\"?(.*?)\"?\\s*(,\\s*return\\s*)?\\)\\s*$",
+                    "value": "\\1",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "kind": {
+                    "regex": "(?is)^\\s*activatewindow\\([^,]*,\\s*\"?[a-z]+://.*$",
+                    "value": "folder",
+                    "input": "{cmd}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "kind": {
+                    "regex": "(?s)^(?!folder$).*$",
+                    "value": "other",
+                    "input": "{kind}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "label": {
+                    "regex": "\"",
+                    "value": "'",
+                    "input": "{label}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon": {
+                    "regex": "(?s)^plugin://([^/?]+).*$",
+                    "value": "\\1",
+                    "input": "{path}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "isplugin": {
+                    "regex": "(?s)^plugin://[^/?]+.*$",
+                    "value": "yes",
+                    "input": "{path}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "isplugin": {
+                    "regex": "(?s)^(?!yes$).*$",
+                    "value": "no",
+                    "input": "{isplugin}"
+                }
+            }
+        },
+        {
+            "regex": {
+                "addon": {
+                    "regex": "(?s)^.*://.*$",
+                    "value": "",
+                    "input": "{addon}"
+                }
+            }
+        }
+    ],
+    "actions": [
+        {
+            "rules": [
+                "{kind}==folder",
+                "{isplugin}==yes",
+                "!System.HasAddon({addon})"
+            ],
+            "value": [
+                "Notification({heading},{msgaddon},5000)"
+            ]
+        },
+        {
+            "rules": [
+                "{kind}==folder"
+            ],
+            "value": [
+                "Skin.SetString(CustomRow.{row}.Path,\"{path}\")",
+                "Skin.SetString(CustomRow.{row}.Target,{target})",
+                "Skin.SetString(CustomRow.{row}.Label,\"{label}\")",
+                "Skin.SetString(CustomRow.{row}.Icon,)",
+                "Skin.SetString(CustomRow.{row}.Addon,{addon})"
+            ]
+        },
+        {
+            "rules": [
+                "{kind}==other"
+            ],
+            "value": [
+                "Notification({heading},{msg},5000)"
+            ]
+        }
+    ]
+}

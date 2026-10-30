@@ -1,0 +1,1013 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Dialog building blocks (owner: Builder E · Settings + core dialogs, M4 styling pass).
+	Index vocabulary: flat bg panel, 1px hairline frame, header title + rule, hairline list rows,
+	focused row = bg_raised fill + 2px accent frame (inset), buttons = 1px outline at rest, accent
+	fill + ink text on focus. Right-hand 720px playback panel per mockups/Tracks + AVSettings.
+
+	Shared names other builders may use (params unchanged from M1, look restyled):
+	  Fold_GenericDialog, Fold_DialogButton, Fold_ListLayout, Fold_Scrollbar,
+	  Fold_ToastFrame, Fold_KeyboardKey, Fold_KeyboardFunc
+	Builder E's own: Dlg_* (constants dlg_*).
+-->
+<includes>
+	<!-- ============================================================ constants -->
+	<constant name="dlg_panel_x">1200</constant>          <!-- right-hand playback panel (mockups/Tracks, AVSettings) -->
+	<constant name="dlg_panel_w">720</constant>
+	<constant name="dlg_panel_pad">72</constant>          <!-- inner left/right padding -->
+	<constant name="dlg_panel_in_w">576</constant>        <!-- 720 - 2 x 72 -->
+	<constant name="dlg_panel_top">64</constant>
+	<constant name="dlg_track_row_h">58</constant>
+	<constant name="dlg_osd_row_h">76</constant>
+	<constant name="dlg_row_pad">16</constant>            <!-- text inset inside a list row -->
+	<constant name="dlg_check">22</constant>              <!-- current-item check -->
+	<constant name="dlg_check_gutter">56</constant>       <!-- label x when a check column precedes it -->
+	<constant name="dlg_btn_h">60</constant>
+
+	<!-- ============================================================ expressions -->
+	<!-- DialogSelect shows the right-hand track panel only over fullscreen video -->
+	<expression name="Dlg_IsTrackPanel">Player.HasVideo + Window.IsActive(fullscreenvideo)</expression>
+	<!-- the select list was opened from the OSD subtitle settings (subtitle stream list) -->
+	<expression name="Dlg_FromSubtitleSettings">Window.IsVisible(osdsubtitlesettings)</expression>
+	<!-- DialogSettings is one of the OSD playback settings dialogs -->
+	<expression name="Dlg_IsOSDSettings">Window.IsActive(osdaudiosettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(osdvideosettings) | Window.IsActive(osdcmssettings)</expression>
+
+	<!-- ============================================================ variables -->
+	<!-- Track panel kicker: "SUBTITLES · 16 TRACKS" -->
+	<variable name="Dlg_SelectKicker">
+		<!-- 1.0.4: singular for one item ("Audio · 1 tracks" on single-track files) -->
+		<value condition="Window.IsVisible(osdsubtitlesettings) + Integer.IsEqual(Container(3).NumItems,1)">Subtitles  ·  1 track</value>
+		<value condition="Window.IsVisible(osdaudiosettings) + Integer.IsEqual(Container(3).NumItems,1)">Audio  ·  1 track</value>
+		<value condition="Window.IsVisible(osdvideosettings) + Integer.IsEqual(Container(3).NumItems,1)">Video  ·  1 option</value>
+		<value condition="Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,1)">Select  ·  1 item</value>
+		<value condition="!Control.IsVisible(6) + Integer.IsEqual(Container(3).NumItems,1)">Select  ·  1 item</value>
+		<value condition="Window.IsVisible(osdsubtitlesettings)">Subtitles$INFO[Container(3).NumItems,  ·  , tracks]</value>
+		<value condition="Window.IsVisible(osdaudiosettings)">Audio$INFO[Container(3).NumItems,  ·  , tracks]</value>
+		<value condition="Window.IsVisible(osdvideosettings)">Video$INFO[Container(3).NumItems,  ·  , options]</value>
+		<value condition="Control.IsVisible(6)">Select$INFO[Container(6).NumItems,  ·  , items]</value>
+		<value>Select$INFO[Container(3).NumItems,  ·  , items]</value>
+	</variable>
+	<!-- Centred select: "03 / 16" in the header -->
+	<variable name="Dlg_SelectPosition">
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).CurrentItem]$INFO[Container(6).NumItems, / ,]</value>
+		<value>$INFO[Container(3).CurrentItem]$INFO[Container(3).NumItems, / ,]</value>
+	</variable>
+	<!-- What is playing, under the track panel: "PAUSED · 1:02:31 / 2:14:00" -->
+	<variable name="Dlg_PlayState">
+		<value condition="Player.Paused">Paused  ·  $INFO[Player.Time]$INFO[Player.Duration, / ,]</value>
+		<value>$INFO[Player.Time]$INFO[Player.Duration, / ,]</value>
+	</variable>
+	<variable name="Dlg_PlayTitle">
+		<value condition="VideoPlayer.Content(episodes)">$INFO[VideoPlayer.TVShowTitle]</value>
+		<value>$INFO[VideoPlayer.Title]</value>
+	</variable>
+
+	<variable name="Dlg_AddonNewsLabel">
+		<value condition="!String.IsEmpty(Window(Home).Property(fold.addonnews))">Description</value>
+		<value>What's new</value>
+	</variable>
+
+	<!-- ============================================================ texture switches -->
+	<!-- (button textures can't take $VAR, so corners / outline weight are picked at window load) -->
+	<include name="Dlg_Tex_DialogButton">
+		<include condition="false">Dlg_Tex_DialogButton_Round</include>
+		<include condition="true">Dlg_Tex_DialogButton_Square</include>
+	</include>
+	<include name="Dlg_Tex_DialogButton_Square">
+		<texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus>
+		<texturenofocus border="6" colordiffuse="1a1d1b18">fold/chip.png</texturenofocus>
+	</include>
+	<include name="Dlg_Tex_DialogButton_Round">
+		<texturefocus border="10" colordiffuse="$VAR[FoldAccent]">common/rect_round8.png</texturefocus>
+		<texturenofocus border="10" colordiffuse="rule_strong">common/rect_outline_1_round8.png</texturenofocus>
+	</include>
+
+	<!-- Accent frame drawn AT the control rect (stroke sits 1-3px inside), for Kodi-cloned rows -->
+	<include name="Dlg_Tex_RowFocus">
+		<include condition="true + !String.IsEqual(Skin.String(fold.focusoutline),medium)">Dlg_Tex_RowFocus_S2</include>
+		<include condition="true + String.IsEqual(Skin.String(fold.focusoutline),medium)">Dlg_Tex_RowFocus_S3</include>
+		<include condition="false + !String.IsEqual(Skin.String(fold.focusoutline),medium)">Dlg_Tex_RowFocus_R2</include>
+		<include condition="false + String.IsEqual(Skin.String(fold.focusoutline),medium)">Dlg_Tex_RowFocus_R3</include>
+	</include>
+	<include name="Dlg_Tex_RowFocus_S2"><texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus></include>
+	<include name="Dlg_Tex_RowFocus_S3"><texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus></include>
+	<include name="Dlg_Tex_RowFocus_R2"><texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus></include>
+	<include name="Dlg_Tex_RowFocus_R3"><texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus></include>
+
+	<!-- Hairline under a row (texturenofocus of Kodi-cloned rows). flip = true gives a top rule. -->
+	<include name="Dlg_Tex_RowRule">
+		<param name="color">rule_soft</param>
+		<param name="flip">false</param>
+		<definition>
+			<texturenofocus border="0,0,0,2" flipy="$PARAM[flip]" colordiffuse="$PARAM[color]">dialogs/row_rule.png</texturenofocus>
+		</definition>
+	</include>
+
+	<!-- ============================================================ generic dialog -->
+	<!-- Centred modal frame. Put inside a group positioned/sized like the dialog.
+	     params: width, height, header_id (Kodi heading id, "" if none), header_label,
+	             kicker (optional mono caption, right side of the header, accent) -->
+	<include name="Fold_GenericDialog">
+		<param name="header_id"></param>
+		<param name="header_label"></param>
+		<param name="kicker"></param>
+		<definition>
+			<control type="image">
+				<description>table dim behind the note</description>
+				<left>-2000</left>
+				<top>-2000</top>
+				<width>6000</width>
+				<height>6000</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="veil">common/white.png</texture>
+			</control>
+			<control type="image">
+				<description>note shadow</description>
+				<left>-96</left>
+				<top>-96</top>
+				<right>-96</right>
+				<bottom>-96</bottom>
+				<texture border="104">fold/shadow_spread.png</texture>
+			</control>
+			<control type="image">
+				<description>the note (cream stock)</description>
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture border="6" colordiffuse="cream">fold/rr4.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture diffuse="fold/rr4.png">fold/tooth_cream.png</texture>
+			</control>
+			<control type="image">
+				<description>centre crease</description>
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture>fold/note_crease.png</texture>
+			</control>
+			<control type="image">
+				<description>cut edge of the duplex board</description>
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture border="4" colordiffuse="$VAR[FoldAccentEdge]">fold/edge_all.png</texture>
+			</control>
+			<control type="label" id="$PARAM[header_id]">
+				<description>heading</description>
+				<left>dialog_pad</left>
+				<top>0</top>
+				<right>260</right>
+				<height>dialog_header_h</height>
+				<font>head_34</font>
+				<textcolor>ink</textcolor>
+				<label>$PARAM[header_label]</label>
+			</control>
+			<control type="label">
+				<description>kicker</description>
+				<right>dialog_pad</right>
+				<top>0</top>
+				<width>220</width>
+				<height>dialog_header_h</height>
+				<align>right</align>
+				<font>caps_20_b</font>
+				<textcolor>$VAR[FoldAccentInk]</textcolor>
+				<label>$PARAM[kicker]</label>
+			</control>
+			<control type="image">
+				<left>dialog_pad</left>
+				<top>dialog_header_h</top>
+				<right>dialog_pad</right>
+				<height>2</height>
+				<aspectratio align="left">center</aspectratio>
+				<texture colordiffuse="rule">fold/dots.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Dialog button: 1px outline at rest, accent fill + ink text on focus (always visible focus).
+	     params: id, label, width, height, onclick, onclick2 (second action), visible -->
+	<!-- No <enable>: Kodi enables/disables its own dialog buttons (5/7/8, 28-30); a skin <enable> would override it. -->
+	<include name="Fold_DialogButton">
+		<param name="width">300</param>
+		<param name="height">dialog_row_h</param>
+		<param name="label"></param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<label>$PARAM[label]</label>
+				<font>word_26</font>
+				<textcolor>ink</textcolor>
+				<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+				<disabledcolor>disabled</disabledcolor>
+				<align>center</align>
+				<textoffsetx>16</textoffsetx>
+				<include>Dlg_Tex_DialogButton</include>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Definition-list fact (mono field label + value), 40px pitch. params: top, label, value, valuew -->
+	<include name="Dlg_FactRow">
+		<param name="valuew">620</param>
+		<definition>
+			<control type="label">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>160</width>
+				<height>28</height>
+				<font>caps_20</font>
+				<textcolor>cap</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="label">
+				<left>160</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[valuew]</width>
+				<height>28</height>
+				<font>num_20</font>
+				<textcolor>ink</textcolor>
+				<label>$PARAM[value]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ list rows -->
+	<!-- Focused-row treatment inside a <focusedlayout>: raised fill + 2px accent frame (inset).
+	     Shown only while the list has focus, so an unfocused list never looks "selected".
+	     params: list_id, width, height -->
+	<include name="Dlg_RowFocus">
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<visible>Control.HasFocus($PARAM[list_id])</visible>
+				<control type="image">
+					<left>-32</left>
+					<top>-32</top>
+					<right>-32</right>
+					<bottom>-32</bottom>
+					<texture border="40">fold/slip_shadow.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture border="6" colordiffuse="fffffcf6">fold/rr3.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>6</width>
+					<bottom>0</bottom>
+					<texture colordiffuse="$VAR[FoldAccent]">common/white.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Text list: check column (current / selected item), label, mono label2 on the right,
+	     hairline under each row. params: width, height, label, label2, list_id -->
+	<include name="Fold_ListLayout">
+		<param name="width">800</param>
+		<param name="height">64</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="list_id">50</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule_soft">common/hairline.png</texture>
+				</control>
+				<control type="image">
+					<left>dlg_row_pad</left>
+					<centertop>50%</centertop>
+					<width>dlg_check</width>
+					<height>dlg_check</height>
+					<texture colordiffuse="$VAR[FoldAccent]">markers/check.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>240</right>
+					<height>$PARAM[height]</height>
+					<font>sans_26_semi</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>210</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>num_20</font>
+					<textcolor>cap</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule_soft">common/hairline.png</texture>
+				</control>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<control type="image">
+					<left>dlg_row_pad</left>
+					<centertop>50%</centertop>
+					<width>dlg_check</width>
+					<height>dlg_check</height>
+					<texture colordiffuse="$VAR[FoldAccent]">markers/check.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>240</right>
+					<height>$PARAM[height]</height>
+					<font>sans_26_semi</font>
+					<textcolor>ink</textcolor>
+					<scroll>true</scroll>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>210</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>num_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Numbered menu list (Settings hub, System menu, power menu): mono index from
+	     ListItem.Property(index) (accent on the focused row), label, mono hint (label2).
+	     params: width, height, list_id -->
+	<!-- Row number from the item's position among VISIBLE items (no gaps when Kodi hides items such
+	     as Reboot/Power off on Android); two digits. -->
+	<variable name="Dlg_RowIndex">
+		<value condition="Integer.IsLess(ListItem.CurrentItem,10)">$INFO[ListItem.CurrentItem,0]</value>
+		<value>$INFO[ListItem.CurrentItem]</value>
+	</variable>
+	<include name="Dlg_IndexListLayout">
+		<param name="width">860</param>
+		<param name="height">72</param>
+		<param name="list_id">9000</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule_soft">common/hairline.png</texture>
+				</control>
+				<control type="label">
+					<left>20</left>
+					<top>0</top>
+					<width>40</width>
+					<height>$PARAM[height]</height>
+					<font>caps_20</font>
+					<textcolor>cap</textcolor>
+					<label>$VAR[Dlg_RowIndex]</label>
+					<visible>false</visible>
+				</control>
+				<control type="label">
+					<left>28</left>
+					<top>0</top>
+					<right>128</right>
+					<height>$PARAM[height]</height>
+					<font>sans_26_semi</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>320</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>caps_20</font>
+					<textcolor>cap</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule_soft">common/hairline.png</texture>
+				</control>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<control type="label">
+					<left>20</left>
+					<top>0</top>
+					<width>40</width>
+					<height>$PARAM[height]</height>
+					<font>caps_20</font>
+					<textcolor>$VAR[FoldAccent]</textcolor>
+					<label>$VAR[Dlg_RowIndex]</label>
+					<visible>false</visible>
+				</control>
+				<control type="label">
+					<left>28</left>
+					<top>0</top>
+					<right>128</right>
+					<height>$PARAM[height]</height>
+					<font>sans_26_semi</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>320</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>caps_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Track rows (mockups/Tracks): 58px, check for the current track, name (bold when current),
+	     mono meta (label2) on the right, #1c1c1c-ish divider (bg_ghost). params: list_id -->
+	<include name="Dlg_TrackListLayout">
+		<param name="list_id">3</param>
+		<definition>
+			<itemlayout width="dlg_panel_in_w" height="dlg_track_row_h">
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>dlg_panel_in_w</width>
+					<height>rule_h</height>
+					<texture colordiffuse="cream_deep">common/hairline.png</texture>
+				</control>
+				<include>Dlg_TrackRowContent</include>
+			</itemlayout>
+			<focusedlayout width="dlg_panel_in_w" height="dlg_track_row_h">
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>dlg_panel_in_w</width>
+					<height>rule_h</height>
+					<texture colordiffuse="cream_deep">common/hairline.png</texture>
+				</control>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="dlg_panel_in_w"/>
+					<param name="height" value="dlg_track_row_h"/>
+				</include>
+				<include>Dlg_TrackRowContent</include>
+			</focusedlayout>
+		</definition>
+	</include>
+	<include name="Dlg_TrackRowContent">
+		<control type="image">
+			<left>dlg_row_pad</left>
+			<top>19</top>
+			<width>20</width>
+			<height>20</height>
+			<texture colordiffuse="$VAR[FoldAccent]">markers/check.png</texture>
+			<visible>ListItem.IsSelected</visible>
+		</control>
+		<control type="label">
+			<left>56</left>
+			<top>0</top>
+			<right>150</right>
+			<height>dlg_track_row_h</height>
+			<font>word_26</font>
+			<textcolor>ink2</textcolor>
+			<label>$INFO[ListItem.Label]</label>
+			<visible>!ListItem.IsSelected</visible>
+		</control>
+		<control type="label">
+			<left>56</left>
+			<top>0</top>
+			<right>150</right>
+			<height>dlg_track_row_h</height>
+			<font>word_26</font>
+			<textcolor>ink</textcolor>
+			<label>$INFO[ListItem.Label]</label>
+			<visible>ListItem.IsSelected</visible>
+		</control>
+		<control type="label">
+			<right>dlg_row_pad</right>
+			<top>0</top>
+			<width>130</width>
+			<height>dlg_track_row_h</height>
+			<align>right</align>
+			<font>caps_20</font>
+			<textcolor>cap</textcolor>
+			<label>$INFO[ListItem.Label2]</label>
+		</control>
+	</include>
+
+	<!-- Thin scroll-position line paired with a list (2px; thumb brightens to accent when focused).
+	     params: id, left, top, height, onleft, onright -->
+	<include name="Fold_Scrollbar">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="scrollbar" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>2</width>
+				<height>$PARAM[height]</height>
+				<texturesliderbackground colordiffuse="cream_deep">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="rule_strong">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="$VAR[FoldAccent]">common/white.png</texturesliderbarfocus>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<orientation>vertical</orientation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ right-hand playback panel -->
+	<!-- Full-screen dim over the paused frame + the 720px panel with its left hairline.
+	     Place at window level (absolute coords). -->
+	<include name="Dlg_SidePanelFrame">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<!-- own fades: without them Kodi draws this dim over the dialog (seen on Shield 2026-10-18) -->
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="veil">common/white.png</texture>
+		</control>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>dlg_panel_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="cream">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>rule_h</width>
+				<height>screen_h</height>
+				<texture colordiffuse="rule_soft">common/hairline_v.png</texture>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ DialogSelect -->
+	<!-- Centred select (id contract from Estuary Omega Includes_DialogSelect.xml: heading 1,
+	     list 3 simple / 6 detailed, scrollbar 61, buttons 5 / 8 / 7 (cancel) in grouplist 9001). -->
+	<include name="Dlg_SelectCentred">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1120</width>
+			<height>800</height>
+			<include content="Fold_GenericDialog">
+				<param name="width" value="1120"/>
+				<param name="height" value="800"/>
+				<param name="header_id" value="1"/>
+				<param name="kicker" value="$VAR[Dlg_SelectPosition]"/>
+			</include>
+			<control type="list" id="3">
+				<left>dialog_inset</left>
+				<top>dialog_content_top</top>
+				<width>768</width>
+				<height>640</height>
+				<onup>3</onup>
+				<ondown>3</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="Fold_ListLayout">
+					<param name="width" value="768"/>
+					<param name="height" value="dialog_row_h"/>
+					<param name="list_id" value="3"/>
+				</include>
+			</control>
+			<control type="list" id="6">
+				<left>dialog_inset</left>
+				<top>dialog_content_top</top>
+				<width>768</width>
+				<height>636</height>
+				<onup>6</onup>
+				<ondown>6</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="768" height="106">
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>768</width>
+						<height>rule_h</height>
+						<texture colordiffuse="rule_soft">common/hairline.png</texture>
+					</control>
+					<include>Dlg_SelectDetailRow</include>
+				</itemlayout>
+				<focusedlayout width="768" height="106">
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>768</width>
+						<height>rule_h</height>
+						<texture colordiffuse="rule_soft">common/hairline.png</texture>
+					</control>
+					<include content="Dlg_RowFocus">
+						<param name="list_id" value="6"/>
+						<param name="width" value="768"/>
+						<param name="height" value="106"/>
+					</include>
+					<include>Dlg_SelectDetailRow</include>
+				</focusedlayout>
+			</control>
+			<!-- empty state (Kodi then focuses the buttons) -->
+			<control type="label">
+				<left>64</left>
+				<top>dialog_content_top</top>
+				<width>700</width>
+				<height>dialog_row_h</height>
+				<font>caps_20</font>
+				<textcolor>cap</textcolor>
+				<label>$LOCALIZE[31322]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<include content="Fold_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="800"/>
+				<param name="top" value="dialog_content_top"/>
+				<param name="height" value="640"/>
+			</include>
+			<control type="grouplist" id="9001">
+				<left>820</left>
+				<top>dialog_content_top</top>
+				<width>276</width>
+				<height>400</height>
+				<orientation>vertical</orientation>
+				<itemgap>12</itemgap>
+				<onleft condition="Control.IsVisible(3)">3</onleft>
+				<onleft condition="Control.IsVisible(6)">6</onleft>
+				<onright condition="Control.IsVisible(3)">3</onright>
+				<onright condition="Control.IsVisible(6)">6</onright>
+				<onup>9001</onup>
+				<ondown>9001</ondown>
+				<include content="Fold_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="276"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="276"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="276"/>
+				</include>
+			</control>
+		</control>
+	</include>
+	<include name="Dlg_SelectDetailRow">
+		<control type="image">
+			<left>dlg_row_pad</left>
+			<top>13</top>
+			<width>80</width>
+			<height>80</height>
+			<aspectratio>keep</aspectratio>
+			<texture background="true">$VAR[ListItemArt]</texture>
+		</control>
+		<control type="image">
+			<right>dlg_row_pad</right>
+			<top>42</top>
+			<width>dlg_check</width>
+			<height>dlg_check</height>
+			<texture colordiffuse="$VAR[FoldAccent]">markers/check.png</texture>
+			<visible>ListItem.IsSelected</visible>
+		</control>
+		<control type="label">
+			<left>116</left>
+			<top>14</top>
+			<right>56</right>
+			<height>40</height>
+			<font>sans_26_semi</font>
+			<textcolor>ink</textcolor>
+			<label>$INFO[ListItem.Label]</label>
+		</control>
+		<control type="label">
+			<left>116</left>
+			<top>56</top>
+			<right>56</right>
+			<height>34</height>
+			<font>body_20</font>
+			<textcolor>ink2</textcolor>
+			<label>$INFO[ListItem.Label2]</label>
+		</control>
+	</include>
+
+	<!-- Right-hand track picker (mockups/Tracks) for selects over fullscreen video.
+	     Same id contract; adds Fold buttons 9101 (download subtitles) / 9102 (subtitle settings)
+	     in grouplist 9100 when the list came from the OSD subtitle settings. -->
+	<include name="Dlg_SelectPanel">
+		<include>Dlg_SidePanelFrame</include>
+		<!-- what's playing, bottom-left over the dimmed frame -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>874</top>
+			<width>1000</width>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>24</height>
+				<font>caps_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Dlg_PlayState]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>34</top>
+				<width>1000</width>
+				<height>60</height>
+				<font>font45_title</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[Dlg_PlayTitle]</label>
+			</control>
+		</control>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="label">
+				<description>kicker</description>
+				<left>dlg_panel_pad</left>
+				<top>dlg_panel_top</top>
+				<width>dlg_panel_in_w</width>
+				<height>20</height>
+				<font>caps_20</font>
+				<textcolor>$VAR[FoldAccent]</textcolor>
+				<label>$VAR[Dlg_SelectKicker]</label>
+			</control>
+			<control type="label" id="1">
+				<description>heading (Kodi)</description>
+				<left>dlg_panel_pad</left>
+				<top>94</top>
+				<width>dlg_panel_in_w</width>
+				<height>56</height>
+				<font>font45_title</font>
+				<textcolor>ink</textcolor>
+			</control>
+			<control type="image">
+				<left>dlg_panel_pad</left>
+				<top>176</top>
+				<width>dlg_panel_in_w</width>
+				<height>rule_h</height>
+				<texture colordiffuse="rule_soft">common/hairline.png</texture>
+			</control>
+			<control type="list" id="3">
+				<left>dlg_panel_pad</left>
+				<top>177</top>
+				<width>dlg_panel_in_w</width>
+				<height>754</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="3"/></include>
+			</control>
+			<control type="list" id="6">
+				<left>dlg_panel_pad</left>
+				<top>177</top>
+				<width>dlg_panel_in_w</width>
+				<height>754</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="6"/></include>
+			</control>
+			<control type="label">
+				<left>dlg_panel_pad</left>
+				<top>177</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_track_row_h</height>
+				<textoffsetx>56</textoffsetx>
+				<font>caps_20</font>
+				<textcolor>cap</textcolor>
+				<label>$LOCALIZE[31322]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<control type="scrollbar" id="61">
+				<left>646</left>
+				<top>177</top>
+				<width>2</width>
+				<height>754</height>
+				<texturesliderbackground colordiffuse="cream_deep">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="rule_strong">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="rule_strong">common/white.png</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+			</control>
+			<control type="grouplist" id="9100">
+				<left>dlg_panel_pad</left>
+				<top>964</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_btn_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>14</itemgap>
+				<onleft>9100</onleft>
+				<onright>9100</onright>
+				<onup condition="Control.IsVisible(3)">3</onup>
+				<onup condition="Control.IsVisible(6)">6</onup>
+				<ondown condition="Control.IsVisible(3)">3</ondown>
+				<ondown condition="Control.IsVisible(6)">6</ondown>
+				<include content="Fold_DialogButton">
+					<param name="id" value="9101"/>
+					<param name="label" value="Download subtitles"/>
+					<param name="width" value="281"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="onclick2" value="ActivateWindow(SubtitleSearch)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="9102"/>
+					<param name="label" value="Subtitle settings"/>
+					<param name="width" value="281"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="181"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="181"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Fold_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="181"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="visible" value="!$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- Mono sub-nav radio (add-on browser filters): same look as Fold_SubNavButton - accent fill +
+	     ink on focus - with a small check / box on the right. -->
+	<include name="Dlg_SubNavRadio">
+		<width>380</width>
+		<height>subnav_h</height>
+		<font>caps_20</font>
+		<textcolor>ink2</textcolor>
+		<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<textoffsetx>12</textoffsetx>
+		<aligny>center</aligny>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus>
+		<texturenofocus />
+		<radiowidth>18</radiowidth>
+		<radioheight>18</radioheight>
+		<radioposx>350</radioposx>
+		<textureradioonfocus colordiffuse="on_card">markers/check.png</textureradioonfocus>
+		<textureradioonnofocus colordiffuse="$VAR[FoldAccent]">markers/check.png</textureradioonnofocus>
+		<textureradioofffocus border="10" colordiffuse="on_card">common/rect_outline_1.png</textureradioofffocus>
+		<textureradiooffnofocus border="10" colordiffuse="rule_strong">common/rect_outline_1.png</textureradiooffnofocus>
+	</include>
+
+	<!-- ============================================================ toasts -->
+	<!-- Toast panel (notification / background progress): bg + hairline frame, no accent bar.
+	     params: height -->
+	<include name="Fold_ToastFrame">
+		<param name="height">104</param>
+		<definition>
+			<control type="image">
+				<left>-96</left>
+				<top>-96</top>
+				<width>752</width>
+				<height>$PARAM[height]</height>
+				<texture border="104">fold/shadow_spread.png</texture>
+				<visible>false</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>toast_w</width>
+				<height>$PARAM[height]</height>
+				<texture border="6" colordiffuse="cream">fold/rr4.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>toast_w</width>
+				<height>$PARAM[height]</height>
+				<texture diffuse="fold/rr4.png">fold/tooth_cream.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>8</width>
+				<height>$PARAM[height]</height>
+				<texture colordiffuse="$VAR[FoldAccent]">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ keyboard keys -->
+	<!-- On-screen keyboard / numeric keys. Kodi writes the key labels. 1px outline at rest,
+	     accent fill + ink on focus; corners follow the setting (picked at window load). -->
+	<include name="Fold_KeyboardKey">
+		<font>sans_28_semi</font>
+		<textcolor>ink</textcolor>
+		<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<include condition="false">Dlg_Tex_Key_Round</include>
+		<include condition="true">Dlg_Tex_Key_Square</include>
+	</include>
+	<include name="Fold_KeyboardFunc">
+		<font>caps_20</font>
+		<textcolor>ink2</textcolor>
+		<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<include condition="false">Dlg_Tex_Key_Round</include>
+		<include condition="true">Dlg_Tex_Key_Square</include>
+	</include>
+	<!-- keys are paper slips; the focused key is a section-colour chip -->
+	<include name="Dlg_Tex_Key_Square">
+		<texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus>
+		<texturenofocus border="6" colordiffuse="ffe9e2d3">fold/chip.png</texturenofocus>
+	</include>
+	<include name="Dlg_Tex_Key_Round">
+		<include>Dlg_Tex_Key_Square</include>
+	</include>
+	<!-- Count words: "1 season", not "1 seasons" (2026-10-30) -->
+	<variable name="Subs_ResultCount">
+		<value condition="Integer.IsEqual(Container(120).NumItems,1)">1 RESULT</value>
+		<value>$INFO[Container(120).NumItems,, RESULTS]</value>
+	</variable>
+</includes>

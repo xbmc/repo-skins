@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Common building blocks (Fold): the table, die-cut section tabs, clock, closed cards, tipped-in plates,
+	key-cap hints, focus mounts and the legacy Fold_* names the forked windows use.
+	Design tokens: docs/skin.fold/DESIGN.md. Textures: _src/make_textures.py -> media/fold/.
+-->
+<includes>
+	<!-- ============================================================ page -->
+
+	<!-- The table: warm light grey with paper tooth and the window light (opaque, pre-rendered). -->
+	<include name="Fold_Background">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<texture colordiffuse="table">common/white.png</texture>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<texture background="true">fold/table.jpg</texture>
+		</control>
+	</include>
+
+	<!-- 1px horizontal rule. params: top, left, width, color -->
+	<include name="Fold_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">$VAR[FoldRule]</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$PARAM[color]">common/hairline.png</texture>
+			</control>
+		</definition>
+	</include>
+	<!-- Fold has no header rule (the tabs hang from the top edge of the table). Kept for forked windows. -->
+	<include name="Fold_TopRule">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1</width>
+			<height>1</height>
+			<texture />
+			<visible>false</visible>
+		</control>
+	</include>
+
+	<!-- Clock (FoldHome .clock): time Plex Mono 500 38 px, date 20 px caps below, right edge x 1824, top 30 -->
+	<include name="Fold_Clock">
+		<control type="group">
+			<visible>!Skin.HasSetting(fold.hideclock)</visible>
+			<control type="label">
+				<left>1224</left>
+				<top>26</top>
+				<width>600</width>
+				<height>48</height>
+				<align>right</align>
+				<font>num_38</font>
+				<textcolor>ink</textcolor>
+				<selectedcolor>ink</selectedcolor>
+				<label>$VAR[ClockLabel]</label>
+			</control>
+			<control type="label">
+				<left>1224</left>
+				<top>76</top>
+				<width>600</width>
+				<height>32</height>
+				<align>right</align>
+				<font>caps_20</font>
+				<textcolor>cap</textcolor>
+				<selectedcolor>cap</selectedcolor>
+				<label>$VAR[DateLabel]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ section tabs
+	     Die-cut paper tabs hanging from the top edge (FoldHome .tabs): 196 wide, gap 10, from x 96.
+	     The active tab stands taller (98 vs 66) with a deeper shadow. Decorative copies in every
+	     full-screen window; Home has focusable ones (Includes_Home.xml).
+	     params: x, color, label, count, active (condition), dim (condition: other tabs at .55) -->
+	<include name="Fold_TabLook">
+		<param name="count"></param>
+		<param name="dim">false</param>
+		<param name="focus">false</param>
+		<param name="text">on_card</param>
+		<param name="text2">on_card2</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[x]</left>
+				<top>0</top>
+				<width>196</width>
+				<height>110</height>
+				<animation effect="fade" start="100" end="55" time="200" condition="$PARAM[dim]">Conditional</animation>
+				<!-- resting tab -->
+				<control type="group">
+					<visible>!$PARAM[active]</visible>
+					<control type="image">
+						<left>-48</left>
+						<top>-48</top>
+						<width>292</width>
+						<height>162</height>
+						<texture>fold/tab_shadow.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>66</height>
+						<texture colordiffuse="$PARAM[color]">fold/tab.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>66</height>
+						<texture diffuse="fold/tab.png">fold/tooth_card_s.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>66</height>
+						<texture>fold/tab_shade.png</texture>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>22</top>
+						<width>150</width>
+						<height>32</height>
+						<font>tab_22</font>
+						<textcolor>$PARAM[text]</textcolor>
+						<selectedcolor>on_card</selectedcolor>
+						<label>$PARAM[label]</label>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>22</top>
+						<width>148</width>
+						<height>32</height>
+						<align>right</align>
+						<font>num_20</font>
+						<textcolor>$PARAM[text2]</textcolor>
+						<selectedcolor>on_card2</selectedcolor>
+						<label>$PARAM[count]</label>
+					</control>
+				</control>
+				<!-- raised tab (active section) -->
+				<control type="group">
+					<visible>$PARAM[active]</visible>
+					<animation effect="slide" start="0,-32" end="0,0" time="220" tween="back" easing="out" condition="!Skin.HasSetting(fold.reducemotion)">Visible</animation>
+					<control type="image">
+						<left>-48</left>
+						<top>-48</top>
+						<width>292</width>
+						<height>194</height>
+						<texture>fold/tab_on_shadow.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>98</height>
+						<texture colordiffuse="$PARAM[color]">fold/tab_on.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>98</height>
+						<texture diffuse="fold/tab_on.png">fold/tooth_card_s.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>196</width>
+						<height>98</height>
+						<texture>fold/tab_on_shade.png</texture>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>44</top>
+						<width>150</width>
+						<height>38</height>
+						<font>tab_26</font>
+						<textcolor>$PARAM[text]</textcolor>
+						<selectedcolor>on_card</selectedcolor>
+						<label>$PARAM[label]</label>
+					</control>
+					<control type="label">
+						<left>24</left>
+						<top>48</top>
+						<width>148</width>
+						<height>32</height>
+						<align>right</align>
+						<font>num_20</font>
+						<textcolor>$PARAM[text]</textcolor>
+						<selectedcolor>$PARAM[text]</selectedcolor>
+						<label>$PARAM[count]</label>
+					</control>
+					<!-- focus notch: a cream crease line under the label while the tab itself has focus -->
+					<control type="image">
+						<left>24</left>
+						<top>84</top>
+						<width>148</width>
+						<height>3</height>
+						<texture colordiffuse="$PARAM[text]">common/white.png</texture>
+						<visible>$PARAM[focus]</visible>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Decorative tab strip for every full-screen window except Home. The active tab follows the
+	     section expressions (Expressions.xml). param dim: fade the inactive tabs (spread open). -->
+	<!-- 0.9.10: tabs hidden in Skin settings (HideMenu.*) are left out here too; the rest close up -->
+	<include name="Fold_Tabs">
+		<param name="dim">false</param>
+		<definition>
+			<control type="group">
+				<control type="group">
+					<visible>!Skin.HasSetting(HideMenu.Movies)</visible>
+					<include content="Fold_TabLook">
+						<param name="x" value="96"/>
+						<param name="color" value="verm"/>
+						<param name="label" value="$LOCALIZE[31200]"/>
+						<param name="count" value="$INFO[Window(Home).Property(fold.n.films)]"/>
+						<param name="active" value="![$EXP[SectionSeries] | $EXP[SectionMusic] | $EXP[SectionSearch] | $EXP[SectionSettings]]"/>
+						<param name="dim" value="$PARAM[dim] + [$EXP[SectionSeries] | $EXP[SectionMusic] | $EXP[SectionSearch] | $EXP[SectionSettings]]"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>!Skin.HasSetting(HideMenu.TVShows)</visible>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+					<include content="Fold_TabLook">
+						<param name="x" value="302"/>
+						<param name="color" value="cobalt"/>
+						<param name="label" value="$LOCALIZE[31201]"/>
+						<param name="count" value="$INFO[Window(Home).Property(fold.n.series)]"/>
+						<param name="active" value="$EXP[SectionSeries]"/>
+						<param name="dim" value="$PARAM[dim] + !$EXP[SectionSeries]"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>!Skin.HasSetting(HideMenu.Music)</visible>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+					<include content="Fold_TabLook">
+						<param name="x" value="508"/>
+						<param name="color" value="mari"/>
+						<param name="text" value="ink"/>
+						<param name="text2" value="cap"/>
+						<param name="label" value="$LOCALIZE[31202]"/>
+						<param name="count" value="$INFO[Window(Home).Property(fold.n.music)]"/>
+						<param name="active" value="$EXP[SectionMusic]"/>
+						<param name="dim" value="$PARAM[dim] + !$EXP[SectionMusic]"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>!Skin.HasSetting(HideMenu.Search)</visible>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Music)">Conditional</animation>
+					<include content="Fold_TabLook">
+						<param name="x" value="714"/>
+						<param name="color" value="jade"/>
+						<param name="label" value="$LOCALIZE[31203]"/>
+						<param name="active" value="$EXP[SectionSearch]"/>
+						<param name="dim" value="$PARAM[dim] + !$EXP[SectionSearch]"/>
+					</include>
+				</control>
+				<control type="group">
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Music)">Conditional</animation>
+					<animation effect="slide" start="0,0" end="-206,0" time="0" condition="Skin.HasSetting(HideMenu.Search)">Conditional</animation>
+					<include content="Fold_TabLook">
+						<param name="x" value="920"/>
+						<param name="color" value="graph"/>
+						<param name="label" value="$LOCALIZE[31204]"/>
+						<param name="active" value="$EXP[SectionSettings]"/>
+						<param name="dim" value="$PARAM[dim] + !$EXP[SectionSettings]"/>
+					</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Row head / crumb (FoldHome .rowhead): accent caps + grey caps, baseline row at y 146.
+	     params: top, left, label (accent, semibold), sub (grey) -->
+	<include name="Fold_RowHead">
+		<param name="left">page_margin</param>
+		<param name="sub"></param>
+		<param name="color">$VAR[FoldAccentInk]</param>
+		<param name="width">1300</param>
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>32</height>
+				<font>caps_20_b</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<selectedcolor>$PARAM[color]</selectedcolor>
+				<label>$PARAM[label][COLOR cap2]$PARAM[sub][/COLOR]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Page header for library / settings windows: section tabs + crumb under them + clock.
+	     params: index (unused), title, sub -->
+	<include name="Fold_PageHeader">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="Fold_RowHead">
+				<param name="top">118</param>
+				<param name="label" value="$PARAM[title]"/>
+				<param name="sub" value="   $PARAM[sub]"/>
+			</include>
+		</definition>
+	</include>
+	<include name="Fold_TopBar">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include>Fold_Tabs</include>
+			<include content="Fold_PageHeader">
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include>Fold_Clock</include>
+		</definition>
+	</include>
+
+	<!-- Key-cap hint (FoldOpen .hint): ink key cap + caps caption + gap. Emits four controls for a horizontal
+	     grouplist with itemgap 0 (an auto-width group can't live in a grouplist). params: key, label, visible -->
+	<include name="Fold_KeyHint">
+		<param name="visible">true</param>
+		<param name="id"></param>
+		<definition>
+			<control type="button">
+				<width>auto</width>
+				<height>32</height>
+				<font>caps_20_b</font>
+				<textcolor>on_card</textcolor>
+				<selectedcolor>on_card</selectedcolor>
+				<disabledcolor>on_card</disabledcolor>
+				<align>center</align>
+				<textoffsetx>10</textoffsetx>
+				<texturenofocus border="6" colordiffuse="ink">fold/key.png</texturenofocus>
+				<texturefocus border="6" colordiffuse="ink">fold/key.png</texturefocus>
+				<label>$PARAM[key]</label>
+				<enable>false</enable>
+				<visible>$PARAM[visible]</visible>
+			</control>
+			<control type="image">
+				<width>12</width>
+				<height>32</height>
+				<texture />
+				<visible>$PARAM[visible]</visible>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>32</height>
+				<font>caps_20</font>
+				<textcolor>cap</textcolor>
+				<selectedcolor>cap</selectedcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+			<control type="image">
+				<width>30</width>
+				<height>32</height>
+				<texture />
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Ellipsis for a clamped textbox (Kodi textboxes cut without one): while the textbox has more than one page
+	     (Container(id).NumPages), the end of its last visible line fades into the paper and "…" is printed.
+	     params: id, right (x of the textbox's right edge), top (top of the last visible line), pitch, font, bg, color -->
+	<include name="Fold_PlotEllipsis">
+		<param name="bg">table</param>
+		<param name="color">body</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[right]</left>
+				<top>$PARAM[top]</top>
+				<visible>Integer.IsGreater(Container($PARAM[id]).NumPages,1)</visible>
+				<control type="image">
+					<left>-120</left>
+					<top>0</top>
+					<width>124</width>
+					<height>$PARAM[pitch]</height>
+					<texture colordiffuse="$PARAM[bg]">fold/fade_r.png</texture>
+				</control>
+				<control type="label">
+					<left>-40</left>
+					<top>0</top>
+					<width>40</width>
+					<height>$PARAM[pitch]</height>
+					<align>right</align>
+					<aligny>top</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>$PARAM[color]</textcolor>
+					<label>…</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ cards
+	     A closed card (FoldHome .card): section-colour stock, rim highlights, sheen, tooth, hinge score
+	     on the spine, the cream inside page peeking out along the fore-edge, a tipped-in plate and a
+	     mono foot. Sits inside a group of the card size. params: w, h, color, plate_l, plate_t,
+	     plate_w, plate_h, art, foot_l, foot_r, foot_font, foot_b (bottom inset), foot_h + foot_aligny (0.9.18: footer box, centre it in the band under the plate), fallback -->
+	<include name="Fold_CardBody">
+		<param name="color">$VAR[FoldAccent]</param>
+		<param name="foot_font">num_20</param>
+		<param name="foot_b">15</param>
+		<param name="foot_h">28</param>
+		<param name="foot_aligny">top</param>
+		<param name="fallback">$INFO[ListItem.Label]</param>
+		<param name="aspect">scale</param>
+		<param name="foot_l"></param>
+		<param name="foot_r"></param>
+		<param name="foot_color">on_card</param>
+		<definition>
+			<control type="image">
+				<description>fore-edge (cream inside page)</description>
+				<left>$PARAM[fe_x]</left>
+				<top>3</top>
+				<width>4</width>
+				<height>$PARAM[fe_h]</height>
+				<texture>fold/foredge.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<texture border="6" colordiffuse="$PARAM[color]">fold/rr4.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<texture diffuse="fold/rr4.png">fold/tooth_card_s.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<texture>fold/card_sheen.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<texture border="6">fold/card_rim.png</texture>
+			</control>
+			<control type="image">
+				<description>hinge score on the spine</description>
+				<left>9</left>
+				<top>0</top>
+				<width>2</width>
+				<height>$PARAM[h]</height>
+				<texture>fold/score.png</texture>
+			</control>
+			<!-- plate: fallback title on cream, art on top, frame + sheen -->
+			<control type="group">
+				<left>$PARAM[plate_l]</left>
+				<top>$PARAM[plate_t]</top>
+				<width>$PARAM[plate_w]</width>
+				<height>$PARAM[plate_h]</height>
+				<control type="image">
+					<left>-12</left>
+					<top>-12</top>
+					<right>-12</right>
+					<bottom>-12</bottom>
+					<texture border="14">fold/plate_frame.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[plate_w]</width>
+					<height>$PARAM[plate_h]</height>
+					<texture colordiffuse="cream">common/white.png</texture>
+				</control>
+				<control type="textbox">
+					<left>12</left>
+					<top>12</top>
+					<right>12</right>
+					<height>120</height>
+					<font>sans_24_semi</font>
+					<textcolor>ink2</textcolor>
+					<selectedcolor>ink2</selectedcolor>
+					<label>$PARAM[fallback]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[plate_w]</width>
+					<height>$PARAM[plate_h]</height>
+					<aspectratio>$PARAM[aspect]</aspectratio>
+					<fadetime>160</fadetime>
+					<texture background="true">$PARAM[art]</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[plate_w]</width>
+					<height>$PARAM[plate_h]</height>
+					<texture>fold/plate_sheen.png</texture>
+				</control>
+			</control>
+			<control type="label">
+				<left>$PARAM[plate_l]</left>
+				<bottom>$PARAM[foot_b]</bottom>
+				<width>$PARAM[plate_w]</width>
+				<height>$PARAM[foot_h]</height>
+				<aligny>$PARAM[foot_aligny]</aligny>
+				<font>$PARAM[foot_font]</font>
+				<textcolor>$PARAM[foot_color]</textcolor>
+				<selectedcolor>$PARAM[foot_color]</selectedcolor>
+				<label>$PARAM[foot_l]</label>
+			</control>
+			<control type="label">
+				<left>$PARAM[plate_l]</left>
+				<bottom>$PARAM[foot_b]</bottom>
+				<width>$PARAM[plate_w]</width>
+				<height>$PARAM[foot_h]</height>
+				<aligny>$PARAM[foot_aligny]</aligny>
+				<align>right</align>
+				<font>$PARAM[foot_font]</font>
+				<textcolor>$PARAM[foot_color]</textcolor>
+				<selectedcolor>$PARAM[foot_color]</selectedcolor>
+				<label>$PARAM[foot_r]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ===================================================== focus mounts
+	     Fold's generic focus: the item sits on a section-colour card mount (4 px edge, radius 4),
+	     drawn 7 px outside the item. Used by forked windows through the old names. -->
+	<include name="Fold_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="$VAR[FoldAccent]">focus/outline_2.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== artwork (forked windows) -->
+	<include name="Fold_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask_round">masks/poster_round8.png</param>
+		<param name="mask_square">masks/poster_square.png</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="cream">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<right>12</right>
+				<top>12</top>
+				<height>60</height>
+				<font>sans_20_semi</font>
+				<textcolor>ink2</textcolor>
+				<selectedcolor>ink2</selectedcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>160</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== buttons
+	     Fold's actions are words (FoldOpen .actions): at rest ink on the paper, focused = a section-colour
+	     chip with cream text and a lift shadow. -->
+	<include name="Fold_Tex_Word">
+		<texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus>
+		<texturenofocus />
+	</include>
+	<include name="Fold_Tex_ButtonPrimary">
+		<include>Fold_Tex_Word</include>
+	</include>
+	<include name="Fold_Tex_ButtonPrimary_Round">
+		<include>Fold_Tex_Word</include>
+	</include>
+
+	<include name="Fold_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onleft_if">false</param>
+		<param name="onleft_then">noop</param>
+		<param name="onright">noop</param>
+		<param name="onright_if">false</param>
+		<param name="onright_then">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="image">
+					<left>-40</left>
+					<top>-40</top>
+					<right>-40</right>
+					<bottom>-40</bottom>
+					<texture border="48">fold/chip_shadow.png</texture>
+					<visible>Control.HasFocus($PARAM[id]) | $PARAM[focus_also]</visible>
+				</control>
+				<control type="button" id="$PARAM[id]">
+					<label>$PARAM[label]</label>
+					<font>word_26</font>
+					<textcolor>ink</textcolor>
+					<selectedcolor>ink</selectedcolor>
+					<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+					<align>center</align>
+					<textoffsetx>16</textoffsetx>
+					<include>Fold_Tex_Word</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft condition="$PARAM[onleft_if]">$PARAM[onleft_then]</onleft>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright condition="$PARAM[onright_if]">$PARAM[onright_then]</onright>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Caps sub-nav button (library header words, OSD words): section chip + cream on focus. -->
+	<include name="Fold_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>subnav_h</height>
+				<font>caps_20_b</font>
+				<textcolor>ink2</textcolor>
+				<selectedcolor>ink2</selectedcolor>
+				<focusedcolor>$VAR[FoldOnAccent]</focusedcolor>
+				<textoffsetx>14</textoffsetx>
+				<texturefocus border="6" colordiffuse="$VAR[FoldAccent]">fold/chip.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="Fold_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>
