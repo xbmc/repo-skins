@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove music library (screens/MyMusicNav.md, boards 06-08). Built by _src/make_music_views.py
+	(Includes_Views_Music.xml: header, views, caption, light); Library panel + view picker: Includes_Library.xml.
+
+	Kodi id contract (Estuary Omega MyMusicNav.xml / CGUIWindowMusicNav): view containers in <views>,
+	3 sort by and 4 sort order (hidden buttons the header / panel click), defaultcontrol 50 = Kodi focuses the active view.
+	Views: 500 Cover wall (albums, artists), 501 Crate dig, 502 Shelf, 503 Orbit (albums), 50 List (everything).
+
+	Focus map
+	  header 9501 Albums | 9502 Artists | 9503 Songs | 9504 Time machine | 9505 Wheel || 9511 View | 9512 Sort | 9513 Options
+	  Down / Back on the header -> the view. Up on the header (or Right from Options) -> mini player 9950 while music plays.
+	  View: Up from the top row -> the tab of this content; Left past the first column / Right past the last -> the
+	  Library panel (9801); Back at a start folder -> 9398 -> Home, deeper -> Kodi's parent folder.
+	  Panel / picker / clean card: Back -> where they were opened from.
+	Draw order: room -> light (wash) -> view stages -> views -> scrim + caption -> header -> mini player -> cards.
+	Window open / close fades sit on the content group, never on the room (no flash in the Light room).
+-->
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9501</menucontrol>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<views>500,501,502,503,50</views>
+	<!-- empty folder: an empty view can't take focus, so the header has it (LESSONS 4) -->
+	<onload condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating">SetFocus(9501)</onload>
+	<controls>
+		<include>Groove_Room</include>
+		<include>MusicLib_Light</include>
+		<control type="group">
+			<include>Anim_WindowContent</include>
+			<include>MusicLib_Stage501</include>
+			<include>MusicLib_Stage502</include>
+			<include>MusicLib_Stage503</include>
+			<include>MusicLib_Stage50</include>
+			<include>MusicLib_View500</include>
+			<include>MusicLib_View501</include>
+			<include>MusicLib_View502</include>
+			<include>MusicLib_View503</include>
+			<include>MusicLib_View50</include>
+			<include>MusicLib_Front500</include>
+			<include>MusicLib_Empty</include>
+			<include>MusicLib_Header</include>
+		</control>
+		<!-- mini player: Down / Back return to the header icon you came up from (groove.mini.from), Left to Options.
+		     It steps aside while the Cover wall's first row has focus: the disc sits over the top-right cover (Pass 2). -->
+		<include content="Groove_MiniPlayer">
+			<param name="down" value="SetFocus($INFO[Window(Home).Property(groove.mini.from)])"/>
+			<param name="rest" value="[Control.HasFocus(500) + Container(500).Row(0)]"/>
+			<param name="left" value="9513"/>
+			<param name="back_nav" value="Mini_BackMusic"/>
+			<param name="back" value="9513"/>
+		</include>
+		<include content="Lib_Panel">
+			<param name="is_video" value="false"/>
+			<param name="kind" value="music"/>
+			<param name="section" value="$VAR[MusicLib_Section]"/>
+			<param name="view_name" value="$VAR[MusicLib_ViewName]"/>
+			<param name="order_click" value="Container.SetSortDirection"/>
+		</include>
+		<include content="Lib_Picker">
+			<param name="items" value="Lib_PickerMusic"/>
+			<param name="section" value="$VAR[MusicLib_Section]"/>
+		</include>
+	</controls>
+</window>

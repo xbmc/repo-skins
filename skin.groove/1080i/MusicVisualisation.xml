@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now Playing, the stage (SPEC 9, screens/MusicVisualisation_NowPlaying.md, boards B3 / B12).
+	The sleeve at the left, the record sliding out of it and turning (printed disc art, or the fallback vinyl with
+	the cover as its label: Skin setting Record), the tonearm tracking Player.Progress, clearlogo / title /
+	album · year at the right, the progress line. Visualiser mode (groove.np.viz) swaps the stage for Kodi's
+	visualisation (control 2) behind a dark scrim and one caption line.
+
+	Kodi id contract (Estuary Omega MusicVisualisation.xml): 2 = the visualisation control. Kept hidden unless
+	Visualiser mode is on (LESSONS Nocturne: it draws over whatever sits behind it).
+
+	Focus map: NOTHING here is focusable. Kodi's keymap turns the d-pad into StepBack / StepForward / SkipNext /
+	SkipPrevious in this window, so every control lives in MusicOSD.xml (tray, progress, Up next, Liner notes),
+	which the onload opens. Without the OSD (closed with Esc): Left / Right step seek, Up / Down skip, OK opens the
+	OSD, Back leaves (all Kodi). Back on the tray leaves Now Playing in one press (MusicOSD).
+
+	Rooms: follows the Room setting (Light = paper, objects unchanged); dark in Visualiser mode (GrooveLight).
+	Budget: one rotating texture (the record), stopped when paused / another dialog / screensaver / Reduce motion /
+	the Liner notes page (Includes_Player.xml NP_Record). Includes: Includes_Player.xml (GENERATED, make_player.py).
+-->
+<window>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<onload condition="!String.IsEqual(Skin.String(groove.npopen),last)">Skin.Reset(groove.np.viz)</onload>
+	<onload>ClearProperty(groove.np.overlay,home)</onload>
+	<onload condition="Player.HasAudio + !Window.IsVisible(musicosd)">ActivateWindow(musicosd)</onload>
+	<controls>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<visible>$EXP[NP_VizMode]</visible>
+		</control>
+		<include>NP_Curtain</include>
+		<control type="group">
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="280" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="100"/>
+			</animation>
+			<animation type="WindowClose">
+				<effect type="fade" start="100" end="0" time="160" tween="cubic" easing="in"/>
+			</animation>
+			<include>NP_RoomGlow</include>
+			<include>NP_Record</include>
+			<include>NP_Sleeve</include>
+			<include>NP_Tonearm</include>
+			<include>NP_Info</include>
+			<include>NP_VizCaption</include>
+			<include>NP_Progress</include>
+			<include>NP_TrayRest</include>
+		</control>
+	</controls>
+</window>

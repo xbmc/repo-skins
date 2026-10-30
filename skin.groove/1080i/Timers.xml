@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove skin timers (Kodi 21: <start> condition + <onstart> builtins). Conditions are written out in full:
+	timers don't expand $EXP (LESSONS, Six Degrees). Every timer that reads control visibility or focus is guarded
+	with !System.HasActiveModalDialog (LESSONS, Fold 0.9.7: timers evaluate against the focused window).
+	M2 adds the first-visit view reset per content type (Groove view ids 500-503 / 510 / 50, SPEC 7).
+-->
+<timers>
+	<!-- Home with nothing focused (seen after Dialog.Close(all) + ActivateWindow, LESSONS Six Degrees 0.9.2):
+	     hand focus to the rail so the first key press isn't swallowed. -->
+	<timer>
+		<name>groove_home_focus</name>
+		<start>Window.IsActive(home) + String.IsEmpty(System.CurrentControlId) + !System.HasActiveModalDialog</start>
+		<stop>!String.IsEmpty(System.CurrentControlId) | !Window.IsActive(home)</stop>
+		<!-- 1.0.2: the group, not 9001: Music can be hidden (HideMenu.Music); a group focuses its first shown icon -->
+		<onstart>SetFocus(9000)</onstart>
+	</timer>
+
+	<!-- Now Playing, Visualiser mode (M3 music playback, MusicOSD.xml): after 4 s without a key the tray has faded
+	     out; move focus to the wake catcher 9690 so the next key only wakes the tray (SetFocus back to it).
+	     MusicOSD is itself a modal dialog: the guard is "MusicOSD is the topmost modal dialog". -->
+	<timer>
+		<name>groove_np_vizidle</name>
+		<start>Window.IsActive(musicosd) + Window.IsModalDialogTopmost(musicosd) + Skin.HasSetting(groove.np.viz) + Visualisation.Enabled + System.IdleTime(4) + [Control.HasFocus(9601) | Control.HasFocus(9602) | Control.HasFocus(9603) | Control.HasFocus(9604) | Control.HasFocus(9605) | Control.HasFocus(9606) | Control.HasFocus(9607) | Control.HasFocus(9608) | Control.HasFocus(9609) | Control.HasFocus(9620) | Control.HasFocus(9621)]</start>
+		<stop>!System.IdleTime(4) | Control.HasFocus(9690) | !Window.IsActive(musicosd)</stop>
+		<onstart>SetFocus(9690)</onstart>
+	</timer>
+
+	<!-- The playing album's colour from TMDb Helper's image service when script.karmamole.helper is not installed
+	     (HELPER_API 6, priority 2; LESSONS Passe-partout image_colors): once per cover, while audio plays. -->
+	<timer>
+		<name>groove_np_colours</name>
+		<start>Player.HasAudio + System.AddonIsEnabled(plugin.video.themoviedb.helper) + !Skin.HasSetting(groove.notmdbcolours) + ![System.HasAddon(script.karmamole.helper) + System.AddonIsEnabled(script.karmamole.helper) + String.IsEqual(Window(Home).Property(KarmaMole.Helper.Running),true)] + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(groove.np.colorsrc),Player.Art(thumb))</start>
+		<stop>String.IsEqual(Window(Home).Property(groove.np.colorsrc),Player.Art(thumb)) | !Player.HasAudio</stop>
+		<onstart>ClearProperty(TMDbHelper.GroovePlayer.BlurImage,home)</onstart>
+		<onstart>SetProperty(groove.np.colorsrc,$ESCINFO[Player.Art(thumb)],home)</onstart>
+		<onstart>RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(thumb)]",prefix=GroovePlayer)</onstart>
+		<onstart>RunScript(plugin.video.themoviedb.helper,"blur_image=$INFO[Player.Art(thumb)]",prefix=GroovePlayer)</onstart>
+	</timer>
+	<!-- Time machine / Wheel (music lane, M2): their first lists fill after onload, so defaultcontrol finds nothing to
+	     focus; hand focus over when the items arrive (LESSONS Keepsake). -->
+	<timer>
+		<name>groove_tm_focus</name>
+		<start>Window.IsActive(1170) + String.IsEmpty(System.CurrentControlId) + Integer.IsGreater(Container(1201).NumItems,0) + !System.HasActiveModalDialog</start>
+		<stop>!String.IsEmpty(System.CurrentControlId) | !Window.IsActive(1170)</stop>
+		<onstart>SetFocus(1201)</onstart>
+	</timer>
+	<timer>
+		<name>groove_wheel_focus</name>
+		<start>Window.IsActive(1171) + String.IsEmpty(System.CurrentControlId) + Integer.IsGreater(Container(1301).NumItems,0) + !System.HasActiveModalDialog</start>
+		<stop>!String.IsEmpty(System.CurrentControlId) | !Window.IsActive(1171)</stop>
+		<onstart>SetFocus(1301)</onstart>
+	</timer>
+	<!-- Films and TV (video lane, M3): Kodi opens a new node in the first visible view (500 Cover wall); TV shows'
+	     default is the Backdrop carousel (SPEC 7), so the shows root is switched to 510 once, the first time it opens
+	     on the wall. Kodi then remembers the choice per path; the flag keeps a later wall choice alone. -->
+	<timer>
+		<name>groove_vfirst_tvshows</name>
+		<start>Window.IsActive(videos) + Container.Content(tvshows) + String.StartsWith(Container.FolderPath,videodb://tvshows/titles) + Control.IsVisible(500) + !Skin.HasSetting(groove.vfirst.tvshows) + !System.HasActiveModalDialog</start>
+		<onstart>Skin.SetBool(groove.vfirst.tvshows)</onstart>
+		<onstart>Container.SetViewMode(510)</onstart>
+		<onstart>SetFocus(50)</onstart>
+	</timer>
+	<!-- Time machine: back to the decade, then the year, used last (Skin.String groove.tm.bucket / groove.tm.year) -->
+	<timer>
+		<name>groove_tm_bucket</name>
+		<start>Window.IsActive(1170) + !System.HasActiveModalDialog + Control.HasFocus(1201) + String.IsEmpty(Window(Home).Property(groove.tm.bucketdone)) + !String.IsEmpty(Skin.String(groove.tm.bucket)) + !String.IsEqual(Container(1201).ListItem.Property(key),Skin.String(groove.tm.bucket)) + !Integer.IsEqual(Container(1201).CurrentItem,Container(1201).NumItems)</start>
+		<stop>true</stop>
+		<onstart>Control.Move(1201,1)</onstart>
+	</timer>
+	<timer>
+		<name>groove_tm_bucketdone</name>
+		<start>Window.IsActive(1170) + !System.HasActiveModalDialog + Control.HasFocus(1201) + String.IsEmpty(Window(Home).Property(groove.tm.bucketdone)) + [String.IsEqual(Container(1201).ListItem.Property(key),Skin.String(groove.tm.bucket)) | String.IsEmpty(Skin.String(groove.tm.bucket)) | Integer.IsEqual(Container(1201).CurrentItem,Container(1201).NumItems)]</start>
+		<stop>true</stop>
+		<onstart>SetProperty(groove.tm.bucketdone,1,home)</onstart>
+	</timer>
+	<timer>
+		<name>groove_tm_year</name>
+		<start>Window.IsActive(1170) + !System.HasActiveModalDialog + !String.IsEmpty(Window(Home).Property(groove.tm.bucketdone)) + String.IsEmpty(Window(Home).Property(groove.tm.yeardone)) + !Container(1202).IsUpdating + Integer.IsGreater(Container(1202).NumItems,0) + !String.IsEmpty(Skin.String(groove.tm.year)) + !String.IsEqual(Container(1202).ListItem.Label,Skin.String(groove.tm.year)) + !Integer.IsEqual(Container(1202).CurrentItem,Container(1202).NumItems)</start>
+		<stop>true</stop>
+		<onstart>Control.Move(1202,1)</onstart>
+	</timer>
+	<timer>
+		<name>groove_tm_yeardone</name>
+		<start>Window.IsActive(1170) + !System.HasActiveModalDialog + !String.IsEmpty(Window(Home).Property(groove.tm.bucketdone)) + String.IsEmpty(Window(Home).Property(groove.tm.yeardone)) + !Container(1202).IsUpdating + Integer.IsGreater(Container(1202).NumItems,0) + [String.IsEqual(Container(1202).ListItem.Label,Skin.String(groove.tm.year)) | String.IsEmpty(Skin.String(groove.tm.year)) | Integer.IsEqual(Container(1202).CurrentItem,Container(1202).NumItems)]</start>
+		<stop>true</stop>
+		<onstart>SetProperty(groove.tm.yeardone,1,home)</onstart>
+	</timer>
+</timers>

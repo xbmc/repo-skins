@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	TV / Radio guide (SPEC 5: Minimal). Builder F, M4. One plain EPG grid (channels as rows, time
+	across) with the selected programme's details underneath. PVR is unused by Omar: correct,
+	readable, never stranding.
+	Kodi id contract (Estuary Omega MyPVRGuide.xml + GUIWindowPVRBase.h): epggrid view container 50
+	(Estuary's alternative grids 51-53 are not offered), scrollbar 60, menucontrol 9000, sort 3 / 4,
+	channel-group button 28, header labels 29 / 30. Inside the grid layouts, label 1 / image 2 are
+	the controls Kodi stretches to each programme's width. Estuary's channel-group strip (list 11)
+	is replaced by the Group button in the options row (6054 -> 28).
+-->
+<window>
+	<defaultcontrol always="true">9100</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<views>50</views>
+	<controls>
+		<include>Groove_Page</include>
+		<!-- M4: content group -->
+		<control type="group">
+			<include>Anim_WindowContent</include>
+			<include content="Misc_PVRFrame">
+				<param name="title" value="$LOCALIZE[19069]"/>
+				<param name="group_label" value="$INFO[Control.GetLabel(30)]"/>
+				<param name="show_group" value="true"/>
+			</include>
+
+			<!-- ====== grid (focus group 9100: grid, else the empty-state button) -->
+			<control type="group" id="9100">
+				<defaultcontrol always="true">50</defaultcontrol>
+				<control type="epggrid" id="50">
+					<left>page_margin</left>
+					<top>misc_pvr_top</top>
+					<width>page_width</width>
+					<height>639</height>
+					<onup>9001</onup>
+					<pagecontrol>60</pagecontrol>
+					<scrolltime tween="cubic" easing="out">200</scrolltime>
+					<timeblocks>36</timeblocks>
+					<rulerunit>6</rulerunit>
+					<viewtype label="19069">list</viewtype>
+					<progresstexture border="0,0,2,0" colordiffuse="$VAR[ink]">misc/epg_now.png</progresstexture>
+					<include>Misc_EPGLayouts</include>
+				</control>
+				<include content="Misc_EmptyStateButton">
+					<param name="top" value="misc_pvr_top"/>
+					<param name="label" value="$LOCALIZE[31867]"/>
+				</include>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1828"/>
+				<param name="top" value="295"/>
+				<param name="height" value="594"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="50"/>
+			</include>
+
+			<!-- ====== selected programme -->
+			<control type="group">
+				<left>page_margin</left>
+				<top>910</top>
+				<width>page_width</width>
+				<visible>Control.IsVisible(50) + Integer.IsGreater(Container.NumItems,0)</visible>
+				<include content="Groove_Rule">
+					<param name="left" value="0"/>
+					<param name="top" value="0"/>
+				</include>
+				<control type="grouplist">
+					<left>0</left>
+					<top>16</top>
+					<width>page_width</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<itemgap>24</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width max="1000">auto</width>
+						<height>40</height>
+						<font>font_tray</font>
+						<label>$VAR[Misc_PVRTitle]$INFO[ListItem.EpisodeName,  ·  ,]</label>
+					</control>
+					<control type="label">
+						<top>4</top>
+						<width max="700">auto</width>
+						<height>34</height>
+						<font>font_fact_label</font>
+						<label>$INFO[ListItem.StartTime]$INFO[ListItem.EndTime, - ,]$INFO[ListItem.Genre,  ·  ,]</label>
+					</control>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>62</top>
+					<width>page_width</width>
+					<height>66</height>
+					<font>font_body_s</font>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="6000" time="3000" repeat="10000">true</autoscroll>  <!-- standard Kodi plot scroll: wait 6s, roll, pause 10s, repeat -->
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

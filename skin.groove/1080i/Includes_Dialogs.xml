@@ -1,0 +1,1018 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove card kit (skin-developer, M4 2026-10-21). One card style for every generic dialog (SPEC 6, screens/README 6):
+	the room dims behind (Dlg_Scrim, its OWN fades: LESSONS 4), one floating card (surface + 2 px line edge + the hollow
+	drop shadow), white / ink type, a lit focus row (groove/row_focus.png tinted ink: a 12 % band with a solid edge,
+	readable in Dark and Light), buttons that fill with ink on focus. Every colour is a room token: over video the
+	room is dark by itself (GrooveLight), so playback dialogs stay dark.
+
+	Window rule (MOTION 3): no window-level animations. A dialog puts Dlg_Scrim (or Groove_GenericDialog, which draws
+	it) first, and its card group carries Anim_DialogCard.
+
+	Shared names other builders use (names and params kept from M1, look restyled):
+	  Groove_GenericDialog, Groove_DialogButton, Groove_ListLayout, Dlg_IndexListLayout, Groove_Scrollbar,
+	  Groove_ToastFrame, Groove_KeyboardKey, Groove_KeyboardFunc, Dlg_FactRow, Dlg_RowFocus
+	New: Dlg_Scrim, Dlg_Card, Groove_IconButton (icon + one word on focus, for grouplists),
+	  Groove_IconSlot (the same at a fixed position), Groove_IconFace (the drawn part of both).
+-->
+<includes>
+	<!-- ============================================================ constants -->
+	<constant name="dlg_panel_x">1200</constant>          <!-- right-hand playback panel (selects over video) -->
+	<constant name="dlg_panel_w">720</constant>
+	<constant name="dlg_panel_pad">72</constant>
+	<constant name="dlg_panel_in_w">576</constant>
+	<constant name="dlg_panel_top">64</constant>
+	<constant name="dlg_track_row_h">64</constant>
+	<constant name="dlg_osd_row_h">76</constant>
+	<constant name="dlg_row_pad">24</constant>            <!-- text inset inside a list row -->
+	<constant name="dlg_check">24</constant>              <!-- current-item check -->
+	<constant name="dlg_check_gutter">64</constant>       <!-- label x when a check column precedes it -->
+	<constant name="dlg_btn_h">64</constant>
+
+	<!-- ============================================================ expressions -->
+	<!-- DialogSelect shows the right-hand track panel only over fullscreen video -->
+	<expression name="Dlg_IsTrackPanel">Player.HasVideo + Window.IsActive(fullscreenvideo)</expression>
+	<expression name="Dlg_FromSubtitleSettings">Window.IsVisible(osdsubtitlesettings)</expression>
+	<!-- over fullscreen video too: a dialog opened from an OSD tab isn't "active" yet when its includes resolve -->
+	<expression name="Dlg_IsOSDSettings">Window.IsActive(osdaudiosettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(osdvideosettings) | Window.IsActive(osdcmssettings) | [Window.IsActive(fullscreenvideo) + Player.HasVideo]</expression>
+
+	<!-- ============================================================ variables -->
+	<variable name="Dlg_SelectKicker">
+		<value condition="Window.IsVisible(osdsubtitlesettings) + Integer.IsEqual(Container(3).NumItems,1)">$LOCALIZE[287]  ·  1</value>
+		<value condition="Window.IsVisible(osdaudiosettings) + Integer.IsEqual(Container(3).NumItems,1)">$LOCALIZE[292]  ·  1</value>
+		<value condition="Window.IsVisible(osdsubtitlesettings)">$LOCALIZE[287]$INFO[Container(3).NumItems,  ·  ,]</value>
+		<value condition="Window.IsVisible(osdaudiosettings)">$LOCALIZE[292]$INFO[Container(3).NumItems,  ·  ,]</value>
+		<value condition="Window.IsVisible(osdvideosettings)">$LOCALIZE[291]$INFO[Container(3).NumItems,  ·  ,]</value>
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).NumItems]</value>
+		<value>$INFO[Container(3).NumItems]</value>
+	</variable>
+	<variable name="Dlg_SelectPosition">
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).CurrentItem]$INFO[Container(6).NumItems, / ,]</value>
+		<value>$INFO[Container(3).CurrentItem]$INFO[Container(3).NumItems, / ,]</value>
+	</variable>
+	<variable name="Dlg_PlayState">
+		<value condition="Player.Paused">$LOCALIZE[112]  ·  $INFO[Player.Time]$INFO[Player.Duration, / ,]</value>
+		<value>$INFO[Player.Time]$INFO[Player.Duration, / ,]</value>
+	</variable>
+	<variable name="Dlg_PlayTitle">
+		<value condition="VideoPlayer.Content(episodes)">$INFO[VideoPlayer.TVShowTitle]</value>
+		<value>$INFO[VideoPlayer.Title]</value>
+	</variable>
+	<variable name="Dlg_AddonNewsLabel">
+		<value condition="!String.IsEmpty(Window(Home).Property(groove.addonnews))">$LOCALIZE[21821]</value>
+		<value>$LOCALIZE[24036]</value>
+	</variable>
+
+	<!-- ============================================================ scrim + card -->
+	<!-- The room dims behind a dialog: one full-screen fill of dim_dialog (dark 80 % in Dark, a 70 % paper veil in
+	     Light) with its own open / close fades. First control of a dialog, at window level. -->
+	<include name="Dlg_Scrim">
+		<control type="image">
+			<description>room dim</description>
+			<left>-2000</left>
+			<top>-2000</top>
+			<width>6000</width>
+			<height>6000</height>
+			<texture colordiffuse="$VAR[dim_dialog]">groove/white.png</texture>
+			<include>Anim_DialogScrim</include>
+		</control>
+	</include>
+
+	<!-- The card: hollow drop shadow, surface fill, 2 px line edge. Inside a group at the card rect.
+	     params: width, height -->
+	<include name="Dlg_Card">
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<control type="image">
+					<left>-96</left>
+					<top>-60</top>
+					<right>-96</right>
+					<bottom>-120</bottom>
+					<texture border="96,60,96,120" colordiffuse="$VAR[shadow]">groove/shadow_square.png</texture>
+				</control>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<texture colordiffuse="$VAR[surface]">groove/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<texture border="4" colordiffuse="$VAR[line]">groove/card_edge.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- A card that lives INSIDE a window (More card, reading page): always "visible" so it can take focus and fill its
+	     static rows, faded out while closed. params: show (condition) -->
+	<include name="Dlg_FadeGate">
+		<animation effect="fade" start="100" end="0" time="140" tween="cubic" easing="out" condition="![$PARAM[show]] + !Skin.HasSetting(groove.reducemotion)">Conditional</animation>
+		<animation effect="fade" start="100" end="0" time="60" condition="![$PARAM[show]] + Skin.HasSetting(groove.reducemotion)">Conditional</animation>
+	</include>
+
+	<!-- ============================================================ generic dialog -->
+	<!-- Centred card: scrim (own fades) + card + heading + kicker + rule. Put inside a group positioned / sized like
+	     the dialog; that group carries Anim_DialogCard.
+	     params: width, height, header_id (Kodi heading id, "" if none), header_label, kicker (right side, ink2) -->
+	<include name="Groove_GenericDialog">
+		<param name="header_id"></param>
+		<param name="header_label"></param>
+		<param name="kicker"></param>
+		<definition>
+			<include>Dlg_Scrim</include>
+			<include content="Dlg_Card">
+				<param name="width" value="$PARAM[width]"/>
+				<param name="height" value="$PARAM[height]"/>
+			</include>
+			<control type="label" id="$PARAM[header_id]">
+				<description>heading</description>
+				<left>dialog_pad</left>
+				<top>0</top>
+				<right>260</right>
+				<height>dialog_header_h</height>
+				<aligny>center</aligny>
+				<font>font_label</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$PARAM[header_label]</label>
+			</control>
+			<control type="label">
+				<description>kicker</description>
+				<right>dialog_pad</right>
+				<top>0</top>
+				<width>220</width>
+				<height>dialog_header_h</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$PARAM[kicker]</label>
+			</control>
+			<control type="image">
+				<left>dialog_pad</left>
+				<top>dialog_header_h</top>
+				<right>dialog_pad</right>
+				<height>2</height>
+				<texture colordiffuse="$VAR[line]">groove/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Text button on a card: a soft fill at rest, ink fill + paper / room text on focus (always visible).
+	     params: id, label, height, onclick, onclick2, visible. The button sizes to its label (width auto).
+	     `width` is still accepted from the callers but not applied: it fed a <minwidth> tag Kodi never reads (removed
+	     2026-10-21, official review xml.invalid-tag); <width min="...">auto</width> would be the real thing (a look change). -->
+	<!-- No <enable>: Kodi enables/disables its own dialog buttons; a skin <enable> would override it. -->
+	<include name="Groove_DialogButton">
+		<param name="width">300</param>
+		<param name="height">dialog_row_h</param>
+		<param name="label"></param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>$PARAM[height]</height>
+				<label>$PARAM[label]</label>
+				<font>font_tray</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<focusedcolor>$VAR[on_lit]</focusedcolor>
+				<disabledcolor>$VAR[disabled]</disabledcolor>
+				<align>center</align>
+				<aligny>center</aligny>
+				<textoffsetx>32</textoffsetx>
+				<include>Dlg_Tex_DialogButton</include>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Dlg_Tex_DialogButton">
+		<texturefocus colordiffuse="$VAR[ink]">groove/btn_fill.png</texturefocus>
+		<texturenofocus colordiffuse="$VAR[focus_fill]">groove/btn_fill.png</texturenofocus>
+	</include>
+
+	<!-- Lit row for Kodi-cloned buttons (settings rows, menus): the row_focus band, nothing at rest -->
+	<include name="Dlg_Tex_RowFocus">
+		<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+	</include>
+	<!-- Rest texture of Kodi-cloned rows: nothing (Groove rows have no rules). params kept: color, flip -->
+	<include name="Dlg_Tex_RowRule">
+		<param name="color">$VAR[line]</param>
+		<param name="flip">false</param>
+		<definition>
+			<texturenofocus />
+		</definition>
+	</include>
+
+	<!-- Fact row (caps label + value), 40 px pitch. params: top, label, value, valuew -->
+	<include name="Dlg_FactRow">
+		<param name="valuew">620</param>
+		<definition>
+			<control type="label">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>180</width>
+				<height>32</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>[UPPERCASE]$PARAM[label][/UPPERCASE]</label>
+			</control>
+			<control type="label">
+				<left>180</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[valuew]</width>
+				<height>32</height>
+				<font>font_fact</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$PARAM[value]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ list rows -->
+	<!-- The lit row inside a <focusedlayout>: band + edge, only while the list has focus.
+	     params: list_id, width, height -->
+	<include name="Dlg_RowFocus">
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<texture border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texture>
+				<visible>Control.HasFocus($PARAM[list_id])</visible>
+				<include>Anim_FocusLight</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Text list: check (selected item), icon when the item has one, label, label2 on the right.
+	     Focused row: lit band, label ink. params: width, height, label, label2, list_id -->
+	<include name="Groove_ListLayout">
+		<param name="width">800</param>
+		<param name="height">64</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="list_id">50</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_ListRowBody">
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+					<param name="label" value="$PARAM[label]"/>
+					<param name="label2" value="$PARAM[label2]"/>
+					<param name="color" value="$VAR[ink2]"/>
+					<param name="scroll" value="false"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<control type="group">
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+					<include content="Dlg_ListRowBody">
+						<param name="width" value="$PARAM[width]"/>
+						<param name="height" value="$PARAM[height]"/>
+						<param name="label" value="$PARAM[label]"/>
+						<param name="label2" value="$PARAM[label2]"/>
+						<param name="color" value="$VAR[ink]"/>
+						<param name="scroll" value="true"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>!Control.HasFocus($PARAM[list_id])</visible>
+					<include content="Dlg_ListRowBody">
+						<param name="width" value="$PARAM[width]"/>
+						<param name="height" value="$PARAM[height]"/>
+						<param name="label" value="$PARAM[label]"/>
+						<param name="label2" value="$PARAM[label2]"/>
+						<param name="color" value="$VAR[ink2]"/>
+						<param name="scroll" value="false"/>
+					</include>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+	<!-- one row's content. params: width, height, label, label2, color, scroll -->
+	<include name="Dlg_ListRowBody">
+		<definition>
+			<control type="image">
+				<left>dlg_row_pad</left>
+				<centertop>50%</centertop>
+				<width>dlg_check</width>
+				<height>dlg_check</height>
+				<texture colordiffuse="$VAR[ink]">markers/check.png</texture>
+				<visible>ListItem.IsSelected</visible>
+			</control>
+			<control type="label">
+				<left>dlg_check_gutter</left>
+				<top>0</top>
+				<right>232</right>
+				<height>$PARAM[height]</height>
+				<aligny>center</aligny>
+				<font>font_label</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<selectedcolor>$PARAM[color]</selectedcolor>
+				<scroll>$PARAM[scroll]</scroll>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="label">
+				<right>dlg_row_pad</right>
+				<top>0</top>
+				<width>200</width>
+				<height>$PARAM[height]</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<selectedcolor>$VAR[ink2]</selectedcolor>
+				<label>$PARAM[label2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Dlg_IndexListLayout">
+		<param name="width">860</param>
+		<param name="height">64</param>
+		<param name="list_id">9000</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_MenuRowBody">
+					<param name="height" value="$PARAM[height]"/>
+					<param name="color" value="$VAR[ink2]"/>
+					<param name="icon" value="$VAR[icon_rest]"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<control type="group">
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+					<include content="Dlg_MenuRowBody">
+						<param name="height" value="$PARAM[height]"/>
+						<param name="color" value="$VAR[ink]"/>
+						<param name="icon" value="$VAR[ink]"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>!Control.HasFocus($PARAM[list_id])</visible>
+					<include content="Dlg_MenuRowBody">
+						<param name="height" value="$PARAM[height]"/>
+						<param name="color" value="$VAR[ink2]"/>
+						<param name="icon" value="$VAR[icon_rest]"/>
+					</include>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+	<!-- params: height, color, icon (icon tint) -->
+	<include name="Dlg_MenuRowBody">
+		<definition>
+			<control type="image">
+				<left>24</left>
+				<centertop>50%</centertop>
+				<width>40</width>
+				<height>40</height>
+				<aspectratio>keep</aspectratio>
+				<texture colordiffuse="$PARAM[icon]">$INFO[ListItem.Icon]</texture>
+				<visible>!String.IsEmpty(ListItem.Icon)</visible>
+			</control>
+			<control type="label">
+				<left>88</left>
+				<top>0</top>
+				<right>200</right>
+				<height>$PARAM[height]</height>
+				<aligny>center</aligny>
+				<font>font_label</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<selectedcolor>$PARAM[color]</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!String.IsEmpty(ListItem.Icon)</visible>
+			</control>
+			<control type="label">
+				<left>24</left>
+				<top>0</top>
+				<right>200</right>
+				<height>$PARAM[height]</height>
+				<aligny>center</aligny>
+				<font>font_label</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<selectedcolor>$PARAM[color]</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>String.IsEmpty(ListItem.Icon)</visible>
+			</control>
+			<control type="label">
+				<right>24</right>
+				<top>0</top>
+				<width>300</width>
+				<height>$PARAM[height]</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<selectedcolor>$VAR[ink2]</selectedcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Scroll line paired with a list (2 px; thumb ink2, ink when focused). params: id, left, top, height, onleft, onright -->
+	<include name="Groove_Scrollbar">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="onright2">noop</param>
+		<definition>
+			<control type="scrollbar" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>2</width>
+				<height>$PARAM[height]</height>
+				<texturesliderbackground colordiffuse="$VAR[line_hair]">groove/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="$VAR[ink3]">groove/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="$VAR[ink]">groove/white.png</texturesliderbarfocus>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<onright>$PARAM[onright2]</onright>
+				<orientation>vertical</orientation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ icon buttons -->
+	<!-- What an icon button draws: soft light + icon (ink focused / icon_rest / ink3 disabled) + one word on focus.
+	     params: id (the button it belongs to), icon, label, width, height, icon_size, label_x, label_font, light -->
+	<include name="Groove_IconFace">
+		<param name="height">64</param>
+		<param name="icon_size">48</param>
+		<param name="icon_top">8</param>
+		<param name="label_x">60</param>
+		<param name="label_font">font_tray</param>
+		<param name="light">true</param>
+		<definition>
+			<control type="image">
+				<left>-34</left>
+				<top>-26</top>
+				<width>116</width>
+				<height>116</height>
+				<texture colordiffuse="$VAR[focus_glow]">groove/glow_radial.png</texture>
+				<visible>Control.HasFocus($PARAM[id]) + $PARAM[light]</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>$PARAM[icon_top]</top>
+				<width>$PARAM[icon_size]</width>
+				<height>$PARAM[icon_size]</height>
+				<aspectratio>keep</aspectratio>
+				<texture colordiffuse="$VAR[ink]">$PARAM[icon]</texture>
+				<visible>Control.HasFocus($PARAM[id])</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>$PARAM[icon_top]</top>
+				<width>$PARAM[icon_size]</width>
+				<height>$PARAM[icon_size]</height>
+				<aspectratio>keep</aspectratio>
+				<texture colordiffuse="$VAR[icon_rest]">$PARAM[icon]</texture>
+				<visible>!Control.HasFocus($PARAM[id]) + Control.IsEnabled($PARAM[id])</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>$PARAM[icon_top]</top>
+				<width>$PARAM[icon_size]</width>
+				<height>$PARAM[icon_size]</height>
+				<aspectratio>keep</aspectratio>
+				<texture colordiffuse="$VAR[ink3]">$PARAM[icon]</texture>
+				<visible>!Control.IsEnabled($PARAM[id])</visible>
+			</control>
+			<control type="label">
+				<left>$PARAM[label_x]</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<aligny>center</aligny>
+				<font>$PARAM[label_font]</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>Control.HasFocus($PARAM[id])</visible>
+				<include>Anim_LabelReveal</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Icon button for a horizontal grouplist with <usecontrolcoords>true</usecontrolcoords> (pad the grouplist ~40 px
+	     around the row and pass top, or the focus light is cropped by the grouplist): an invisible button of
+	     the slot width, then its face in a group shifted back over it (zero net width, Arctic pattern). Kodi may write
+	     a label into its own buttons (8, 9, 11): the button text is clear, the face draws our word.
+	     params: id, gid (face group id, unique), icon, label, width (slot pitch), height, visible, onclick, onclick2,
+	             onclick3, onup, ondown, onback -->
+	<include name="Groove_IconButton">
+		<param name="width">196</param>
+		<param name="height">64</param>
+		<param name="top">0</param>
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="onclick3">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<label></label>
+				<textcolor>clear</textcolor>
+				<focusedcolor>clear</focusedcolor>
+				<disabledcolor>clear</disabledcolor>
+				<texturefocus />
+				<texturenofocus />
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<onclick>$PARAM[onclick3]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<visible>$PARAM[visible]</visible>
+			</control>
+			<control type="group" id="$PARAM[gid]">
+				<left>-$PARAM[width]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<visible>$PARAM[visible]</visible>
+				<include content="Groove_IconFace">
+					<param name="id" value="$PARAM[id]"/>
+					<param name="icon" value="$PARAM[icon]"/>
+					<param name="label" value="$PARAM[label]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- The same at a fixed position (OSD slots, headers): nothing ever moves.
+	     params: id, left, top, icon, label, width, height, onclick, onclick2, onleft, onright, onup, ondown, onback,
+	             visible, enable -->
+	<include name="Groove_IconSlot">
+		<param name="width">196</param>
+		<param name="height">64</param>
+		<param name="visible">true</param>
+		<param name="enable">true</param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>$PARAM[height]</height>
+					<label></label>
+					<textcolor>clear</textcolor>
+					<focusedcolor>clear</focusedcolor>
+					<disabledcolor>clear</disabledcolor>
+					<texturefocus />
+					<texturenofocus />
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<enable>$PARAM[enable]</enable>
+				</control>
+				<include content="Groove_IconFace">
+					<param name="id" value="$PARAM[id]"/>
+					<param name="icon" value="$PARAM[icon]"/>
+					<param name="label" value="$PARAM[label]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ side panel (selects over video) -->
+	<!-- Over a film the choice sits at the right edge as a full-height card, the picture dimmed at the left.
+	     Dark by itself (GrooveLight is off over fullscreen video). -->
+	<include name="Dlg_SidePanelFrame">
+		<include>Dlg_Scrim</include>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>dlg_panel_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[surface]">groove/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>2</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[line]">groove/white.png</texture>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ DialogSelect -->
+	<!-- Centred select (Estuary Omega Includes_DialogSelect.xml ids: heading 1, list 3 simple / 6 detailed,
+	     scrollbar 61, buttons 5 / 8 / 7 cancel in grouplist 9001). -->
+	<include name="Dlg_SelectCentred">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1120</width>
+			<height>808</height>
+			<include content="Anim_DialogCard"><param name="center" value="560,404"/></include>
+			<include content="Groove_GenericDialog">
+				<param name="width" value="1120"/>
+				<param name="height" value="808"/>
+				<param name="header_id" value="1"/>
+				<param name="kicker" value="$VAR[Dlg_SelectPosition]"/>
+			</include>
+			<control type="list" id="3">
+				<left>dialog_inset</left>
+				<top>dialog_content_top</top>
+				<width>768</width>
+				<height>640</height>
+				<onup>3</onup>
+				<ondown>3</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<include>Anim_ScrollRow</include>
+				<include content="Groove_ListLayout">
+					<param name="width" value="768"/>
+					<param name="height" value="dialog_row_h"/>
+					<param name="list_id" value="3"/>
+				</include>
+			</control>
+			<control type="list" id="6">
+				<left>dialog_inset</left>
+				<top>dialog_content_top</top>
+				<width>768</width>
+				<height>636</height>
+				<onup>6</onup>
+				<ondown>6</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<include>Anim_ScrollRow</include>
+				<itemlayout width="768" height="106">
+					<include content="Dlg_SelectDetailRow"><param name="color" value="$VAR[ink2]"/></include>
+				</itemlayout>
+				<focusedlayout width="768" height="106">
+					<include content="Dlg_RowFocus">
+						<param name="list_id" value="6"/>
+						<param name="width" value="768"/>
+						<param name="height" value="106"/>
+					</include>
+					<control type="group">
+						<visible>Control.HasFocus(6)</visible>
+						<include content="Dlg_SelectDetailRow"><param name="color" value="$VAR[ink]"/></include>
+					</control>
+					<control type="group">
+						<visible>!Control.HasFocus(6)</visible>
+						<include content="Dlg_SelectDetailRow"><param name="color" value="$VAR[ink2]"/></include>
+					</control>
+				</focusedlayout>
+			</control>
+			<control type="label">
+				<left>64</left>
+				<top>dialog_content_top</top>
+				<width>700</width>
+				<height>dialog_row_h</height>
+				<font>font_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$LOCALIZE[31800]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="808"/>
+				<param name="top" value="dialog_content_top"/>
+				<param name="height" value="640"/>
+			</include>
+			<control type="grouplist" id="9001">
+				<left>832</left>
+				<top>dialog_content_top</top>
+				<width>256</width>
+				<height>400</height>
+				<orientation>vertical</orientation>
+				<itemgap>12</itemgap>
+				<onleft condition="Control.IsVisible(3)">3</onleft>
+				<onleft condition="Control.IsVisible(6)">6</onleft>
+				<onright condition="Control.IsVisible(3)">3</onright>
+				<onright condition="Control.IsVisible(6)">6</onright>
+				<onup>9001</onup>
+				<ondown>9001</ondown>
+				<include content="Groove_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="256"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="256"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="256"/>
+				</include>
+			</control>
+		</control>
+	</include>
+	<!-- params: color -->
+	<include name="Dlg_SelectDetailRow">
+		<definition>
+			<control type="image">
+				<left>dlg_row_pad</left>
+				<top>13</top>
+				<width>80</width>
+				<height>80</height>
+				<aspectratio>keep</aspectratio>
+				<texture background="true">$VAR[ListItemArt]</texture>
+			</control>
+			<control type="image">
+				<right>dlg_row_pad</right>
+				<top>41</top>
+				<width>dlg_check</width>
+				<height>dlg_check</height>
+				<texture colordiffuse="$VAR[ink]">markers/check.png</texture>
+				<visible>ListItem.IsSelected</visible>
+			</control>
+			<control type="label">
+				<left>124</left>
+				<top>14</top>
+				<right>64</right>
+				<height>40</height>
+				<font>font_label</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<selectedcolor>$PARAM[color]</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>124</left>
+				<top>56</top>
+				<right>64</right>
+				<height>36</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<selectedcolor>$VAR[ink2]</selectedcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Right-hand track picker for selects over fullscreen video. Same id contract; Groove buttons 9101 (download
+	     subtitles) / 9102 (subtitle settings) in grouplist 9100 when the list came from the subtitle settings. -->
+	<include name="Dlg_SelectPanel">
+		<include>Dlg_SidePanelFrame</include>
+		<control type="group">
+			<left>page_margin</left>
+			<top>900</top>
+			<width>1000</width>
+			<include>Anim_DialogCard</include>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>32</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$VAR[Dlg_PlayState]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>36</top>
+				<width>1000</width>
+				<height>64</height>
+				<font>font_caption</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$VAR[Dlg_PlayTitle]</label>
+			</control>
+		</control>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="label">
+				<left>dlg_panel_pad</left>
+				<top>dlg_panel_top</top>
+				<width>dlg_panel_in_w</width>
+				<height>32</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$VAR[Dlg_SelectKicker]</label>
+			</control>
+			<control type="label" id="1">
+				<description>heading (Kodi)</description>
+				<left>dlg_panel_pad</left>
+				<top>100</top>
+				<width>dlg_panel_in_w</width>
+				<height>56</height>
+				<font>font_title</font>
+				<textcolor>$VAR[ink]</textcolor>
+			</control>
+			<control type="list" id="3">
+				<left>48</left>
+				<top>180</top>
+				<width>624</width>
+				<height>768</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<include>Anim_ScrollRow</include>
+				<include content="Groove_ListLayout">
+					<param name="width" value="624"/>
+					<param name="height" value="dlg_track_row_h"/>
+					<param name="list_id" value="3"/>
+				</include>
+			</control>
+			<control type="list" id="6">
+				<left>48</left>
+				<top>180</top>
+				<width>624</width>
+				<height>768</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<include>Anim_ScrollRow</include>
+				<include content="Groove_ListLayout">
+					<param name="width" value="624"/>
+					<param name="height" value="dlg_track_row_h"/>
+					<param name="list_id" value="6"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>dlg_panel_pad</left>
+				<top>180</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_track_row_h</height>
+				<font>font_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$LOCALIZE[31800]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="684"/>
+				<param name="top" value="180"/>
+				<param name="height" value="768"/>
+			</include>
+			<control type="grouplist" id="9100">
+				<left>48</left>
+				<top>972</top>
+				<width>624</width>
+				<height>dlg_btn_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>12</itemgap>
+				<onleft>9100</onleft>
+				<onright>9100</onright>
+				<onup condition="Control.IsVisible(3)">3</onup>
+				<onup condition="Control.IsVisible(6)">6</onup>
+				<ondown condition="Control.IsVisible(3)">3</ondown>
+				<ondown condition="Control.IsVisible(6)">6</ondown>
+				<include content="Groove_DialogButton">
+					<param name="id" value="9101"/>
+					<param name="label" value="$LOCALIZE[31801]"/>
+					<param name="width" value="300"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="onclick2" value="ActivateWindow(SubtitleSearch)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="9102"/>
+					<param name="label" value="$LOCALIZE[5]"/>
+					<param name="width" value="300"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="196"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="196"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="196"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="visible" value="!$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- Filter toggles (add-on browser): lit row on focus, a check on the right when on. -->
+	<include name="Dlg_SubNavRadio">
+		<width>380</width>
+		<height>56</height>
+		<font>font_tray</font>
+		<textcolor>$VAR[ink2]</textcolor>
+		<focusedcolor>$VAR[ink]</focusedcolor>
+		<disabledcolor>$VAR[disabled]</disabledcolor>
+		<textoffsetx>24</textoffsetx>
+		<aligny>center</aligny>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+		<texturenofocus />
+		<radiowidth>24</radiowidth>
+		<radioheight>24</radioheight>
+		<radioposx>340</radioposx>
+		<textureradioonfocus colordiffuse="$VAR[ink]">markers/check.png</textureradioonfocus>
+		<textureradioonnofocus colordiffuse="$VAR[ink2]">markers/check.png</textureradioonnofocus>
+		<textureradioofffocus />
+		<textureradiooffnofocus />
+	</include>
+
+	<!-- ============================================================ toasts -->
+	<!-- Toast card (notification / background progress). params: height -->
+	<include name="Groove_ToastFrame">
+		<param name="height">104</param>
+		<definition>
+			<include content="Dlg_Card">
+				<param name="width" value="toast_w"/>
+				<param name="height" value="$PARAM[height]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- ============================================================ keyboard keys -->
+	<!-- Keys: a soft fill at rest, ink fill + paper / room text on focus. Kodi writes the key labels. -->
+	<include name="Groove_KeyboardKey">
+		<font>font_label</font>
+		<textcolor>$VAR[ink]</textcolor>
+		<focusedcolor>$VAR[on_lit]</focusedcolor>
+		<disabledcolor>$VAR[disabled]</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<include>Dlg_Tex_Key_Square</include>
+	</include>
+	<include name="Groove_KeyboardFunc">
+		<font>font_tray</font>
+		<textcolor>$VAR[ink2]</textcolor>
+		<focusedcolor>$VAR[on_lit]</focusedcolor>
+		<disabledcolor>$VAR[disabled]</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<include>Dlg_Tex_Key_Square</include>
+	</include>
+	<include name="Dlg_Tex_Key_Square">
+		<texturefocus colordiffuse="$VAR[ink]">groove/btn_fill.png</texturefocus>
+		<texturenofocus colordiffuse="$VAR[focus_fill]">groove/btn_fill.png</texturenofocus>
+	</include>
+	<!-- Count words: "1 season", not "1 seasons" (2026-10-30) -->
+	<variable name="Subs_ResultCount">
+		<value condition="Integer.IsEqual(Container(120).NumItems,1)">1 $LOCALIZE[31115]</value>
+		<value>$INFO[Container(120).NumItems,, $LOCALIZE[31913]]</value>
+	</variable>
+	<variable name="VidView_SetFilms">
+		<value condition="Integer.IsEqual(ListItem.Property(Total),1)">1 $LOCALIZE[31116]</value>
+		<value>$INFO[ListItem.Property(Total),, $LOCALIZE[31245]]</value>
+	</variable>
+</includes>

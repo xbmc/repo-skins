@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove motion system - owned by Builder M (Motion). Spec: docs/skin.groove/MOTION.md.
+
+	Budget (SPEC 9): focus <= 160 ms cubic out, window/dialog open <= 200 ms, close faster than open,
+	list scrolltime ~200 ms. Entering = cubic out, leaving = cubic in. No loop animations, no
+	Conditional animations inside item layouts, cheap effects only (fade / slide / small zoom).
+
+	Reduce motion: Skin.HasSetting(groove.reducemotion). Every include carries a pair of animations per
+	trigger with mutually exclusive animation-level conditions (effect-level conditions are NOT used:
+	Kodi does not honour them). Reduce motion = short fades only, no zoom/slide; focus = instant.
+
+	Timing tokens (ms):  micro 120-160 | small 180-200 | window 200 open / 140 close | bg 350
+	Reduced:             fade in 80 | fade out 60 | focus 0 (no animation)
+-->
+<includes>
+
+	<!-- ===================================================================================== -->
+	<!-- WINDOWS                                                                               -->
+	<!-- ===================================================================================== -->
+
+	<!-- Full-screen windows (Home, library, settings). Place as a direct child of <window>. -->
+
+	<!-- Right-hand panels as a WINDOW (context/side menus, info side sheets).
+	     Direct child of <window> or on the panel group. Param offset = px travelled (default 80). -->
+	<include name="Anim_SidePanel">
+		<param name="offset" default="80"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+				<effect type="slide" start="$PARAM[offset],0" end="0,0" time="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+				<effect type="slide" start="0,0" end="$PARAM[offset],0" time="140" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="60"/>
+			</animation>
+		</definition>
+	</include>
+
+	<!-- Toasts (notification, busy, progress, volume, seek bar): fade only - shown over playback. -->
+	<!-- Anim_Toast: replaced by the motion draft below -->
+
+	<!-- ===================================================================================== -->
+	<!-- OSD / STRIPS                                                                          -->
+	<!-- ===================================================================================== -->
+
+	<!-- Legacy alias (M1 VideoOSD). -->
+	<!-- Anim_OSD: replaced by the motion draft below -->
+
+	<!-- Top strip (offset/info strip, OSD top bar): drops 24 px from the top + fade.
+	     Put on the strip GROUP (not window level). Fires on window open AND when its <visible> flips. -->
+	<!-- Anim_TopStrip: replaced by the motion draft below -->
+
+	<!-- ===================================================================================== -->
+	<!-- CONTENT REGIONS                                                                       -->
+	<!-- ===================================================================================== -->
+
+	<!-- Generic Visible/Hidden fade for any group (hubs, spotlight, info panels, labels). -->
+	<include name="Anim_FadeVisible">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+	</include>
+
+	<!-- Legacy alias (M1 Home spotlight / views). -->
+	<include name="Anim_VisibleFade">
+		<include>Anim_FadeVisible</include>
+	</include>
+
+	<!-- ============================================================ Groove -->
+	<!-- A plaque / glint appearing where the light lands (after the torch has started to arrive) -->
+	<include name="Anim_PlaqueVisible">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="140" tween="sine" easing="out"/>
+		</animation>
+		<animation type="Hidden" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="90" tween="sine" easing="in"/>
+		</animation>
+	</include>
+	<!-- Home sections swap. The room only changes after a 400 ms rest on a cornice word: the old room holds for 400 ms,
+	     then crossfades to the new one, so walking Films -> Series -> Music never shows the Series wall in between
+	     (a room whose condition flips back within the delay never appears). Reduce motion keeps the rest, drops the fade. -->
+	<!-- Anim_SectionSwap: replaced by the motion draft below -->
+
+	<!-- ===== MOTION DRAFT (merged by _src/merge_motion.py; edit MOTION.md's draft, then re-run) ===== -->
+	<include name="Anim_WindowContent">
+		<param name="center" default="960,540"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="280" tween="cubic" easing="out"/>
+				<effect type="zoom" start="98" end="100" center="$PARAM[center]" time="280" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="100"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="160" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="80"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_DialogScrim">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<include name="Anim_DialogCard">
+		<param name="center" default="960,540"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+				<effect type="zoom" start="97" end="100" center="$PARAM[center]" time="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+				<effect type="zoom" start="100" end="98" center="$PARAM[center]" time="140" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="60"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_Toast">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="220" tween="cubic" easing="out"/>
+			<effect type="slide" start="60,0" end="0,0" time="220" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="160" tween="cubic" easing="in"/>
+			<effect type="slide" start="0,0" end="60,0" time="160" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<include name="Anim_OSD">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,40" end="0,0" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+			<effect type="slide" start="0,0" end="0,40" time="140" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<include name="Anim_TopStrip">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,-24" end="0,0" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,-24" end="0,0" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+			<effect type="slide" start="0,0" end="0,-24" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<include name="Anim_OpenEnter">
+		<param name="dx" default="0"/>
+		<param name="dy" default="24"/>
+		<param name="delay" default="0"/>
+		<param name="t" default="260"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="$PARAM[t]" delay="$PARAM[delay]" tween="cubic" easing="out"/>
+				<effect type="slide" start="$PARAM[dx],$PARAM[dy]" end="0,0" time="$PARAM[t]" delay="$PARAM[delay]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="100"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_Reveal">
+		<param name="closed"/>
+		<param name="dx" default="0"/>
+		<param name="dy" default="120"/>
+		<param name="t" default="300"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[closed]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="$PARAM[dx],$PARAM[dy]" time="$PARAM[t]" tween="cubic" easing="in"/>
+				<effect type="fade" start="100" end="0" time="$PARAM[t]" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[closed]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="fade" start="100" end="0" time="80"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_Dim">
+		<param name="condition"/>
+		<param name="to" default="45"/>
+		<param name="t" default="200"/>
+		<definition>
+			<animation type="Conditional" condition="$PARAM[condition]" reversible="true">
+				<effect type="fade" start="100" end="$PARAM[to]" time="$PARAM[t]" tween="sine" easing="inout"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_IdleFade">
+		<param name="condition"/>
+		<param name="to" default="30"/>
+		<param name="t" default="400"/>
+		<definition>
+			<animation type="Conditional" condition="$PARAM[condition]" reversible="false">
+				<effect type="fade" start="100" end="$PARAM[to]" time="$PARAM[t]" tween="sine" easing="inout"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_PulseSlot">
+		<param name="id"/>
+		<param name="nx" default="0"/>
+		<param name="ny" default="0"/>
+		<param name="nz" default="100"/>
+		<param name="px" default="0"/>
+		<param name="py" default="0"/>
+		<param name="pz" default="100"/>
+		<param name="center" default="auto"/>
+		<param name="t" default="240"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="slide" start="$PARAM[nx],$PARAM[ny]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="zoom" start="$PARAM[nz]" end="100" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="slide" start="$PARAM[px],$PARAM[py]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="zoom" start="$PARAM[pz]" end="100" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_PulseRotate">
+		<param name="id"/>
+		<param name="angle" default="30"/>
+		<param name="center" default="600,540"/>
+		<param name="t" default="200"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotate" start="-$PARAM[angle]" end="0" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotate" start="$PARAM[angle]" end="0" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_PulseFade">
+		<param name="id"/>
+		<param name="dx" default="0"/>
+		<param name="dy" default="0"/>
+		<param name="t" default="200"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="fade" start="0" end="100" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="slide" start="$PARAM[dx],$PARAM[dy]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="fade" start="0" end="100" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="slide" start="$PARAM[dx],$PARAM[dy]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnPrevious] + Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_FocusCover">
+		<param name="zoom" default="106"/>
+		<param name="center" default="auto"/>
+		<param name="t" default="160"/>
+		<definition>
+			<include content="Anim_FocusCover_Moving" condition="!Skin.HasSetting(groove.reducemotion)">
+				<param name="zoom" value="$PARAM[zoom]"/>
+				<param name="center" value="$PARAM[center]"/>
+				<param name="t" value="$PARAM[t]"/>
+			</include>
+			<include content="Anim_FocusCover_Still" condition="Skin.HasSetting(groove.reducemotion)">
+				<param name="zoom" value="$PARAM[zoom]"/>
+				<param name="center" value="$PARAM[center]"/>
+			</include>
+		</definition>
+	</include>
+
+	<include name="Anim_FocusCover_Moving">
+		<param name="zoom" default="106"/>
+		<param name="center" default="auto"/>
+		<param name="t" default="160"/>
+		<definition>
+			<animation type="Focus" reversible="true">
+				<effect type="zoom" start="100" end="$PARAM[zoom]" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_FocusCover_Still">
+		<param name="zoom" default="106"/>
+		<param name="center" default="auto"/>
+		<definition>
+			<animation type="Focus" reversible="true">
+				<effect type="zoom" start="100" end="$PARAM[zoom]" center="$PARAM[center]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_FocusBrighten">
+		<animation type="Focus" reversible="true" condition="!Skin.HasSetting(groove.light) + !Skin.HasSetting(groove.reducemotion)">
+			<effect type="fadediffuse" start="FF707070" end="FFFFFFFF" time="160" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Focus" reversible="true" condition="Skin.HasSetting(groove.light) + !Skin.HasSetting(groove.reducemotion)">
+			<effect type="fadediffuse" start="8CFFFFFF" end="FFFFFFFF" time="160" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Focus" reversible="true" condition="!Skin.HasSetting(groove.light) + Skin.HasSetting(groove.reducemotion)">
+			<effect type="fadediffuse" start="FF707070" end="FFFFFFFF" time="80"/>
+		</animation>
+		<animation type="Focus" reversible="true" condition="Skin.HasSetting(groove.light) + Skin.HasSetting(groove.reducemotion)">
+			<effect type="fadediffuse" start="8CFFFFFF" end="FFFFFFFF" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_FocusLight">
+		<animation type="Focus" reversible="true" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Focus" reversible="true" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_FocusRim">
+		<animation type="Focus" reversible="true" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="120" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Focus" reversible="true" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_LabelReveal">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="160" tween="cubic" easing="out"/>
+			<effect type="slide" start="-8,0" end="0,0" time="160" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_CaptionRest">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="240" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_GlowFadetime">
+		<include condition="!Skin.HasSetting(groove.reducemotion)">Anim_GlowFadetime_Normal</include>
+		<include condition="Skin.HasSetting(groove.reducemotion)">Anim_GlowFadetime_Reduced</include>
+	</include>
+
+	<include name="Anim_GlowFadetime_Normal">
+		<fadetime>400</fadetime>
+	</include>
+
+	<include name="Anim_GlowFadetime_Reduced">
+		<fadetime>150</fadetime>
+	</include>
+
+	<include name="Anim_ArtFadetime">
+		<include condition="!Skin.HasSetting(groove.reducemotion)">Anim_ArtFadetime_Normal</include>
+		<include condition="Skin.HasSetting(groove.reducemotion)">Anim_ArtFadetime_Reduced</include>
+	</include>
+
+	<include name="Anim_ArtFadetime_Normal">
+		<fadetime>300</fadetime>
+	</include>
+
+	<include name="Anim_ArtFadetime_Reduced">
+		<fadetime>120</fadetime>
+	</include>
+
+	<include name="Anim_GlowLayer">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="400" tween="sine" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="150"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="300" tween="sine" easing="in"/>
+		</animation>
+	</include>
+
+	<include name="Anim_ScrollRow">
+		<include condition="!Skin.HasSetting(groove.reducemotion)">Anim_ScrollRow_Normal</include>
+		<include condition="Skin.HasSetting(groove.reducemotion)">Anim_Scroll_Reduced</include>
+	</include>
+
+	<include name="Anim_ScrollRow_Normal">
+		<scrolltime tween="cubic" easing="out">200</scrolltime>
+	</include>
+
+	<include name="Anim_ScrollPanel">
+		<include condition="!Skin.HasSetting(groove.reducemotion)">Anim_ScrollPanel_Normal</include>
+		<include condition="Skin.HasSetting(groove.reducemotion)">Anim_Scroll_Reduced</include>
+	</include>
+
+	<include name="Anim_ScrollPanel_Normal">
+		<scrolltime tween="cubic" easing="out">220</scrolltime>
+	</include>
+
+	<include name="Anim_ScrollText">
+		<include condition="!Skin.HasSetting(groove.reducemotion)">Anim_ScrollRow_Normal</include>
+		<include condition="Skin.HasSetting(groove.reducemotion)">Anim_Scroll_Reduced</include>
+	</include>
+
+	<include name="Anim_Scroll_Reduced">
+		<scrolltime>0</scrolltime>
+	</include>
+
+	<include name="Anim_HomeLift">
+		<param name="open"/>
+		<param name="lift" default="390"/>
+		<param name="t" default="300"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[open]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-$PARAM[lift]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[open]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-$PARAM[lift]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_SectionSwap">
+		<param name="center" default="1200,452"/>
+		<definition>
+			<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="300" delay="200" tween="sine" easing="out"/>
+				<effect type="zoom" start="98" end="100" center="$PARAM[center]" time="300" delay="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Hidden">
+				<effect type="fade" start="100" end="0" time="200" delay="200" tween="sine" easing="in"/>
+			</animation>
+			<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="120" delay="200"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_CratePulseFocus">
+		<param name="id"/>
+		<param name="dy" default="-21"/>
+		<param name="zoom" default="97.6"/>
+		<param name="center" default="960,762"/>
+		<param name="hinge" default="762"/>
+		<param name="t" default="180"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="slide" start="0,$PARAM[dy]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="zoom" start="$PARAM[zoom]" end="100" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotatex" start="-80" end="0" center="$PARAM[hinge]" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="fade" start="0" end="100" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_CrateLift">
+		<param name="id"/>
+		<param name="hinge" default="762"/>
+		<param name="tilt" default="-7"/>
+		<param name="lift" default="-40"/>
+		<param name="t" default="220"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + [!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotatex" start="0" end="$PARAM[tilt]" center="$PARAM[hinge]" time="$PARAM[t]" tween="sine" easing="out"/>
+				<effect type="slide" start="0,0" end="0,$PARAM[lift]" time="$PARAM[t]" tween="sine" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotatex" start="0" end="$PARAM[tilt]" center="$PARAM[hinge]" time="0"/>
+				<effect type="slide" start="0,0" end="0,$PARAM[lift]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_CrateSettle">
+		<param name="condition"/>
+		<param name="hinge" default="762"/>
+		<param name="tilt" default="7"/>
+		<param name="drop" default="40"/>
+		<param name="t" default="200"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[condition]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotatex" start="0" end="$PARAM[tilt]" center="$PARAM[hinge]" time="$PARAM[t]" tween="sine" easing="in"/>
+				<effect type="slide" start="0,0" end="0,$PARAM[drop]" time="$PARAM[t]" tween="sine" easing="in"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[condition]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotatex" start="0" end="$PARAM[tilt]" center="$PARAM[hinge]" time="0"/>
+				<effect type="slide" start="0,0" end="0,$PARAM[drop]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_CrateGhost">
+		<param name="id"/>
+		<param name="hinge" default="762"/>
+		<param name="t" default="180"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotatex" start="0" end="-80" center="$PARAM[hinge]" time="$PARAM[t]" tween="cubic" easing="in"/>
+				<effect type="fade" start="100" end="0" time="$PARAM[t]" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="Conditional" condition="Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="fade" start="0" end="0" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_SpinePull">
+		<param name="id"/>
+		<param name="hinge" default="760"/>
+		<param name="dy" default="-26"/>
+		<param name="t" default="300"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + [!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotatey" start="-90" end="0" center="$PARAM[hinge]" time="$PARAM[t]" tween="cubic" easing="out"/>
+				<effect type="slide" start="0,$PARAM[dy]" end="0,0" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_SpineLean">
+		<param name="id"/>
+		<param name="angle"/>
+		<param name="center"/>
+		<param name="t" default="200"/>
+		<definition>
+			<animation type="Conditional" condition="[!Container($PARAM[id]).OnNext] + [!Container($PARAM[id]).OnPrevious] + !Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotate" start="0" end="$PARAM[angle]" center="$PARAM[center]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="Skin.HasSetting(groove.reducemotion)" reversible="false">
+				<effect type="rotate" start="0" end="$PARAM[angle]" center="$PARAM[center]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_RecordSlideOut">
+		<param name="dx" default="-350"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="slide" start="$PARAM[dx],0" end="0,0" time="600" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="slide" start="$PARAM[dx],0" end="0,0" time="450" tween="cubic" easing="out"/>
+				<effect type="fade" start="0" end="100" time="200"/>
+			</animation>
+			<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="slide" start="0,0" end="$PARAM[dx],0" time="200" tween="cubic" easing="in"/>
+				<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="0" time="60"/>
+			</animation>
+			<animation type="Hidden" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="slide" start="0,0" end="$PARAM[dx],0" time="200" tween="cubic" easing="in"/>
+				<effect type="fade" start="100" end="0" time="200" tween="cubic" easing="in"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_TonearmSwingIn">
+		<param name="pivot" default="1160,210"/>
+		<param name="angle" default="20"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="100" end="100" time="450"/>
+				<effect type="rotate" start="$PARAM[angle]" end="0" center="$PARAM[pivot]" delay="450" time="300" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_TonearmLift">
+		<param name="pivot" default="1160,210"/>
+		<param name="angle" default="6"/>
+		<definition>
+			<animation type="Conditional" condition="Player.Paused + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="$PARAM[angle]" center="$PARAM[pivot]" time="300" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="Player.Paused + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="$PARAM[angle]" center="$PARAM[pivot]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_TonearmStep">
+		<param name="k"/>
+		<param name="step" default="0.2"/>
+		<param name="pivot" default="1160,210"/>
+		<definition>
+			<animation type="Conditional" condition="Integer.IsGreaterOrEqual(Player.Progress,$PARAM[k]) + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="-$PARAM[step]" center="$PARAM[pivot]" time="300" tween="sine" easing="inout"/>
+			</animation>
+			<animation type="Conditional" condition="Integer.IsGreaterOrEqual(Player.Progress,$PARAM[k]) + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="-$PARAM[step]" center="$PARAM[pivot]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_StageToggle">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="280" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="240" tween="cubic" easing="in"/>
+		</animation>
+	</include>
+
+	<include name="Anim_StageVeil">
+		<param name="closed"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[closed]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="fade" start="100" end="0" time="300" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[closed]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="fade" start="100" end="0" time="80"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_StackFan">
+		<param name="closed"/>
+		<param name="angle"/>
+		<param name="pivot" default="1130,630"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[closed]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="-$PARAM[angle]" center="$PARAM[pivot]" time="300" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[closed]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="rotate" start="0" end="-$PARAM[angle]" center="$PARAM[pivot]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_StackReturn">
+		<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="160" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+	</include>
+
+	<include name="Anim_PickUp">
+		<param name="condition"/>
+		<param name="center" default="1598,362"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[condition]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-12" time="200" tween="cubic" easing="out"/>
+				<effect type="zoom" start="100" end="103" center="$PARAM[center]" time="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[condition]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-12" time="0"/>
+				<effect type="zoom" start="100" end="103" center="$PARAM[center]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_PageSlide">
+		<param name="open"/>
+		<param name="dy" default="-1080"/>
+		<param name="t" default="340"/>
+		<definition>
+			<animation type="Conditional" condition="[$PARAM[open]] + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,$PARAM[dy]" time="$PARAM[t]" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="[$PARAM[open]] + Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,$PARAM[dy]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_MiniAppear">
+		<param name="center" default="1764,114"/>
+		<definition>
+			<animation type="Visible" condition="!Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="240" tween="cubic" easing="out"/>
+				<effect type="zoom" start="80" end="100" center="$PARAM[center]" time="240" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Visible" condition="Skin.HasSetting(groove.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="Hidden">
+				<effect type="fade" start="100" end="0" time="160" tween="cubic" easing="in"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_MiniSpin">
+		<param name="center" default="1764,114"/>
+		<definition>
+			<animation type="Conditional" condition="Player.HasAudio + !Skin.HasSetting(groove.reducemotion) + !String.IsEqual(Skin.String(groove.mini),still) + !String.IsEqual(Skin.String(groove.mini),off) + !System.ScreenSaverActive + [[!Player.Paused + !System.HasActiveModalDialog] | !System.IdleTime(1)]" reversible="false" loop="true">
+				<effect type="rotate" start="0" end="-360" center="$PARAM[center]" time="8000" tween="linear"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Anim_MiniSpinStop">
+		<animation type="Conditional" condition="Player.Paused | System.HasActiveModalDialog | System.ScreenSaverActive | Skin.HasSetting(groove.reducemotion) | String.IsEqual(Skin.String(groove.mini),still)" reversible="true">
+			<effect type="fade" start="100" end="0" time="150"/>
+		</animation>
+	</include>
+</includes>

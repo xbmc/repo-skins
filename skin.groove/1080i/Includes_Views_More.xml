@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	More film and TV views that feel like record sleeves (docs/VIEWS_BRIEF_2026-10-27.md). The room, glow, rim and caption
+	are Groove's own (Includes_Views_Video.xml, Includes_Groove.xml); every colour is a room token.
+
+	  520 Sleeve       one record at a time: the picture on a square sleeve (clearlogo across its foot), the record
+	                   half out of it with the poster as its label; title, icon line and story beside it; the rest of the
+	                   crate in a row of small sleeves below (horizontal list 520). Library video and add-on listings.
+	  521 Gatefold     16:9 pictures opened flat like gatefold sleeves, four across (a crease down the middle); the
+	                   focused one lit. Every content type; posters and icons sit whole on the card, never cropped.
+	  522 Liner notes  the register: picture, title, details and the first line of the story for each item (episodes
+	                   with their stills, like a tracklist); the whole story beside the lit picture. Library video and
+	                   add-on listings.
+	viewtypes bigwrap / bigwide / biglist are never a node's default type (Kodi defaults: list, icon, big icon, info,
+	big info, auto = info / list), so the view a node opens in by default is unchanged.
+-->
+<includes>
+	<!-- ================================================================ art -->
+	<expression name="GV_HasWide">[String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb))] | !String.IsEmpty(ListItem.Art(landscape)) | !String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(tvshow.landscape)) | !String.IsEmpty(ListItem.Art(tvshow.fanart))</expression>
+	<expression name="GV_HasMat">!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(tvshow.poster)) | !String.IsEmpty(ListItem.Art(thumb))</expression>
+	<expression name="GV_HasPoster">!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(tvshow.poster))</expression>
+	<expression name="GV_Offered">$EXP[VidView_IsLibraryVideo] | !String.IsEmpty(Container.PluginName)</expression>
+	<variable name="GV_WideArt">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.landscape))">$INFO[ListItem.Art(tvshow.landscape)]</value>
+		<value>$INFO[ListItem.Art(tvshow.fanart)]</value>
+	</variable>
+	<variable name="GV_LabelArt">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(tvshow.poster)]</value>
+	</variable>
+	<variable name="GV_Line">
+		<value condition="ListItem.IsParentFolder"></value>
+		<value condition="!String.IsEmpty(ListItem.Plot)">$INFO[ListItem.Plot]</value>
+		<value>$INFO[ListItem.Genre]</value>
+	</variable>
+
+	<!-- A card with honest fallbacks, inside a group at its rect: the wide art (scale), else the poster / cover / icon
+	     whole on the raised surface (keep), else the title; ".." = the back arrow. params: lit, dim, shadow.
+	     fit = true (small square sleeves): never crop; the poster whole, an episode's still (or wide art with no
+	     poster) fitted whole -->
+	<include name="GV_Card">
+		<param name="lit">false</param>
+		<param name="dim">false</param>
+		<param name="shadow">true</param>
+		<param name="crease">false</param>
+		<param name="fit">false</param>
+		<definition>
+			<control type="image">
+				<left>-96</left>
+				<top>-60</top>
+				<right>-96</right>
+				<bottom>-120</bottom>
+				<texture border="96,60,96,120" colordiffuse="$VAR[shadow]">groove/shadow_square.png</texture>
+				<visible>$PARAM[shadow]</visible>
+			</control>
+			<control type="image">
+				<left>-24</left>
+				<top>-16</top>
+				<right>-24</right>
+				<bottom>-32</bottom>
+				<texture border="24,16,24,32" colordiffuse="$VAR[shadow]">groove/shadow_contact.png</texture>
+				<visible>!$PARAM[shadow]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="$VAR[surface_raised]">groove/white.png</texture>
+			</control>
+			<control type="image">
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<width>64</width>
+				<height>64</height>
+				<texture colordiffuse="$VAR[ink2]">icons/back.png</texture>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="label">
+				<left>16</left>
+				<right>16</right>
+				<top>16</top>
+				<bottom>16</bottom>
+				<align>center</align>
+				<aligny>center</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$VAR[VidView_ItemTitle]</label>
+				<visible>!ListItem.IsParentFolder + !$EXP[GV_HasWide] + !$EXP[GV_HasMat]</visible>
+			</control>
+			<control type="image">
+				<left>12</left>
+				<top>12</top>
+				<right>12</right>
+				<bottom>12</bottom>
+				<aspectratio>keep</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true">$VAR[VidView_PosterArt]</texture>
+				<visible>!ListItem.IsParentFolder + $EXP[GV_HasMat] + [!$EXP[GV_HasWide] | [[$PARAM[fit]] + !String.IsEqual(ListItem.DBType,episode)]]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true" colordiffuse="$VAR[dim_cover]">$VAR[GV_WideArt]</texture>
+				<visible>$EXP[GV_HasWide] + [$PARAM[dim]] + ![$PARAM[fit]]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true">$VAR[GV_WideArt]</texture>
+				<visible>$EXP[GV_HasWide] + ![$PARAM[dim]] + ![$PARAM[fit]]</visible>
+			</control>
+			<!-- fit: the wide picture whole (episodes, items with no poster) -->
+			<control type="image">
+				<left>8</left>
+				<top>8</top>
+				<right>8</right>
+				<bottom>8</bottom>
+				<aspectratio>keep</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true" colordiffuse="$VAR[dim_cover]">$VAR[GV_WideArt]</texture>
+				<visible>[$PARAM[fit]] + $EXP[GV_HasWide] + [String.IsEqual(ListItem.DBType,episode) | !$EXP[GV_HasMat]] + [$PARAM[dim]]</visible>
+			</control>
+			<control type="image">
+				<left>8</left>
+				<top>8</top>
+				<right>8</right>
+				<bottom>8</bottom>
+				<aspectratio>keep</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true">$VAR[GV_WideArt]</texture>
+				<visible>[$PARAM[fit]] + $EXP[GV_HasWide] + [String.IsEqual(ListItem.DBType,episode) | !$EXP[GV_HasMat]] + ![$PARAM[dim]]</visible>
+			</control>
+			<!-- the gatefold crease -->
+			<control type="image">
+				<centerleft>50%</centerleft>
+				<top>0</top>
+				<width>2</width>
+				<bottom>0</bottom>
+				<texture colordiffuse="$VAR[line_hair]">groove/white.png</texture>
+				<visible>$PARAM[crease] + !ListItem.IsParentFolder</visible>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<right>0</right>
+				<bottom>0</bottom>
+				<height>4</height>
+				<texturebg colordiffuse="$VAR[text_shadow]">groove/white.png</texturebg>
+				<midtexture colordiffuse="white">groove/white.png</midtexture>
+				<info>ListItem.PercentPlayed</info>
+				<visible>ListItem.IsResumable</visible>
+			</control>
+			<include content="Groove_Rim">
+				<param name="visible" value="$PARAM[lit]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- ================================================================ 520 sleeve -->
+	<include name="VidView_520_Sleeve">
+		<control type="group">
+			<visible>Control.IsVisible(520)</visible>
+			<include content="VidView_CinemaGlow">
+				<param name="extra" value="white_45"/>
+			</include>
+			<control type="group">
+				<visible>!ListItem.IsParentFolder + Integer.IsGreater(Container.NumItems,0)</visible>
+				<!-- the record, half out of the sleeve: the poster is its label -->
+				<control type="group">
+					<left>380</left>
+					<top>160</top>
+					<control type="image">
+						<left>-40</left>
+						<top>-20</top>
+						<width>640</width>
+						<height>640</height>
+						<texture colordiffuse="$VAR[shadow]">groove/shadow_disc.png</texture>
+					</control>
+					<control type="image">
+						<left>184</left>
+						<top>184</top>
+						<width>192</width>
+						<height>192</height>
+						<texture colordiffuse="black">groove/disc_mask.png</texture>
+					</control>
+					<control type="image">
+						<left>184</left>
+						<top>184</top>
+						<width>192</width>
+						<height>192</height>
+						<aspectratio scalediffuse="false">scale</aspectratio>
+						<include>Anim_ArtFadetime</include>
+						<texture background="true" diffuse="groove/disc_mask.png">$VAR[GV_LabelArt]</texture>
+						<visible>$EXP[GV_HasPoster]</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>560</width>
+						<height>560</height>
+						<texture>groove/vinyl.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>560</width>
+						<height>560</height>
+						<texture>groove/vinyl_sheen.png</texture>
+					</control>
+					<control type="image">
+						<left>271</left>
+						<top>271</top>
+						<width>18</width>
+						<height>18</height>
+						<texture>groove/spindle.png</texture>
+					</control>
+				</control>
+				<!-- the sleeve -->
+				<control type="group">
+					<left>96</left>
+					<top>160</top>
+					<width>560</width>
+					<height>560</height>
+					<include content="GV_Card">
+						<param name="lit" value="true"/>
+					</include>
+					<control type="image">
+						<left>0</left>
+						<right>0</right>
+						<bottom>0</bottom>
+						<height>200</height>
+						<texture diffuse="groove/ramp_v_up.png" colordiffuse="white_70">groove/dark/room.png</texture>
+						<visible>$EXP[VidView_HasLogo] + $EXP[GV_HasWide]</visible>
+					</control>
+					<control type="image">
+						<left>36</left>
+						<bottom>32</bottom>
+						<width>488</width>
+						<height>128</height>
+						<aspectratio aligny="bottom" align="left">keep</aspectratio>
+						<include>Anim_ArtFadetime</include>
+						<texture background="true">$VAR[VidView_Logo]</texture>
+						<visible>$EXP[VidView_HasLogo] + $EXP[GV_HasWide]</visible>
+					</control>
+				</control>
+				<!-- the notes -->
+				<control type="textbox">
+					<left>1010</left>
+					<top>160</top>
+					<width>814</width>
+					<height>122</height>
+					<font>font_title_l</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$VAR[VidView_LogoTitle]</label>
+				</control>
+				<control type="label">
+					<left>1010</left>
+					<top>286</top>
+					<width>814</width>
+					<height>40</height>
+					<aligny>center</aligny>
+					<font>font_caption_light</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$VAR[VidView_EpisodeLine]</label>
+					<visible>String.IsEqual(ListItem.DBType,episode)</visible>
+				</control>
+				<include content="VidView_FactLine">
+					<param name="left" value="1010"/>
+					<param name="top" value="334"/>
+				</include>
+				<control type="textbox">
+					<left>1010</left>
+					<top>404</top>
+					<width>814</width>
+					<height>297</height>
+					<font>font_body</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="9000" time="3000" repeat="10000">true</autoscroll>
+				</control>
+			</control>
+		</control>
+		<!-- the crate: small sleeves (the poster whole, an episode's still fitted); 192 px slots and a list that ends
+		     at 1800 (in the gap between sleeves, before the next one's contact shadow), so nine whole sleeves show and none is cut at the screen edge.
+		     preloaditems 1: at rest Kodi draws no cached item before the first slot (GetCacheOffsets: preload / 2 = 0),
+		     whose sleeve would otherwise show cut at the left edge (the layouts draw 96 px into the slot) -->
+		<control type="list" id="520">
+			<left>0</left>
+			<top>752</top>
+			<width>1800</width>
+			<height>328</height>
+			<orientation>horizontal</orientation>
+			<onup condition="$EXP[VidView_IsTVContent]">9522</onup>
+			<onup>9521</onup>
+			<ondown>noop</ondown>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<onback condition="$EXP[VidView_AtRoot]">9398</onback>
+			<preloaditems>1</preloaditems>
+			<include>Anim_ScrollRow</include>
+			<viewtype label="31745">bigwrap</viewtype>
+			<visible>$EXP[GV_Offered]</visible>
+			<itemlayout width="192" height="328">
+				<control type="group">
+					<left>96</left>
+					<top>64</top>
+					<width>160</width>
+					<height>160</height>
+					<include content="GV_Card">
+						<param name="dim" value="true"/>
+						<param name="shadow" value="false"/>
+						<param name="fit" value="true"/>
+					</include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="192" height="328">
+				<include content="VidView_CardLight">
+					<param name="list" value="520"/>
+					<param name="gx" value="16"/><param name="gy" value="-16"/><param name="gw" value="320"/><param name="gh" value="320"/>
+					<param name="cx" value="72"/><param name="cy" value="64"/><param name="cw" value="208"/><param name="ch" value="208"/>
+					<param name="fx" value="72"/><param name="fy" value="40"/><param name="fw" value="208"/><param name="fh" value="208"/>
+				</include>
+				<control type="group">
+					<left>96</left>
+					<top>64</top>
+					<width>160</width>
+					<height>160</height>
+					<include content="Anim_FocusCover"><param name="center" value="80,80"/></include>
+					<include content="GV_Card">
+						<param name="lit" value="Control.HasFocus(520)"/>
+						<param name="dim" value="!Control.HasFocus(520)"/>
+						<param name="shadow" value="false"/>
+						<param name="fit" value="true"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>64</left>
+					<top>250</top>
+					<width>224</width>
+					<height>40</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<selectedcolor>$VAR[ink]</selectedcolor>
+					<label>$VAR[VidView_ItemTitle]</label>
+					<visible>Control.HasFocus(520)</visible>
+				</control>
+			</focusedlayout>
+		</control>
+	</include>
+
+	<!-- ================================================================ 521 gatefold -->
+	<include name="VidView_521_Gatefold">
+		<control type="group">
+			<visible>Control.IsVisible(521)</visible>
+			<include content="VidView_CinemaGlow">
+				<param name="extra" value="white_45"/>
+			</include>
+		</control>
+		<!-- the focused card's light, behind the grid, on the focused cell (Column / Row time-0 slides) -->
+		<control type="group">
+			<left>-260</left>
+			<top>-23</top>
+			<width>1000</width>
+			<height>560</height>
+			<visible>Control.HasFocus(521) + !Container(521).Scrolling</visible>
+			<include>Anim_GlowLayer</include>
+			<animation effect="slide" start="0,0" end="480,0" time="0" condition="Container(521).Column(1)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="960,0" time="0" condition="Container(521).Column(2)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="1440,0" time="0" condition="Container(521).Column(3)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,270" time="0" condition="Container(521).Row(1)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,540" time="0" condition="Container(521).Row(2)">Conditional</animation>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>560</height>
+				<texture colordiffuse="$VAR[art_pool]">groove/glow_radial.png</texture>
+				<visible>$EXP[GrooveLight]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>560</height>
+				<texture colordiffuse="$VAR[glow]">groove/glow_radial.png</texture>
+				<include>Groove_GlowStrength</include>
+			</control>
+		</control>
+		<control type="panel" id="521">
+			<left>0</left>
+			<top>110</top>
+			<width>1920</width>
+			<height>810</height>
+			<orientation>vertical</orientation>
+			<onup condition="$EXP[VidView_IsTVContent]">9522</onup>
+			<onup>9521</onup>
+			<ondown>noop</ondown>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<onback condition="$EXP[VidView_AtRoot]">9398</onback>
+			<preloaditems>2</preloaditems>
+			<include>Anim_ScrollPanel</include>
+			<viewtype label="31746">bigwide</viewtype>
+			<itemlayout width="480" height="270">
+				<control type="group">
+					<left>32</left>
+					<top>30</top>
+					<width>416</width>
+					<height>234</height>
+					<include content="GV_Card">
+						<param name="dim" value="true"/>
+						<param name="crease" value="true"/>
+					</include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="480" height="270">
+				<include content="VidView_CardLight">
+					<param name="list" value="521"/>
+					<param name="radial" value="false"/>
+					<param name="gx" value="0"/><param name="gy" value="0"/><param name="gw" value="1"/><param name="gh" value="1"/>
+					<param name="cx" value="-30"/><param name="cy" value="0"/><param name="cw" value="540"/><param name="ch" value="302"/>
+					<param name="fx" value="8"/><param name="fy" value="6"/><param name="fw" value="464"/><param name="fh" value="282"/>
+				</include>
+				<control type="group">
+					<left>32</left>
+					<top>30</top>
+					<width>416</width>
+					<height>234</height>
+					<include content="Anim_FocusCover"><param name="center" value="208,117"/></include>
+					<include content="GV_Card">
+						<param name="lit" value="Control.HasFocus(521)"/>
+						<param name="dim" value="!Control.HasFocus(521)"/>
+						<param name="crease" value="true"/>
+					</include>
+				</control>
+			</focusedlayout>
+		</control>
+		<control type="group">
+			<visible>Control.IsVisible(521)</visible>
+			<control type="image">
+				<left>0</left>
+				<top>860</top>
+				<width>1920</width>
+				<height>220</height>
+				<texture diffuse="groove/ramp_v_up.png">$VAR[Tex_Room]</texture>
+			</control>
+			<include content="VidView_Caption">
+				<param name="top" value="954"/>
+				<param name="visible" value="Control.HasFocus(521) + System.IdleTime(1) + !Container(521).Scrolling"/>
+			</include>
+		</control>
+	</include>
+
+	<!-- ================================================================ 522 liner notes -->
+	<!-- rows of 120: picture (80 x 120 poster, 176 x 99 still for episodes), title, details, the first line of the story -->
+	<include name="GV_LinerText">
+		<control type="label">
+			<left>$PARAM[x]</left>
+			<top>8</top>
+			<width>$PARAM[w]</width>
+			<height>44</height>
+			<aligny>center</aligny>
+			<font>font_label</font>
+			<textcolor>$PARAM[color]</textcolor>
+			<selectedcolor>$PARAM[color]</selectedcolor>
+			<scroll>$PARAM[scroll]</scroll>
+			<label>$VAR[VidView_ListLabel]</label>
+		</control>
+		<control type="label">
+			<left>$PARAM[x]</left>
+			<top>50</top>
+			<width>$PARAM[w]</width>
+			<height>32</height>
+			<aligny>center</aligny>
+			<font>font_small</font>
+			<textcolor>$VAR[ink2]</textcolor>
+			<selectedcolor>$VAR[ink2]</selectedcolor>
+			<label>$VAR[VidView_Meta]</label>
+		</control>
+		<control type="label">
+			<left>$PARAM[x]</left>
+			<top>80</top>
+			<width>$PARAM[w]</width>
+			<height>32</height>
+			<aligny>center</aligny>
+			<font>font_small</font>
+			<textcolor>$VAR[ink3]</textcolor>
+			<selectedcolor>$VAR[ink3]</selectedcolor>
+			<label>$VAR[GV_Line]</label>
+		</control>
+	</include>
+	<include name="GV_LinerPoster">
+		<control type="group">
+			<left>24</left>
+			<top>10</top>
+			<width>66</width>
+			<height>100</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="$VAR[surface_raised]">groove/white.png</texture>
+			</control>
+			<control type="image">
+				<centerleft>50%</centerleft>
+				<centertop>50%</centertop>
+				<width>40</width>
+				<height>40</height>
+				<texture colordiffuse="$VAR[ink2]">icons/back.png</texture>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>keep</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true">$VAR[VidView_PosterArt]</texture>
+				<visible>!ListItem.IsParentFolder</visible>
+			</control>
+		</control>
+	</include>
+	<include name="VidView_522_Liner">
+		<control type="group">
+			<visible>Control.IsVisible(522)</visible>
+			<include content="VidView_CinemaGlow">
+				<param name="extra" value="white_55"/>
+			</include>
+			<control type="group">
+				<visible>!ListItem.IsParentFolder + Integer.IsGreater(Container.NumItems,0)</visible>
+				<control type="group">
+					<left>1032</left>
+					<top>150</top>
+					<width>792</width>
+					<height>446</height>
+					<include content="GV_Card">
+						<param name="lit" value="true"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>1032</left>
+					<top>636</top>
+					<width>792</width>
+					<height>56</height>
+					<aligny>center</aligny>
+					<font>font_title_s</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$VAR[VidView_LogoTitle]</label>
+				</control>
+				<include content="VidView_FactLine">
+					<param name="left" value="1032"/>
+					<param name="top" value="696"/>
+				</include>
+				<control type="textbox">
+					<left>1032</left>
+					<top>760</top>
+					<width>792</width>
+					<height>231</height>
+					<font>font_body</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="9000" time="3000" repeat="10000">true</autoscroll>
+				</control>
+			</control>
+		</control>
+		<control type="list" id="522">
+			<left>96</left>
+			<top>150</top>
+			<width>872</width>
+			<height>840</height>
+			<onup condition="$EXP[VidView_IsTVContent]">9522</onup>
+			<onup>9521</onup>
+			<ondown>noop</ondown>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<onback condition="$EXP[VidView_AtRoot]">9398</onback>
+			<include>Anim_ScrollRow</include>
+			<viewtype label="31747">biglist</viewtype>
+			<visible>$EXP[GV_Offered]</visible>
+			<itemlayout width="872" height="120" condition="Container.Content(episodes)">
+				<control type="group">
+					<left>24</left>
+					<top>11</top>
+					<width>176</width>
+					<height>99</height>
+					<include content="GV_Card">
+						<param name="dim" value="true"/>
+						<param name="shadow" value="false"/>
+					</include>
+				</control>
+				<include content="GV_LinerText"><param name="x" value="224"/><param name="w" value="624"/><param name="color" value="$VAR[ink2]"/><param name="scroll" value="false"/></include>
+			</itemlayout>
+			<focusedlayout width="872" height="120" condition="Container.Content(episodes)">
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="522"/>
+					<param name="width" value="872"/>
+					<param name="height" value="120"/>
+				</include>
+				<control type="group">
+					<left>24</left>
+					<top>11</top>
+					<width>176</width>
+					<height>99</height>
+					<include content="GV_Card">
+						<param name="shadow" value="false"/>
+					</include>
+				</control>
+				<include content="GV_LinerText"><param name="x" value="224"/><param name="w" value="624"/><param name="color" value="$VAR[ink]"/><param name="scroll" value="true"/></include>
+			</focusedlayout>
+			<itemlayout width="872" height="120">
+				<include>GV_LinerPoster</include>
+				<include content="GV_LinerText"><param name="x" value="114"/><param name="w" value="734"/><param name="color" value="$VAR[ink2]"/><param name="scroll" value="false"/></include>
+			</itemlayout>
+			<focusedlayout width="872" height="120">
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="522"/>
+					<param name="width" value="872"/>
+					<param name="height" value="120"/>
+				</include>
+				<include>GV_LinerPoster</include>
+				<include content="GV_LinerText"><param name="x" value="114"/><param name="w" value="734"/><param name="color" value="$VAR[ink]"/><param name="scroll" value="true"/></include>
+			</focusedlayout>
+		</control>
+	</include>
+</includes>

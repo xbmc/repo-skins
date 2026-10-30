@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now Playing, the controls (SPEC 9.2 / 8.2 / 8.3; screens/MusicVisualisation_NowPlaying.md, UpNextStack.md,
+	LinerNotes.md; boards B3 / B4 / B5). MusicVisualisation.xml opens this dialog in its onload, so on Now Playing
+	the tray is always here with focus on Play / Pause (Kodi's Visualisation keymap would otherwise turn the d-pad
+	into seeks and skips). Kodi also opens it with the OSD key. Every control in Includes_Player.xml (GENERATED).
+
+	Kodi id contract (GUIDialogMusicOSD.cpp, Omega): only 500 (visualisation picker) and 501 (lock preset) are
+	handled by Kodi; Groove ships neither. Estuary's 600-608 / 70040-70055 are Estuary's own choice, not a contract.
+
+	Focus map (rest control: the tray)
+	  Tray 9601 Previous 9602 Play/Pause 9603 Next 9604 Up next 9605 Liner notes 9606 Visualiser/Record
+	       9607 Watch video (YouTube + a song video link) 9608 Shuffle 9609 Repeat
+	       Left / Right walk the tray (hidden or disabled slots are skipped), Up = 9620, Down = nothing,
+	       Back = close the OSD AND leave Now Playing (Action(FullScreen,visualisation)).
+	  9620 progress line: Left / Right seek 10 s, OK play / pause, Down / Back = the tray button you came from,
+	       Up = 9621 Visualiser presets (Visualiser mode + Visualisation.HasPresets; also Up from 9606; Down / Back
+	       = 9620; OK = Kodi's preset list in DialogSelect).
+	  Up next (9604 OK): 9631-9636 cards (Up / Down walk, OK jump, Left on the top card skips; helper: Right picks
+	       up, Up / Down move, OK drops, Back cancels), 9640 empty queue. Back = 9604.
+	  Liner notes (9605 OK): 9661 review -> 9662 bio (or 9663 / 9664 / 9665 by what exists). Back = 9605.
+	  9690 wake catcher (Visualiser mode, tray hidden after 4 s idle; Timers.xml): any key returns to the tray.
+	Back always ends in Kodi's previous window (Home / a library), so repeated Back reaches Home.
+-->
+<window>
+	<defaultcontrol always="true">9602</defaultcontrol>
+	<onunload>ClearProperty(groove.np.overlay,home)</onunload>
+	<onunload>ClearProperty(groove.upnext.pick,home)</onunload>
+	<onunload>ClearProperty(groove.upnext.to,home)</onunload>
+	<controls>
+		<include>NP_UpNextVeil</include>
+		<include>NP_Tray</include>
+		<include>NP_ProgressFocus</include>
+		<include>NP_VizPresets</include>
+		<include>NP_UpNext</include>
+		<control type="group">
+			<include content="Anim_Reveal">
+				<param name="closed" value="!ControlGroup(9650).HasFocus()"/>
+				<param name="dx" value="0"/>
+				<param name="dy" value="80"/>
+				<param name="t" value="300"/>
+			</include>
+			<include content="Groove_LinerNotes">
+				<param name="src" value="player"/>
+				<param name="origin" value="9605"/>
+				<param name="room" value="true"/>
+			</include>
+		</control>
+		<include>NP_WakeCatcher</include>
+		<include>NP_VideoLookup</include>
+	</controls>
+</window>

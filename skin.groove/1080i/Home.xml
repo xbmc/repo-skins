@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove Home (SPEC 5, boards 01 / 02). M1: icon rail + glow stage. Generated pieces: _src/make_home.py ->
+	Includes_Home.xml (rail, stage, data lists).
+
+	Focus map (M1)
+	  rail 9001 Music | 9002 Films | 9003 TV | 9004 Search | 9005 Settings. Left/Right walk it, no wrap.
+	  (1.0.7: custom menu items 9006-9008 after TV, only while set; each has a quiet stage; Down = the custom rows.)
+	  (1.0.2: 9001-9004 can be hidden in Skin settings, HideMenu.*: the rail closes up, its stage and row go too.)
+	  OK opens the section (Settings: OK = Down). Down: the section row (Home_Rows, _src/home_rows.py; the rail lifts).
+	  Up: the mini player 9950 while music plays. Rows: Up / Back -> their rail icon.
+	  1.0.2 custom rows (opt-in, Includes_CustomRows.xml): 9881-9883 open in the row slot, Down from a section row /
+	  tile / the Search icon; Up walks back to the section row, Back -> the rail icon; the focused item is the stage hero.
+	  Back on the rail: Kodi's own (nothing on Home; fullscreen while something plays).
+	  While anything plays Kodi handles Back on Home BEFORE any control's onback (CGUIWindowHome::OnAction: Home <->
+	  fullscreen / Now Playing). So nothing here may need Back to get out: every row and card leaves with Up (cards
+	  also Left), the mini player with Down (DEVICE_AUDIT M3, screens/Home.md).
+	Home reopens on the section you left (Window(Home).Property(groove.home)); Music at Kodi start.
+	Draw order: data lists (under the room) -> room -> stage (glow, hero) -> rail.
+	Window open/close fades sit on the content group, never on the room (MOTION.md: no dark flash in the Light room).
+-->
+<window>
+	<defaultcontrol always="true">9001</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),films) + !Skin.HasSetting(HideMenu.Movies)">SetFocus(9002)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),tv) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9003)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),search) + !Skin.HasSetting(HideMenu.Search)">SetFocus(9004)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),custom1) + $EXP[CustomMenu1On]">SetFocus(9006)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),custom2) + $EXP[CustomMenu2On]">SetFocus(9007)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),custom3) + $EXP[CustomMenu3On]">SetFocus(9008)</onload>
+	<!-- 1.0.2 / 1.0.7: the remembered rail icon (or Music, the default) is hidden in Skin settings (HideMenu.*), or it
+	     was a custom menu item that has been cleared: focus the first icon shown (Music, Films, TV, the custom items,
+	     Search, Settings); its onfocus sets the section. Settings (9005) never hides. -->
+	<onload condition="!$EXP[Home_RefocusValid] + !Skin.HasSetting(HideMenu.Music)">SetFocus(9001)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Movies)">SetFocus(9002)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9003)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + $EXP[CustomMenu1On]">SetFocus(9006)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !$EXP[CustomMenu1On] + $EXP[CustomMenu2On]">SetFocus(9007)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9008)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + !$EXP[CustomMenu3On] + !Skin.HasSetting(HideMenu.Search)">SetFocus(9004)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + !$EXP[CustomMenu3On] + Skin.HasSetting(HideMenu.Search)">SetFocus(9005)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(groove.home),settings)">SetFocus(9005)</onload>
+	<!-- TMDb Helper colour service (optional add-on, setting "Use TMDb Helper colours", default on) -->
+	<onload condition="System.AddonIsEnabled(plugin.video.themoviedb.helper) + !Skin.HasSetting(groove.notmdbcolours) + !Skin.HasSetting(TMDbHelper.EnableColors)">Skin.SetBool(TMDbHelper.EnableColors)</onload>
+	<onload condition="Skin.HasSetting(groove.notmdbcolours) + Skin.HasSetting(TMDbHelper.EnableColors)">Skin.Reset(TMDbHelper.EnableColors)</onload>
+	<onunload>ClearProperty(TMDbHelper.WidgetContainer,home)</onunload>
+	<!-- script.karmamole.helper follows Home's data list only while a rail icon has focus (HELPER_API 1) -->
+	<onunload>ClearProperty(Groove.Helper.Container,home)</onunload>
+	<controls>
+		<include>Home_DataLists</include>
+		<include>CustomRows_Probes</include>
+		<include>Groove_Room</include>
+		<control type="group">
+			<include>Anim_WindowContent</include>
+			<include>Home_Stage</include>
+			<include>Home_Rows</include>
+			<include>Home_Rail</include>
+			<include>Home_Cards</include>
+		</control>
+		<!-- mini player: Down returns to the rail icon you came up from (groove.railid), MiniPlayer.md. Back does the same
+		     when nothing plays; while something plays Kodi takes Back on Home first (fullscreen / Now Playing), so Down is
+		     the way back there (DEVICE_AUDIT M3). On the Music section at rest the hero IS the playing album: the disc
+		     steps aside (fades) until Up gives it focus (DEVICE_AUDIT n2). -->
+		<include content="Groove_MiniPlayer">
+			<param name="down" value="SetFocus($INFO[Window(Home).Property(groove.railid)])"/>
+			<param name="rest" value="[String.IsEmpty(Window(Home).Property(groove.home)) | String.IsEqual(Window(Home).Property(groove.home),music)] + !$EXP[Home_RowOpen]"/>
+			<param name="back_nav" value="Mini_BackHome"/>
+			<param name="back" value="9001"/>
+		</include>
+	</controls>
+</window>

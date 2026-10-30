@@ -1,0 +1,552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	DialogVideoInfo = cinema glow (skin-developer, M3 2026-10-21). Screen: docs/skin.groove/screens/DialogVideoInfo.md,
+	board 02-home-films (backdrop, clearlogo, icon line).
+	Kodi ids (Estuary Omega / CGUIDialogVideoInfo): 8 play (from start when 9 exists; browses folders), 9 resume,
+	11 trailer, 50 cast (or a collection's films), 6 refresh, 7 user rating, 10 choose art, 12 fanart, 13 director,
+	14 versions, 15 extras. 6/7/10/12/13/14/15 sit offscreen: the More card clicks them and reads Control.IsEnabled.
+	Groove ids: 9930 button row (9931 face groups 9961-9965), 9935 More, 9945 More card list, 9940 reading page group,
+	9941 plot textbox, 9942 its scroll line (focus target), 9950 mini player.
+	Focus: buttons (rest, default 9) <-> cast 50 (Down / Up); More -> card 9945 (Back: 9935); Read the plot -> 9942
+	(Back: 9935). Back on the buttons closes the dialog.
+-->
+<includes>
+	<expression name="VidInfo_ShowResume">Control.IsEnabled(9) + !$EXP[VidView_IsFolderType]</expression>
+	<expression name="VidInfo_HasCast">Integer.IsGreater(Container(50).NumItems,0)</expression>
+
+	<variable name="VidInfo_PlayLabel">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)">$LOCALIZE[31824]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$LOCALIZE[31829]</value>
+		<value condition="$EXP[VidInfo_ShowResume]">$LOCALIZE[31257]</value>
+		<value>$LOCALIZE[31261]</value>
+	</variable>
+	<variable name="VidInfo_PlayIcon">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)">icons/episodes.png</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">icons/films.png</value>
+		<value condition="$EXP[VidInfo_ShowResume]">icons/previous.png</value>
+		<value>icons/play.png</value>
+	</variable>
+	<variable name="VidInfo_ResumeLabel">
+		<value>$LOCALIZE[31260]$INFO[ListItem.PercentPlayed,  ,%]</value>
+	</variable>
+	<variable name="VidInfo_CastHeader">
+		<value condition="String.IsEqual(ListItem.DBType,set)">$LOCALIZE[31256]</value>
+		<value>$LOCALIZE[31810]</value>
+	</variable>
+	<variable name="VidInfo_CastArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+	<!-- the cast member under focus: "Oscar Isaac · Miguel O'Hara" (a set's film: "Title · 2019") -->
+	<variable name="VidInfo_CastCaption">
+		<value condition="!String.IsEmpty(Container(50).ListItem.Label2)">$INFO[Container(50).ListItem.Label][COLOR $VAR[ink2]]  ·  $INFO[Container(50).ListItem.Label2][/COLOR]</value>
+		<value condition="!String.IsEmpty(Container(50).ListItem.Year)">$INFO[Container(50).ListItem.Label][COLOR $VAR[ink2]]  ·  $INFO[Container(50).ListItem.Year][/COLOR]</value>
+		<value>$INFO[Container(50).ListItem.Label]</value>
+	</variable>
+	<variable name="VidInfo_EndsLine">
+		<value condition="ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)">$LOCALIZE[31825] $INFO[ListItem.EndTimeResume]</value>
+		<value condition="!String.IsEmpty(ListItem.EndTime) + !$EXP[VidView_IsFolderType]">$LOCALIZE[31825] $INFO[ListItem.EndTime]</value>
+	</variable>
+
+	<!-- ============================================================ the stage -->
+	<include name="VidInfo_Stage">
+		<include content="VidView_CinemaGlow">
+			<param name="visible" value="!String.IsEmpty(ListItem.Art(fanart)) | !String.IsEmpty(ListItem.Art(tvshow.fanart)) | !String.IsEmpty(ListItem.Art(landscape))"/>
+		</include>
+		<!-- no backdrop: the poster lit at the right in its own light -->
+		<control type="group">
+			<visible>String.IsEmpty(ListItem.Art(fanart)) + String.IsEmpty(ListItem.Art(tvshow.fanart)) + String.IsEmpty(ListItem.Art(landscape))</visible>
+			<include content="Groove_Glow">
+				<param name="art" value="$VAR[VidView_PosterArt]"/>
+				<param name="wash_x" value="900"/><param name="wash_y" value="-260"/><param name="wash_s" value="1200"/>
+				<param name="halo_x" value="1080"/><param name="halo_y" value="-80"/><param name="halo_s" value="840"/>
+			</include>
+			<control type="group">
+				<left>1304</left>
+				<top>120</top>
+				<width>400</width>
+				<height>600</height>
+				<include content="VidView_ArtCard">
+					<param name="art" value="$VAR[VidView_PosterArt]"/>
+					<param name="lit" value="true"/>
+					<param name="noart" value="$EXP[VidView_NoPoster]"/>
+					<param name="title" value="$VAR[VidView_ItemTitle]"/>
+				</include>
+			</control>
+		</control>
+		<include content="VidView_Logo">
+			<param name="left" value="96"/>
+			<param name="top" value="104"/>
+			<param name="width" value="600"/>
+			<param name="height" value="196"/>
+		</include>
+		<control type="label">
+			<left>96</left>
+			<top>304</top>
+			<width>1200</width>
+			<height>48</height>
+			<aligny>center</aligny>
+			<font>font_caption</font>
+			<textcolor>$VAR[ink]</textcolor>
+			<shadowcolor>$VAR[text_shadow]</shadowcolor>
+			<label>$VAR[VidView_EpisodeLine]</label>
+			<visible>String.IsEqual(ListItem.DBType,episode)</visible>
+		</control>
+		<!-- icon line, then "Ends 11:21 PM" right after its last fact (DEVICE_AUDIT m5) -->
+		<include content="VidView_FactLinePacked">
+			<param name="left" value="96"/>
+			<param name="top" value="360"/>
+			<param name="ends" value="$VAR[VidInfo_EndsLine]"/>
+			<param name="ends_visible" value="!$EXP[VidView_IsFolderType] + $EXP[VidView_HasRuntime] + [[ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)] | !String.IsEmpty(ListItem.EndTime)]"/>
+		</include>
+		<control type="textbox">
+			<left>96</left>
+			<top>430</top>
+			<width>1000</width>
+			<height>120</height>
+			<font>font_body</font>
+			<textcolor>$VAR[ink]</textcolor>
+			<shadowcolor>$VAR[text_shadow]</shadowcolor>
+			<label>$INFO[ListItem.Plot]</label>
+		</control>
+	</include>
+
+	<!-- ============================================================ buttons -->
+	<include name="VidInfo_Buttons">
+		<!-- padded 40 px around the row so the focus light is not cropped; buttons sit at (96, 600) -->
+		<control type="grouplist" id="9930">
+			<left>56</left>
+			<top>560</top>
+			<width>1300</width>
+			<height>144</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<control type="image" id="9969">
+				<width>40</width>
+				<height>8</height>
+				<texture />
+			</control>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onup condition="Control.IsVisible(9950)">9950</onup>
+			<ondown condition="$EXP[VidInfo_HasCast]">50</ondown>
+			<include content="Groove_IconButton">
+				<param name="id" value="9"/>
+				<param name="top" value="40"/>
+				<param name="onup" value="9950"/>
+				<param name="ondown" value="50"/>
+				<param name="gid" value="9961"/>
+				<param name="icon" value="icons/play.png"/>
+				<param name="label" value="$VAR[VidInfo_ResumeLabel]"/>
+				<param name="visible" value="$EXP[VidInfo_ShowResume]"/>
+			</include>
+			<include content="Groove_IconButton">
+				<param name="id" value="8"/>
+				<param name="top" value="40"/>
+				<param name="onup" value="9950"/>
+				<param name="ondown" value="50"/>
+				<param name="gid" value="9962"/>
+				<param name="icon" value="$VAR[VidInfo_PlayIcon]"/>
+				<param name="label" value="$VAR[VidInfo_PlayLabel]"/>
+				<param name="width" value="216"/>
+			</include>
+			<include content="Groove_IconButton">
+				<param name="id" value="11"/>
+				<param name="top" value="40"/>
+				<param name="onup" value="9950"/>
+				<param name="ondown" value="50"/>
+				<param name="gid" value="9963"/>
+				<param name="icon" value="icons/trailer.png"/>
+				<param name="label" value="$LOCALIZE[31262]"/>
+				<param name="visible" value="!String.IsEmpty(ListItem.Trailer)"/>
+			</include>
+			<include content="Groove_IconButton">
+				<param name="id" value="9935"/>
+				<param name="top" value="40"/>
+				<param name="onup" value="9950"/>
+				<param name="ondown" value="50"/>
+				<param name="gid" value="9965"/>
+				<param name="icon" value="icons/more.png"/>
+				<param name="label" value="$LOCALIZE[31258]"/>
+				<param name="onclick" value="SetFocus(9945,0,absolute)"/>
+			</include>
+		</control>
+		<!-- Kodi's other buttons, offscreen (enabled / disabled by Kodi; clicked from the More card) -->
+		<control type="group">
+			<left>-3000</left>
+			<top>-3000</top>
+			<control type="button" id="6"><include>Groove_Hidden</include></control>
+			<control type="button" id="7"><include>Groove_Hidden</include></control>
+			<control type="button" id="10"><include>Groove_Hidden</include></control>
+			<control type="button" id="12"><include>Groove_Hidden</include></control>
+			<control type="button" id="13"><include>Groove_Hidden</include></control>
+			<control type="button" id="14"><include>Groove_Hidden</include></control>
+			<control type="button" id="15"><include>Groove_Hidden</include></control>
+		</control>
+	</include>
+
+	<!-- ============================================================ cast row -->
+	<include name="VidInfo_Cast">
+		<control type="group">
+			<visible>$EXP[VidInfo_HasCast]</visible>
+			<control type="label">
+				<left>96</left>
+				<top>700</top>
+				<width>1300</width>
+				<height>48</height>
+				<aligny>center</aligny>
+				<font>font_caption</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<shadowcolor>$VAR[text_shadow]</shadowcolor>
+				<label>$VAR[VidInfo_CastCaption]</label>
+				<visible>Control.HasFocus(50)</visible>
+				<include>Anim_LabelReveal</include>
+			</control>
+			<control type="label">
+				<left>96</left>
+				<top>700</top>
+				<width>1300</width>
+				<height>48</height>
+				<aligny>center</aligny>
+				<font>font_tray</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$VAR[VidInfo_CastHeader]</label>
+				<visible>!Control.HasFocus(50)</visible>
+			</control>
+		</control>
+		<control type="fixedlist" id="50">
+			<left>56</left>
+			<top>720</top>
+			<width>1864</width>
+			<height>360</height>
+			<orientation>horizontal</orientation>
+			<focusposition>0</focusposition>
+			<movement>7</movement>
+			<onup>9930</onup>
+			<onback>9930</onback>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<preloaditems>2</preloaditems>
+			<include>Anim_ScrollRow</include>
+			<itemlayout width="184" height="360">
+				<control type="group">
+					<left>40</left>
+					<top>40</top>
+					<width>160</width>
+					<height>240</height>
+					<include content="VidInfo_CastFace"><param name="dim" value="true"/><param name="lit" value="false"/></include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="184" height="360">
+				<include content="VidView_CardLight">
+					<param name="list" value="50"/>
+					<param name="gx" value="-72"/><param name="gy" value="-128"/><param name="gw" value="384"/><param name="gh" value="576"/>
+					<param name="cx" value="0"/><param name="cy" value="80"/><param name="cw" value="240"/><param name="ch" value="360"/>
+					<param name="fx" value="0"/><param name="fy" value="0"/><param name="fw" value="240"/><param name="fh" value="320"/>
+				</include>
+				<control type="group">
+					<left>40</left>
+					<top>40</top>
+					<width>160</width>
+					<height>240</height>
+					<include content="Anim_FocusCover"><param name="center" value="80,120"/></include>
+					<include content="VidInfo_CastFace"><param name="dim" value="!Control.HasFocus(50)"/><param name="lit" value="Control.HasFocus(50)"/></include>
+				</control>
+			</focusedlayout>
+		</control>
+	</include>
+	<!-- a portrait (or a collection's poster); no photo: a blank portrait with the artists icon. params: dim, lit -->
+	<include name="VidInfo_CastFace">
+		<definition>
+			<control type="image">
+				<left>-96</left>
+				<top>-60</top>
+				<right>-96</right>
+				<bottom>-120</bottom>
+				<texture border="96,60,96,120" colordiffuse="$VAR[shadow]">groove/shadow_square.png</texture>
+			</control>
+			<control type="group">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture colordiffuse="$VAR[surface_raised]">groove/white.png</texture>
+				</control>
+				<control type="image">
+					<left>48</left>
+					<top>88</top>
+					<width>64</width>
+					<height>64</height>
+					<texture colordiffuse="$VAR[icon_rest]">icons/artists.png</texture>
+					<visible>String.IsEmpty(ListItem.Art(thumb)) + String.IsEmpty(ListItem.Art(poster))</visible>
+				</control>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true" colordiffuse="$VAR[dim_cover]">$VAR[VidInfo_CastArt]</texture>
+				<visible>$PARAM[dim] + [!String.IsEmpty(ListItem.Art(thumb)) | !String.IsEmpty(ListItem.Art(poster))]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<include>Anim_ArtFadetime</include>
+				<texture background="true">$VAR[VidInfo_CastArt]</texture>
+				<visible>!$PARAM[dim] + [!String.IsEmpty(ListItem.Art(thumb)) | !String.IsEmpty(ListItem.Art(poster))]</visible>
+			</control>
+			<include content="Groove_Rim">
+				<param name="visible" value="$PARAM[lit]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- ============================================================ More card -->
+	<!-- Kodi's secondary actions on a Groove card; rows hide when Kodi's button is disabled. Always "visible" (a hidden
+	     static list never fills, LESSONS), faded in while it has focus. -->
+	<include name="VidInfo_MoreCard">
+		<control type="group" id="9944">
+			<include content="Dlg_FadeGate"><param name="show" value="Control.HasFocus(9945)"/></include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>1080</height>
+				<texture colordiffuse="$VAR[dim_dialog]">groove/white.png</texture>
+			</control>
+			<!-- the card hugs its rows (Kodi hides the rows whose button is disabled) -->
+			<control type="group">
+				<left>620</left>
+				<top>220</top>
+				<width>680</width>
+				<height>640</height>
+				<control type="group">
+					<visible>Integer.IsLessOrEqual(Container(9945).NumItems,3)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="320"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>Integer.IsEqual(Container(9945).NumItems,4)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="384"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>Integer.IsEqual(Container(9945).NumItems,5)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="448"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>Integer.IsEqual(Container(9945).NumItems,6)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="512"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>Integer.IsEqual(Container(9945).NumItems,7)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="576"/>
+					</include>
+				</control>
+				<control type="group">
+					<visible>Integer.IsGreaterOrEqual(Container(9945).NumItems,8)</visible>
+					<include content="Dlg_Card">
+						<param name="width" value="680"/>
+						<param name="height" value="640"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>40</left>
+					<top>0</top>
+					<width>600</width>
+					<height>88</height>
+					<aligny>center</aligny>
+					<font>font_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$LOCALIZE[31258]</label>
+				</control>
+				<control type="image">
+					<left>40</left>
+					<top>88</top>
+					<width>600</width>
+					<height>2</height>
+					<texture colordiffuse="$VAR[line]">groove/white.png</texture>
+				</control>
+				<control type="list" id="9945">
+					<left>16</left>
+					<top>104</top>
+					<width>648</width>
+					<height>512</height>
+					<onup>9945</onup>
+					<ondown>9945</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>9935</onback>
+					<include>Anim_ScrollRow</include>
+					<include content="Dlg_IndexListLayout">
+						<param name="width" value="648"/>
+						<param name="height" value="64"/>
+						<param name="list_id" value="9945"/>
+					</include>
+					<content>
+						<item>
+							<label>$LOCALIZE[31811]</label>
+							<icon>icons/liner.png</icon>
+							<onclick>SetFocus(9942)</onclick>
+							<visible>!String.IsEmpty(ListItem.Plot)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31815]</label>
+							<icon>icons/films.png</icon>
+							<onclick>Dialog.Close(all,true)</onclick>
+							<onclick>ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId],return)</onclick>
+							<visible>!String.IsEmpty(ListItem.SetID)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31814]</label>
+							<icon>icons/artists.png</icon>
+							<onclick>SendClick(13)</onclick>
+							<visible>!String.IsEmpty(ListItem.Director) + Control.IsEnabled(13)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31812]</label>
+							<label2>$INFO[ListItem.UserRating]</label2>
+							<icon>icons/rating.png</icon>
+							<onclick>SendClick(7)</onclick>
+							<visible>Control.IsEnabled(7)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31816]</label>
+							<icon>icons/view.png</icon>
+							<onclick>SendClick(14)</onclick>
+							<visible>String.IsEqual(ListItem.DBType,movie) + Control.IsEnabled(14)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31817]</label>
+							<icon>icons/playall.png</icon>
+							<onclick>SendClick(15)</onclick>
+							<visible>String.IsEqual(ListItem.DBType,movie) + Control.IsEnabled(15)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31813]</label>
+							<icon>icons/pictures.png</icon>
+							<onclick>SendClick(10)</onclick>
+							<visible>Control.IsEnabled(10)</visible>
+						</item>
+						<item>
+							<label>$LOCALIZE[31270]</label>
+							<icon>icons/update.png</icon>
+							<onclick>SendClick(6)</onclick>
+							<visible>Control.IsEnabled(6)</visible>
+						</item>
+					</content>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ reading page -->
+	<!-- Full plot + facts, its own room (the stage behind does not slide with it). Focus target: the scroll line 9942. -->
+	<include name="VidInfo_ReadingPage">
+		<control type="group" id="9940">
+			<include content="Dlg_FadeGate"><param name="show" value="Control.HasFocus(9942)"/></include>
+			<animation type="Conditional" condition="!Control.HasFocus(9942) + !Skin.HasSetting(groove.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,80" time="300" tween="cubic" easing="in"/>
+			</animation>
+			<include>Groove_Room</include>
+			<include content="Groove_Glow">
+				<param name="art" value="$VAR[VidView_PosterArt]"/>
+				<param name="wash_x" value="1000"/><param name="wash_y" value="-300"/><param name="wash_s" value="1200"/>
+				<param name="halo_x" value="1160"/><param name="halo_y" value="-140"/><param name="halo_s" value="880"/>
+			</include>
+			<include content="VidView_Logo">
+				<param name="left" value="96"/>
+				<param name="top" value="54"/>
+				<param name="width" value="480"/>
+				<param name="height" value="120"/>
+			</include>
+			<control type="textbox" id="9941">
+				<left>96</left>
+				<top>220</top>
+				<width>1100</width>
+				<height>760</height>
+				<font>font_body</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<pagecontrol>9942</pagecontrol>
+				<include>Anim_ScrollText</include>
+				<label>$INFO[ListItem.Plot]</label>
+			</control>
+			<control type="scrollbar" id="9942">
+				<left>1224</left>
+				<top>220</top>
+				<width>2</width>
+				<height>760</height>
+				<texturesliderbackground colordiffuse="$VAR[line_hair]">groove/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="$VAR[ink3]">groove/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="$VAR[ink]">groove/white.png</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+				<showonepage>true</showonepage>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback>9935</onback>
+			</control>
+			<control type="group">
+				<left>1300</left>
+				<top>228</top>
+				<width>524</width>
+				<include content="Dlg_FactRow">
+					<param name="top" value="0"/>
+					<param name="label" value="$LOCALIZE[31818]"/>
+					<param name="value" value="$INFO[ListItem.Genre]"/>
+					<param name="valuew" value="344"/>
+				</include>
+				<include content="Dlg_FactRow">
+					<param name="top" value="56"/>
+					<param name="label" value="$LOCALIZE[31819]"/>
+					<param name="value" value="$INFO[ListItem.Director]"/>
+					<param name="valuew" value="344"/>
+				</include>
+				<include content="Dlg_FactRow">
+					<param name="top" value="112"/>
+					<param name="label" value="$LOCALIZE[31820]"/>
+					<param name="value" value="$INFO[ListItem.Writer]"/>
+					<param name="valuew" value="344"/>
+				</include>
+				<include content="Dlg_FactRow">
+					<param name="top" value="168"/>
+					<param name="label" value="$LOCALIZE[31821]"/>
+					<param name="value" value="$INFO[ListItem.Studio]"/>
+					<param name="valuew" value="344"/>
+				</include>
+				<include content="Dlg_FactRow">
+					<param name="top" value="224"/>
+					<param name="label" value="$LOCALIZE[31822]"/>
+					<param name="value" value="$INFO[ListItem.Premiered]"/>
+					<param name="valuew" value="344"/>
+				</include>
+				<include content="Dlg_FactRow">
+					<param name="top" value="280"/>
+					<param name="label" value="$LOCALIZE[31823]"/>
+					<param name="value" value="$INFO[ListItem.Country]"/>
+					<param name="valuew" value="344"/>
+				</include>
+			</control>
+		</control>
+	</include>
+</includes>

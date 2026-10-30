@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove look: the room, the light (glow), captions, art parts, the clock. Prefix Groove_.
+	Design: docs/skin.groove/DESIGN.md. Textures: media/groove/ (visual-designer, _src/make_textures.py).
+	Colours: ONLY room tokens $VAR[<token>] (Includes_Theme.xml) or the statics white / black / clear / white_NN.
+
+	The first block keeps the include names (and params) the forked Nocturne windows call, drawn in Groove's
+	language: the plaster wall is the room, the brass plaque is a one-line caption, the torch halo is the glow, the
+	shroud is a soft veil of the room's own colour. M2-M4 replace the forked windows; these stay as the shared look.
+-->
+<includes>
+	<!-- ============================================================ constants (DESIGN.md section 4) -->
+	<constant name="g_safe_x">96</constant>
+	<constant name="g_safe_y">54</constant>
+	<constant name="g_rail_y">920</constant>             <!-- top of the 64 px rail icons -->
+	<constant name="g_rail_icon">64</constant>
+	<constant name="g_rail_pitch">232</constant>         <!-- fixed for the longest label ("Settings") -->
+	<constant name="g_rail_label_x">80</constant>        <!-- icon 64 + gap 16 -->
+	<constant name="g_rail_label_w">148</constant>       <!-- pitch - label_x - 4 -->
+	<constant name="g_icon_glow">154</constant>          <!-- glow_radial at 2.4 x a 64 px icon -->
+	<constant name="g_icon_glow_off">-45</constant>      <!-- (64 - 154) / 2 -->
+	<constant name="g_header_y">54</constant>
+	<constant name="g_header_icon">48</constant>
+	<constant name="g_header_pitch">96</constant>
+	<constant name="g_tray_x">150</constant>
+	<constant name="g_tray_y">950</constant>
+	<constant name="g_tray_icon">48</constant>
+	<constant name="g_tray_pitch">216</constant>
+	<constant name="g_progress_y">852</constant>
+	<constant name="g_mini_x">1704</constant>
+	<constant name="g_mini_y">54</constant>
+	<constant name="g_mini_size">120</constant>
+	<constant name="g_mini_disc">92</constant>
+	<constant name="g_rim">2</constant>
+	<constant name="g_glow_frame_out">-40</constant>     <!-- glow_frame drawn 40 px outside the item -->
+	<constant name="g_cover_home">620</constant>         <!-- Home Music hero sleeve (board 01) -->
+	<constant name="g_cover_home_x">888</constant>
+	<constant name="g_cover_home_y">142</constant>
+
+	<!-- ============================================================ expressions (Groove) -->
+	<!-- Optional helper add-ons: the ONLY guards to use (HELPER_API 0). Installed + enabled + (helper) its service
+	     running. Timers, window-level <visible> and <autoscroll> don't expand $EXP: paste the text there. -->
+	<expression name="HasGrooveHelper">System.HasAddon(script.karmamole.helper) + System.AddonIsEnabled(script.karmamole.helper) + String.IsEqual(Window(Home).Property(KarmaMole.Helper.Running),true)</expression>
+	<expression name="HasVizPalette">System.HasAddon(service.vizpalette) + System.AddonIsEnabled(service.vizpalette)</expression>
+	<expression name="GlowSoft">String.IsEqual(Skin.String(groove.glow),soft)</expression>
+	<expression name="GlowMedium">!String.IsEqual(Skin.String(groove.glow),soft) + !String.IsEqual(Skin.String(groove.glow),vivid)</expression>
+	<expression name="RecordAlwaysVinyl">String.IsEqual(Skin.String(groove.record),vinyl)</expression>
+	<expression name="MiniPlayerOff">String.IsEqual(Skin.String(groove.mini),off)</expression>
+
+	<!-- helper soft art for the current room (DESIGN 12.4: Groove.Art.SoftLight is the pastel variant) -->
+	<variable name="Groove_SoftArt">
+		<value condition="$EXP[GrooveLight] + !String.IsEmpty(Window(Home).Property(Groove.Art.SoftLight))">$INFO[Window(Home).Property(Groove.Art.SoftLight)]</value>
+		<value>$INFO[Window(Home).Property(Groove.Art.Soft)]</value>
+	</variable>
+
+	<!-- ============================================================ the room -->
+	<!-- Opaque, dithered ground for the current room (Dark / Light). First control of every full-screen window. -->
+	<include name="Groove_Room">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture>$VAR[Tex_Room]</texture>
+		</control>
+	</include>
+	<!-- A page: the room (lists, settings, generic windows) -->
+	<include name="Groove_Page">
+		<include>Groove_Room</include>
+	</include>
+
+	<!-- Clock, top right; gives way to the mini player while music plays (M3) -->
+	<include name="Groove_Clock">
+		<control type="label">
+			<right>g_safe_x</right>
+			<top>g_safe_y</top>
+			<width>400</width>
+			<height>40</height>
+			<align>right</align>
+			<aligny>center</aligny>
+			<font>font_clock</font>
+			<textcolor>$VAR[ink2]</textcolor>
+			<label>$VAR[ClockLabel]</label>
+			<visible>!Player.HasAudio | $EXP[MiniPlayerOff]</visible>
+			<visible>!Window.IsVisible(fullscreenvideo) | Window.IsVisible(videoosd)</visible>
+		</control>
+	</include>
+
+	<!-- ============================================================ art -->
+	<!-- Art (poster / still / cover) with its cast shadow, fallback block + title, and when lit: the glow frame
+	     and the 2 px rim (DESIGN 5). Inside a group at the art rect. params: art, lit, label, aspect -->
+	<include name="Groove_ArtParts">
+		<param name="lit">false</param>
+		<param name="label"></param>
+		<param name="aspect">scale</param>
+		<param name="noart">true</param>
+		<definition>
+			<control type="image">
+				<left>-96</left>
+				<top>-60</top>
+				<right>-96</right>
+				<bottom>-120</bottom>
+				<texture border="96,60,96,120" colordiffuse="$VAR[shadow]">groove/shadow_square.png</texture>
+			</control>
+			<control type="image">
+				<left>g_glow_frame_out</left>
+				<top>g_glow_frame_out</top>
+				<right>g_glow_frame_out</right>
+				<bottom>g_glow_frame_out</bottom>
+				<texture border="48" colordiffuse="$VAR[glow]">groove/glow_frame.png</texture>
+				<visible>$PARAM[lit] + !$EXP[GrooveLight]</visible>
+				<include>Groove_GlowStrength</include>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="$VAR[surface_raised]">groove/white.png</texture>
+				<visible>$PARAM[noart]</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<right>12</right>
+				<top>12</top>
+				<bottom>12</bottom>
+				<align>center</align>
+				<aligny>center</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<font>font_caption</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[noart]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>$PARAM[aspect]</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+			</control>
+			<include content="Groove_Rim">
+				<param name="visible" value="$PARAM[lit]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- Album cover: same parts, square art -->
+	<include name="Groove_CoverParts">
+		<param name="lit">false</param>
+		<param name="label"></param>
+		<definition>
+			<include content="Groove_ArtParts">
+				<param name="art" value="$PARAM[art]"/>
+				<param name="lit" value="$PARAM[lit]"/>
+				<param name="label" value="$PARAM[label]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- 2 px focus rim at 60 % (a black sleeve on black still reads as focused). Inside the art group. -->
+	<include name="Groove_Rim">
+		<param name="visible">true</param>
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<height>g_rim</height>
+					<texture colordiffuse="$VAR[rim]">groove/white.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<right>0</right>
+					<height>g_rim</height>
+					<texture colordiffuse="$VAR[rim]">groove/white.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>g_rim</top>
+					<bottom>g_rim</bottom>
+					<width>g_rim</width>
+					<texture colordiffuse="$VAR[rim]">groove/white.png</texture>
+				</control>
+				<control type="image">
+					<right>0</right>
+					<top>g_rim</top>
+					<bottom>g_rim</bottom>
+					<width>g_rim</width>
+					<texture colordiffuse="$VAR[rim]">groove/white.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ captions (DESIGN 3: one caption line) -->
+	<!-- One line centred in [left, left + width]: title (Medium, ink) + meta (Light, ink2).
+	     params: left, top, width (default 1200), title, meta, visible -->
+	<include name="Groove_Caption">
+		<param name="visible">true</param>
+		<param name="width">1200</param>
+		<definition>
+			<control type="grouplist">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<align>center</align>
+				<itemgap>16</itemgap>
+				<visible>$PARAM[visible]</visible>
+				<include>Anim_PlaqueVisible</include>
+				<control type="label">
+					<width max="760">auto</width>
+					<height>64</height>
+					<aligny>center</aligny>
+					<font>font_caption</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<width max="600">auto</width>
+					<height>64</height>
+					<aligny>center</aligny>
+					<font>font_caption_light</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$PARAM[meta]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ light -->
+
+	<!-- Glow strength (setting groove.glow: Soft 25 / Medium 40 / Vivid 60, SPEC 11) as time-0 fades on a glow layer.
+	     The glow textures are full-strength white alpha; this scales them. Runtime conditions: no reload needed. -->
+	<include name="Groove_GlowStrength">
+		<animation effect="fade" start="100" end="42" time="0" condition="$EXP[GlowSoft]">Conditional</animation>
+		<animation effect="fade" start="100" end="67" time="0" condition="$EXP[GlowMedium]">Conditional</animation>
+	</include>
+
+	<!-- The room glow behind one lit item (SPEC 11 / DESIGN 6): wash + halo, positioned in window coordinates.
+	     params: art (infolabel); wash_x, wash_y, wash_s (square, ~3.2 x the item, centred on it);
+	     halo_x, halo_y, halo_s (~2.2 x the item). With script.karmamole.helper the wash is the helper's soft art
+	     (Window(Home).Property(Groove.Art.Soft)); without it the art itself through the wash mask (art-halo fallback).
+	     soft / soft_ready / colour default to the focused item; Home's Music stage passes the playing album's
+	     (Groove.Player.Art.Soft, glow_playing) while music plays. -->
+	<include name="Groove_Glow">
+		<param name="art">$INFO[ListItem.Art(thumb)]</param>
+		<param name="visible">true</param>
+		<param name="soft">$VAR[Groove_SoftArt]</param>
+		<param name="soft_ready">$EXP[HasGrooveHelper] + !String.IsEmpty(Window(Home).Property(Groove.Art.Soft))</param>
+		<param name="colour">$VAR[glow]</param>
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<control type="image">
+					<left>$PARAM[wash_x]</left>
+					<top>$PARAM[wash_y]</top>
+					<width>$PARAM[wash_s]</width>
+					<height>$PARAM[wash_s]</height>
+					<aspectratio>stretch</aspectratio>
+					<texture background="true" diffuse="groove/wash_mask.png" colordiffuse="$VAR[wash]">$PARAM[soft]</texture>
+					<visible>$PARAM[soft_ready]</visible>
+					<include>Anim_GlowCrossfade</include>
+				</control>
+				<control type="image">
+					<left>$PARAM[wash_x]</left>
+					<top>$PARAM[wash_y]</top>
+					<width>$PARAM[wash_s]</width>
+					<height>$PARAM[wash_s]</height>
+					<aspectratio>stretch</aspectratio>
+					<texture background="true" diffuse="groove/wash_mask.png" colordiffuse="$VAR[wash]">$PARAM[art]</texture>
+					<visible>![$PARAM[soft_ready]]</visible>
+					<include>Anim_GlowCrossfade</include>
+				</control>
+				<!-- pool: the lamp on paper (Light only, DESIGN 12.4 layer 2) -->
+				<control type="image">
+					<left>$PARAM[halo_x]</left>
+					<top>$PARAM[halo_y]</top>
+					<width>$PARAM[halo_s]</width>
+					<height>$PARAM[halo_s]</height>
+					<texture colordiffuse="$VAR[art_pool]">groove/glow_radial.png</texture>
+					<visible>$EXP[GrooveLight]</visible>
+					<include>Anim_GlowCrossfade</include>
+				</control>
+				<control type="image">
+					<left>$PARAM[halo_x]</left>
+					<top>$PARAM[halo_y]</top>
+					<width>$PARAM[halo_s]</width>
+					<height>$PARAM[halo_s]</height>
+					<texture colordiffuse="$PARAM[colour]">groove/glow_radial.png</texture>
+					<include>Groove_GlowStrength</include>
+					<include>Anim_GlowCrossfade</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Glow appears / changes source: 400 ms crossfade (DESIGN 6.5). motion-designer may move this into
+	     Includes_Animations.xml (keep the name). -->
+	<include name="Anim_GlowCrossfade">
+		<include>Anim_GlowLayer</include>
+	</include>
+
+</includes>

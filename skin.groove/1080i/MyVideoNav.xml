@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Films and TV library: cinema glow (screens/MyVideoNav.md). Everything lives in Includes_Views_Video.xml.
+
+	Kodi id contract (Estuary Omega MyVideoNav.xml / CGUIWindowVideoNav): views listed in <views> (first visible one is
+	the default for a new node: films 500, episodes 510, everything else 50; TV shows corrected to 510 once by a timer);
+	3 sort by / 4 sort order (offscreen, clicked by the header and the panel); 14 watched toggle (SendClick only);
+	defaultcontrol 50 = Kodi focuses the active view.
+	Groove ids: 9520 header group (9521 Films, 9522 Shows, 9531 View, 9532 Sort, 9533 Options), 60 list scroll line,
+	9398 Back-to-Home catcher, 9800-9893 library panel / picker / clean confirm, 9950 mini player.
+	Focus map: view (rest) <-Up/Down-> header; Left past the first column / Right past the last -> library panel.
+	Back: drilled -> parent; at the films / shows root -> Home in one press. Header / panel Back -> the view.
+	No window-level animation (MOTION 3): the content group fades, the room never does.
+-->
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9521</menucontrol>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<views>500,510,50,520,521,522</views>
+	<!-- empty folder: an empty view can't take focus, so land on the header -->
+	<onload condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating">SetFocus(9521)</onload>
+	<controls>
+		<include>VidView_Window</include>
+		<!-- the mini disc steps aside while the Cover wall's first row has focus (it sits over the top-right poster) -->
+		<include content="VidView_MiniPlayer">
+			<param name="down" value="SetFocus($INFO[Window(Home).Property(groove.mini.from)])"/>
+			<param name="rest" value="[Control.HasFocus(500) + Container(500).Row(0)]"/>
+			<param name="back_nav" value="Mini_BackVideo"/>
+			<param name="back" value="9533"/>
+		</include>
+	</controls>
+</window>

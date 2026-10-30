@@ -1,0 +1,1508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Includes_Misc.xml - Builder F (remaining windows, SPEC 5 "Minimal" treatments).
+	Shared generic layouts for every window Omar never uses day to day: PVR, pictures, programs,
+	games, weather, file manager, profiles/login, system info, calibration, event log, favourites,
+	media source, smart playlist editor/rule, colour picker. Prefix: Misc_ (includes, variables,
+	constants misc_).
+	Builds only on the foundation layouts: Groove_Page / Groove_TopBar / Groove_SubNavButton /
+	Groove_FocusFrameAlways (Includes_Common), Groove_GenericDialog / Groove_DialogButton /
+	Groove_ListLayout / Groove_Scrollbar (Includes_Dialogs), View_50_List (Includes_Views).
+	Focus is always visible: lists = raised row + accent bar, buttons = accent fill, rows = accent frame.
+
+	Empty-container rule: a Kodi container with no items cannot take focus. Windows whose list can be
+	empty (PVR without a backend, event log) put the list inside a group with a fallback focusable
+	control; Kodi's group focus falls through to the first focusable child, so focus never lands on
+	nothing. Back is a window action and always works regardless.
+-->
+<includes>
+	<!-- ============================================================== constants -->
+	<constant name="misc_nav2_top">186</constant>          <!-- second sub-nav row (PVR options) -->
+	<constant name="misc_pvr_top">250</constant>           <!-- PVR content below two nav rows -->
+	<constant name="misc_pvr_list_h">792</constant>        <!-- 12 rows x 66 -->
+	<constant name="misc_col_x">560</constant>             <!-- content column next to a 380px left menu -->
+	<constant name="misc_col_w">1264</constant>            <!-- 1824 - 560 -->
+	<constant name="misc_menu_w">400</constant>            <!-- left option menu width -->
+
+	<!-- ============================================================== variables -->
+	<!-- PVR: TV or Radio (Kodi sets Window.Property(IsRadio) on the Radio* windows) -->
+	<variable name="Misc_PVRMedium">
+		<value condition="!String.IsEmpty(Window.Property(IsRadio))">$LOCALIZE[19021]</value>
+		<value>$LOCALIZE[19020]</value>
+	</variable>
+	<!-- PVR status tag, typographic (no icon set): recording / timer / reminder / archive -->
+	<variable name="Misc_PVRStatus">
+		<value condition="ListItem.IsRecording">[UPPERCASE]$LOCALIZE[31917][/UPPERCASE]</value>
+		<value condition="ListItem.HasTimer | ListItem.HasTimerSchedule">[UPPERCASE]$LOCALIZE[31835][/UPPERCASE]</value>
+		<value condition="ListItem.HasReminder">[UPPERCASE]$LOCALIZE[31918][/UPPERCASE]</value>
+		<value condition="ListItem.HasArchive">[UPPERCASE]$LOCALIZE[31919][/UPPERCASE]</value>
+	</variable>
+	<variable name="Misc_PVRTitle">
+		<value condition="!String.IsEmpty(ListItem.EpgEventTitle)">$INFO[ListItem.EpgEventTitle]</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="Misc_PVRTimersTitle">
+		<value condition="Window.IsActive(TVTimerRules) | Window.IsActive(RadioTimerRules)">$LOCALIZE[19138]</value>
+		<value>$LOCALIZE[19040]</value>
+	</variable>
+	<variable name="Misc_PVRSearchLabel">
+		<value condition="!String.IsEmpty(ListItem.ChannelName)">$INFO[ListItem.Label]  ·  $INFO[ListItem.ChannelName]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<!-- Channel manager row flags -->
+	<variable name="Misc_ChannelMgrFlags">
+		<value condition="ListItem.Property(Changed) + ListItem.Property(ParentalLocked)">[UPPERCASE]$LOCALIZE[31920]  $LOCALIZE[20166][/UPPERCASE]</value>
+		<value condition="ListItem.Property(Changed)">[UPPERCASE]$LOCALIZE[31920][/UPPERCASE]</value>
+		<value condition="ListItem.Property(ParentalLocked)">[UPPERCASE]$LOCALIZE[20166][/UPPERCASE]</value>
+	</variable>
+	<variable name="Misc_PVRMeta">
+		<value condition="!String.IsEmpty(ListItem.StartTime)">$INFO[ListItem.StartDate,,  ·  ]$INFO[ListItem.StartTime]$INFO[ListItem.EndTime, - ,]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value>$INFO[ListItem.Date]$INFO[ListItem.Duration,  ·  ,]$INFO[ListItem.Genre,  ·  ,]</value>
+	</variable>
+
+	<!-- ============================================================== small pieces -->
+	<!-- Nothing (default for optional include params) -->
+	<include name="Misc_None">
+		<description>empty</description>
+	</include>
+
+	<!-- Off-screen label Kodi writes into (PVR header labels 29 / 30, group manager 20) -->
+	<include name="Misc_HiddenLabel">
+		<param name="id"></param>
+		<definition>
+			<control type="label" id="$PARAM[id]">
+				<left>offscreen</left>
+				<top>offscreen</top>
+				<width>1</width>
+				<height>1</height>
+				<font>font13</font>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Mono caption (section heading inside dialogs / panels). params: left, top, width, label -->
+	<include name="Misc_Caption">
+		<param name="left">0</param>
+		<param name="top">0</param>
+		<param name="width">600</param>
+		<param name="label"></param>
+		<param name="color">$VAR[ink]</param>
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>36</height>
+				<font>font_fact_label</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- One "LABEL   value" line, hidden when the value is empty (RDS, weather facts).
+	     params: label (mono caption), value (infolabel name, without $INFO), width, suffix -->
+	<include name="Misc_InfoLine">
+		<param name="width">600</param>
+		<param name="suffix"></param>
+		<definition>
+			<control type="group">
+				<width>$PARAM[width]</width>
+				<height>44</height>
+				<visible>!String.IsEmpty($PARAM[value])</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>200</width>
+					<height>44</height>
+					<font>font_fact_label</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<left>210</left>
+					<top>0</top>
+					<right>0</right>
+					<height>44</height>
+					<font>font_small</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$INFO[$PARAM[value]]$PARAM[suffix]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Row look for option controls in dialogs (button / radiobutton / edit / spincontrolex):
+	     secondary text, accent frame + primary text on focus, label2 (value) on the right.
+	     Radio / spin textures come from Defaults.xml. param width -->
+	<include name="Misc_RowLook">
+		<param name="width">700</param>
+		<definition>
+			<width>$PARAM[width]</width>
+			<height>dialog_row_h</height>
+			<font>font_label</font>
+			<textcolor>$VAR[ink2]</textcolor>
+			<focusedcolor>$VAR[ink]</focusedcolor>
+			<disabledcolor>$VAR[disabled]</disabledcolor>
+			<invalidcolor>$VAR[ink]</invalidcolor>
+			<selectedcolor>$VAR[ink]</selectedcolor>
+			<textoffsetx>24</textoffsetx>
+			<aligny>center</aligny>
+			<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+			<texturenofocus />
+		</definition>
+	</include>
+
+	<!-- Mono sub-nav radiobutton (window toggles Kodi drives: hidden channels, show deleted, ...).
+	     Same focus as Groove_SubNavButton (accent fill + ink). params: id, label, width, visible -->
+	<include name="Misc_SubNavRadio">
+		<param name="label"></param>
+		<param name="width">340</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="radiobutton" id="$PARAM[id]">
+				<width>$PARAM[width]</width>
+				<height>subnav_h</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<focusedcolor>$VAR[ink]</focusedcolor>
+				<textoffsetx>12</textoffsetx>
+				<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+				<texturenofocus />
+				<radiowidth>18</radiowidth>
+				<radioheight>18</radioheight>
+				<textureradioonfocus colordiffuse="$VAR[on_lit]">markers/check.png</textureradioonfocus>
+				<textureradioonnofocus colordiffuse="$VAR[ink]">fork/dot_on.png</textureradioonnofocus>
+				<textureradioofffocus border="10" colordiffuse="$VAR[on_lit]">common/rect_outline_1.png</textureradioofffocus>
+				<textureradiooffnofocus colordiffuse="$VAR[line_strong]">fork/dot_off.png</textureradiooffnofocus>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Sort / order / view sub-nav buttons (Kodi media-window ids 3 / 4 clicked through) -->
+	<include name="Misc_SortButtons">
+		<include content="Groove_SubNavButton">
+			<param name="id" value="6053"/>
+			<param name="label" value="$LOCALIZE[31010]: $INFO[Container.SortMethod]"/>
+			<param name="onclick" value="SendClick(3)"/>
+			<param name="visible" value="Control.IsEnabled(3)"/>
+		</include>
+		<include content="Groove_SubNavButton">
+			<param name="id" value="6052"/>
+			<param name="label" value="$INFO[Container.SortOrder]"/>
+			<param name="onclick" value="SendClick(4)"/>
+			<param name="visible" value="Control.IsEnabled(4)"/>
+		</include>
+	</include>
+
+	<!-- Hidden Kodi media-window buttons the sub-nav clicks into -->
+	<include name="Misc_HiddenSortControls">
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>Groove_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>Groove_Hidden</include>
+		</control>
+	</include>
+
+	<!-- Label-only list layouts for narrow dialog lists (Groove_ListLayout keeps 220px for label2).
+	     Focus: raised row + accent bar; ListItem.IsSelected shows the accent check.
+	     params: list_id, width, label -->
+	<include name="Misc_SimpleListLayouts">
+		<param name="width">400</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="dialog_row_h">
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<right>56</right>
+					<height>dialog_row_h</height>
+					<font>font_label</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="image">
+					<right>20</right>
+					<top>21</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="$VAR[ink]">markers/check.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="dialog_row_h">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>dialog_row_h</height>
+					<texture border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>list_bar_w</width>
+					<height>dialog_row_h</height>
+					<texture colordiffuse="$VAR[ink]">fork/tick.png</texture>
+				</control>
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<right>56</right>
+					<height>dialog_row_h</height>
+					<font>font_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<scroll>true</scroll>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="image">
+					<right>20</right>
+					<top>21</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="$VAR[ink]">markers/check.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- ============================================================== media list window -->
+	<!-- MyPrograms / MyPics / MyGames / MyFavourites: page header, mono sub-nav (sort + per-window
+	     extras passed as an include name), view 50 with art panel, empty state.
+	     params: index, title, sub, extra (include name of extra sub-nav buttons) -->
+	<include name="Misc_MediaWindow">
+		<param name="index">06</param>
+		<param name="title">$VAR[LibraryTitle]</param>
+		<param name="sub"></param>
+		<param name="extra">Misc_None</param>
+		<param name="icon">icons/files.png</param>
+		<definition>
+			<!-- the room is drawn by the window, outside its animated content group (M4) -->
+			<include content="Groove_TopBar">
+				<param name="index" value="$PARAM[index]"/>
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+				<param name="icon" value="$PARAM[icon]"/>
+			</include>
+			<control type="grouplist" id="9000">
+				<left>subnav_left</left>
+				<top>below_bar_top</top>
+				<width>1500</width>
+				<height>subnav_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>28</itemgap>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>noop</onup>
+				<ondown>50</ondown>
+				<onback>50</onback>
+				<include>Misc_SortButtons</include>
+				<include content="$PARAM[extra]"/>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>below_bar_top</top>
+				<width>page_width</width>
+				<height>subnav_h</height>
+				<align>right</align>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[Container.CurrentItem]$INFO[Container.NumItems, / ,]</label>
+			</control>
+			<include>View_50_List</include>
+			<control type="label">
+				<left>page_margin</left>
+				<top>list_top</top>
+				<width>list_w</width>
+				<height>list_row_h</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$LOCALIZE[31802]</label>
+				<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			</control>
+			<include>Misc_HiddenSortControls</include>
+		</definition>
+	</include>
+
+	<!-- Extra sub-nav buttons: add-on settings + get more (programs / games / pictures).
+	     param kind: Kodi add-on type for the "get more" browser (executable / game / image) -->
+	<include name="Misc_AddonButtons">
+		<param name="kind">executable</param>
+		<definition>
+			<include content="Groove_SubNavButton">
+				<param name="id" value="624"/>
+				<param name="label" value="$LOCALIZE[10140]"/>
+				<param name="onclick" value="Addon.OpenSettings($INFO[Container.PluginName])"/>
+				<param name="visible" value="!String.IsEmpty(Container.PluginName)"/>
+			</include>
+			<include content="Groove_SubNavButton">
+				<param name="id" value="621"/>
+				<param name="label" value="$LOCALIZE[21452]"/>
+				<param name="onclick" value="ActivateWindow(addonbrowser,addons://more/$PARAM[kind]/,return)"/>
+				<param name="visible" value="Container.Content(addons)"/>
+			</include>
+		</definition>
+	</include>
+	<include name="Misc_Extra_Programs">
+		<include content="Misc_AddonButtons"><param name="kind" value="executable"/></include>
+	</include>
+	<include name="Misc_Extra_Games">
+		<include content="Misc_AddonButtons"><param name="kind" value="game"/></include>
+	</include>
+	<!-- MyPics: Kodi ids 6 slideshow, 7 recursive slideshow, 9 randomise (radio) -->
+	<include name="Misc_Extra_Pictures">
+		<include content="Groove_SubNavButton">
+			<param name="id" value="6"/>
+			<param name="label" value="$LOCALIZE[108]"/>
+		</include>
+		<include content="Groove_SubNavButton">
+			<param name="id" value="7"/>
+			<param name="label" value="$LOCALIZE[361]"/>
+		</include>
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="9"/>
+			<param name="label" value="$LOCALIZE[13319]"/>
+			<param name="width" value="190"/>
+		</include>
+		<include content="Misc_AddonButtons"><param name="kind" value="image"/></include>
+	</include>
+
+	<!-- ============================================================== PVR -->
+	<!-- PVR area link: active area is disabled and drawn in the accent ("you are here"); the
+	     grouplist skips it. params: id, area (Channels / Guide / Recordings / Timers / TimerRules /
+	     Search), label -->
+	<include name="Misc_PVRAreaButton">
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>subnav_h</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<focusedcolor>$VAR[ink]</focusedcolor>
+				<disabledcolor>$VAR[ink]</disabledcolor>
+				<textoffsetx>12</textoffsetx>
+				<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick condition="String.IsEmpty(Window.Property(IsRadio))">ActivateWindow(TV$PARAM[area])</onclick>
+				<onclick condition="!String.IsEmpty(Window.Property(IsRadio))">ActivateWindow(Radio$PARAM[area])</onclick>
+				<enable>!Window.IsActive(TV$PARAM[area]) + !Window.IsActive(Radio$PARAM[area])</enable>
+			</control>
+		</definition>
+	</include>
+
+	<!-- PVR window furniture (replaces Estuary's PVRSideBar). Kodi ids (GUIWindowPVRBase.h):
+	     3 sort by, 4 sort order, 28 channel-group button, 29 / 30 header labels, 5 / 6 / 7 / 8 / 10 / 31
+	     window toggles (passed per window in `options`). Row 1 (9000) = PVR areas, row 2 (9001) =
+	     group / sort / window options.
+	     params: title (area name), group_label (Control.GetLabel(29) or (30)), show_group, options,
+	     content_id (control Down from the options row lands on) -->
+	<include name="Misc_PVRFrame">
+		<param name="title"></param>
+		<param name="group_label">$INFO[Control.GetLabel(29)]</param>
+		<param name="show_group">false</param>
+		<param name="options">Misc_None</param>
+		<param name="content_id">9100</param>
+		<definition>
+			<!-- the room is drawn by the window, outside its animated content group (M4) -->
+			<include content="Groove_TopBar">
+				<param name="index" value="10"/>
+				<param name="title" value="$VAR[Misc_PVRMedium]  ·  $PARAM[title]"/>
+				<param name="icon" value="icons/livetv.png"/>
+				<param name="sub" value="$PARAM[group_label]"/>
+			</include>
+			<control type="grouplist" id="9000">
+				<left>subnav_left</left>
+				<top>below_bar_top</top>
+				<width>1500</width>
+				<height>subnav_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>28</itemgap>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>noop</onup>
+				<ondown>9001</ondown>
+				<onback>$PARAM[content_id]</onback>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="100"/>
+					<param name="area" value="Channels"/>
+					<param name="label" value="$LOCALIZE[19019]"/>
+				</include>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="101"/>
+					<param name="area" value="Guide"/>
+					<param name="label" value="$LOCALIZE[19069]"/>
+				</include>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="102"/>
+					<param name="area" value="Recordings"/>
+					<param name="label" value="$LOCALIZE[19017]"/>
+				</include>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="103"/>
+					<param name="area" value="Timers"/>
+					<param name="label" value="$LOCALIZE[19040]"/>
+				</include>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="104"/>
+					<param name="area" value="TimerRules"/>
+					<param name="label" value="$LOCALIZE[19138]"/>
+				</include>
+				<include content="Misc_PVRAreaButton">
+					<param name="id" value="105"/>
+					<param name="area" value="Search"/>
+					<param name="label" value="$LOCALIZE[137]"/>
+				</include>
+			</control>
+			<control type="grouplist" id="9001">
+				<left>subnav_left</left>
+				<top>misc_nav2_top</top>
+				<width>1500</width>
+				<height>subnav_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>28</itemgap>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>9000</onup>
+				<ondown>$PARAM[content_id]</ondown>
+				<onback>$PARAM[content_id]</onback>
+				<include content="Groove_SubNavButton">
+					<param name="id" value="6054"/>
+					<param name="label" value="$LOCALIZE[19141]: $PARAM[group_label]"/>
+					<param name="onclick" value="SendClick(28)"/>
+					<param name="visible" value="$PARAM[show_group]"/>
+				</include>
+				<include content="Groove_SubNavButton">
+					<param name="id" value="6053"/>
+					<param name="label" value="$LOCALIZE[31010]: $INFO[Container.SortMethod]"/>
+					<param name="onclick" value="SendClick(3)"/>
+				</include>
+				<include content="Groove_SubNavButton">
+					<param name="id" value="6055"/>
+					<param name="label" value="$INFO[Container.SortOrder]"/>
+					<param name="onclick" value="Container.SetSortDirection"/>
+				</include>
+				<include content="$PARAM[options]"/>
+			</control>
+			<control type="button" id="28">
+				<description>Channel group selector (Kodi), clicked by 6054</description>
+				<include>Groove_Hidden</include>
+			</control>
+			<include content="Misc_HiddenLabel"><param name="id" value="29"/></include>
+			<include content="Misc_HiddenLabel"><param name="id" value="30"/></include>
+			<include>Misc_HiddenSortControls</include>
+		</definition>
+	</include>
+
+	<!-- Per-window PVR option toggles (Kodi ids, GUIWindowPVRBase.h) -->
+	<include name="Misc_PVROptions_Channels">
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="31"/>
+			<param name="label" value="$LOCALIZE[587]"/>
+			<param name="width" value="160"/>
+		</include>
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="6"/>
+			<param name="label" value="$LOCALIZE[19051]"/>
+			<param name="width" value="360"/>
+		</include>
+	</include>
+	<include name="Misc_PVROptions_Recordings">
+		<control type="button" id="10">
+			<description>Watched filter (Kodi sets the label)</description>
+			<width>auto</width>
+			<height>subnav_h</height>
+			<font>font_fact_label</font>
+			<textcolor>$VAR[ink2]</textcolor>
+			<focusedcolor>$VAR[ink]</focusedcolor>
+			<textoffsetx>12</textoffsetx>
+			<texturefocus border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texturefocus>
+			<texturenofocus />
+		</control>
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="5"/>
+			<param name="label" value="$LOCALIZE[19270]"/>
+			<param name="width" value="330"/>
+		</include>
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="7"/>
+			<param name="label" value="$LOCALIZE[19184]"/>
+			<param name="width" value="360"/>
+		</include>
+	</include>
+	<include name="Misc_PVROptions_Timers">
+		<include content="Misc_SubNavRadio">
+			<param name="id" value="8"/>
+			<param name="label" value="$LOCALIZE[19077]"/>
+			<param name="width" value="340"/>
+		</include>
+	</include>
+
+	<!-- PVR row layouts (list 50 in windows, list 11 in the PVR OSD dialogs).
+	     params: list_id, width, number (left column, e.g. channel number / start time; "" = none),
+	     text_x (label x: 28 without number, 120 with), label, label2, progress (visible condition) -->
+	<include name="Misc_PVRRowLayouts">
+		<param name="width">1080</param>
+		<param name="number"></param>
+		<param name="text_x">28</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="progress">false</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="list_row_h">
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<width>84</width>
+					<height>list_row_h</height>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>[UPPERCASE]$PARAM[number][/UPPERCASE]</label>
+				</control>
+				<control type="label">
+					<left>$PARAM[text_x]</left>
+					<top>0</top>
+					<right>440</right>
+					<height>list_row_h</height>
+					<font>font_label</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>110</right>
+					<top>0</top>
+					<width>320</width>
+					<height>list_row_h</height>
+					<align>right</align>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+				<control type="label">
+					<right>list_text_x</right>
+					<top>0</top>
+					<width>80</width>
+					<height>list_row_h</height>
+					<align>right</align>
+					<font>font_fact_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$VAR[Misc_PVRStatus]</label>
+				</control>
+				<control type="progress">
+					<left>0</left>
+					<bottom>1</bottom>
+					<width>$PARAM[width]</width>
+					<height>2</height>
+					<info>ListItem.Progress</info>
+					<visible>$PARAM[progress]</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="list_row_h">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>list_row_h</height>
+					<texture border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>list_bar_w</width>
+					<height>list_row_h</height>
+					<texture colordiffuse="$VAR[ink]">fork/tick.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<width>84</width>
+					<height>list_row_h</height>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>[UPPERCASE]$PARAM[number][/UPPERCASE]</label>
+				</control>
+				<control type="label">
+					<left>$PARAM[text_x]</left>
+					<top>0</top>
+					<right>440</right>
+					<height>list_row_h</height>
+					<font>font_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<scroll>true</scroll>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>110</right>
+					<top>0</top>
+					<width>320</width>
+					<height>list_row_h</height>
+					<align>right</align>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+				<control type="label">
+					<right>list_text_x</right>
+					<top>0</top>
+					<width>80</width>
+					<height>list_row_h</height>
+					<align>right</align>
+					<font>font_fact_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$VAR[Misc_PVRStatus]</label>
+				</control>
+				<control type="progress">
+					<left>0</left>
+					<bottom>1</bottom>
+					<width>$PARAM[width]</width>
+					<height>2</height>
+					<info>ListItem.Progress</info>
+					<visible>$PARAM[progress]</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- PVR window content: list 50 (inside focus group 9100 with an empty-state fallback button),
+	     scrollbar 60, focused-item panel. params as Misc_PVRRowLayouts + empty_label -->
+	<include name="Misc_PVRList">
+		<param name="number"></param>
+		<param name="text_x">28</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="progress">false</param>
+		<param name="empty_label">$LOCALIZE[31606]</param>
+		<definition>
+			<control type="group" id="9100">
+				<defaultcontrol always="true">50</defaultcontrol>
+				<control type="list" id="50">
+					<left>page_margin</left>
+					<top>misc_pvr_top</top>
+					<width>list_w</width>
+					<height>misc_pvr_list_h</height>
+					<onup>9001</onup>
+					<ondown>50</ondown>
+					<onleft>noop</onleft>
+					<onright>60</onright>
+					<pagecontrol>60</pagecontrol>
+					<scrolltime tween="cubic" easing="out">200</scrolltime>
+					<viewtype label="535">list</viewtype>
+					<include content="Misc_PVRRowLayouts">
+						<param name="list_id" value="50"/>
+						<param name="width" value="1080"/>
+						<param name="number" value="$PARAM[number]"/>
+						<param name="text_x" value="$PARAM[text_x]"/>
+						<param name="label" value="$PARAM[label]"/>
+						<param name="label2" value="$PARAM[label2]"/>
+						<param name="progress" value="$PARAM[progress]"/>
+					</include>
+				</control>
+				<include content="Misc_EmptyStateButton">
+					<param name="top" value="misc_pvr_top"/>
+					<param name="label" value="$PARAM[empty_label]"/>
+				</include>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1196"/>
+				<param name="top" value="misc_pvr_top"/>
+				<param name="height" value="misc_pvr_list_h"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="50"/>
+			</include>
+			<include>Misc_PVRInfoPanel</include>
+		</definition>
+	</include>
+
+	<!-- Empty-state button for PVR windows: tells the user why the screen is empty and offers
+	     the PVR settings (focus lands here only when the container has no items). params: top, label -->
+	<include name="Misc_EmptyStateButton">
+		<param name="top">misc_pvr_top</param>
+		<param name="label">$LOCALIZE[31606]</param>
+		<definition>
+			<control type="label">
+				<left>page_margin</left>
+				<top>$PARAM[top]</top>
+				<width>list_w</width>
+				<height>list_row_h</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			</control>
+			<control type="group">
+				<left>page_margin</left>
+				<top>$PARAM[top]</top>
+				<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+				<control type="button" id="9099">
+					<description>Empty state: open PVR and Live TV settings</description>
+					<top>80</top>
+					<width>420</width>
+					<height>dialog_row_h</height>
+					<label>$LOCALIZE[14205]</label>
+					<font>font_label_s</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<focusedcolor>$VAR[on_lit]</focusedcolor>
+					<align>center</align>
+					<textoffsetx>16</textoffsetx>
+					<texturefocus border="10" colordiffuse="$VAR[ink]">common/rect_square.png</texturefocus>
+					<texturenofocus border="10" colordiffuse="$VAR[line_strong]">common/rect_outline_1.png</texturenofocus>
+					<onclick>ActivateWindow(pvrsettings)</onclick>
+					<onup>9001</onup>
+					<ondown>noop</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Focused PVR item panel (right of the list): logo/thumb, channel, title, times, progress, plot -->
+	<include name="Misc_PVRInfoPanel">
+		<control type="group">
+			<left>list_panel_x</left>
+			<top>misc_pvr_top</top>
+			<width>list_panel_w</width>
+			<visible>Integer.IsGreater(Container.NumItems,0)</visible>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>list_panel_w</width>
+				<height>300</height>
+				<aspectratio align="left" aligny="top">keep</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true">$INFO[ListItem.Icon]</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>320</top>
+				<width>list_panel_w</width>
+				<height>28</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$INFO[ListItem.ChannelNumberLabel,,  ·  ]$INFO[ListItem.ChannelName]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>352</top>
+				<width>list_panel_w</width>
+				<height>40</height>
+				<font>font_tray</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$VAR[Misc_PVRTitle]$INFO[ListItem.EpisodeName,  ·  ,]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>396</top>
+				<width>list_panel_w</width>
+				<height>28</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ColorCaption]</textcolor>
+				<label>$VAR[Misc_PVRMeta]</label>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<top>436</top>
+				<width>list_panel_w</width>
+				<height>2</height>
+				<info>ListItem.Progress</info>
+				<visible>ListItem.HasEpg</visible>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>456</top>
+				<width>list_panel_w</width>
+				<height>230</height>
+				<font>font_body_s</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="6000" time="3000" repeat="10000">true</autoscroll>  <!-- standard Kodi plot scroll: wait 6s, roll, pause 10s, repeat -->
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>700</top>
+				<width>list_panel_w</width>
+				<height>28</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.NextStartTime,$LOCALIZE[19031]  ,  ·  ]$INFO[ListItem.NextTitle]</label>
+				<visible>!String.IsEmpty(ListItem.NextTitle)</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================== weather -->
+	<!-- Forecast items for MyWeather list 15100 (static content). Standard DayN.* properties are
+	     shown unless the provider fills the richer Daily.N.* set (then those replace them), as in
+	     Estuary Omega's DailyItems. param i = day index -->
+	<include name="Misc_WeatherDay">
+		<definition>
+			<item>
+				<label>$INFO[Window(Weather).Property(Day$PARAM[i].Title)]</label>
+				<label2>$INFO[Window(Weather).Property(Day$PARAM[i].LowTemp)]$INFO[System.TemperatureUnits]  /  $INFO[Window(Weather).Property(Day$PARAM[i].HighTemp)]$INFO[System.TemperatureUnits]</label2>
+				<property name="Outlook">$INFO[Window(Weather).Property(Day$PARAM[i].Outlook)]</property>
+				<onclick>noop</onclick>
+				<visible>String.IsEmpty(Window(Weather).Property(Daily.IsFetched)) + !String.IsEmpty(Window(Weather).Property(Day$PARAM[i].Outlook))</visible>
+			</item>
+		</definition>
+	</include>
+	<include name="Misc_WeatherDaily">
+		<definition>
+			<item>
+				<label>$INFO[Window(Weather).Property(Daily.$PARAM[i].LongDay)]</label>
+				<label2>$INFO[Window(Weather).Property(Daily.$PARAM[i].LowTemperature)]  /  $INFO[Window(Weather).Property(Daily.$PARAM[i].HighTemperature)]</label2>
+				<property name="Outlook">$INFO[Window(Weather).Property(Daily.$PARAM[i].Outlook)]</property>
+				<onclick>noop</onclick>
+				<visible>!String.IsEmpty(Window(Weather).Property(Daily.IsFetched)) + !String.IsEmpty(Window(Weather).Property(Daily.$PARAM[i].Outlook))</visible>
+			</item>
+		</definition>
+	</include>
+
+	<!-- ============================================================== games -->
+	<!-- DialogGameControllers.xml, controller-profile variant. Id contract (Estuary Omega
+	     Includes_Games.xml): grouplist 3 + template button 10 (profiles), gamecontroller 31,
+	     grouplist 5 + templates 7 (feature button) / 8 (group title) / 9 (separator), scrollbars 62 / 61,
+	     buttons 18 17 19 20 21 22 in 9001, description textbox 32, heading 2. -->
+	<include name="Misc_GameControllers">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1760</width>
+			<height>900</height>
+			<include content="Groove_GenericDialog">
+				<param name="width" value="1760"/>
+				<param name="height" value="900"/>
+				<param name="header_id" value="2"/>
+				<param name="header_label" value="$LOCALIZE[35058]"/>
+			</include>
+			<!-- controller profiles -->
+			<include content="Misc_Caption">
+				<param name="left" value="dialog_pad"/>
+				<param name="top" value="104"/>
+				<param name="width" value="400"/>
+				<param name="label" value="$LOCALIZE[35050]"/>
+			</include>
+			<control type="grouplist" id="3">
+				<left>dialog_pad</left>
+				<top>148</top>
+				<width>400</width>
+				<height>580</height>
+				<onleft>9001</onleft>
+				<onright>5</onright>
+				<onup>3</onup>
+				<ondown>3</ondown>
+				<pagecontrol>62</pagecontrol>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="62"/>
+				<param name="left" value="448"/>
+				<param name="top" value="148"/>
+				<param name="height" value="580"/>
+			</include>
+			<control type="button" id="10">
+				<description>Default controller button (template)</description>
+				<left>dialog_pad</left>
+				<top>148</top>
+				<include content="Misc_RowLook"><param name="width" value="400"/></include>
+			</control>
+			<!-- controller picture -->
+			<control type="gamecontroller" id="31">
+				<left>480</left>
+				<top>160</top>
+				<width>540</width>
+				<height>540</height>
+			</control>
+			<!-- features -->
+			<include content="Misc_Caption">
+				<param name="left" value="1050"/>
+				<param name="top" value="104"/>
+				<param name="width" value="400"/>
+				<param name="label" value="$LOCALIZE[35059]"/>
+			</include>
+			<control type="grouplist" id="5">
+				<left>1050</left>
+				<top>148</top>
+				<width>400</width>
+				<height>580</height>
+				<onleft>3</onleft>
+				<onright>9001</onright>
+				<onup>5</onup>
+				<ondown>5</ondown>
+				<pagecontrol>61</pagecontrol>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="1458"/>
+				<param name="top" value="148"/>
+				<param name="height" value="580"/>
+			</include>
+			<control type="button" id="7">
+				<description>Default feature button (template)</description>
+				<left>1050</left>
+				<top>148</top>
+				<include content="Misc_RowLook"><param name="width" value="400"/></include>
+			</control>
+			<control type="label" id="8">
+				<description>Feature group title (template)</description>
+				<left>1050</left>
+				<top>148</top>
+				<width>400</width>
+				<height>44</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+			</control>
+			<control type="image" id="9">
+				<description>Feature separator (template)</description>
+				<left>1050</left>
+				<top>148</top>
+				<width>400</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$VAR[line_strong]">common/hairline.png</texture>
+			</control>
+			<!-- buttons -->
+			<control type="grouplist" id="9001">
+				<left>1490</left>
+				<top>148</top>
+				<width>240</width>
+				<height>580</height>
+				<itemgap>12</itemgap>
+				<onleft>5</onleft>
+				<onright>3</onright>
+				<include content="Groove_DialogButton">
+					<param name="id" value="18"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[186]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="19"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[13007]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="20"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[21452]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="22"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[35021]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="17"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[10043]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="21"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$LOCALIZE[35019]"/>
+				</include>
+			</control>
+			<!-- description -->
+			<control type="image">
+				<left>0</left>
+				<top>760</top>
+				<width>1760</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$VAR[line_strong]">common/hairline.png</texture>
+			</control>
+			<control type="textbox" id="32">
+				<description>Controller description</description>
+				<left>dialog_pad</left>
+				<top>776</top>
+				<width>1680</width>
+				<height>89</height>  <!-- 3 lines exactly: no half-clipped line at the bottom -->
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+			</control>
+		</control>
+	</include>
+
+	<!-- DialogGameControllers.xml, ports variant (gameports): list 3, scrollbar 62, buttons 18 / 19 in
+	     9001, heading 2 (Estuary Omega GameDialogPorts) -->
+	<include name="Misc_GamePorts">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1760</width>
+			<height>860</height>
+			<include content="Groove_GenericDialog">
+				<param name="width" value="1760"/>
+				<param name="height" value="860"/>
+				<param name="header_id" value="2"/>
+				<param name="header_label" value="$LOCALIZE[35110]"/>
+			</include>
+			<control type="list" id="3">
+				<description>Port item list</description>
+				<left>dialog_inset</left>
+				<top>dialog_content_top</top>
+				<width>1380</width>
+				<height>720</height>
+				<onleft>noop</onleft>
+				<onright>9001</onright>
+				<onup>3</onup>
+				<ondown>3</ondown>
+				<pagecontrol>62</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<orientation>vertical</orientation>
+				<itemlayout width="1380" height="96">
+					<control type="label">
+						<left>list_text_x</left>
+						<top>0</top>
+						<width>700</width>
+						<height>96</height>
+						<font>font_label</font>
+						<textcolor>$VAR[ink2]</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<right>140</right>
+						<top>0</top>
+						<width>500</width>
+						<height>96</height>
+						<align>right</align>
+						<font>font_small</font>
+						<textcolor>$VAR[ink2]</textcolor>
+						<label>$INFO[ListItem.Label2]</label>
+					</control>
+					<control type="gamecontroller">
+						<right>20</right>
+						<top>4</top>
+						<width>100</width>
+						<height>88</height>
+						<texture>$INFO[ListItem.Icon]</texture>
+						<portaddress>$INFO[ListItem.FilenameAndPath]</portaddress>
+						<controllerdiffuse>$VAR[ink2]</controllerdiffuse>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>1380</width>
+						<height>rule_h</height>
+						<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="1380" height="96">
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>1380</width>
+						<height>96</height>
+						<texture border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texture>
+						<visible>Control.HasFocus(3)</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>list_bar_w</width>
+						<height>96</height>
+						<texture colordiffuse="$VAR[ink]">fork/tick.png</texture>
+						<visible>Control.HasFocus(3)</visible>
+					</control>
+					<control type="label">
+						<left>list_text_x</left>
+						<top>0</top>
+						<width>700</width>
+						<height>96</height>
+						<font>font_label</font>
+						<textcolor>$VAR[ink]</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<right>140</right>
+						<top>0</top>
+						<width>500</width>
+						<height>96</height>
+						<align>right</align>
+						<font>font_small</font>
+						<textcolor>$VAR[ink2]</textcolor>
+						<label>$INFO[ListItem.Label2]</label>
+					</control>
+					<control type="gamecontroller">
+						<right>20</right>
+						<top>4</top>
+						<width>100</width>
+						<height>88</height>
+						<texture>$INFO[ListItem.Icon]</texture>
+						<portaddress>$INFO[ListItem.FilenameAndPath]</portaddress>
+						<controllerdiffuse>$VAR[ink]</controllerdiffuse>
+					</control>
+				</focusedlayout>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="62"/>
+				<param name="left" value="1414"/>
+				<param name="top" value="dialog_content_top"/>
+				<param name="height" value="720"/>
+			</include>
+			<control type="grouplist" id="9001">
+				<left>1450</left>
+				<top>dialog_content_top</top>
+				<width>280</width>
+				<height>400</height>
+				<itemgap>12</itemgap>
+				<onleft>3</onleft>
+				<onright>3</onright>
+				<include content="Groove_DialogButton">
+					<param name="id" value="18"/>
+					<param name="width" value="280"/>
+					<param name="label" value="$LOCALIZE[186]"/>
+				</include>
+				<include content="Groove_DialogButton">
+					<param name="id" value="19"/>
+					<param name="width" value="280"/>
+					<param name="label" value="$LOCALIZE[13007]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- DialogGameControllers.xml, agents variant (gameagents): ports button 3, active-port
+	     gamecontrollerlist 4, player list 7, scrollbar 61, button 18 in grouplist 10, heading 2 -->
+	<include name="Misc_GameAgentRow">
+		<param name="text">$VAR[ink2]</param>
+		<definition>
+			<control type="label">
+				<left>list_text_x</left>
+				<top>0</top>
+				<width>440</width>
+				<height>96</height>
+				<font>font_label</font>
+				<textcolor>$PARAM[text]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="gamecontrollerlist">
+				<right>0</right>
+				<width>1248</width>
+				<height>96</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<enable>false</enable>
+				<itemlayout width="96" height="96">
+					<control type="gamecontroller">
+						<texture>$INFO[ListItem.Icon]</texture>
+						<controllerid>$INFO[ListItem.Property(game.controllerid)]</controllerid>
+						<peripherallocation>$INFO[ListItem.FilenameAndPath]</peripherallocation>
+						<controllerdiffuse>$VAR[ink2]</controllerdiffuse>
+					</control>
+				</itemlayout>
+				<focusedlayout width="96" height="96">
+					<control type="gamecontroller">
+						<texture>$INFO[ListItem.Icon]</texture>
+						<controllerid>$INFO[ListItem.Property(game.controllerid)]</controllerid>
+						<peripherallocation>$INFO[ListItem.FilenameAndPath]</peripherallocation>
+						<controllerdiffuse>$VAR[ink2]</controllerdiffuse>
+					</control>
+				</focusedlayout>
+			</control>
+		</definition>
+	</include>
+	<include name="Misc_GameAgents">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1800</width>
+			<height>960</height>
+			<include content="Groove_GenericDialog">
+				<param name="width" value="1800"/>
+				<param name="height" value="960"/>
+				<param name="header_id" value="2"/>
+				<param name="header_label" value="$LOCALIZE[35172]"/>
+			</include>
+			<control type="group">
+				<left>dialog_pad</left>
+				<top>dialog_content_top</top>
+				<width>1720</width>
+				<height>96</height>
+				<control type="button" id="3">
+					<description>Ports button</description>
+					<left>0</left>
+					<top>0</top>
+					<width>420</width>
+					<height>96</height>
+					<label>$LOCALIZE[35110]</label>
+					<font>font_label_s</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<focusedcolor>$VAR[on_lit]</focusedcolor>
+					<align>center</align>
+					<texturefocus border="10" colordiffuse="$VAR[ink]">common/rect_square.png</texturefocus>
+					<texturenofocus border="10" colordiffuse="$VAR[line_strong]">common/rect_outline_1.png</texturenofocus>
+					<onup>noop</onup>
+					<ondown>7</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onclick>ActivateWindow(GamePorts)</onclick>
+				</control>
+				<control type="gamecontrollerlist" id="4">
+					<description>Active port list (12 controllers + disconnected indicator)</description>
+					<right>0</right>
+					<width>1248</width>
+					<height>96</height>
+					<orientation>horizontal</orientation>
+					<align>right</align>
+					<enable>false</enable>
+					<itemlayout width="96" height="96">
+						<control type="gamecontroller">
+							<texture>$INFO[ListItem.Icon]</texture>
+							<controllerid>$INFO[ListItem.Property(game.controllerid)]</controllerid>
+							<controlleraddress>$INFO[ListItem.FilenameAndPath]</controlleraddress>
+							<controllerdiffuse>$VAR[ink2]</controllerdiffuse>
+						</control>
+					</itemlayout>
+					<focusedlayout width="96" height="96">
+						<control type="gamecontroller">
+							<texture>$INFO[ListItem.Icon]</texture>
+							<controllerid>$INFO[ListItem.Property(game.controllerid)]</controllerid>
+							<controlleraddress>$INFO[ListItem.FilenameAndPath]</controlleraddress>
+							<controllerdiffuse>$VAR[ink2]</controllerdiffuse>
+						</control>
+					</focusedlayout>
+				</control>
+			</control>
+			<control type="list" id="7">
+				<description>Controller list</description>
+				<left>dialog_pad</left>
+				<top>236</top>
+				<width>1700</width>
+				<height>576</height>
+				<onup>3</onup>
+				<ondown>10</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<orientation>vertical</orientation>
+				<itemlayout width="1700" height="96">
+					<include>Misc_GameAgentRow</include>
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>1700</width>
+						<height>rule_h</height>
+						<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="1700" height="96">
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>1700</width>
+						<height>96</height>
+						<texture border="8,0,0,0" colordiffuse="$VAR[ink]">groove/row_focus.png</texture>
+						<visible>Control.HasFocus(7)</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>list_bar_w</width>
+						<height>96</height>
+						<texture colordiffuse="$VAR[ink]">fork/tick.png</texture>
+						<visible>Control.HasFocus(7)</visible>
+					</control>
+					<include content="Misc_GameAgentRow"><param name="text" value="$VAR[ink]"/></include>
+				</focusedlayout>
+			</control>
+			<include content="Groove_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="1748"/>
+				<param name="top" value="236"/>
+				<param name="height" value="576"/>
+			</include>
+			<control type="grouplist" id="10">
+				<description>Action buttons</description>
+				<left>dialog_pad</left>
+				<top>848</top>
+				<width>1720</width>
+				<height>dialog_row_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>16</itemgap>
+				<onup>7</onup>
+				<include content="Groove_DialogButton">
+					<param name="id" value="18"/>
+					<param name="width" value="300"/>
+					<param name="label" value="$LOCALIZE[186]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+	<!-- EPG grid layouts of MyPVRGuide (Kodi widens every control with an id 1-14 in a programme layout to the
+	     programme's length: 1 = title label, 2 / 3 = block images, 4 = second title copy). Kept in an include so the
+	     window file has no repeated ids. -->
+	<include name="Misc_EPGLayouts">
+		<rulerlayout height="45" width="238">
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1</width>
+				<height>45</height>
+				<texture colordiffuse="$VAR[line_strong]">common/hairline_v.png</texture>
+			</control>
+			<control type="label">
+				<left>10</left>
+				<top>0</top>
+				<width>220</width>
+				<height>45</height>
+				<font>font_fact_label</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+		</rulerlayout>
+		<channellayout height="66" width="300">
+			<control type="label">
+				<left>12</left>
+				<top>0</top>
+				<width>60</width>
+				<height>66</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.ChannelNumberLabel]</label>
+			</control>
+			<control type="label" id="1">
+				<left>76</left>
+				<top>0</top>
+				<width>212</width>
+				<height>66</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.ChannelName]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>300</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+			</control>
+		</channellayout>
+		<focusedchannellayout height="66" width="300">
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>list_bar_w</width>
+				<height>66</height>
+				<texture colordiffuse="$VAR[ink]">fork/tick.png</texture>
+				<visible>Control.HasFocus(50)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>0</top>
+				<width>60</width>
+				<height>66</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.ChannelNumberLabel]</label>
+			</control>
+			<control type="label" id="1">
+				<left>76</left>
+				<top>0</top>
+				<width>212</width>
+				<height>66</height>
+				<font>font_tray</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$INFO[ListItem.ChannelName]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>300</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$VAR[line]">common/hairline.png</texture>
+			</control>
+		</focusedchannellayout>
+		<itemlayout height="66" width="40">
+			<control type="image" id="2">
+				<left>0</left>
+				<top>0</top>
+				<width>40</width>
+				<height>66</height>
+				<texture border="10" colordiffuse="$VAR[line]">common/rect_outline_1.png</texture>
+			</control>
+			<control type="label" id="1">
+				<left>12</left>
+				<top>0</top>
+				<width>20</width>
+				<height>66</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+		</itemlayout>
+		<focusedlayout height="66" width="40">
+			<control type="image" id="2">
+				<left>0</left>
+				<top>0</top>
+				<width>40</width>
+				<height>66</height>
+				<texture border="10" colordiffuse="$VAR[ink]">common/rect_square.png</texture>
+				<visible>Control.HasFocus(50)</visible>
+			</control>
+			<control type="image" id="3">
+				<left>0</left>
+				<top>0</top>
+				<width>40</width>
+				<height>66</height>
+				<texture border="10" colordiffuse="$VAR[line_strong]">common/rect_outline_1.png</texture>
+				<visible>!Control.HasFocus(50)</visible>
+			</control>
+			<control type="label" id="1">
+				<left>12</left>
+				<top>0</top>
+				<width>20</width>
+				<height>66</height>
+				<font>font_tray</font>
+				<textcolor>$VAR[on_lit]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>Control.HasFocus(50)</visible>
+			</control>
+			<control type="label" id="4">
+				<left>12</left>
+				<top>0</top>
+				<width>20</width>
+				<height>66</height>
+				<font>font_small</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!Control.HasFocus(50)</visible>
+			</control>
+		</focusedlayout>
+	</include>
+</includes>

@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Groove Search, Custom_1150 (skin-developer, M4 2026-10-21). Screen: docs/skin.groove/screens/Custom_1150_Search.md.
+	A query line and six result rows: Albums, Artists, Songs, Films, Shows, Episodes. Library only.
+	The query is the text of edit 9001 ($INFO[Control.GetLabel(9001).index(1)]); paths stay empty until something
+	is typed. Each row is a group in the vertical grouplist 9700 (it scrolls to the focused row) that shows only
+	when its always-visible offscreen data list 9711..9716 has items (a hidden container never loads, LESSONS
+	Passe-partout). Rows chain Up / Down through numeric ids: a hidden row passes the move on to the next one.
+	Ids: 9099 opener, 9001 query, 9700 rows, 9721..9726 row groups, 9701..9706 row lists, 9711..9716 data lists.
+	OK: albums / artists / films / shows / episodes open their info (Action(Info)); songs play (Kodi's default).
+-->
+<includes>
+	<expression name="Search_HasQuery">!String.IsEmpty(Control.GetLabel(9001).index(1))</expression>
+	<expression name="Search_Nothing">$EXP[Search_HasEncoded] + Integer.IsEqual(Container(9711).NumItems,0) + Integer.IsEqual(Container(9712).NumItems,0) + Integer.IsEqual(Container(9713).NumItems,0) + Integer.IsEqual(Container(9714).NumItems,0) + Integer.IsEqual(Container(9715).NumItems,0) + Integer.IsEqual(Container(9716).NumItems,0) + !Container(9711).IsUpdating + !Container(9714).IsUpdating</expression>
+
+	<!-- ================================================================ paths -->
+	<!-- xsp JSON, fully URL-encoded. The query is encoded by script.skinvariables (a required import since 2026-10-21,
+	     Omar's decision for the official review's xml.xsp-unencoded): the 1 px list 9710 runs its get_encoded_string
+	     whenever the typed text changes, which writes Window(Home).Property(Groove.Search.Encoded) (quote_plus;
+	     Kodi decodes + back to a space). & | + % now search fine. The window clears the property on unload. -->
+	<expression name="Search_HasEncoded">$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(Groove.Search.Encoded))</expression>
+	<!-- Quote marks (2026-10-25, Greptile on repo-skins): the query goes to the encoder as $ESCINFO, a JSON string
+	     literal (Kodi escapes \ and " and adds the quotes), and the xsp holds the encoded value without %22 wrappers,
+	     so "Superman" or Waiting for "Superman" search fine. esc=%25 in the encoder URL keeps Kodi from turning those
+	     backslashes into slashes (CUtil::ValidatePath leaves a URL that holds a % alone). Majan pattern. -->
+	<variable name="Search_EncoderPath">
+		<value condition="$EXP[Search_HasQuery]">plugin://script.skinvariables/?info=get_encoded_string&amp;unencoded_paths=true&amp;esc=%25&amp;window_prop=Groove.Search.Encoded&amp;window_id=home&amp;&amp;$ESCINFO[Control.GetLabel(9001).index(1)]</value>
+	</variable>
+	<variable name="Search_PathAlbums">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://albums/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D</value>
+	</variable>
+	<variable name="Search_PathArtists">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://artists/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D</value>
+	</variable>
+	<variable name="Search_PathSongs">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://songs/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22songs%22%7D</value>
+	</variable>
+	<variable name="Search_PathFilms">
+		<value condition="$EXP[Search_HasEncoded]">videodb://movies/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D</value>
+	</variable>
+	<variable name="Search_PathShows">
+		<value condition="$EXP[Search_HasEncoded]">videodb://tvshows/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D</value>
+	</variable>
+	<variable name="Search_PathEpisodes">
+		<value condition="$EXP[Search_HasEncoded]">videodb://tvshows/titles/-1/-1/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Groove.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22episodes%22%7D</value>
+	</variable>
+
+	<!-- ================================================================ captions -->
+	<variable name="Search_CaptionMeta">
+		<value condition="String.IsEqual(ListItem.DBType,album) | String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Artist,·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.TVShowTitle,·  ,]$INFO[ListItem.Season,  ·  S,]$INFO[ListItem.Episode,·E,]</value>
+		<value>$INFO[ListItem.Year,·  ,]</value>
+	</variable>
+	<variable name="Search_Art">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+	<variable name="Search_StillArt">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Art(tvshow.fanart)]</value>
+	</variable>
+
+	<!-- ================================================================ one art cell -->
+	<!-- params: art, w, h, list (id), round (true/false), lit (focused layout) -->
+	<include name="Search_Cell">
+		<param name="round">false</param>
+		<param name="lit">false</param>
+		<definition>
+			<control type="group">
+				<left>40</left>
+				<top>40</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<include content="Anim_FocusCover" condition="$PARAM[lit]"><param name="center" value="auto"/></include>
+				<!-- the light (focused cell of the focused row) -->
+				<control type="image">
+					<left>-40</left>
+					<top>-40</top>
+					<right>-40</right>
+					<bottom>-40</bottom>
+					<texture border="48" colordiffuse="$VAR[glow]">groove/glow_frame.png</texture>
+					<visible>$PARAM[lit] + Control.HasFocus($PARAM[list]) + !$EXP[GrooveLight] + !$PARAM[round]</visible>
+					<include>Groove_GlowStrength</include>
+				</control>
+				<control type="image">
+					<left>-40</left>
+					<top>-40</top>
+					<right>-40</right>
+					<bottom>-40</bottom>
+					<texture colordiffuse="$VAR[focus_glow]">groove/glow_radial.png</texture>
+					<visible>$PARAM[lit] + Control.HasFocus($PARAM[list]) + [$EXP[GrooveLight] | $PARAM[round]]</visible>
+				</control>
+				<!-- square art -->
+				<control type="group">
+					<visible>!$PARAM[round]</visible>
+					<include content="VidView_ArtCard">
+						<param name="art" value="$PARAM[art]"/>
+						<param name="lit" value="$PARAM[lit] + Control.HasFocus($PARAM[list])"/>
+						<param name="dim" value="![$PARAM[lit] + Control.HasFocus($PARAM[list])]"/>
+						<param name="noart" value="String.IsEmpty(ListItem.Art(thumb)) + String.IsEmpty(ListItem.Art(poster))"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+						<param name="shadow" value="false"/>
+					</include>
+				</control>
+				<!-- round art (artists) -->
+				<control type="group">
+					<visible>$PARAM[round]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<right>0</right>
+						<bottom>0</bottom>
+						<texture colordiffuse="$VAR[surface_raised]" diffuse="groove/disc_mask.png">groove/white.png</texture>
+					</control>
+					<control type="image">
+						<centerleft>50%</centerleft>
+						<centertop>50%</centertop>
+						<width>64</width>
+						<height>64</height>
+						<texture colordiffuse="$VAR[icon_rest]">icons/artists.png</texture>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<right>0</right>
+						<bottom>0</bottom>
+						<!-- scalediffuse false: the disc mask stays on the cell, so wide photos are cropped round (DEVICE_AUDIT m7) -->
+						<aspectratio scalediffuse="false">scale</aspectratio>
+						<include>Anim_ArtFadetime</include>
+						<texture background="true" diffuse="groove/disc_mask.png">$INFO[ListItem.Art(thumb)]</texture>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ one result row -->
+	<!-- A row group in 9700: heading (icon + kind + count), the list (padded 40 px for the light), the caption.
+	     params: gid, id (row list), data (data list id), icon, title, w, h, pitch, art, round, onup, ondown, info -->
+	<include name="Search_Row">
+		<param name="round">false</param>
+		<param name="info">true</param>
+		<definition>
+			<control type="group" id="$PARAM[gid]">
+				<width>1864</width>
+				<height>$PARAM[rowh]</height>
+				<visible>Integer.IsGreater(Container($PARAM[data]).NumItems,0)</visible>
+				<control type="image">
+					<left>40</left>
+					<top>6</top>
+					<width>32</width>
+					<height>32</height>
+					<texture colordiffuse="$VAR[ink]">$PARAM[icon]</texture>
+					<visible>ControlGroup($PARAM[gid]).HasFocus()</visible>
+				</control>
+				<control type="image">
+					<left>40</left>
+					<top>6</top>
+					<width>32</width>
+					<height>32</height>
+					<texture colordiffuse="$VAR[icon_rest]">$PARAM[icon]</texture>
+					<visible>!ControlGroup($PARAM[gid]).HasFocus()</visible>
+				</control>
+				<control type="label">
+					<left>88</left>
+					<top>0</top>
+					<width>1200</width>
+					<height>44</height>
+					<aligny>center</aligny>
+					<font>font_label</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$PARAM[title][COLOR $VAR[ink3]]$INFO[Container($PARAM[data]).NumItems,   ,][/COLOR]</label>
+					<visible>!ControlGroup($PARAM[gid]).HasFocus()</visible>
+				</control>
+				<control type="label">
+					<left>88</left>
+					<top>0</top>
+					<width>1200</width>
+					<height>44</height>
+					<aligny>center</aligny>
+					<font>font_label</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$PARAM[title][COLOR $VAR[ink3]]$INFO[Container($PARAM[data]).NumItems,   ,][/COLOR]</label>
+					<visible>ControlGroup($PARAM[gid]).HasFocus()</visible>
+				</control>
+				<control type="list" id="$PARAM[id]">
+					<left>0</left>
+					<top>16</top>
+					<width>1864</width>
+					<height>$PARAM[listh]</height>
+					<orientation>horizontal</orientation>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>9001</onback>
+					<onfocus>SetProperty(groove.search.row,$PARAM[id],home)</onfocus>
+					<onclick condition="$PARAM[info]">Action(Info)</onclick>
+					<preloaditems>2</preloaditems>
+					<include>Anim_ScrollRow</include>
+					<itemlayout width="$PARAM[pitch]" height="$PARAM[listh]">
+						<include content="Search_Cell">
+							<param name="art" value="$PARAM[art]"/>
+							<param name="w" value="$PARAM[w]"/>
+							<param name="h" value="$PARAM[h]"/>
+							<param name="list" value="$PARAM[id]"/>
+							<param name="round" value="$PARAM[round]"/>
+						</include>
+					</itemlayout>
+					<focusedlayout width="$PARAM[pitch]" height="$PARAM[listh]">
+						<include content="Search_Cell">
+							<param name="art" value="$PARAM[art]"/>
+							<param name="w" value="$PARAM[w]"/>
+							<param name="h" value="$PARAM[h]"/>
+							<param name="list" value="$PARAM[id]"/>
+							<param name="round" value="$PARAM[round]"/>
+							<param name="lit" value="true"/>
+						</include>
+					</focusedlayout>
+					<content target="$PARAM[target]" limit="30" browse="never">$PARAM[path]</content>
+				</control>
+				<!-- the focused item, one line under the row (only while the row has focus) -->
+				<control type="grouplist">
+					<left>40</left>
+					<top>$PARAM[captop]</top>
+					<width>1700</width>
+					<height>40</height>
+					<orientation>horizontal</orientation>
+					<itemgap>16</itemgap>
+					<visible>Control.HasFocus($PARAM[id])</visible>
+					<include>Anim_LabelReveal</include>
+					<control type="label">
+						<width max="1000">auto</width>
+						<height>40</height>
+						<aligny>center</aligny>
+						<font>font_caption</font>
+						<textcolor>$VAR[ink]</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<width max="680">auto</width>
+						<height>40</height>
+						<aligny>center</aligny>
+						<font>font_caption_light</font>
+						<textcolor>$VAR[ink2]</textcolor>
+						<label>$VAR[Search_CaptionMeta]</label>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- An offscreen data list (always visible, 1 px): its NumItems gates the row. params: id, path, target -->
+	<include name="Search_Data">
+		<control type="list" id="$PARAM[id]">
+			<left>-10</left>
+			<top>-10</top>
+			<width>1</width>
+			<height>1</height>
+			<itemlayout width="1" height="1" />
+			<focusedlayout width="1" height="1" />
+			<content target="$PARAM[target]" limit="30" browse="never">$PARAM[path]</content>
+		</control>
+	</include>
+
+	<!-- ================================================================ the page -->
+	<include name="Search_Page">
+		<!-- header: icon + word -->
+		<control type="image">
+			<left>96</left>
+			<top>54</top>
+			<width>44</width>
+			<height>44</height>
+			<texture colordiffuse="$VAR[ink]">icons/search.png</texture>
+		</control>
+		<control type="label">
+			<left>156</left>
+			<top>54</top>
+			<width>800</width>
+			<height>44</height>
+			<aligny>center</aligny>
+			<font>font_label</font>
+			<textcolor>$VAR[ink]</textcolor>
+			<label>$LOCALIZE[31833]</label>
+		</control>
+		<!-- the query line -->
+		<control type="edit" id="9001">
+			<left>96</left>
+			<top>124</top>
+			<width>1728</width>
+			<height>80</height>
+			<font>font_np_title</font>
+			<textcolor>$VAR[ink]</textcolor>
+			<focusedcolor>$VAR[ink]</focusedcolor>
+			<disabledcolor>$VAR[ink3]</disabledcolor>
+			<textoffsetx>0</textoffsetx>
+			<aligny>center</aligny>
+			<label></label>
+			<hinttext>$LOCALIZE[31831]</hinttext>
+			<texturefocus />
+			<texturenofocus />
+			<onup condition="Control.IsVisible(9950)">9950</onup>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<ondown>9701</ondown>
+		</control>
+		<control type="image">
+			<left>96</left>
+			<top>210</top>
+			<width>1728</width>
+			<height>2</height>
+			<texture colordiffuse="$VAR[line]">groove/white.png</texture>
+			<visible>!Control.HasFocus(9001)</visible>
+		</control>
+		<control type="image">
+			<left>96</left>
+			<top>210</top>
+			<width>1728</width>
+			<height>2</height>
+			<texture colordiffuse="$VAR[ink]">groove/white.png</texture>
+			<visible>Control.HasFocus(9001)</visible>
+		</control>
+		<control type="image">
+			<left>96</left>
+			<top>146</top>
+			<width>1728</width>
+			<height>130</height>
+			<texture colordiffuse="$VAR[focus_glow]">groove/glow_radial.png</texture>
+			<visible>Control.HasFocus(9001)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		<control type="label">
+			<left>96</left>
+			<top>260</top>
+			<width>1728</width>
+			<height>48</height>
+			<aligny>center</aligny>
+			<font>font_caption</font>
+			<textcolor>$VAR[ink2]</textcolor>
+			<label>$LOCALIZE[31832]</label>
+			<visible>$EXP[Search_Nothing]</visible>
+		</control>
+		<!-- the rows -->
+		<control type="grouplist" id="9700">
+			<left>56</left>
+			<top>224</top>
+			<width>1864</width>
+			<height>856</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<include>Anim_ScrollRow</include>
+			<include content="Search_Row">
+				<param name="gid" value="9721"/><param name="id" value="9701"/><param name="data" value="9711"/>
+				<param name="icon" value="icons/albums.png"/><param name="title" value="$LOCALIZE[31826]"/>
+				<param name="w" value="200"/><param name="h" value="200"/><param name="pitch" value="224"/>
+				<param name="rowh" value="364"/><param name="listh" value="280"/><param name="captop" value="300"/>
+				<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+				<param name="path" value="$VAR[Search_PathAlbums]"/><param name="target" value="music"/>
+				<param name="onup" value="9001"/><param name="ondown" value="9702"/>
+			</include>
+			<include content="Search_Row">
+				<param name="gid" value="9722"/><param name="id" value="9702"/><param name="data" value="9712"/>
+				<param name="icon" value="icons/artists.png"/><param name="title" value="$LOCALIZE[31827]"/>
+				<param name="w" value="200"/><param name="h" value="200"/><param name="pitch" value="224"/>
+				<param name="rowh" value="364"/><param name="listh" value="280"/><param name="captop" value="300"/>
+				<param name="art" value="$INFO[ListItem.Art(thumb)]"/><param name="round" value="true"/>
+				<param name="path" value="$VAR[Search_PathArtists]"/><param name="target" value="music"/>
+				<param name="onup" value="9701"/><param name="ondown" value="9703"/>
+			</include>
+			<include content="Search_Row">
+				<param name="gid" value="9723"/><param name="id" value="9703"/><param name="data" value="9713"/>
+				<param name="icon" value="icons/songs.png"/><param name="title" value="$LOCALIZE[31828]"/>
+				<param name="w" value="200"/><param name="h" value="200"/><param name="pitch" value="224"/>
+				<param name="rowh" value="364"/><param name="listh" value="280"/><param name="captop" value="300"/>
+				<param name="art" value="$INFO[ListItem.Art(thumb)]"/><param name="info" value="false"/>
+				<param name="path" value="$VAR[Search_PathSongs]"/><param name="target" value="music"/>
+				<param name="onup" value="9702"/><param name="ondown" value="9704"/>
+			</include>
+			<include content="Search_Row">
+				<param name="gid" value="9724"/><param name="id" value="9704"/><param name="data" value="9714"/>
+				<param name="icon" value="icons/films.png"/><param name="title" value="$LOCALIZE[31829]"/>
+				<param name="w" value="160"/><param name="h" value="240"/><param name="pitch" value="184"/>
+				<param name="rowh" value="404"/><param name="listh" value="320"/><param name="captop" value="340"/>
+				<param name="art" value="$VAR[Search_Art]"/>
+				<param name="path" value="$VAR[Search_PathFilms]"/><param name="target" value="videos"/>
+				<param name="onup" value="9703"/><param name="ondown" value="9705"/>
+			</include>
+			<include content="Search_Row">
+				<param name="gid" value="9725"/><param name="id" value="9705"/><param name="data" value="9715"/>
+				<param name="icon" value="icons/tv.png"/><param name="title" value="$LOCALIZE[31803]"/>
+				<param name="w" value="160"/><param name="h" value="240"/><param name="pitch" value="184"/>
+				<param name="rowh" value="404"/><param name="listh" value="320"/><param name="captop" value="340"/>
+				<param name="art" value="$VAR[Search_Art]"/>
+				<param name="path" value="$VAR[Search_PathShows]"/><param name="target" value="videos"/>
+				<param name="onup" value="9704"/><param name="ondown" value="9706"/>
+			</include>
+			<include content="Search_Row">
+				<param name="gid" value="9726"/><param name="id" value="9706"/><param name="data" value="9716"/>
+				<param name="icon" value="icons/episodes.png"/><param name="title" value="$LOCALIZE[31830]"/>
+				<param name="w" value="320"/><param name="h" value="180"/><param name="pitch" value="344"/>
+				<param name="rowh" value="344"/><param name="listh" value="260"/><param name="captop" value="280"/>
+				<param name="art" value="$VAR[Search_StillArt]"/>
+				<param name="path" value="$VAR[Search_PathEpisodes]"/><param name="target" value="videos"/>
+				<param name="onup" value="9705"/><param name="ondown" value="9706"/>
+			</include>
+		</control>
+		<!-- the query encoder (script.skinvariables): its items are not shown; it exists to set Groove.Search.Encoded -->
+		<include content="Search_Data"><param name="id" value="9710"/><param name="path" value="$VAR[Search_EncoderPath]"/><param name="target" value="programs"/></include>
+		<include content="Search_Data"><param name="id" value="9711"/><param name="path" value="$VAR[Search_PathAlbums]"/><param name="target" value="music"/></include>
+		<include content="Search_Data"><param name="id" value="9712"/><param name="path" value="$VAR[Search_PathArtists]"/><param name="target" value="music"/></include>
+		<include content="Search_Data"><param name="id" value="9713"/><param name="path" value="$VAR[Search_PathSongs]"/><param name="target" value="music"/></include>
+		<include content="Search_Data"><param name="id" value="9714"/><param name="path" value="$VAR[Search_PathFilms]"/><param name="target" value="videos"/></include>
+		<include content="Search_Data"><param name="id" value="9715"/><param name="path" value="$VAR[Search_PathShows]"/><param name="target" value="videos"/></include>
+		<include content="Search_Data"><param name="id" value="9716"/><param name="path" value="$VAR[Search_PathEpisodes]"/><param name="target" value="videos"/></include>
+	</include>
+</includes>

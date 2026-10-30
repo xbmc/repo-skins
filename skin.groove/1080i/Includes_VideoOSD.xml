@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	The shared Groove playback layout (skin-developer, M3 2026-10-21): VideoOSD, DialogSeekBar, DialogFullScreenInfo.
+	Screen: docs/skin.groove/screens/VideoOSD.md. Always dark: GrooveLight is off over fullscreen video, so every room
+	token resolves to its Dark value here by itself (DESIGN 12.6).
+	Bands: top strip (clearlogo 96,54 480x150 / title; episode line y 214; clock + "ends" right), bottom scrim,
+	progress line y 852 (x 150..1770) with times at y 866, icon rail y 950 (48 px icons, pitch 216 from x 150).
+	Ids (VideoOSD): 602 Play/Pause, 603 Stop, 70044 Chapters, 70049 Audio, 70046 Subtitles, 70048 Settings, 70043 Info,
+	87 seek stepper (invisible; Left/Right = StepBack / StepForward, frame advance when paused). 401 = DialogSeekBar's
+	slider (Kodi sets it to the seek target). Prefix VOSD_.
+-->
+<includes>
+	<!-- ================================================================ expressions -->
+	<expression name="VOSD_PanelOpen">Window.IsVisible(SliderDialog) | Window.IsVisible(osdaudiosettings) | Window.IsVisible(osdvideosettings) | Window.IsVisible(osdsubtitlesettings) | Window.IsVisible(VideoBookmarks) | Window.IsVisible(osdcmssettings) | Window.IsVisible(selectdialog) | Window.IsVisible(subtitlesearch) | Window.IsVisible(fullscreeninfo) | Window.IsVisible(movieinformation) | Window.IsVisible(contextmenu)</expression>
+	<expression name="VOSD_SeekBarHidden">Window.IsVisible(videoosd) | Window.IsVisible(fullscreeninfo) | Window.IsVisible(sliderdialog) | Window.IsVisible(osdaudiosettings) | Window.IsVisible(osdvideosettings) | Window.IsVisible(osdsubtitlesettings) | Window.IsVisible(osdcmssettings) | Window.IsVisible(videobookmarks) | Window.IsVisible(selectdialog) | Window.IsVisible(subtitlesearch) | Window.IsVisible(movieinformation)</expression>
+	<expression name="VOSD_ChaptersOK">Player.SeekEnabled + !VideoPlayer.Content(livetv)</expression>
+	<expression name="VOSD_Paused">Player.Paused | Player.Forwarding | Player.Rewinding</expression>
+	<expression name="VOSD_HasLogo">!String.IsEmpty(Player.Art(clearlogo)) | !String.IsEmpty(Player.Art(tvshow.clearlogo))</expression>
+
+	<!-- ================================================================ variables -->
+	<variable name="VOSD_Logo">
+		<value condition="!String.IsEmpty(Player.Art(clearlogo))">$INFO[Player.Art(clearlogo)]</value>
+		<value>$INFO[Player.Art(tvshow.clearlogo)]</value>
+	</variable>
+	<variable name="VOSD_Title">
+		<value condition="VideoPlayer.Content(episodes) + !String.IsEmpty(VideoPlayer.TVShowTitle)">$INFO[VideoPlayer.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(VideoPlayer.Title)">$INFO[VideoPlayer.Title]</value>
+		<value>$INFO[Player.Title]</value>
+	</variable>
+	<variable name="VOSD_EpLine">
+		<value condition="VideoPlayer.Content(episodes) + !String.IsEmpty(VideoPlayer.Episode)">S$INFO[VideoPlayer.Season]·E$INFO[VideoPlayer.Episode]$INFO[VideoPlayer.Title,  ·  ,]</value>
+		<value condition="VideoPlayer.Content(livetv)">$INFO[VideoPlayer.ChannelName]$INFO[VideoPlayer.Title,  ·  ,]</value>
+	</variable>
+	<variable name="VOSD_PlayIcon">
+		<value condition="$EXP[VOSD_Paused]">icons/play.png</value>
+		<value>icons/pause.png</value>
+	</variable>
+	<variable name="VOSD_PlayLabel">
+		<value condition="$EXP[VOSD_Paused]">$LOCALIZE[31836]</value>
+		<value>$LOCALIZE[31837]</value>
+	</variable>
+	<variable name="VOSD_Ends">
+		<value condition="!String.IsEmpty(Player.FinishTime) + Player.HasVideo">$LOCALIZE[31255] $INFO[Player.FinishTime]</value>
+	</variable>
+	<variable name="VOSD_SkipValue">
+		<value condition="!String.IsEmpty(Player.SeekStepSize) + Integer.IsEqual(Player.SeekStepSize(mm),0)">$INFO[Player.SeekStepSize(ss)]s</value>
+		<value condition="!String.IsEmpty(Player.SeekStepSize)">$INFO[Player.SeekStepSize]</value>
+		<value condition="!String.IsEmpty(Player.SeekOffset) + Integer.IsEqual(Player.SeekOffset(mm),0)">$INFO[Player.SeekOffset(ss)]s</value>
+		<value condition="!String.IsEmpty(Player.SeekOffset)">$INFO[Player.SeekOffset]</value>
+	</variable>
+	<!-- the time a seek will land on, or where we are -->
+	<variable name="VOSD_SeekTime">
+		<value condition="!String.IsEmpty(Player.SeekNumeric)">$INFO[Player.SeekNumeric]</value>
+		<value condition="Player.Seeking | Player.HasPerformedSeek(3)">$INFO[Player.SeekTime]</value>
+		<value>$INFO[Player.Time]</value>
+	</variable>
+	<variable name="VOSD_State">
+		<value condition="Player.Paused">$LOCALIZE[31878]</value>
+		<value condition="Player.Forwarding | Player.Rewinding">$INFO[Player.PlaySpeed,,x]</value>
+	</variable>
+
+	<!-- ================================================================ top strip -->
+	<!-- clearlogo / title top-left, episode line, clock and "ends" top-right, over a ground ramp. -->
+	<include name="VOSD_TopStrip">
+		<control type="group">
+			<include>Anim_TopStrip</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>320</height>
+				<texture diffuse="groove/ramp_v.png" colordiffuse="white_80">$VAR[Tex_Room]</texture>
+			</control>
+			<control type="image">
+				<left>96</left>
+				<top>54</top>
+				<width>480</width>
+				<height>150</height>
+				<aspectratio aligny="top" align="left">keep</aspectratio>
+				<texture background="true" colordiffuse="$VAR[logo_tint]">$VAR[VOSD_Logo]</texture>
+				<visible>$EXP[VOSD_HasLogo]</visible>
+			</control>
+			<control type="label">
+				<left>96</left>
+				<top>54</top>
+				<width>1100</width>
+				<height>64</height>
+				<aligny>center</aligny>
+				<font>font_title</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<shadowcolor>$VAR[text_shadow]</shadowcolor>
+				<label>$VAR[VOSD_Title]</label>
+				<visible>!$EXP[VOSD_HasLogo]</visible>
+			</control>
+			<control type="label">
+				<left>96</left>
+				<top>214</top>
+				<width>1100</width>
+				<height>40</height>
+				<aligny>center</aligny>
+				<font>font_caption_light</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<shadowcolor>$VAR[text_shadow]</shadowcolor>
+				<label>$VAR[VOSD_EpLine]</label>
+			</control>
+			<control type="label">
+				<right>96</right>
+				<top>54</top>
+				<width>400</width>
+				<height>40</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>font_clock</font>
+				<textcolor>$VAR[ink]</textcolor>
+				<label>$INFO[System.Time]</label>
+			</control>
+			<control type="label">
+				<right>96</right>
+				<top>92</top>
+				<width>400</width>
+				<height>34</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>font_small</font>
+				<textcolor>$VAR[ink2]</textcolor>
+				<label>$VAR[VOSD_Ends]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ progress line -->
+	<!-- track, cache, fill, chapter ticks, times. params: top (line y), lit (condition: the line is focused / seeking:
+	     bright times + the playhead dot), dot (condition: draw the Player.Progress dot without lighting the times) -->
+	<include name="VOSD_Progress">
+		<param name="lit">false</param>
+		<param name="dot">false</param>
+		<definition>
+			<control type="group">
+				<left>150</left>
+				<top>$PARAM[top]</top>
+				<width>1620</width>
+				<control type="progress">
+					<left>0</left>
+					<top>-1</top>
+					<width>1620</width>
+					<height>4</height>
+					<info>Player.ProgressCache</info>
+					<texturebg colordiffuse="$VAR[line]">groove/white.png</texturebg>
+					<midtexture colordiffuse="$VAR[line_strong]">groove/white.png</midtexture>
+				</control>
+				<control type="progress">
+					<left>0</left>
+					<top>-1</top>
+					<width>1620</width>
+					<height>4</height>
+					<info>Player.Progress</info>
+					<texturebg colordiffuse="clear">groove/white.png</texturebg>
+					<midtexture colordiffuse="$VAR[ink]">groove/white.png</midtexture>
+				</control>
+				<control type="ranges">
+					<left>0</left>
+					<top>-5</top>
+					<width>1620</width>
+					<height>12</height>
+					<texturebg colordiffuse="clear">groove/white.png</texturebg>
+					<righttexture colordiffuse="$VAR[ink2]">groove/white.png</righttexture>
+					<info>Player.Chapters</info>
+					<visible>Integer.IsGreater(Player.ChapterCount,1)</visible>
+				</control>
+				<!-- playhead: a 16 px dot drawn 1:1 by a slider (nib = bar texture at the control's height) -->
+				<control type="slider">
+					<left>-8</left>
+					<top>-7</top>
+					<width>1636</width>
+					<height>16</height>
+					<info>Player.Progress</info>
+					<texturesliderbar colordiffuse="clear">groove/dot.png</texturesliderbar>
+					<textureslidernib colordiffuse="$VAR[ink]">groove/dot.png</textureslidernib>
+					<textureslidernibfocus colordiffuse="$VAR[ink]">groove/dot.png</textureslidernibfocus>
+					<visible>$PARAM[lit] | $PARAM[dot]</visible>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>14</top>
+					<width>400</width>
+					<height>36</height>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$INFO[Player.Time]</label>
+					<visible>!$PARAM[lit]</visible>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>14</top>
+					<width>400</width>
+					<height>36</height>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$INFO[Player.Time]</label>
+					<visible>$PARAM[lit]</visible>
+				</control>
+				<control type="label">
+					<left>520</left>
+					<top>14</top>
+					<width>580</width>
+					<height>36</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$VAR[VOSD_State]</label>
+				</control>
+				<control type="label">
+					<left>1220</left>
+					<top>14</top>
+					<width>400</width>
+					<height>36</height>
+					<align>right</align>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$INFO[Player.TimeRemaining,-,]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ VideoOSD -->
+	<include name="VOSD_Window">
+		<control type="group">
+			<visible>!$EXP[VOSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+			<include>VOSD_TopStrip</include>
+			<control type="group">
+				<include>Anim_OSD</include>
+				<control type="image">
+					<left>0</left>
+					<top>600</top>
+					<width>1920</width>
+					<height>480</height>
+					<texture diffuse="groove/ramp_v_up.png" colordiffuse="white_90">$VAR[Tex_Room]</texture>
+				</control>
+				<!-- the seek line (invisible stepper over it; the dot and bright times show it has focus) -->
+				<control type="button" id="87">
+					<description>seek stepper</description>
+					<left>150</left>
+					<top>832</top>
+					<width>1620</width>
+					<height>44</height>
+					<label></label>
+					<texturefocus />
+					<texturenofocus />
+					<onup>87</onup>
+					<ondown>602</ondown>
+					<onleft>StepBack</onleft>
+					<onright condition="!Player.Paused">StepForward</onright>
+					<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+					<onclick>PlayerControl(Play)</onclick>
+					<onback>602</onback>
+					<visible>Player.SeekEnabled</visible>
+				</control>
+				<include content="VOSD_Progress">
+					<param name="top" value="852"/>
+					<param name="lit" value="Control.HasFocus(87)"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="602"/>
+					<param name="left" value="150"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="$VAR[VOSD_PlayIcon]"/>
+					<param name="label" value="$VAR[VOSD_PlayLabel]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="603"/>
+					<param name="onup" value="87"/>
+					<param name="enable" value="Player.PauseEnabled"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="603"/>
+					<param name="left" value="366"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/stop.png"/>
+					<param name="label" value="$LOCALIZE[31838]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="70044"/>
+					<param name="onup" value="87"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="70044"/>
+					<param name="left" value="582"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/chapters.png"/>
+					<param name="label" value="$LOCALIZE[31839]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="70049"/>
+					<param name="onup" value="87"/>
+					<param name="enable" value="$EXP[VOSD_ChaptersOK]"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="70049"/>
+					<param name="left" value="798"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/audio.png"/>
+					<param name="label" value="$LOCALIZE[31840]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+					<param name="onleft" value="70044"/>
+					<param name="onright" value="70046"/>
+					<param name="onup" value="87"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="70046"/>
+					<param name="left" value="1014"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/subtitles.png"/>
+					<param name="label" value="$LOCALIZE[31841]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+					<param name="onleft" value="70049"/>
+					<param name="onright" value="70048"/>
+					<param name="onup" value="87"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="70048"/>
+					<param name="left" value="1230"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/settings.png"/>
+					<param name="label" value="$LOCALIZE[31842]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+					<param name="onleft" value="70046"/>
+					<param name="onright" value="70043"/>
+					<param name="onup" value="87"/>
+				</include>
+				<include content="Groove_IconSlot">
+					<param name="id" value="70043"/>
+					<param name="left" value="1446"/>
+					<param name="top" value="942"/>
+					<param name="icon" value="icons/info.png"/>
+					<param name="label" value="$LOCALIZE[31843]"/>
+					<param name="width" value="216"/>
+					<param name="onclick" value="Action(Info,fullscreenvideo)"/>
+					<param name="onleft" value="70048"/>
+					<param name="onright" value="70043"/>
+					<param name="onup" value="87"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ DialogSeekBar -->
+	<include name="VOSD_SeekBar">
+		<control type="group">
+			<visible>!$EXP[VOSD_SeekBarHidden]</visible>
+			<visible>!Player.HasGame</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>720</top>
+				<width>1920</width>
+				<height>360</height>
+				<texture diffuse="groove/ramp_v_up.png" colordiffuse="white_80">$VAR[Tex_Room]</texture>
+				<include>Anim_DialogScrim</include>
+			</control>
+			<!-- where the seek lands (and how far a skip goes) -->
+			<control type="grouplist">
+				<left>150</left>
+				<top>772</top>
+				<width>1620</width>
+				<height>56</height>
+				<orientation>horizontal</orientation>
+				<align>center</align>
+				<itemgap>20</itemgap>
+				<visible>Player.Seeking | Player.HasPerformedSeek(3) | !String.IsEmpty(Player.SeekNumeric) | !String.IsEmpty(Player.SeekStepSize)</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="label">
+					<width max="600">auto</width>
+					<height>56</height>
+					<aligny>center</aligny>
+					<font>font_caption</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<label>$VAR[VOSD_SeekTime]</label>
+				</control>
+				<control type="label">
+					<width max="400">auto</width>
+					<height>56</height>
+					<aligny>center</aligny>
+					<font>font_caption_light</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$VAR[VOSD_SkipValue]</label>
+				</control>
+			</control>
+			<!-- playhead: Player.Progress while nothing is seeking (a plain pause opens this dialog too), Kodi's slider 401 while
+			     seeking (Kodi sets 401 only during a seek: on a pause it sits at 0, DEVICE_AUDIT M2) -->
+			<include content="VOSD_Progress">
+				<param name="top" value="852"/>
+				<param name="lit" value="false"/>
+				<param name="dot" value="![Player.Seeking | Player.HasPerformedSeek(3)]"/>
+			</include>
+			<!-- Kodi's seek slider: set to the seek target; drawn as the playhead dot only while seeking -->
+			<control type="slider" id="401">
+				<left>142</left>
+				<top>845</top>
+				<width>1636</width>
+				<height>16</height>
+				<texturesliderbar colordiffuse="clear">groove/dot.png</texturesliderbar>
+				<textureslidernib colordiffuse="$VAR[ink]">groove/dot.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="$VAR[ink]">groove/dot.png</textureslidernibfocus>
+				<visible>Player.Seeking | Player.HasPerformedSeek(3)</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ DialogFullScreenInfo -->
+	<include name="VOSD_FullScreenInfo">
+		<control type="group">
+			<visible>!Window.IsVisible(sliderdialog) + !Window.IsVisible(selectdialog) + !Window.IsVisible(osdsubtitlesettings) + !Window.IsVisible(osdaudiosettings) + !Window.IsVisible(osdvideosettings)</visible>
+			<include>Anim_FadeVisible</include>
+			<include>VOSD_TopStrip</include>
+			<control type="group">
+				<include>Anim_OSD</include>
+				<control type="image">
+					<left>0</left>
+					<top>520</top>
+					<width>1920</width>
+					<height>560</height>
+					<texture diffuse="groove/ramp_v_up.png" colordiffuse="white_90">$VAR[Tex_Room]</texture>
+				</control>
+				<control type="textbox">
+					<left>96</left>
+					<top>700</top>
+					<width>1100</width>
+					<height>120</height>
+					<font>font_body</font>
+					<textcolor>$VAR[ink]</textcolor>
+					<shadowcolor>$VAR[text_shadow]</shadowcolor>
+					<label>$INFO[VideoPlayer.Plot]</label>
+				</control>
+				<include content="VOSD_Progress">
+					<param name="top" value="852"/>
+					<param name="lit" value="true"/>
+				</include>
+				<!-- the facts of the file: resolution, HDR, audio -->
+				<control type="label">
+					<left>150</left>
+					<top>942</top>
+					<width>1620</width>
+					<height>48</height>
+					<aligny>center</aligny>
+					<font>font_small</font>
+					<textcolor>$VAR[ink2]</textcolor>
+					<label>$INFO[VideoPlayer.VideoResolution,,  ·  ]$INFO[VideoPlayer.HdrType,,  ·  ]$INFO[VideoPlayer.VideoCodec,,  ·  ]$INFO[VideoPlayer.AudioCodec]$INFO[VideoPlayer.AudioChannels, ,ch]$INFO[VideoPlayer.AudioLanguage,  ·  ,]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+</includes>
