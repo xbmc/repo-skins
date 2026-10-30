@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Void Search (Custom_1150_Search.xml). Library only: four text columns - Films, Shows, Albums,
+	Artists - fed by library paths filtered with ?xsp= JSON ("contains" the query). The query is what
+	you typed into edit 9001, set in serif 96 like a title.
+	Columns never hide (a hidden container is not processed, so it would never load the next query);
+	an empty one says "No matches" and Left/Right skip it (empty containers can't take focus).
+	Ids: 9001 edit, 9101 films, 9102 shows, 9103 albums, 9104 artists.
+-->
+<includes>
+	<expression name="Search_HasQuery">!String.IsEmpty(Control.GetLabel(9001).index(1))</expression>
+	<!-- The typed query reaches the xsp paths URL-encoded: the 1 px list 9710 (Custom_1150) runs script.skinvariables'
+	     get_encoded_string whenever the text changes, which writes Window(Home).Property(Void.Search.Encoded)
+	     (quote_plus; Kodi decodes + back to a space), so & | + % search fine.
+	     The query goes in as $ESCINFO (a JSON string literal: Kodi escapes backslashes and quotes and adds the
+	     quotes), so a query holding a double quote searches fine too; esc=%25 keeps Kodi from turning those
+	     backslashes into slashes (CUtil::ValidatePath leaves URLs with a % alone). 2026-10-25. Custom_1150 clears the property on unload. (Groove pattern, 2026-10-21) -->
+	<expression name="Search_HasEncoded">$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(Void.Search.Encoded))</expression>
+	<variable name="Search_EncoderPath">
+		<value condition="$EXP[Search_HasQuery]">plugin://script.skinvariables/?info=get_encoded_string&amp;unencoded_paths=true&amp;esc=%25&amp;window_prop=Void.Search.Encoded&amp;window_id=home&amp;&amp;$ESCINFO[Control.GetLabel(9001).index(1)]</value>
+	</variable>
+
+	<!-- ================================================================ paths -->
+	<!-- xsp JSON, URL-encoded except the query itself. $ESCINFO quotes the query and escapes " and \ as JSON
+	     expects (QA 2026-10-18). Kodi has no URL-encode infolabel, so & % + in a query still break the path. -->
+	<variable name="Search_PathMovies">
+		<value condition="$EXP[Search_HasEncoded]">videodb://movies/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Void.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D</value>
+	</variable>
+	<variable name="Search_PathTV">
+		<value condition="$EXP[Search_HasEncoded]">videodb://tvshows/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Void.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D</value>
+	</variable>
+	<variable name="Search_PathAlbums">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://albums/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22album%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Void.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D</value>
+	</variable>
+	<variable name="Search_PathArtists">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://artists/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22artist%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Void.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D</value>
+	</variable>
+
+	<include name="Search_Query">
+		<control type="label">
+			<left>160</left>
+			<top>150</top>
+			<width>1600</width>
+			<height>24</height>
+			<aligny>top</aligny>
+			<font>caps_20</font>
+			<textcolor>grey</textcolor>
+			<label>$LOCALIZE[31248][COLOR sep_light]  ·  [/COLOR]$LOCALIZE[31249]</label>
+		</control>
+		<control type="edit" id="9001">
+			<left>152</left>
+			<top>186</top>
+			<width>1608</width>
+			<height>132</height>
+			<font>serif_96</font>
+			<textcolor>text</textcolor>
+			<focusedcolor>text</focusedcolor>
+			<disabledcolor>grey_soft</disabledcolor>
+			<textoffsetx>8</textoffsetx>
+			<aligny>center</aligny>
+			<label></label>
+			<hinttext>$LOCALIZE[31250]</hinttext>
+			<texturefocus border="0,0,0,3" colordiffuse="grey">common/underline.png</texturefocus>
+			<texturenofocus border="0,0,0,3" colordiffuse="hairline">common/underline.png</texturenofocus>
+			<onup>noop</onup>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<ondown condition="Integer.IsGreater(Container(9101).NumItems,0)">9101</ondown>
+			<ondown condition="Integer.IsEqual(Container(9101).NumItems,0) + Integer.IsGreater(Container(9102).NumItems,0)">9102</ondown>
+			<ondown condition="Integer.IsEqual(Container(9101).NumItems,0) + Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsGreater(Container(9103).NumItems,0)">9103</ondown>
+			<ondown condition="Integer.IsEqual(Container(9101).NumItems,0) + Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsEqual(Container(9103).NumItems,0) + Integer.IsGreater(Container(9104).NumItems,0)">9104</ondown>
+		</control>
+		<include content="Void_Hint">
+			<param name="label" value="OK to type[COLOR sep_light]  ·  [/COLOR]Down for results[COLOR sep_light]  ·  [/COLOR]Back to close"/>
+			<param name="top" value="1000"/>
+			<param name="visible" value="Control.HasFocus(9001)"/>
+		</include>
+	</include>
+
+	<include name="Search_Results">
+		<control type="group">
+			<visible>$EXP[Search_HasQuery]</visible>
+			<include>Anim_FadeVisible</include>
+			<!-- Films -->
+			<control type="label">
+				<left>160</left>
+				<top>372</top>
+				<width>380</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>Films$INFO[Container(9101).NumItems,[COLOR sep_light]  ·  [/COLOR],]</label>
+			</control>
+			<control type="label">
+				<left>160</left>
+				<top>414</top>
+				<width>380</width>
+				<height>40</height>
+				<font>sans_26</font>
+				<textcolor>sep_light</textcolor>
+				<label>$LOCALIZE[31251]</label>
+				<visible>Integer.IsEqual(Container(9101).NumItems,0) + !Container(9101).IsUpdating + $EXP[Search_HasEncoded]</visible>
+			</control>
+			<control type="list" id="9101">
+				<left>146</left>
+				<top>410</top>
+				<width>400</width>
+				<height>528</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">160</scrolltime>
+				<onup>9001</onup>
+				<ondown>noop</ondown>
+				<onright condition="Integer.IsGreater(Container(9102).NumItems,0)">SetFocus(9102)</onright>
+				<onright condition="Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsGreater(Container(9103).NumItems,0)">SetFocus(9103)</onright>
+				<onright condition="Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsEqual(Container(9103).NumItems,0) + Integer.IsGreater(Container(9104).NumItems,0)">SetFocus(9104)</onright>
+				<onleft>noop</onleft>
+				<onback>9001</onback>
+				<itemlayout width="400" height="48">
+					<control type="label">
+						<left>14</left>
+						<top>0</top>
+						<width>380</width>
+						<height>48</height>
+						<font>sans_26</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="400" height="96">
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>!Control.HasFocus(9101)</visible>
+					</control>
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>text</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>Control.HasFocus(9101)</visible>
+					</control>
+					<control type="label">
+						<left>14</left>
+						<top>58</top>
+						<width>380</width>
+						<height>28</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey_soft</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Year]$INFO[ListItem.Genre,[COLOR sep_light]  ·  [/COLOR],]</label>
+					</control>
+				</focusedlayout>
+				<content target="videos" limit="40">$VAR[Search_PathMovies]</content>
+			</control>
+			<!-- Shows -->
+			<control type="label">
+				<left>560</left>
+				<top>372</top>
+				<width>380</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>Shows$INFO[Container(9102).NumItems,[COLOR sep_light]  ·  [/COLOR],]</label>
+			</control>
+			<control type="label">
+				<left>560</left>
+				<top>414</top>
+				<width>380</width>
+				<height>40</height>
+				<font>sans_26</font>
+				<textcolor>sep_light</textcolor>
+				<label>$LOCALIZE[31251]</label>
+				<visible>Integer.IsEqual(Container(9102).NumItems,0) + !Container(9102).IsUpdating + $EXP[Search_HasEncoded]</visible>
+			</control>
+			<control type="list" id="9102">
+				<left>546</left>
+				<top>410</top>
+				<width>400</width>
+				<height>528</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">160</scrolltime>
+				<onup>9001</onup>
+				<ondown>noop</ondown>
+				<onright condition="Integer.IsGreater(Container(9103).NumItems,0)">SetFocus(9103)</onright>
+				<onright condition="Integer.IsEqual(Container(9103).NumItems,0) + Integer.IsGreater(Container(9104).NumItems,0)">SetFocus(9104)</onright>
+				<onleft condition="Integer.IsGreater(Container(9101).NumItems,0)">SetFocus(9101)</onleft>
+				<onback>9001</onback>
+				<itemlayout width="400" height="48">
+					<control type="label">
+						<left>14</left>
+						<top>0</top>
+						<width>380</width>
+						<height>48</height>
+						<font>sans_26</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="400" height="96">
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>!Control.HasFocus(9102)</visible>
+					</control>
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>text</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>Control.HasFocus(9102)</visible>
+					</control>
+					<control type="label">
+						<left>14</left>
+						<top>58</top>
+						<width>380</width>
+						<height>28</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey_soft</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Year]$INFO[ListItem.Genre,[COLOR sep_light]  ·  [/COLOR],]</label>
+					</control>
+				</focusedlayout>
+				<content target="videos" limit="40">$VAR[Search_PathTV]</content>
+			</control>
+			<!-- Albums -->
+			<control type="label">
+				<left>960</left>
+				<top>372</top>
+				<width>380</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>Albums$INFO[Container(9103).NumItems,[COLOR sep_light]  ·  [/COLOR],]</label>
+			</control>
+			<control type="label">
+				<left>960</left>
+				<top>414</top>
+				<width>380</width>
+				<height>40</height>
+				<font>sans_26</font>
+				<textcolor>sep_light</textcolor>
+				<label>$LOCALIZE[31251]</label>
+				<visible>Integer.IsEqual(Container(9103).NumItems,0) + !Container(9103).IsUpdating + $EXP[Search_HasEncoded]</visible>
+			</control>
+			<control type="list" id="9103">
+				<left>946</left>
+				<top>410</top>
+				<width>400</width>
+				<height>528</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">160</scrolltime>
+				<onup>9001</onup>
+				<ondown>noop</ondown>
+				<onright condition="Integer.IsGreater(Container(9104).NumItems,0)">SetFocus(9104)</onright>
+				<onleft condition="Integer.IsGreater(Container(9102).NumItems,0)">SetFocus(9102)</onleft>
+				<onleft condition="Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsGreater(Container(9101).NumItems,0)">SetFocus(9101)</onleft>
+				<onback>9001</onback>
+				<itemlayout width="400" height="48">
+					<control type="label">
+						<left>14</left>
+						<top>0</top>
+						<width>380</width>
+						<height>48</height>
+						<font>sans_26</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="400" height="96">
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>!Control.HasFocus(9103)</visible>
+					</control>
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>text</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>Control.HasFocus(9103)</visible>
+					</control>
+					<control type="label">
+						<left>14</left>
+						<top>58</top>
+						<width>380</width>
+						<height>28</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey_soft</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Artist]$INFO[ListItem.Year,[COLOR sep_light]  ·  [/COLOR],]</label>
+					</control>
+				</focusedlayout>
+				<content target="music" limit="40">$VAR[Search_PathAlbums]</content>
+			</control>
+			<!-- Artists -->
+			<control type="label">
+				<left>1360</left>
+				<top>372</top>
+				<width>380</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>Artists$INFO[Container(9104).NumItems,[COLOR sep_light]  ·  [/COLOR],]</label>
+			</control>
+			<control type="label">
+				<left>1360</left>
+				<top>414</top>
+				<width>380</width>
+				<height>40</height>
+				<font>sans_26</font>
+				<textcolor>sep_light</textcolor>
+				<label>$LOCALIZE[31251]</label>
+				<visible>Integer.IsEqual(Container(9104).NumItems,0) + !Container(9104).IsUpdating + $EXP[Search_HasEncoded]</visible>
+			</control>
+			<control type="list" id="9104">
+				<left>1346</left>
+				<top>410</top>
+				<width>400</width>
+				<height>528</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">160</scrolltime>
+				<onup>9001</onup>
+				<ondown>noop</ondown>
+				<onright>noop</onright>
+				<onleft condition="Integer.IsGreater(Container(9103).NumItems,0)">SetFocus(9103)</onleft>
+				<onleft condition="Integer.IsEqual(Container(9103).NumItems,0) + Integer.IsGreater(Container(9102).NumItems,0)">SetFocus(9102)</onleft>
+				<onleft condition="Integer.IsEqual(Container(9103).NumItems,0) + Integer.IsEqual(Container(9102).NumItems,0) + Integer.IsGreater(Container(9101).NumItems,0)">SetFocus(9101)</onleft>
+				<onback>9001</onback>
+				<itemlayout width="400" height="48">
+					<control type="label">
+						<left>14</left>
+						<top>0</top>
+						<width>380</width>
+						<height>48</height>
+						<font>sans_26</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+				</itemlayout>
+				<focusedlayout width="400" height="96">
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>!Control.HasFocus(9104)</visible>
+					</control>
+					<control type="label">
+						<left>12</left>
+						<top>2</top>
+						<width>384</width>
+						<height>52</height>
+						<aligny>top</aligny>
+						<font>serif_44</font>
+						<textcolor>text</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>Control.HasFocus(9104)</visible>
+					</control>
+					<control type="label">
+						<left>14</left>
+						<top>58</top>
+						<width>380</width>
+						<height>28</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey_soft</textcolor>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Genre]</label>
+					</control>
+				</focusedlayout>
+				<content target="music" limit="40">$VAR[Search_PathArtists]</content>
+			</control>
+		</control>
+		<control type="textbox">
+			<left>160</left>
+			<top>372</top>
+			<width>1000</width>
+			<height>100</height>
+			<font>sans_26</font>
+			<textcolor>grey</textcolor>
+			<label>$LOCALIZE[31252]</label>
+			<visible>!$EXP[Search_HasQuery]</visible>
+		</control>
+	</include>
+</includes>

@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Album / artist / song information, Void: the same quiet page as the video info - kicker, serif
+	title, meta, description, actions as text buttons on the left; the cover as a small plate and the
+	tracklist / discography as text on the right; the artist's fanart rises after a rest.
+	Kodi also loads this file for songinformation (CGUIDialogSongInfo).
+	Kodi id contract (Estuary Omega DialogMusicInfo.xml, GUIDialogMusicInfo.cpp / GUIDialogSongInfo.cpp):
+	  50 list Kodi fills (album -> songs, artist -> discography; click opens that album's info)
+	  6 Refresh (hidden by Kodi for songs) | 8 Play (album / song; hidden for artists)
+	  12 Artist info / Album info (hidden for artists). 7 (user rating) / 10 (choose art) not shipped.
+	Void ids: 9000 actions (default), 9011 Shuffle, 9012 Play all (artist), 9001 description (OK =
+	full text), 9200 overlay + scrollbar 61.
+	Focus map: actions Right / Down -> list 50; list Left / Back -> actions; Up from actions -> text.
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<include>Void_Background</include>
+		<!-- artist fanart rises after a rest -->
+		<control type="group">
+			<visible>$EXP[Dwell2] + $EXP[Music_InfoHasArt] + $EXP[AmbientOn] + !ControlGroup(9200).HasFocus()</visible>
+			<include>Void_Anim_AmbientRise</include>
+			<control type="group">
+				<include>Void_Anim_KenBurns</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>1920</width>
+					<height>1080</height>
+					<aspectratio>scale</aspectratio>
+					<texture background="true" colordiffuse="art_50">$VAR[Music_InfoArt]</texture>
+				</control>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>1080</height>
+				<texture colordiffuse="scrim">common/vignette_home.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="150">WindowClose</animation>
+			</control>
+			<control type="image">
+				<left>1000</left>
+				<top>0</top>
+				<width>920</width>
+				<height>1080</height>
+				<texture colordiffuse="e6000000">common/scrim_right.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="150">WindowClose</animation>
+			</control>
+		</control>
+		<!-- left column -->
+		<control type="grouplist">
+			<left>0</left>
+			<top>150</top>
+			<width>1100</width>
+			<height>900</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="group">
+				<width>1100</width>
+				<height>46</height>
+				<control type="label">
+					<left>164</left>
+					<top>0</top>
+					<width>900</width>
+					<height>24</height>
+					<aligny>top</aligny>
+					<font>capsw_20</font>
+					<textcolor>grey</textcolor>
+					<label>$VAR[Music_InfoKicker]</label>
+				</control>
+			</control>
+			<include content="Title_Info_Visible">
+				<param name="label" value="$VAR[Music_InfoTitle]"/>
+				<param name="p0" value="7811"/>
+				<param name="p1" value="7812"/>
+			</include>
+			<include content="Title_Info_Layout">
+				<param name="label" value="$VAR[Music_InfoTitle]"/>
+				<param name="p0" value="7811"/>
+				<param name="p1" value="7812"/>
+			</include>
+			<control type="group">
+				<width>1100</width>
+				<height>56</height>
+				<control type="label">
+					<left>160</left>
+					<top>18</top>
+					<width>920</width>
+					<height>32</height>
+					<aligny>top</aligny>
+					<textcolor>grey</textcolor>
+					<label>$VAR[Music_InfoSubline]</label>
+				</control>
+			</control>
+			<control type="group">
+				<width>1100</width>
+				<height>300</height>
+				<visible>!String.IsEmpty(ListItem.Property(Album_Description)) | !String.IsEmpty(ListItem.Property(Artist_Description)) | [$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Comment)]</visible>
+				<control type="textbox">
+					<left>160</left>
+					<top>24</top>
+					<width>880</width>
+					<height>244</height>
+					<label>$VAR[Music_InfoDescription]</label>
+					<visible>!Control.HasFocus(9001)</visible>
+				</control>
+				<control type="textbox">
+					<left>160</left>
+					<top>24</top>
+					<width>880</width>
+					<height>244</height>
+					<textcolor>text</textcolor>
+					<label>$VAR[Music_InfoDescription]</label>
+					<visible>Control.HasFocus(9001)</visible>
+				</control>
+				<control type="button" id="9001">
+					<left>160</left>
+					<top>24</top>
+					<width>880</width>
+					<height>244</height>
+					<label></label>
+					<onup>noop</onup>
+					<ondown>9000</ondown>
+					<onleft>noop</onleft>
+					<onright condition="Integer.IsGreater(Container(50).NumItems,0)">50</onright>
+					<onclick>SetFocus(61)</onclick>
+					<visible>!String.IsEmpty(ListItem.Property(Album_Description)) | !String.IsEmpty(ListItem.Property(Artist_Description)) | [$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Comment)]</visible>
+				</control>
+			</control>
+			<control type="grouplist" id="9000">
+				<left>146</left>
+				<width>1000</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<itemgap>26</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<onup condition="Control.IsVisible(9001)">9001</onup>
+				<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+				<onleft>noop</onleft>
+				<onright condition="Integer.IsGreater(Container(50).NumItems,0)">50</onright>
+				<control type="button" id="8">
+					<top>4</top>
+					<include>VidInfo_ButtonLook</include>
+					<onup condition="Control.IsVisible(9001)">9001</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<label>$LOCALIZE[31225]</label>
+					<visible>!$EXP[Music_InfoIsArtist]</visible>
+				</control>
+				<control type="button" id="9012">
+					<top>4</top>
+					<include>VidInfo_ButtonLook</include>
+					<onup condition="Control.IsVisible(9001)">9001</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<label>$LOCALIZE[31226]</label>
+					<onclick>PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)</onclick>
+					<visible>$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)</visible>
+				</control>
+				<control type="button" id="9011">
+					<top>4</top>
+					<include>VidInfo_ButtonLook</include>
+					<onup condition="Control.IsVisible(9001)">9001</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<label>$LOCALIZE[31227]</label>
+					<onclick>$VAR[Music_InfoShuffleAction]</onclick>
+					<onclick>PlayerControl(RandomOn)</onclick>
+					<visible>[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)</visible>
+				</control>
+				<control type="button" id="12">
+					<top>4</top>
+					<include>VidInfo_ButtonLook</include>
+					<onup condition="Control.IsVisible(9001)">9001</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<label>$LOCALIZE[21891]</label>
+					<visible>!$EXP[Music_InfoIsArtist]</visible>
+				</control>
+				<control type="button" id="6">
+					<top>4</top>
+					<include>VidInfo_ButtonLook</include>
+					<onup condition="Control.IsVisible(9001)">9001</onup>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<label>$LOCALIZE[184]</label>
+					<visible>!$EXP[Music_InfoIsSong]</visible>
+				</control>
+			</control>
+			<control type="group">
+				<width>1100</width>
+				<height>60</height>
+				<control type="label">
+					<left>160</left>
+					<top>18</top>
+					<width>920</width>
+					<height>26</height>
+					<aligny>top</aligny>
+					<font>caps_20</font>
+					<textcolor>grey_soft</textcolor>
+					<label>$INFO[ListItem.Property(Album_Duration)]$VAR[PL_PlayCount_Time]$INFO[ListItem.Property(Artist_Born),born ,]</label>
+				</control>
+			</control>
+		</control>
+		<!-- right column: cover plate + tracklist / discography -->
+		<control type="image">
+			<left>1240</left>
+			<top>150</top>
+			<width>240</width>
+			<height>240</height>
+			<aspectratio aligny="top" align="left">keep</aspectratio>
+			<fadetime>200</fadetime>
+			<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
+		</control>
+		<control type="group">
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<control type="label">
+				<left>1240</left>
+				<top>420</top>
+				<width>520</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$VAR[Music_InfoListCaption]</label>
+			</control>
+			<control type="list" id="50">
+				<left>1226</left>
+				<top>456</top>
+				<width>560</width>
+				<height>560</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">180</scrolltime>
+				<onleft>9000</onleft>
+				<onright>noop</onright>
+				<onup>noop</onup>
+				<ondown>noop</ondown>
+				<onback>9000</onback>
+				<itemlayout width="560" height="46">
+					<control type="label">
+						<left>14</left>
+						<top>0</top>
+						<width>420</width>
+						<height>46</height>
+						<font>sans_24</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.TrackNumber,,  ]$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<right>14</right>
+						<top>0</top>
+						<width>110</width>
+						<height>46</height>
+						<align>right</align>
+						<font>num_22</font>
+						<textcolor>grey_soft</textcolor>
+						<label>$INFO[ListItem.Duration]</label>
+						<visible>String.IsEqual(ListItem.DBType,song)</visible>
+					</control>
+					<control type="label">
+						<right>14</right>
+						<top>0</top>
+						<width>110</width>
+						<height>46</height>
+						<align>right</align>
+						<font>num_22</font>
+						<textcolor>grey_soft</textcolor>
+						<label>$INFO[ListItem.Year]</label>
+						<visible>!String.IsEqual(ListItem.DBType,song)</visible>
+					</control>
+				</itemlayout>
+				<focusedlayout width="560" height="92">
+					<control type="label">
+						<left>12</left>
+						<top>4</top>
+						<width>530</width>
+						<height>50</height>
+						<aligny>top</aligny>
+						<font>serif_40</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>!Control.HasFocus(50)</visible>
+					</control>
+					<control type="label">
+						<left>12</left>
+						<top>4</top>
+						<width>530</width>
+						<height>50</height>
+						<aligny>top</aligny>
+						<font>serif_40</font>
+						<scroll>true</scroll>
+						<label>$INFO[ListItem.Label]</label>
+						<visible>Control.HasFocus(50)</visible>
+					</control>
+					<control type="label">
+						<left>14</left>
+						<top>56</top>
+						<width>530</width>
+						<height>26</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey_soft</textcolor>
+						<label>$INFO[ListItem.TrackNumber,track ,]$INFO[ListItem.Duration,[COLOR sep]  ·  [/COLOR],]$INFO[ListItem.Year]</label>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+		<!-- full text overlay -->
+		<control type="group" id="9200">
+			<visible allowhiddenfocus="true">ControlGroup(9200).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>1080</height>
+				<texture colordiffuse="bg">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>152</left>
+				<top>170</top>
+				<width>1500</width>
+				<height>76</height>
+				<aligny>top</aligny>
+				<font>serif_64</font>
+				<label>$VAR[Music_InfoTitle]</label>
+			</control>
+			<control type="textbox">
+				<left>160</left>
+				<top>290</top>
+				<width>1000</width>
+				<height>664</height>
+				<textcolor>text</textcolor>
+				<pagecontrol>61</pagecontrol>
+				<label>$VAR[Music_InfoDescription]</label>
+			</control>
+			<control type="scrollbar" id="61">
+				<left>1200</left>
+				<top>290</top>
+				<width>1</width>
+				<height>664</height>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<onback>9001</onback>
+			</control>
+			<control type="label">
+				<left>160</left>
+				<top>1000</top>
+				<width>1200</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$LOCALIZE[31228][COLOR sep_light]  ·  [/COLOR]$LOCALIZE[31229]</label>
+			</control>
+		</control>
+	</controls>
+</window>

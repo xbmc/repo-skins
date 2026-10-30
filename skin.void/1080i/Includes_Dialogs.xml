@@ -1,0 +1,695 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Dialog building blocks, Void. A dialog is text on near-black: a 95% black backdrop over whatever
+	is behind, a serif heading, rows and text buttons. No panels, frames, fills or outlines.
+	Focus = brightness and scale: unfocused rows are grey Instrument Sans, the focused row becomes
+	white Instrument Serif at a larger size; buttons go grey -> white and grow 8%.
+
+	Shared names (params unchanged from the engine): Void_GenericDialog, Void_DialogButton,
+	Void_ListLayout, Void_Scrollbar, Void_ToastFrame, Void_KeyboardKey, Void_KeyboardFunc.
+	Own: Dlg_* (constants dlg_*).
+-->
+<includes>
+	<!-- ============================================================ constants -->
+	<constant name="dlg_panel_x">1200</constant>          <!-- right-hand playback area (track picker, OSD settings) -->
+	<constant name="dlg_panel_w">720</constant>
+	<constant name="dlg_panel_pad">72</constant>
+	<constant name="dlg_panel_in_w">576</constant>
+	<constant name="dlg_panel_top">64</constant>
+	<constant name="dlg_track_row_h">60</constant>
+	<constant name="dlg_osd_row_h">76</constant>
+	<constant name="dlg_row_pad">16</constant>
+	<constant name="dlg_check">10</constant>
+	<constant name="dlg_check_gutter">14</constant>
+	<constant name="dlg_btn_h">60</constant>
+
+	<!-- ============================================================ expressions -->
+	<expression name="Dlg_IsTrackPanel">Player.HasVideo + Window.IsActive(fullscreenvideo)</expression>
+	<expression name="Dlg_FromSubtitleSettings">Window.IsVisible(osdsubtitlesettings)</expression>
+	<!-- evaluated while DialogSettings loads, when the dialog itself is not active yet: fullscreen video is (device 2026-10-18) -->
+	<expression name="Dlg_IsOSDSettings">Window.IsActive(fullscreenvideo) | Window.IsActive(osdaudiosettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(osdvideosettings) | Window.IsActive(osdcmssettings)</expression>
+
+	<!-- ============================================================ variables -->
+	<variable name="Dlg_SelectKicker">
+		<value condition="Window.IsVisible(osdsubtitlesettings)">Subtitles$VAR[PL_Container_3_NumItems_Track]</value>
+		<value condition="Window.IsVisible(osdaudiosettings)">Audio$VAR[PL_Container_3_NumItems_Track]</value>
+		<value condition="Window.IsVisible(osdvideosettings)">Picture$VAR[PL_Container_3_NumItems_Option]</value>
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).CurrentItem,, of ]$INFO[Container(6).NumItems]</value>
+		<value>$INFO[Container(3).CurrentItem,, of ]$INFO[Container(3).NumItems]</value>
+	</variable>
+	<variable name="Dlg_SelectPosition">
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).CurrentItem,, of ]$INFO[Container(6).NumItems]</value>
+		<value>$INFO[Container(3).CurrentItem,, of ]$INFO[Container(3).NumItems]</value>
+	</variable>
+	<variable name="Dlg_PlayState">
+		<value condition="Player.Paused">Paused[COLOR sep_light]  ·  [/COLOR]$INFO[Player.Time]$INFO[Player.Duration, of ,]</value>
+		<value>$INFO[Player.Time]$INFO[Player.Duration, of ,]</value>
+	</variable>
+	<variable name="Dlg_PlayTitle">
+		<value condition="VideoPlayer.Content(episodes)">$INFO[VideoPlayer.TVShowTitle]</value>
+		<value>$INFO[VideoPlayer.Title]</value>
+	</variable>
+	<variable name="Dlg_AddonNewsLabel">
+		<value condition="!String.IsEmpty(Window(Home).Property(void.addonnews))">Description</value>
+		<value>What's new</value>
+	</variable>
+
+	<!-- ============================================================ texture switches (retired) -->
+	<!-- Engine names kept: Void buttons and Kodi-cloned rows draw no textures at all. -->
+	<include name="Dlg_Tex_DialogButton">
+		<texturefocus />
+		<texturenofocus />
+	</include>
+
+	<!-- ============================================================ backdrop -->
+	<!-- 95% black over everything, with its own fades (LESSONS 4). Window coordinates. -->
+	<include name="Dlg_Backdrop">
+		<param name="color">dim_dialog</param>
+		<definition>
+			<control type="image">
+				<description>backdrop</description>
+				<left>-2000</left>
+				<top>-2000</top>
+				<width>6000</width>
+				<height>6000</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="$PARAM[color]">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ generic dialog -->
+	<!-- Put inside a group positioned/sized like the dialog. Draws the backdrop, a serif heading and a
+	     caps kicker on the right. params: width, height, header_id, header_label, kicker -->
+	<include name="Void_GenericDialog">
+		<param name="header_id"></param>
+		<param name="header_label"></param>
+		<param name="kicker"></param>
+		<definition>
+			<include>Dlg_Backdrop</include>
+			<control type="label" id="$PARAM[header_id]">
+				<description>heading</description>
+				<left>dialog_pad</left>
+				<top>8</top>
+				<right>240</right>
+				<height>64</height>
+				<aligny>top</aligny>
+				<font>serif_52</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[header_label]</label>
+			</control>
+			<control type="label">
+				<description>kicker</description>
+				<right>dialog_pad</right>
+				<top>30</top>
+				<width>220</width>
+				<height>24</height>
+				<align>right</align>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$PARAM[kicker]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Dialog button: text only, grey -> white + 8% scale. Kodi enables/disables its own buttons
+	     (no skin <enable>). params: id, label, width, height, onclick, onclick2, visible -->
+	<include name="Void_DialogButton">
+		<param name="width">300</param>
+		<param name="height">dialog_row_h</param>
+		<param name="label"></param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<param name="align">center</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<label>$PARAM[label]</label>
+				<font>sans_28_med</font>
+				<textcolor>grey_dim</textcolor>
+				<focusedcolor>text</focusedcolor>
+				<disabledcolor>disabled</disabledcolor>
+				<align>$PARAM[align]</align>
+				<textoffsetx>16</textoffsetx>
+				<texturefocus />
+				<texturenofocus />
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+				<include>Void_Anim_FocusText</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Field label + value. params: top, label, value, valuew -->
+	<include name="Dlg_FactRow">
+		<param name="valuew">620</param>
+		<definition>
+			<control type="label">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>180</width>
+				<height>30</height>
+				<font>caps_20</font>
+				<textcolor>grey_soft</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="label">
+				<left>180</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[valuew]</width>
+				<height>30</height>
+				<font>sans_24</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[value]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ list rows -->
+	<!-- Text list. Unfocused: grey sans 28. Focused (list has focus): white serif 40. Selected items
+	     carry a small dot on the left. params: width, height, label, label2, list_id -->
+	<include name="Void_ListLayout">
+		<param name="width">800</param>
+		<param name="height">64</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="list_id">50</param>
+		<param name="label_right">250</param>
+		<param name="focusfont">serif_40</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include>Dlg_SelectedDot</include>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>$PARAM[label_right]</right>
+					<height>$PARAM[height]</height>
+					<font>sans_28_med</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>16</right>
+					<top>0</top>
+					<width>230</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>sans_22</font>
+					<textcolor>grey_soft</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include>Dlg_SelectedDot</include>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>$PARAM[label_right]</right>
+					<height>$PARAM[height]</height>
+					<font>sans_28_med</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[label]</label>
+					<visible>!Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>$PARAM[label_right]</right>
+					<height>$PARAM[height]</height>
+					<font>$PARAM[focusfont]</font>
+					<textcolor>text</textcolor>
+					<scroll>true</scroll>
+					<label>$PARAM[label]</label>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="label">
+					<right>16</right>
+					<top>0</top>
+					<width>230</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>sans_22</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+	<include name="Dlg_SelectedDot">
+		<control type="image">
+			<right>16</right>
+			<centertop>50%</centertop>
+			<width>10</width>
+			<height>10</height>
+			<texture colordiffuse="text">common/dot.png</texture>
+			<visible>ListItem.IsSelected</visible>
+		</control>
+	</include>
+
+	<!-- Menu list (settings hub, system menu, power menu). params: width, height, list_id -->
+	<include name="Dlg_IndexListLayout">
+		<param name="width">860</param>
+		<param name="height">72</param>
+		<param name="list_id">9000</param>
+		<definition>
+			<include content="Void_ListLayout">
+				<param name="width" value="$PARAM[width]"/>
+				<param name="height" value="$PARAM[height]"/>
+				<param name="list_id" value="$PARAM[list_id]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- Track rows (right-hand picker): same language, the current track carries the dot. -->
+	<include name="Dlg_TrackListLayout">
+		<param name="list_id">3</param>
+		<definition>
+			<include content="Void_ListLayout">
+				<param name="width" value="dlg_panel_in_w"/>
+				<param name="height" value="dlg_track_row_h"/>
+				<param name="list_id" value="$PARAM[list_id]"/>
+				<param name="label_right" value="40"/>
+				<param name="focusfont" value="serif_32"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- 1px scroll-position line. params: id, left, top, height, onleft, onright -->
+	<include name="Void_Scrollbar">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="scrollbar" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>1</width>
+				<height>$PARAM[height]</height>
+				<texturesliderbackground colordiffuse="hairline">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="sep_light">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="text">common/white.png</texturesliderbarfocus>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<orientation>vertical</orientation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ right-hand playback area -->
+	<!-- Video dimmed to 30% + a black ramp from the right edge; no panel. Window coordinates. -->
+	<include name="Dlg_SidePanelFrame">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="dim_video">common/white.png</texture>
+		</control>
+		<control type="image">
+			<left>720</left>
+			<top>0</top>
+			<width>1200</width>
+			<height>1080</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="scrim">common/scrim_right.png</texture>
+		</control>
+	</include>
+
+	<!-- ============================================================ DialogSelect -->
+	<!-- Select on the Void axis (id contract from Estuary Omega Includes_DialogSelect.xml: heading 1,
+	     list 3 simple / 6 detailed, scrollbar 61, buttons 5 / 8 / 7 (cancel) in grouplist 9001). -->
+	<include name="Dlg_SelectCentred">
+		<include>Dlg_Backdrop</include>
+		<control type="label">
+			<left>160</left>
+			<top>150</top>
+			<width>1100</width>
+			<height>24</height>
+			<aligny>top</aligny>
+			<font>caps_20</font>
+			<textcolor>grey</textcolor>
+			<label>$VAR[Dlg_SelectPosition]</label>
+		</control>
+		<control type="label" id="1">
+			<description>heading (Kodi)</description>
+			<left>152</left>
+			<top>186</top>
+			<width>1500</width>
+			<height>80</height>
+			<aligny>top</aligny>
+			<font>serif_64</font>
+			<textcolor>text</textcolor>
+		</control>
+		<control type="list" id="3">
+			<left>146</left>
+			<top>300</top>
+			<width>1150</width>
+			<height>704</height>
+			<onup>3</onup>
+			<ondown>3</ondown>
+			<onleft>9001</onleft>
+			<onright>9001</onright>
+			<pagecontrol>61</pagecontrol>
+			<scrolltime tween="cubic" easing="out">180</scrolltime>
+			<include content="Void_ListLayout">
+				<param name="width" value="1150"/>
+				<param name="height" value="64"/>
+				<param name="list_id" value="3"/>
+			</include>
+		</control>
+		<control type="list" id="6">
+			<left>146</left>
+			<top>300</top>
+			<width>1150</width>
+			<height>700</height>
+			<onup>6</onup>
+			<ondown>6</ondown>
+			<onleft>9001</onleft>
+			<onright>9001</onright>
+			<pagecontrol>61</pagecontrol>
+			<scrolltime tween="cubic" easing="out">180</scrolltime>
+			<itemlayout width="1150" height="100">
+				<include content="Dlg_SelectDetailRow"><param name="color" value="grey"/><param name="font" value="sans_28_med"/></include>
+			</itemlayout>
+			<focusedlayout width="1150" height="100">
+				<control type="group">
+					<visible>!Control.HasFocus(6)</visible>
+					<include content="Dlg_SelectDetailRow"><param name="color" value="grey"/><param name="font" value="sans_28_med"/></include>
+				</control>
+				<control type="group">
+					<visible>Control.HasFocus(6)</visible>
+					<include content="Dlg_SelectDetailRow"><param name="color" value="text"/><param name="font" value="serif_40"/></include>
+				</control>
+			</focusedlayout>
+		</control>
+		<control type="label">
+			<left>160</left>
+			<top>300</top>
+			<width>1100</width>
+			<height>64</height>
+			<font>sans_28</font>
+			<textcolor>grey</textcolor>
+			<label>$LOCALIZE[31246]</label>
+			<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+		</control>
+		<include content="Void_Scrollbar">
+			<param name="id" value="61"/>
+			<param name="left" value="1320"/>
+			<param name="top" value="300"/>
+			<param name="height" value="700"/>
+		</include>
+		<control type="grouplist" id="9001">
+			<left>1400</left>
+			<top>300</top>
+			<width>380</width>
+			<height>400</height>
+			<orientation>vertical</orientation>
+			<itemgap>8</itemgap>
+			<onleft condition="Control.IsVisible(3)">3</onleft>
+			<onleft condition="Control.IsVisible(6)">6</onleft>
+			<onright condition="Control.IsVisible(3)">3</onright>
+			<onright condition="Control.IsVisible(6)">6</onright>
+			<onup>9001</onup>
+			<ondown>9001</ondown>
+			<include content="Void_DialogButton">
+				<param name="id" value="5"/>
+				<param name="width" value="360"/>
+				<param name="align" value="left"/>
+			</include>
+			<include content="Void_DialogButton">
+				<param name="id" value="8"/>
+				<param name="width" value="360"/>
+				<param name="align" value="left"/>
+			</include>
+			<include content="Void_DialogButton">
+				<param name="id" value="7"/>
+				<param name="label" value="$LOCALIZE[222]"/>
+				<param name="width" value="360"/>
+				<param name="align" value="left"/>
+			</include>
+		</control>
+	</include>
+	<include name="Dlg_SelectDetailRow">
+		<param name="color">grey</param>
+		<param name="font">sans_28_med</param>
+		<definition>
+			<control type="image">
+				<left>14</left>
+				<top>10</top>
+				<width>80</width>
+				<height>80</height>
+				<aspectratio>keep</aspectratio>
+				<texture background="true">$VAR[ListItemArt]</texture>
+			</control>
+			<control type="image">
+				<right>16</right>
+				<centertop>50%</centertop>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="text">common/dot.png</texture>
+				<visible>ListItem.IsSelected</visible>
+			</control>
+			<control type="label">
+				<left>118</left>
+				<top>8</top>
+				<right>56</right>
+				<height>48</height>
+				<font>$PARAM[font]</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>118</left>
+				<top>58</top>
+				<right>56</right>
+				<height>30</height>
+				<font>sans_22</font>
+				<textcolor>grey_soft</textcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Right-hand track picker for selects over fullscreen video. Same id contract; Void buttons
+	     9101 (download subtitles) / 9102 (subtitle settings) in grouplist 9100 when the list came
+	     from the OSD subtitle settings. -->
+	<include name="Dlg_SelectPanel">
+		<include>Dlg_SidePanelFrame</include>
+		<!-- what's playing, bottom-left over the dimmed frame -->
+		<control type="group">
+			<left>160</left>
+			<top>880</top>
+			<width>1000</width>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$VAR[Dlg_PlayState]</label>
+			</control>
+			<control type="label">
+				<left>-6</left>
+				<top>36</top>
+				<width>1000</width>
+				<height>70</height>
+				<aligny>top</aligny>
+				<font>serif_56</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Dlg_PlayTitle]</label>
+			</control>
+		</control>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="60"/></include>
+			<control type="label">
+				<description>kicker</description>
+				<left>dlg_panel_pad</left>
+				<top>dlg_panel_top</top>
+				<width>dlg_panel_in_w</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$VAR[Dlg_SelectKicker]</label>
+			</control>
+			<control type="label" id="1">
+				<description>heading (Kodi)</description>
+				<left>66</left>
+				<top>98</top>
+				<width>dlg_panel_in_w</width>
+				<height>64</height>
+				<aligny>top</aligny>
+				<font>serif_52</font>
+				<textcolor>text</textcolor>
+			</control>
+			<control type="list" id="3">
+				<left>56</left>
+				<top>190</top>
+				<width>dlg_panel_in_w</width>
+				<height>720</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">180</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="3"/></include>
+			</control>
+			<control type="list" id="6">
+				<left>56</left>
+				<top>190</top>
+				<width>dlg_panel_in_w</width>
+				<height>720</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">180</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="6"/></include>
+			</control>
+			<control type="label">
+				<left>dlg_panel_pad</left>
+				<top>190</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_track_row_h</height>
+				<font>sans_26</font>
+				<textcolor>grey</textcolor>
+				<label>$LOCALIZE[31246]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<control type="scrollbar" id="61">
+				<left>650</left>
+				<top>190</top>
+				<width>1</width>
+				<height>720</height>
+				<texturesliderbackground colordiffuse="hairline">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="sep_light">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="sep_light">common/white.png</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+			</control>
+			<control type="grouplist" id="9100">
+				<left>56</left>
+				<top>950</top>
+				<width>620</width>
+				<height>dlg_btn_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>8</itemgap>
+				<onleft>9100</onleft>
+				<onright>9100</onright>
+				<onup condition="Control.IsVisible(3)">3</onup>
+				<onup condition="Control.IsVisible(6)">6</onup>
+				<ondown condition="Control.IsVisible(3)">3</ondown>
+				<ondown condition="Control.IsVisible(6)">6</ondown>
+				<include content="Void_DialogButton">
+					<param name="id" value="9101"/>
+					<param name="label" value="Download"/>
+					<param name="width" value="auto"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="onclick2" value="ActivateWindow(SubtitleSearch)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Void_DialogButton">
+					<param name="id" value="9102"/>
+					<param name="label" value="Settings"/>
+					<param name="width" value="auto"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="Void_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="auto"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Void_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="auto"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="Void_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="auto"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="visible" value="!$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- Caps radio for option rows (add-on browser filters): dot on / dash off on the right. -->
+	<include name="Dlg_SubNavRadio">
+		<width>360</width>
+		<height>40</height>
+		<font>caps_20</font>
+		<textcolor>grey_dim</textcolor>
+		<focusedcolor>text</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<textoffsetx>12</textoffsetx>
+		<aligny>center</aligny>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus />
+		<texturenofocus />
+		<radiowidth>12</radiowidth>
+		<radioheight>12</radioheight>
+		<radioposx>330</radioposx>
+		<include>Void_Anim_FocusText</include>
+	</include>
+
+	<!-- ============================================================ toasts -->
+	<!-- Toast: no panel, a soft black ramp from the right edge behind the text. params: height -->
+	<include name="Void_ToastFrame">
+		<param name="height">104</param>
+		<definition>
+			<control type="image">
+				<left>-420</left>
+				<top>0</top>
+				<width>1180</width>
+				<height>$PARAM[height]</height>
+				<texture colordiffuse="f2000000">common/scrim_right.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ keyboard keys -->
+	<!-- Keys are just characters: grey, the focused key white and 40% larger. -->
+	<include name="Void_KeyboardKey">
+		<font>serif_40</font>
+		<textcolor>grey_dim</textcolor>
+		<focusedcolor>text</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus />
+		<texturenofocus />
+		<include content="Void_Anim_FocusText"><param name="zoom" value="140"/></include>
+	</include>
+	<include name="Void_KeyboardFunc">
+		<font>caps_20</font>
+		<textcolor>grey_dim</textcolor>
+		<focusedcolor>text</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus />
+		<texturenofocus />
+		<include content="Void_Anim_FocusText"><param name="zoom" value="115"/></include>
+	</include>
+</includes>

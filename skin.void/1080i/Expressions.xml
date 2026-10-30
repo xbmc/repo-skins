@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Expressions: booleans used in more than one place. Use as $EXP[Name] (control-level <visible>,
+	animation conditions, onclick conditions). NOT inside window-level <visible> or <autoscroll>
+	(Kodi doesn't expand $EXP there - LESSONS 2): write those out in full.
+	Skin settings: docs/skin.void/SETTINGS.md. An unset setting always means the default.
+-->
+<includes>
+	<!-- ============================================================ settings -->
+	<expression name="ReduceMotion">Skin.HasSetting(void.reducemotion)</expression>
+	<expression name="AmbientOn">!Skin.HasSetting(void.noambient)</expression>
+	<expression name="KenBurnsOn">!Skin.HasSetting(void.nokenburns) + !Skin.HasSetting(void.reducemotion)</expression>
+	<expression name="ClockOn">!Skin.HasSetting(void.noclock)</expression>
+	<expression name="HintsOn">!Skin.HasSetting(void.nohints)</expression>
+
+	<!-- Dwell layers (setting void.dwell: empty or calm = calm 1 / 3 / 8 s, quick 0 / 2 / 5 s, slow 2 / 5 / 15 s).
+	     Any key press resets System.IdleTime, so every layer retracts at once. -->
+	<expression name="Dwell1">[[String.IsEmpty(Skin.String(void.dwell)) | String.IsEqual(Skin.String(void.dwell),calm)] + System.IdleTime(1)] | String.IsEqual(Skin.String(void.dwell),quick) | [String.IsEqual(Skin.String(void.dwell),slow) + System.IdleTime(2)]</expression>
+	<expression name="Dwell2">[[String.IsEmpty(Skin.String(void.dwell)) | String.IsEqual(Skin.String(void.dwell),calm)] + System.IdleTime(3)] | [String.IsEqual(Skin.String(void.dwell),quick) + System.IdleTime(2)] | [String.IsEqual(Skin.String(void.dwell),slow) + System.IdleTime(5)]</expression>
+	<expression name="Dwell3">!Skin.HasSetting(void.noambient) + [[[String.IsEmpty(Skin.String(void.dwell)) | String.IsEqual(Skin.String(void.dwell),calm)] + System.IdleTime(8)] | [String.IsEqual(Skin.String(void.dwell),quick) + System.IdleTime(5)] | [String.IsEqual(Skin.String(void.dwell),slow) + System.IdleTime(15)]]</expression>
+
+	<!-- ============================================================ helpers -->
+	<expression name="HasTMDbHelper">System.AddonIsEnabled(plugin.video.themoviedb.helper)</expression>
+	<expression name="HasNextUpHelper">System.AddonIsEnabled(script.embuary.helper)</expression>
+	<expression name="HasWeather">!String.IsEmpty(Weather.Conditions)</expression>
+	<!-- Letters only mean something when the folder is sorted by a name (Estuary's sort-letter set) -->
+	<expression name="SortIsAlpha">Container.SortMethod(1) | Container.SortMethod(4) | Container.SortMethod(12) | Container.SortMethod(10) | Container.SortMethod(7) | Container.SortMethod(29) | Container.SortMethod(17)</expression>
+
+	<!-- ============================================================ items -->
+	<expression name="ListItemIsVideoFile">!ListItem.IsFolder + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,episode) | String.IsEqual(ListItem.DBType,musicvideo)]</expression>
+	<expression name="ListItemUnwatched">Integer.IsEqual(ListItem.PlayCount,0) + !ListItem.IsResumable</expression>
+	<expression name="ListItemWatched">Integer.IsGreater(ListItem.PlayCount,0)</expression>
+	<expression name="HasRating">!String.IsEmpty(ListItem.Rating) + !String.IsEqual(ListItem.Rating,0.0) + !String.IsEqual(ListItem.Rating,0)</expression>
+
+	<!-- ============================================================ windows -->
+	<expression name="InfoDialogActive">Window.IsVisible(movieinformation) | Window.IsVisible(musicinformation) | Window.IsVisible(addoninformation)</expression>
+	<expression name="OSDPanelOpen">Window.IsVisible(SliderDialog) | Window.IsVisible(osdaudiosettings) | Window.IsVisible(osdvideosettings) | Window.IsVisible(osdsubtitlesettings) | Window.IsVisible(VideoBookmarks) | Window.IsVisible(playerprocessinfo) | Window.IsVisible(osdcmssettings)</expression>
+
+	<!-- ============================================================ engine-era names (inherited logic) -->
+	<expression name="ArtBackgroundOn">false</expression>
+	<expression name="IsRounded">false</expression>
+	<expression name="FocusOutlineOff">true</expression>
+	<expression name="FocusOutlineMedium">false</expression>
+	<expression name="ShowTrailerButton">true</expression>
+	<expression name="ShowUnwatchedMarkers">true</expression>
+	<expression name="ShowWatchedMarkers">false</expression>
+</includes>

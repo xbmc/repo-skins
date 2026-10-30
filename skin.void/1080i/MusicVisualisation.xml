@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing (music), Void: the song in serif on true black, artist and album as a caps kicker,
+	the cover as a floating plate on the right, the OSD's 1px timeline and two numbers, and the next
+	song as one quiet line. After a rest the artist's fanart rises behind it (same dwell mechanic as
+	Home); with a visualisation add-on enabled, the visualisation is the background instead.
+	Kodi id contract (Estuary Omega MusicVisualisation.xml): 2 = visualisation control. No focusable
+	controls (Kodi routes OK / Menu to MusicOSD, Back to the previous window).
+-->
+<window>
+	<defaultcontrol></defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Void_Background</include>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<visible>Player.HasAudio + Visualisation.Enabled</visible>
+		</control>
+		<!-- ambient: artist fanart rises after a rest -->
+		<control type="group">
+			<visible>!Visualisation.Enabled + $EXP[Dwell3] + !String.IsEmpty(Player.Art(fanart))</visible>
+			<include>Void_Anim_AmbientRise</include>
+			<control type="group">
+				<include>Void_Anim_KenBurns</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>1920</width>
+					<height>1080</height>
+					<aspectratio>scale</aspectratio>
+					<texture background="true" colordiffuse="$VAR[AmbientLevel]">$INFO[Player.Art(fanart)]</texture>
+				</control>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>1080</height>
+				<texture colordiffuse="scrim">common/vignette_home.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="150">WindowClose</animation>
+			</control>
+		</control>
+		<control type="group">
+			<visible>Visualisation.Enabled</visible>
+			<include content="OSD_Scrim"><param name="height" value="760"/></include>
+		</control>
+		<include content="Void_SectionLabel"><param name="label" value="Now playing$INFO[MusicPlayer.PlaylistPosition,[COLOR sep_light]  ·  [/COLOR],]$INFO[MusicPlayer.PlaylistLength, of ,]"/></include>
+		<include>Void_Clock</include>
+		<!-- cover plate (fades away while the fanart is up) -->
+		<control type="image">
+			<left>1300</left>
+			<top>250</top>
+			<width>460</width>
+			<height>460</height>
+			<aspectratio aligny="bottom">keep</aspectratio>
+			<fadetime>300</fadetime>
+			<texture background="true">$INFO[Player.Art(thumb)]</texture>
+			<visible>!Visualisation.Enabled + ![$EXP[Dwell3] + !String.IsEmpty(Player.Art(fanart))]</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		<!-- song, growing upwards from the timeline: kicker, title (1-2 lines) -->
+		<control type="grouplist">
+			<left>0</left>
+			<top>300</top>
+			<width>1260</width>
+			<height>596</height>
+			<orientation>vertical</orientation>
+			<align>right</align>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="group">
+				<width>1260</width>
+				<height>44</height>
+				<control type="label">
+					<left>164</left>
+					<top>0</top>
+					<width>1080</width>
+					<height>24</height>
+					<aligny>top</aligny>
+					<font>capsw_20</font>
+					<textcolor>grey</textcolor>
+					<label>$INFO[MusicPlayer.Artist]$INFO[MusicPlayer.Album,[COLOR sep]  ·  [/COLOR],]$INFO[MusicPlayer.Year,[COLOR sep]  ·  [/COLOR],]</label>
+				</control>
+			</control>
+			<include content="Title_NowPlaying_Visible">
+				<param name="label" value="$INFO[MusicPlayer.Title]"/>
+				<param name="p0" value="7821"/>
+				<param name="p1" value="7822"/>
+			</include>
+			<include content="Title_NowPlaying_Layout">
+				<param name="label" value="$INFO[MusicPlayer.Title]"/>
+				<param name="p0" value="7821"/>
+				<param name="p1" value="7822"/>
+			</include>
+		</control>
+		<include>OSD_Timeline</include>
+		<include>OSD_Numbers</include>
+		<control type="label">
+			<left>160</left>
+			<top>1004</top>
+			<width>1220</width>
+			<height>26</height>
+			<aligny>top</aligny>
+			<font>caps_20</font>
+			<textcolor>grey_soft</textcolor>
+			<label>Next[COLOR sep]  ·  [/COLOR]$INFO[MusicPlayer.offset(1).Title]$INFO[MusicPlayer.offset(1).Artist,[COLOR sep]  ·  [/COLOR],]</label>
+			<visible>!String.IsEmpty(MusicPlayer.offset(1).Title) + !Window.IsVisible(musicosd)</visible>
+		</control>
+		<!-- 0.9.9: how to reach the visualiser presets (OK opens the controls, Left from Play wraps to them) -->
+		<control type="label">
+			<left>1400</left>
+			<top>1004</top>
+			<width>360</width>
+			<height>26</height>
+			<aligny>top</aligny>
+			<align>right</align>
+			<font>caps_20</font>
+			<textcolor>grey_soft</textcolor>
+			<label>$LOCALIZE[31338]</label>
+			<visible>Visualisation.Enabled + Visualisation.HasPresets + !Window.IsVisible(musicosd)</visible>
+		</control>
+	</controls>
+</window>

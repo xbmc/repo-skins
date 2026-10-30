@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Player controls (Kodi's PlayerControls builtin while something plays outside fullscreen), Void:
+	a full-screen black dialog with the OSD composition - title in serif, 1px timeline, two numbers,
+	one text-button row.
+	Id contract (Estuary Omega PlayerControls.xml, skin-side ids): 201 transport row, 600 previous,
+	602 play/pause, 603 stop, 605 next, 704 repeat, 607 shuffle, 87 hidden seek stepper (Up).
+	Focus map: open -> 602; Left/Right walk the row; Up -> 87 (Left/Right step seek); Down -> row.
+-->
+<window>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<visible>Player.HasMedia + Window.IsActive(PlayerControls) + !Window.IsActive(FullscreenVideo) + !Window.IsActive(FullscreenGame) + !Window.IsActive(Visualisation)</visible>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="dim_dialog">common/white.png</texture>
+		</control>
+		<include content="Void_SectionLabel"><param name="label" value="Now playing[COLOR sep_light]  ·  [/COLOR]$VAR[OSD_State]"/></include>
+		<include>Void_Clock</include>
+		<control type="image">
+			<left>1380</left>
+			<top>300</top>
+			<width>380</width>
+			<height>440</height>
+			<aspectratio aligny="bottom" align="right">keep</aspectratio>
+			<fadetime>160</fadetime>
+			<texture background="true">$VAR[OSD_PlayerArt]</texture>
+		</control>
+		<include>OSD_TitleBlock</include>
+		<include>OSD_Timeline</include>
+		<control type="image">
+			<left>160</left>
+			<top>930</top>
+			<width>1600</width>
+			<height>1</height>
+			<texture colordiffuse="99f2f2f0">common/white.png</texture>
+			<visible>Control.HasFocus(87)</visible>
+		</control>
+		<include>OSD_Numbers</include>
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>Void_Hidden</include>
+			<onup>noop</onup>
+			<ondown>201</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+			<visible>Player.SeekEnabled</visible>
+		</control>
+		<control type="grouplist" id="201">
+			<left>146</left>
+			<top>1000</top>
+			<width>1640</width>
+			<height>56</height>
+			<orientation>horizontal</orientation>
+			<itemgap>30</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup condition="Player.SeekEnabled">87</onup>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<ondown>noop</ondown>
+			<!-- Play/Pause, Stop next to it, then skips and the toggles; fixed widths (OSD_RowButton) -->
+			<include content="OSD_RowButton">
+				<param name="id" value="602"/>
+				<param name="label" value="$VAR[OSD_PauseLabel]"/>
+				<param name="onclick" value="PlayerControl(Play)"/>
+				<param name="width" value="107"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="603"/>
+				<param name="label" value="Stop"/>
+				<param name="onclick" value="PlayerControl(Stop)"/>
+				<param name="width" value="91"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="600"/>
+				<param name="label" value="Previous"/>
+				<param name="onclick" value="PlayerControl(Previous)"/>
+				<param name="width" value="140"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="605"/>
+				<param name="label" value="Next"/>
+				<param name="onclick" value="PlayerControl(Next)"/>
+				<param name="width" value="92"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="607"/>
+				<param name="label" value="Shuffle  [COLOR grey_soft]$VAR[OSD_ShuffleState][/COLOR]"/>
+				<param name="onclick" value="PlayerControl(Random)"/>
+				<param name="width" value="170"/>
+				<param name="visible" value="Player.HasAudio"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="704"/>
+				<param name="label" value="Repeat  [COLOR grey_soft]$VAR[OSD_RepeatState][/COLOR]"/>
+				<param name="onclick" value="PlayerControl(Repeat)"/>
+				<param name="width" value="178"/>
+				<param name="visible" value="Player.HasAudio"/>
+			</include>
+		</control>
+	</controls>
+</window>

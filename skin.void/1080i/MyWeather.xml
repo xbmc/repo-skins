@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Weather (SPEC 5: Minimal, "plain text forecast, no icon pack"). Builder F, M4.
+	Kodi writes no control ids that Estuary Omega MyWeather.xml relies on: everything is Weather.* /
+	Window(Weather).Property(...) infolabels from the weather add-on (standard Current.* / Day0-6.*
+	properties, plus Daily.* when the provider fills them). Menu: grouplist 9000 (next location,
+	refresh, weather settings); forecast list 15100 (Estuary's id). States: busy, no provider, data.
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Void_Background</include>
+		<include content="Void_TopBar">
+			<param name="index" value="11"/>
+			<param name="title" value="$LOCALIZE[8]"/>
+			<param name="sub" value="$INFO[Window(Weather).Property(WeatherProvider)]"/>
+		</include>
+
+		<!-- ====== current conditions -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>content_top</top>
+			<width>800</width>
+			<visible>Weather.IsFetched + !String.StartsWith(Weather.Temperature,$LOCALIZE[503])</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>800</width>
+				<height>30</height>
+				<font>mono_15</font>
+				<textcolor>grey</textcolor>
+				<label>$INFO[Weather.Location]$INFO[Window(Weather).Property(Updated),  ·  ,]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>40</top>
+				<width>800</width>
+				<height>110</height>
+				<font>display_100</font>
+				<textcolor>text_primary</textcolor>
+				<label>$INFO[Weather.Temperature]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>160</top>
+				<width>800</width>
+				<height>40</height>
+				<font>title_28_semibold</font>
+				<textcolor>text_body</textcolor>
+				<label>$INFO[Weather.Conditions]</label>
+			</control>
+			<include content="Void_Rule">
+				<param name="left" value="0"/>
+				<param name="top" value="224"/>
+				<param name="width" value="800"/>
+				<param name="color" value="hairline_strong"/>
+			</include>
+			<control type="grouplist">
+				<left>0</left>
+				<top>240</top>
+				<width>800</width>
+				<height>320</height>
+				<orientation>vertical</orientation>
+				<include content="Misc_InfoLine"><param name="label" value="Feels like"/><param name="value" value="Window(Weather).Property(Current.FeelsLike)"/><param name="suffix" value="$INFO[System.TemperatureUnits]"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="Humidity"/><param name="value" value="Window(Weather).Property(Current.Humidity)"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="Wind"/><param name="value" value="Window(Weather).Property(Current.Wind)"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="Precipitation"/><param name="value" value="Window(Weather).Property(Current.Precipitation)"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="UV index"/><param name="value" value="Window(Weather).Property(Current.UVIndex)"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="Sunrise"/><param name="value" value="Window(Weather).Property(Today.Sunrise)"/><param name="width" value="800"/></include>
+				<include content="Misc_InfoLine"><param name="label" value="Sunset"/><param name="value" value="Window(Weather).Property(Today.Sunset)"/><param name="width" value="800"/></include>
+			</control>
+		</control>
+
+		<!-- ====== no data / busy -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>content_top</top>
+			<width>800</width>
+			<visible>!Weather.IsFetched | String.StartsWith(Weather.Temperature,$LOCALIZE[503])</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>800</width>
+				<height>40</height>
+				<font>mono_15</font>
+				<textcolor>grey</textcolor>
+				<label>$LOCALIZE[503]</label>
+				<visible>String.StartsWith(Weather.Temperature,$LOCALIZE[503])</visible>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>0</top>
+				<width>800</width>
+				<height>111</height>  <!-- 3 lines exactly: no half-clipped line at the bottom -->
+				<font>body_25</font>
+				<label>$LOCALIZE[31261]</label>
+				<visible>!String.StartsWith(Weather.Temperature,$LOCALIZE[503])</visible>
+			</control>
+		</control>
+
+		<!-- ====== menu -->
+		<control type="grouplist" id="9000">
+			<left>page_margin</left>
+			<top>820</top>
+			<width>800</width>
+			<height>dialog_row_h</height>
+			<orientation>horizontal</orientation>
+			<itemgap>16</itemgap>
+			<onleft>noop</onleft>
+			<onright>15100</onright>
+			<onup>noop</onup>
+			<ondown>noop</ondown>
+			<include content="Void_DialogButton">
+				<param name="id" value="9011"/>
+				<param name="width" value="250"/>
+				<param name="label" value="Next location"/>
+				<param name="onclick" value="Weather.LocationNext"/>
+				<param name="visible" value="Weather.IsFetched"/>
+			</include>
+			<include content="Void_DialogButton">
+				<param name="id" value="9012"/>
+				<param name="width" value="200"/>
+				<param name="label" value="$LOCALIZE[184]"/>
+				<param name="onclick" value="Weather.Refresh"/>
+				<param name="visible" value="Weather.IsFetched"/>
+			</include>
+			<include content="Void_DialogButton">
+				<param name="id" value="9013"/>
+				<param name="width" value="250"/>
+				<param name="label" value="$LOCALIZE[5]"/>
+				<param name="onclick" value="ActivateWindow(servicesettings)"/>
+			</include>
+		</control>
+
+		<!-- ====== forecast -->
+		<control type="group">
+			<left>984</left>
+			<top>content_top</top>
+			<width>840</width>
+			<visible>Weather.IsFetched</visible>
+			<include content="Misc_Caption">
+				<param name="width" value="840"/>
+				<param name="label" value="Forecast"/>
+			</include>
+			<control type="list" id="15100">
+				<left>0</left>
+				<top>48</top>
+				<width>840</width>
+				<height>792</height>
+				<onleft>9000</onleft>
+				<onright>noop</onright>
+				<onup>15100</onup>
+				<ondown>15100</ondown>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="840" height="88">
+					<control type="label">
+						<left>list_text_x</left>
+						<top>8</top>
+						<width>300</width>
+						<height>40</height>
+						<font>sans_28_med</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<left>list_text_x</left>
+						<top>48</top>
+						<width>560</width>
+						<height>30</height>
+						<font>small_19</font>
+						<textcolor>grey_soft</textcolor>
+						<label>$INFO[ListItem.Property(Outlook)]</label>
+					</control>
+					<control type="label">
+						<right>list_text_x</right>
+						<top>0</top>
+						<width>260</width>
+						<height>88</height>
+						<align>right</align>
+						<font>num_16</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Label2]</label>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>840</width>
+						<height>rule_h</height>
+						<texture colordiffuse="00ffffff">common/white.png</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="840" height="88">
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>840</width>
+						<height>88</height>
+						<texture colordiffuse="00ffffff">common/white.png</texture>
+						<visible>Control.HasFocus(15100)</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>list_bar_w</width>
+						<height>88</height>
+						<texture colordiffuse="00ffffff">common/white.png</texture>
+						<visible>Control.HasFocus(15100)</visible>
+					</control>
+					<control type="label">
+						<left>list_text_x</left>
+						<top>8</top>
+						<width>300</width>
+						<height>40</height>
+						<font>serif_40</font>
+						<textcolor>text_primary</textcolor>
+						<label>$INFO[ListItem.Label]</label>
+					</control>
+					<control type="label">
+						<left>list_text_x</left>
+						<top>48</top>
+						<width>560</width>
+						<height>30</height>
+						<font>small_19</font>
+						<textcolor>grey</textcolor>
+						<label>$INFO[ListItem.Property(Outlook)]</label>
+					</control>
+					<control type="label">
+						<right>list_text_x</right>
+						<top>0</top>
+						<width>260</width>
+						<height>88</height>
+						<align>right</align>
+						<font>num_16</font>
+						<textcolor>text_primary</textcolor>
+						<label>$INFO[ListItem.Label2]</label>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<bottom>0</bottom>
+						<width>840</width>
+						<height>rule_h</height>
+						<texture colordiffuse="00ffffff">common/white.png</texture>
+					</control>
+				</focusedlayout>
+				<content>
+					<include content="Misc_WeatherDay"><param name="i" value="0"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="1"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="2"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="3"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="4"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="5"/></include>
+					<include content="Misc_WeatherDay"><param name="i" value="6"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="1"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="2"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="3"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="4"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="5"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="6"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="7"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="8"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="9"/></include>
+					<include content="Misc_WeatherDaily"><param name="i" value="10"/></include>
+				</content>
+			</control>
+		</control>
+	</controls>
+</window>

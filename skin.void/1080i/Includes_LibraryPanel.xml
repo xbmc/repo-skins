@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Library panel (Custom_1160_LibraryPanel.xml) and view picker (Custom_1161_ViewPicker.xml): shared
+	variables. docs/requests/library-panel/BRIEF.md.
+	Window(Home) properties:
+	  void.libmode   empty = the panel of the library underneath (Videos / Music window);
+	                 update / clean = opened from the System menu (choose Movies and TV or Music)
+	  void.libclean  video / music = the Clean library confirmation is showing
+	Both are cleared when the panel closes.
+	Inside these dialogs Container.* (Content, Viewmode, SortMethod, ViewCount, PluginName) reads
+	the media window underneath; Control.IsVisible / Container(id) would look in the dialog itself,
+	so nothing here uses them.
+-->
+<includes>
+	<!-- panel heading: "Options · Movies" / "Update library" / "Clean library" -->
+	<variable name="LibPanel_Kicker">
+		<value condition="String.IsEqual(Window(Home).Property(void.libclean),video)">Clean library[COLOR sep_light]  ·  [/COLOR]Movies and TV</value>
+		<value condition="String.IsEqual(Window(Home).Property(void.libclean),music)">Clean library[COLOR sep_light]  ·  [/COLOR]Music</value>
+		<value condition="String.IsEqual(Window(Home).Property(void.libmode),update)">Update library</value>
+		<value condition="String.IsEqual(Window(Home).Property(void.libmode),clean)">Clean library</value>
+		<value>Options[COLOR sep_light]  ·  [/COLOR]$VAR[LibPanel_Where]</value>
+	</variable>
+	<variable name="LibPanel_Where">
+		<value condition="Container.Content(movies) | Container.Content(sets)">Movies</value>
+		<value condition="Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)">TV Shows</value>
+		<value condition="Container.Content(musicvideos)">Music videos</value>
+		<value condition="Window.IsActive(music)">Music</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<!-- Sets row: films in the library (not inside a set already, not a plug-in folder) and the library has sets -->
+	<expression name="LibPanel_ShowSets">Window.IsActive(videos) + [Container.Content(movies) | String.IsEqual(Container.FolderPath,videodb://movies/) | String.IsEqual(Container.FolderPath,library://video/movies/)] + !String.StartsWith(Container.FolderPath,videodb://movies/sets/) + String.IsEmpty(Container.PluginName) + Library.HasContent(moviesets)</expression>
+	<variable name="LibPanel_Watched">
+		<value condition="System.Setting(hidewatched)">hidden</value>
+		<value>shown</value>
+	</variable>
+	<variable name="LibPanel_CleanText">
+		<value condition="String.IsEqual(Window(Home).Property(void.libclean),music)">Kodi removes the songs, albums and artists whose files it can no longer find. Your files stay where they are.</value>
+		<value>Kodi removes the movies, shows and episodes whose files it can no longer find. Your files stay where they are.</value>
+	</variable>
+
+	<!-- "Menu  Options" in the library header (the options row above is invisible until focused, so the
+	     header says how to reach the options; 0.9.19: it named Up, which only works from the top row, while the
+	     Menu key opens the Library panel from any item). Sits left of the clock, same caps line. -->
+	<include name="LibPanel_HeaderWord">
+		<control type="label">
+			<right>340</right>
+			<top>label_top</top>
+			<width>400</width>
+			<height>24</height>
+			<align>right</align>
+			<aligny>top</aligny>
+			<font>caps_20</font>
+			<textcolor>grey_dim</textcolor>
+			<label>$LOCALIZE[31356]</label>
+		</control>
+	</include>
+
+	<!-- One preview card: 320x180 schematic, name, "current" mark. focus = brightness + 6 % (Void). -->
+	<include name="Pick_Item">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>8</left>
+				<top>16</top>
+				<width>320</width>
+				<height>180</height>
+				<include condition="$PARAM[focused]">Void_Anim_FocusPoster</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>320</width>
+					<height>180</height>
+					<texture colordiffuse="art_35">$INFO[ListItem.Icon]</texture>
+					<visible>!$PARAM[focused] | !Control.HasFocus(100)</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>320</width>
+					<height>180</height>
+					<texture>$INFO[ListItem.Icon]</texture>
+					<visible>$PARAM[focused] + Control.HasFocus(100)</visible>
+				</control>
+			</control>
+			<control type="label">
+				<left>8</left>
+				<top>222</top>
+				<width>340</width>
+				<height>40</height>
+				<aligny>top</aligny>
+				<font>sans_28_med</font>
+				<textcolor>grey</textcolor>
+				<selectedcolor>grey</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(100)</visible>
+			</control>
+			<control type="label">
+				<left>8</left>
+				<top>214</top>
+				<width>340</width>
+				<height>52</height>
+				<aligny>top</aligny>
+				<font>serif_40</font>
+				<textcolor>text</textcolor>
+				<selectedcolor>text</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(100)</visible>
+			</control>
+			<control type="image">
+				<left>9</left>
+				<top>284</top>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="text">common/dot.png</texture>
+				<visible>!String.IsEmpty(ListItem.Label2)</visible>
+			</control>
+			<control type="label">
+				<left>30</left>
+				<top>278</top>
+				<width>300</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<selectedcolor>grey</selectedcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+</includes>

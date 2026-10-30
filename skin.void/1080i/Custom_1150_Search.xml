@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Void Search - custom window 1150 (replaces Estuary's Custom_1107_SearchDialog; SPEC 5 / T16).
+	Owner: Builder A. Opened from Home's search icon: ActivateWindow(1150).
+	No Kodi-owned control ids. Pieces live in Includes_Search.xml.
+
+	Flow: the window opens on the edit field and, when it is empty, opens the keyboard straight away.
+	Done -> results load (library only). Down enters the first column with results; Left/Right walk the columns (empty ones
+	are skipped). OK on a result does Kodi's normal action (play/info per select action, open show /
+	album / artist). Back from a row -> edit field; Back from the edit field -> Home.
+-->
+<window type="window" id="1150">
+	<defaultcontrol always="true">9099</defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<include>Anim_WindowOpenClose</include>
+	<!-- the encoded query (Includes_Search.xml) must not outlive the window: a stale one would show old rows -->
+	<onunload>ClearProperty(Void.Search.Encoded,home)</onunload>
+	<controls>
+		<!-- query encoder (script.skinvariables): its items are never shown; it exists to set Void.Search.Encoded -->
+		<control type="list" id="9710">
+			<left>-20</left>
+			<top>-20</top>
+			<width>1</width>
+			<height>1</height>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content target="programs">$VAR[Search_EncoderPath]</content>
+		</control>
+		<!-- Opens the keyboard on arrival: the window starts focused on this invisible button, whose
+		     onfocus moves to the field and clicks it (onload/AlarmClock clicks were lost on the Shield).
+		     With a query already present it just hands focus to the field. -->
+		<control type="button" id="9099">
+			<left>-100</left>
+			<top>-100</top>
+			<width>1</width>
+			<height>1</height>
+			<onfocus>SetFocus(9001)</onfocus>
+			<onfocus condition="!$EXP[Search_HasQuery]">Action(Select)</onfocus>  <!-- SendClick does not open an edit field's keyboard; Select does -->
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<include>Void_Background</include>
+		<include content="Void_TopBar">
+			<param name="title" value="$LOCALIZE[137]"/>
+		</include>
+		<include>Search_Query</include>
+		<include>Search_Results</include>
+	</controls>
+</window>

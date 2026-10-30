@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD, Void: opens over Now playing (MusicVisualisation.xml), which already draws the song,
+	timeline and numbers; this adds the same text-button row as the video OSD at y 1000.
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (603 when pause is not possible),
+	87 seek stepper (hidden; Left/Right step), group 200 in this order: 602 play/pause, 603 stop, 600 prev, 607 next,
+	70054 shuffle, 70053 repeat, 70051 queue, 70056 visualiser presets (Void id; only with a
+	visualisation that has presets). Not shipped: 608 record / PVR + RDS ids,
+	70052 rating, 70055 lyrics, 70048 settings.
+	Focus map: Left/Right walk the row (Left from the first button wraps to Visualiser presets when shown), Up -> 87 (seek), Down from 87 -> row. Back closes the OSD.
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_Toast</include>
+	<controls>
+		<control type="image">
+			<left>160</left>
+			<top>930</top>
+			<width>1600</width>
+			<height>1</height>
+			<texture colordiffuse="99f2f2f0">common/white.png</texture>
+			<visible>Control.HasFocus(87)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>Void_Hidden</include>
+			<onup>noop</onup>
+			<ondown>200</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+			<visible>Player.SeekEnabled</visible>
+		</control>
+		<control type="grouplist" id="200">
+			<left>146</left>
+			<top>1000</top>
+			<width>1640</width>
+			<height>56</height>
+			<orientation>horizontal</orientation>
+			<itemgap>30</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup condition="Player.SeekEnabled">87</onup>
+			<!-- with presets: Left from Play/Pause wraps to Visualiser presets (one press), Right from it back -->
+			<onleft condition="Visualisation.Enabled + Visualisation.HasPresets">70056</onleft>
+			<onleft condition="!Visualisation.Enabled | !Visualisation.HasPresets">noop</onleft>
+			<onright condition="Control.HasFocus(70056)">602</onright>
+			<onright condition="!Control.HasFocus(70056)">noop</onright>
+			<ondown>noop</ondown>
+			<!-- Order (Omar): Play/Pause, Stop next to it, Previous, Next, Shuffle, Repeat, Queue (+ Visualiser presets). Fixed widths
+			     (OSD_RowButton): the toggles never shift the row. -->
+			<include content="OSD_RowButton">
+				<param name="id" value="602"/>
+				<param name="label" value="$VAR[OSD_PauseLabel]"/>
+				<param name="onclick" value="PlayerControl(Play)"/>
+				<param name="width" value="107"/>
+				<param name="visible" value="Player.PauseEnabled"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="603"/>
+				<param name="label" value="Stop"/>
+				<param name="onclick" value="PlayerControl(Stop)"/>
+				<param name="width" value="91"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="600"/>
+				<param name="label" value="Previous"/>
+				<param name="onclick" value="PlayerControl(Previous)"/>
+				<param name="width" value="140"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="607"/>
+				<param name="label" value="Next"/>
+				<param name="onclick" value="PlayerControl(Next)"/>
+				<param name="width" value="92"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="70054"/>
+				<param name="label" value="Shuffle  [COLOR grey_soft]$VAR[OSD_ShuffleState][/COLOR]"/>
+				<param name="onclick" value="PlayerControl(Random)"/>
+				<param name="width" value="170"/>
+			</include>
+			<include content="OSD_RowButton">
+				<param name="id" value="70053"/>
+				<param name="label" value="Repeat  [COLOR grey_soft]$VAR[OSD_RepeatState][/COLOR]"/>
+				<param name="onclick" value="PlayerControl(Repeat)"/>
+				<param name="width" value="178"/>
+			</include>
+			<control type="button" id="70051">
+				<top>4</top>
+				<width>114</width>
+				<height>48</height>
+				<font>sans_24_med</font>
+				<textoffsetx>14</textoffsetx>
+				<label>$LOCALIZE[31258]</label>
+				<onclick>Dialog.Close(all,true)</onclick>
+				<onclick>ActivateWindow(musicplaylist)</onclick>
+				<include content="Void_Anim_FocusText"><param name="zoom" value="112"/></include>
+			</control>
+			<!-- 0.9.9: Kodi's preset list (DialogSelect); only for a running visualisation with presets -->
+			<include content="OSD_RowButton">
+				<param name="id" value="70056"/>
+				<param name="label" value="$LOCALIZE[31337]"/>
+				<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+				<param name="width" value="244"/>
+				<param name="visible" value="Visualisation.Enabled + Visualisation.HasPresets"/>
+			</include>
+		</control>
+	</controls>
+</window>

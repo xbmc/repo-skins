@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Library views (VoidIndex mockup; docs/skin.void/SPEC.md "Libraries").
+	  50  Index  - the rotary text index: one tall serif column on the x=160 axis, focus at y=540,
+	               neighbours shrinking and greying with distance; A-Z letter column at x=1744;
+	               the focused item's poster as a floating plate in the right third; "412 of 1360".
+	               Up/Down = item, Left/Right = previous/next letter (page when not sorted by name),
+	               Left on the first item or Up at the top = the options row.
+	  51  Wall   - sparse poster wall on black (movies, sets, shows, seasons, music videos).
+	  52  Covers - sparse square wall (albums, artists, songs, pictures, add-ons).
+	Every media window uses these; ids 50/51/52 are listed in each window's <views>.
+	Options row: grouplist 9000 (= the window's menucontrol) at y=128, invisible until focused.
+-->
+<includes>
+	<!-- ================================================================ expressions -->
+	<expression name="Lib_OptionsFocus">ControlGroup(9000).HasFocus()</expression>
+	<expression name="Lib_Empty">Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</expression>
+	<expression name="Lib_IsVideoLibrary">Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</expression>
+	<expression name="Lib_IsTVRoot">Container.Content(tvshows) + String.StartsWith(Container.FolderPath,videodb://tvshows/titles)</expression>
+	<expression name="Lib_IsInProgressTV">String.StartsWith(Container.FolderPath,videodb://inprogresstvshows)</expression>
+	<expression name="Plate_HasPoster">!Container(50).ListItem.IsParentFolder + [!String.IsEmpty(Container(50).ListItem.Art(poster)) | !String.IsEmpty(Container(50).ListItem.Art(tvshow.poster))] + !Container.Content(episodes)</expression>
+	<expression name="Plate_HasLandscape">!Container(50).ListItem.IsParentFolder + !$EXP[Plate_HasPoster] + Container.Content(episodes) + !String.IsEmpty(Container(50).ListItem.Art(thumb))</expression>
+	<expression name="Plate_HasSquare">!Container(50).ListItem.IsParentFolder + !$EXP[Plate_HasPoster] + !$EXP[Plate_HasLandscape] + !String.IsEmpty(Container(50).ListItem.Art(thumb))</expression>
+
+	<!-- ================================================================== variables -->
+	<variable name="Lib_Title">
+		<value condition="Container.Content(movies) + String.StartsWith(Container.FolderPath,videodb://movies/titles)">Movies</value>
+		<value condition="$EXP[Lib_IsTVRoot]">TV Shows</value>
+		<value condition="$EXP[Lib_IsInProgressTV]">TV Shows</value>
+		<value condition="Container.Content(episodes) + !String.IsEmpty(ListItem.TVShowTitle)">$INFO[ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value condition="Window.IsActive(music)">Music</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<!-- "A to Z" when sorted by name, else "by <sort>"; filters appended -->
+	<variable name="Lib_Sub">
+		<value condition="$EXP[Lib_IsInProgressTV]">In progress</value>
+		<value condition="Container.Content(episodes)">$INFO[ListItem.Season,Season ,]</value>
+		<value condition="$EXP[SortIsAlpha] + Container.SortDirection(ascending) + System.Setting(hidewatched) + $EXP[Lib_IsVideoLibrary]">A to Z  ·  unwatched</value>
+		<value condition="$EXP[SortIsAlpha] + Container.SortDirection(ascending)">A to Z</value>
+		<value condition="$EXP[SortIsAlpha]">Z to A</value>
+		<value condition="System.Setting(hidewatched) + $EXP[Lib_IsVideoLibrary]">$INFO[Container.SortMethod,by ,]  ·  unwatched</value>
+		<value>$INFO[Container.SortMethod,by ,]</value>
+	</variable>
+
+	<!-- Plate art / meta for the focused index item (Container 50) -->
+	<variable name="Plate_Poster">
+		<value condition="!String.IsEmpty(Container(50).ListItem.Art(poster))">$INFO[Container(50).ListItem.Art(poster)]</value>
+		<value>$INFO[Container(50).ListItem.Art(tvshow.poster)]</value>
+	</variable>
+	<variable name="Plate_Runtime">
+		<value condition="Integer.IsGreater(Container(50).ListItem.Duration(h),0) + Integer.IsGreater(Container(50).ListItem.Duration(m),0)">$INFO[Container(50).ListItem.Duration(h),, h ]$INFO[Container(50).ListItem.Duration(m),, min]</value>
+		<value condition="Integer.IsGreater(Container(50).ListItem.Duration(h),0)">$INFO[Container(50).ListItem.Duration(h),, h]</value>
+		<value>$INFO[Container(50).ListItem.Duration(m),, min]</value>
+	</variable>
+	<variable name="Plate_RuntimePart">
+		<value condition="Integer.IsGreater(Container(50).ListItem.Duration(h),0) | Integer.IsGreater(Container(50).ListItem.Duration(m),0)">[COLOR sep_light]  ·  [/COLOR]$VAR[Plate_Runtime]</value>
+	</variable>
+	<variable name="Wall_Title">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="Plate_Rating">
+		<value condition="!String.IsEmpty(Container(50).ListItem.Rating) + !String.IsEqual(Container(50).ListItem.Rating,0.0)">[COLOR sep_light]  ·  [/COLOR][COLOR value]$INFO[Container(50).ListItem.Rating][/COLOR]</value>
+	</variable>
+	<variable name="Plate_EpCode">
+		<value condition="String.IsEmpty(Container(50).ListItem.Episode)"></value>
+		<value condition="Integer.IsLess(Container(50).ListItem.Season,10) + Integer.IsLess(Container(50).ListItem.Episode,10)">S0$INFO[Container(50).ListItem.Season]E0$INFO[Container(50).ListItem.Episode]</value>
+		<value condition="Integer.IsLess(Container(50).ListItem.Season,10)">S0$INFO[Container(50).ListItem.Season]E$INFO[Container(50).ListItem.Episode]</value>
+		<value condition="Integer.IsLess(Container(50).ListItem.Episode,10)">S$INFO[Container(50).ListItem.Season]E0$INFO[Container(50).ListItem.Episode]</value>
+		<value>S$INFO[Container(50).ListItem.Season]E$INFO[Container(50).ListItem.Episode]</value>
+	</variable>
+	<variable name="Plate_Meta">
+		<value condition="Container(50).ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,movie)">$INFO[Container(50).ListItem.Year]$VAR[Plate_RuntimePart]$VAR[Plate_Rating]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,tvshow)">$INFO[Container(50).ListItem.Year]$VAR[PL_Container_50_TotalSeasons_Season]$VAR[Plate_Rating]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,season)">$VAR[PL_Container_50_TotalEpisodes_Episode]$INFO[Container(50).ListItem.Property(UnWatchedEpisodes),[COLOR sep_light]  ·  [/COLOR], to watch]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,episode)">$VAR[Plate_EpCode]$VAR[Plate_RuntimePart]$VAR[Plate_Rating]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,set)">$VAR[PL_Container_50_Total_Film]$INFO[Container(50).ListItem.Property(Watched),[COLOR sep_light]  ·  [/COLOR], watched]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,album)">$INFO[Container(50).ListItem.Artist]$INFO[Container(50).ListItem.Year,[COLOR sep_light]  ·  [/COLOR],]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,artist)">$INFO[Container(50).ListItem.Genre]</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,song)">$INFO[Container(50).ListItem.Artist]$INFO[Container(50).ListItem.Duration,[COLOR sep_light]  ·  [/COLOR],]</value>
+		<value>$INFO[Container(50).ListItem.Label2]</value>
+	</variable>
+	<!-- state line under the meta: resume / watched -->
+	<variable name="Plate_State">
+		<value condition="Container(50).ListItem.IsResumable">Resume at $INFO[Container(50).ListItem.PercentPlayed]%</value>
+		<value condition="[String.IsEqual(Container(50).ListItem.DBType,movie) | String.IsEqual(Container(50).ListItem.DBType,episode)] + Integer.IsGreater(Container(50).ListItem.PlayCount,0)">Watched</value>
+		<value condition="String.IsEqual(Container(50).ListItem.DBType,movie) | String.IsEqual(Container(50).ListItem.DBType,episode)">Unwatched</value>
+	</variable>
+	<variable name="VidLib_FilterLabel">
+		<value condition="System.Setting(hidewatched)">Watched  hidden</value>
+		<value>Watched  shown</value>
+	</variable>
+	<variable name="VidLib_Direction">
+		<value condition="Container.SortDirection(descending)">Descending</value>
+		<value>Ascending</value>
+	</variable>
+	<variable name="Lib_Hint">
+		<value condition="$EXP[SortIsAlpha]">Left · Right jump by letter[COLOR sep_light]  ·  [/COLOR]Up at the top for options</value>
+		<value>Left · Right page[COLOR sep_light]  ·  [/COLOR]Up at the top for options</value>
+	</variable>
+
+	<!-- ========================================================== options row (9000) -->
+	<!-- Invisible until focused; the view recedes while it is. Put Void_Options_Look on each button. -->
+	<include name="Void_Anim_OptionsRow">
+		<animation type="Conditional" condition="!ControlGroup(9000).HasFocus()" reversible="true">
+			<effect type="fade" start="100" end="0" time="160"/>
+		</animation>
+	</include>
+	<include name="Void_OptionsBegin">
+		<left>146</left>
+		<top>124</top>
+		<width>1620</width>
+		<height>44</height>
+		<orientation>horizontal</orientation>
+		<itemgap>24</itemgap>
+		<usecontrolcoords>true</usecontrolcoords>
+		<onup>noop</onup>
+		<include>Void_Anim_OptionsRow</include>
+	</include>
+	<!-- caption over the row so it reads as a menu -->
+	<include name="Void_OptionsCaption">
+		<control type="label">
+			<left>axis</left>
+			<top>label_top</top>
+			<width>1200</width>
+			<height>22</height>
+			<aligny>top</aligny>
+			<font>caps_20</font>
+			<textcolor>grey</textcolor>
+			<label>$LOCALIZE[31256][COLOR sep_light]  ·  [/COLOR]$LOCALIZE[31257]</label>
+			<visible>ControlGroup(9000).HasFocus()</visible>
+			<include>Void_Anim_Dwell</include>
+		</control>
+	</include>
+	<!-- Kodi media-window buttons the row clicks into (sort by / sort order) -->
+	<include name="Void_SortControls">
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>Void_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>Void_Hidden</include>
+		</control>
+	</include>
+
+	<!-- ============================================================ 50: rotary index -->
+	<include name="Void_View50">
+		<param name="viewlabel">31217</param>
+		<param name="libpanel">false</param>
+		<definition>
+			<control type="group">
+				<visible>Control.IsVisible(50)</visible>
+				<include>Anim_FadeVisible</include>
+				<include content="Void_Anim_Recede"><param name="condition" value="$EXP[Lib_OptionsFocus]"/><param name="level" value="25"/></include>
+				<!-- the driver: invisible fixedlist, focus fixed in slot 7 of 15 -->
+				<control type="fixedlist" id="50">
+					<left>0</left>
+					<top>0</top>
+					<width>8</width>
+					<height>60</height>
+					<orientation>vertical</orientation>
+					<focusposition>7</focusposition>
+					<movement>0</movement>
+					<scrolltime tween="cubic" easing="out">160</scrolltime>
+					<viewtype label="$PARAM[viewlabel]">list</viewtype>
+					<onup>SetFocus(9000)</onup>
+					<ondown>noop</ondown>
+					<onleft condition="Integer.IsEqual(Container(50).CurrentItem,1) | Integer.IsEqual(Container(50).NumItems,1)">SetFocus(9000)</onleft>
+					<onleft condition="!Integer.IsEqual(Container(50).CurrentItem,1) + $EXP[SortIsAlpha]">Action(prevletter)</onleft>
+					<onleft condition="!Integer.IsEqual(Container(50).CurrentItem,1) + !$EXP[SortIsAlpha]">Action(pageup)</onleft>
+					<!-- 0.9.7: Right on the last item (nowhere left to jump) = the Library panel -->
+					<onright condition="$PARAM[libpanel] + Integer.IsEqual(Container(50).CurrentItem,Container(50).NumItems)">ActivateWindow(1160)</onright>
+					<onright condition="![$PARAM[libpanel] + Integer.IsEqual(Container(50).CurrentItem,Container(50).NumItems)] + $EXP[SortIsAlpha]">Action(nextletter)</onright>
+					<onright condition="![$PARAM[libpanel] + Integer.IsEqual(Container(50).CurrentItem,Container(50).NumItems)] + !$EXP[SortIsAlpha]">Action(pagedown)</onright>
+					<itemlayout height="4" width="8"/>
+					<focusedlayout height="4" width="8"/>
+				</control>
+				<include>Rotary_Column</include>
+				<include>Rotary_Letters</include>
+				<!-- floating plate + meta + count, centred on the column (mockup: plate 300..750) -->
+				<control type="grouplist">
+					<left>1380</left>
+					<top>35</top>
+					<width>320</width>
+					<height>1080</height>
+					<orientation>vertical</orientation>
+					<align>center</align>
+					<itemgap>0</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="group">
+						<width>300</width>
+						<height>478</height>
+						<visible>$EXP[Plate_HasPoster]</visible>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>300</width>
+							<height>450</height>
+							<aspectratio>scale</aspectratio>
+							<fadetime>160</fadetime>
+							<texture background="true">$VAR[Plate_Poster]</texture>
+							<visible>!Container(50).Scrolling</visible>
+						</control>
+					</control>
+					<control type="group">
+						<width>300</width>
+						<height>197</height>
+						<visible>$EXP[Plate_HasLandscape]</visible>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>300</width>
+							<height>169</height>
+							<aspectratio>scale</aspectratio>
+							<fadetime>160</fadetime>
+							<texture background="true">$INFO[Container(50).ListItem.Art(thumb)]</texture>
+							<visible>!Container(50).Scrolling</visible>
+						</control>
+					</control>
+					<control type="group">
+						<width>300</width>
+						<height>328</height>
+						<visible>$EXP[Plate_HasSquare]</visible>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>300</width>
+							<height>300</height>
+							<aspectratio aligny="bottom">keep</aspectratio>
+							<fadetime>160</fadetime>
+							<texture background="true">$INFO[Container(50).ListItem.Art(thumb)]</texture>
+							<visible>!Container(50).Scrolling</visible>
+						</control>
+					</control>
+					<control type="label">
+						<width>320</width>
+						<height>48</height>
+						<aligny>top</aligny>
+						<font>sans_22</font>
+						<textcolor>grey</textcolor>
+						<label>$VAR[Plate_Meta]</label>
+					</control>
+					<control type="label">
+						<width>320</width>
+						<height>30</height>
+						<aligny>top</aligny>
+						<font>caps_20</font>
+						<textcolor>grey_soft</textcolor>
+						<label>[COLOR value]$INFO[Container.CurrentItem][/COLOR] of $INFO[Container.NumItems]</label>
+					</control>
+					<control type="label">
+						<width>320</width>
+						<height>30</height>
+						<aligny>top</aligny>
+						<font>caps_20</font>
+						<textcolor>grey_soft</textcolor>
+						<label>$VAR[Plate_State]</label>
+					</control>
+				</control>
+				<include content="Void_Hint">
+					<param name="label" value="$VAR[Lib_Hint]"/>
+					<param name="top" value="1000"/>
+					<param name="visible" value="$EXP[Dwell2] + Control.HasFocus(50)"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<!-- engine name -->
+	<include name="View_50_List">
+		<include>Void_View50</include>
+	</include>
+
+	<!-- ============================================================ 51: poster wall -->
+	<include name="Void_WallItem">
+		<param name="w">210</param>
+		<param name="h">315</param>
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="focused">false</param>
+		<param name="color">white</param>
+		<definition>
+			<control type="group">
+				<left>28</left>
+				<top>14</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<include condition="$PARAM[focused]">Void_Anim_FocusPoster</include>
+				<include content="Void_Artwork">
+					<param name="art" value="$PARAM[art]"/>
+					<param name="color" value="$PARAM[color]"/>
+					<param name="title" value="$VAR[Wall_Title]"/>
+				</include>
+				<include>Void_WatchedMarkers</include>
+			</control>
+		</definition>
+	</include>
+	<include name="Void_WallCaption">
+		<param name="id"/>
+		<definition>
+			<control type="label">
+				<left>152</left>
+				<top>906</top>
+				<width>1300</width>
+				<height>64</height>
+				<aligny>top</aligny>
+				<font>serif_56</font>
+				<textcolor>text</textcolor>
+				<scroll>true</scroll>  <!-- long titles run on instead of ending in "..." -->
+				<label>$INFO[Container($PARAM[id]).ListItem.Label]</label>
+				<visible>!Container($PARAM[id]).ListItem.IsParentFolder</visible>
+			</control>
+			<control type="label">
+				<left>160</left>
+				<top>984</top>
+				<width>1300</width>
+				<height>30</height>
+				<aligny>top</aligny>
+				<font>sans_22</font>
+				<textcolor>grey</textcolor>
+				<label>$INFO[Container($PARAM[id]).ListItem.Year]$INFO[Container($PARAM[id]).ListItem.Genre,[COLOR sep_light]  ·  [/COLOR],]$INFO[Container($PARAM[id]).ListItem.Artist,[COLOR sep_light]  ·  [/COLOR],]</label>
+			</control>
+			<control type="label">
+				<right>160</right>
+				<top>988</top>
+				<width>400</width>
+				<height>26</height>
+				<align>right</align>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey_soft</textcolor>
+				<label>[COLOR value]$INFO[Container.CurrentItem][/COLOR] of $INFO[Container.NumItems]</label>
+			</control>
+		</definition>
+	</include>
+	<include name="Void_View51">
+		<control type="group">
+			<visible>Control.IsVisible(51)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="Void_Anim_Recede"><param name="condition" value="$EXP[Lib_OptionsFocus]"/><param name="level" value="25"/></include>
+			<control type="panel" id="51">
+				<left>132</left>
+				<top>158</top>
+				<width>1596</width>
+				<height>720</height>
+				<orientation>vertical</orientation>
+				<onup>SetFocus(9000)</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.7: past the first / last column = Library panel -->
+				<onright>ActivateWindow(1160)</onright>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">220</scrolltime>
+				<viewtype label="31218">panel</viewtype>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)</visible>
+				<itemlayout width="266" height="360">
+					<include content="Void_WallItem">
+						<param name="art" value="$VAR[ListItemArt]"/>
+						<param name="color" value="art_35"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="266" height="360">
+					<include content="Void_WallItem">
+						<param name="art" value="$VAR[ListItemArt]"/>
+						<param name="color" value="white"/>
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+			<include content="Void_WallCaption"><param name="id" value="51"/></include>
+		</control>
+	</include>
+
+	<!-- ============================================================ 52: square wall -->
+	<include name="Void_View52">
+		<control type="group">
+			<visible>Control.IsVisible(52)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="Void_Anim_Recede"><param name="condition" value="$EXP[Lib_OptionsFocus]"/><param name="level" value="25"/></include>
+			<control type="panel" id="52">
+				<left>132</left>
+				<top>158</top>
+				<width>1596</width>
+				<height>738</height>
+				<orientation>vertical</orientation>
+				<onup>SetFocus(9000)</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1160)</onleft>  <!-- 0.9.7: past the first / last column = Library panel -->
+				<onright>ActivateWindow(1160)</onright>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">220</scrolltime>
+				<viewtype label="31219">panel</viewtype>
+				<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs) | Container.Content(images) | Container.Content(addons) | Window.IsActive(pictures) | Window.IsActive(programs) | Window.IsActive(addonbrowser)</visible>
+				<itemlayout width="266" height="246">
+					<include content="Void_WallItem">
+						<param name="h" value="210"/>
+						<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+						<param name="color" value="art_35"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="266" height="246">
+					<include content="Void_WallItem">
+						<param name="h" value="210"/>
+						<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+						<param name="color" value="white"/>
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+			<include content="Void_WallCaption"><param name="id" value="52"/></include>
+		</control>
+	</include>
+
+	<!-- ========================================== empty folder / still loading -->
+	<include name="Void_LibraryEmpty">
+		<param name="hint">Up for sort, filter and view.</param>
+		<definition>
+			<control type="group">
+				<visible>$EXP[Lib_Empty]</visible>
+				<include>Void_Anim_Dwell</include>
+				<!-- below the focus row: an "empty" folder still shows its ".." (Back) item there -->
+				<control type="label">
+					<left>152</left>
+					<top>660</top>
+					<width>1600</width>
+					<height>90</height>
+					<aligny>top</aligny>
+					<font>serif_72</font>
+					<textcolor>neighbour</textcolor>
+					<label>$LOCALIZE[31012]</label>
+				</control>
+				<control type="label">
+					<left>160</left>
+					<top>770</top>
+					<width>1600</width>
+					<height>32</height>
+					<aligny>top</aligny>
+					<font>sans_26</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[hint]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+</includes>

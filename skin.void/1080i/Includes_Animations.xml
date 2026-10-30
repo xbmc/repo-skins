@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Void motion system. Engine includes (window / dialog / toast / OSD) inherited from the Majan engine,
+	plus Void's own at the end: dwell layers, ambient rise, Ken Burns loop, rolodex roll, text focus.
+
+	Budget (SPEC 9): focus <= 160 ms cubic out, window/dialog open <= 200 ms, close faster than open,
+	list scrolltime ~200 ms. Entering = cubic out, leaving = cubic in. No loop animations, no
+	Conditional animations inside item layouts, cheap effects only (fade / slide / small zoom).
+
+	Reduce motion: Skin.HasSetting(void.reducemotion). Every include carries a pair of animations per
+	trigger with mutually exclusive animation-level conditions (effect-level conditions are NOT used:
+	Kodi does not honour them). Reduce motion = short fades only, no zoom/slide; focus = instant.
+
+	Timing tokens (ms):  micro 120-160 | small 180-200 | window 200 open / 140 close | bg 350
+	Reduced:             fade in 80 | fade out 60 | focus 0 (no animation)
+-->
+<includes>
+
+	<!-- ===================================================================================== -->
+	<!-- WINDOWS                                                                               -->
+	<!-- ===================================================================================== -->
+
+	<!-- Full-screen windows (Home, library, settings). Place as a direct child of <window>. -->
+	<include name="Anim_WindowOpenClose">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+			<effect type="zoom" start="98" end="100" center="auto" time="200" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Centred modal dialogs: fade + 2% zoom in, fade out. Direct child of <window>. -->
+	<include name="Anim_DialogOpenClose">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+			<effect type="zoom" start="98" end="100" center="auto" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Right-hand panels as a WINDOW (context/side menus, info side sheets).
+	     Direct child of <window> or on the panel group. Param offset = px travelled (default 80). -->
+	<include name="Anim_SidePanel">
+		<param name="offset" default="80"/>
+		<definition>
+			<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+				<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+				<effect type="slide" start="$PARAM[offset],0" end="0,0" time="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+				<effect type="fade" start="0" end="100" time="80"/>
+			</animation>
+			<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+				<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+				<effect type="slide" start="0,0" end="$PARAM[offset],0" time="140" tween="cubic" easing="in"/>
+			</animation>
+			<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+				<effect type="fade" start="100" end="0" time="60"/>
+			</animation>
+		</definition>
+	</include>
+
+	<!-- Toasts (notification, busy, progress, volume, seek bar): fade only - shown over playback. -->
+	<include name="Anim_Toast">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="160" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- ===================================================================================== -->
+	<!-- OSD / STRIPS                                                                          -->
+	<!-- ===================================================================================== -->
+
+	<!-- Video/music OSD as a WINDOW: fade + 40 px rise from the bottom. Direct child of <window>
+	     or on the bottom OSD group. -->
+	<include name="Anim_OSDSlideUp">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,40" end="0,0" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+			<effect type="slide" start="0,0" end="0,40" time="140" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- Top strip (offset/info strip, OSD top bar): drops 24 px from the top + fade.
+	     Put on the strip GROUP (not window level). Fires on window open AND when its <visible> flips. -->
+	<include name="Anim_TopStrip">
+		<animation type="WindowOpen" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,-24" end="0,0" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="WindowOpen" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Visible" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+			<effect type="slide" start="0,-24" end="0,0" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+			<effect type="slide" start="0,0" end="0,-24" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+		<animation type="WindowClose" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="100" end="0" time="60"/>
+		</animation>
+	</include>
+
+	<!-- ===================================================================================== -->
+	<!-- CONTENT REGIONS                                                                       -->
+	<!-- ===================================================================================== -->
+
+	<!-- Generic Visible/Hidden fade for any group (hubs, spotlight, info panels, labels). -->
+	<include name="Anim_FadeVisible">
+		<animation type="Visible" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+		</animation>
+	</include>
+
+	<!-- ===================================================================================== -->
+	<!-- VOID                                                                                  -->
+	<!-- ===================================================================================== -->
+	<!-- Dwell layer: arrives softly, retracts at once (any key resets System.IdleTime). -->
+	<include name="Void_Anim_Dwell">
+		<animation type="Visible" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="450" tween="sine" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="120"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="90"/>
+		</animation>
+	</include>
+	<!-- Ambient artwork: rises like a lamp being turned up (1.6 s), drops away in 0.2 s. -->
+	<include name="Void_Anim_AmbientRise">
+		<animation type="Visible" condition="!Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="1600" tween="sine" easing="inout"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="300"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="200"/>
+		</animation>
+	</include>
+	<!-- Ken Burns: 100 -> 108 % over 40 s and back over 40 s, looping, centred near the subject side
+	     (68% / 42%). Runs only while ambient is visible (it lives on the ambient group). -->
+	<include name="Void_Anim_KenBurns">
+		<animation type="Conditional" condition="!Skin.HasSetting(void.nokenburns) + !Skin.HasSetting(void.reducemotion)" loop="true" reversible="false">
+			<effect type="zoom" start="100" end="108" center="1306,454" time="40000" tween="sine" easing="inout"/>
+			<effect type="zoom" start="100" end="92.6" center="1306,454" time="40000" delay="40000" tween="sine" easing="inout"/>
+		</animation>
+	</include>
+	<!-- Text recedes while the artwork is up (VoidAmbient: title 84%, furniture 60%). param level -->
+	<include name="Void_Anim_Recede">
+		<param name="condition"/>
+		<param name="level" default="84"/>
+		<definition>
+			<animation type="Conditional" condition="$PARAM[condition]">
+				<effect type="fade" start="100" end="$PARAM[level]" time="1200" tween="sine" easing="inout"/>
+			</animation>
+		</definition>
+	</include>
+	<!-- Rolodex roll: content updates instantly when the driver list moves; the column snaps a little
+	     the way you moved and settles. Container(id).OnNext/OnPrevious is a one-frame pulse (LESSONS
+	     round 3), so the animations hang on its negation: they replay from the start when the pulse
+	     drops, and window load applies their end state (nothing replays on open). param id, dist -->
+	<include name="Void_Anim_Roll">
+		<param name="id"/>
+		<param name="dist" default="36"/>
+		<definition>
+			<animation type="Conditional" condition="!Container($PARAM[id]).OnNext + !Skin.HasSetting(void.reducemotion)" reversible="false">
+				<effect type="slide" start="0,$PARAM[dist]" end="0,0" time="200" tween="cubic" easing="out"/>
+				<effect type="fade" start="70" end="100" time="200"/>
+			</animation>
+			<animation type="Conditional" condition="!Container($PARAM[id]).OnPrevious + !Skin.HasSetting(void.reducemotion)" reversible="false">
+				<effect type="slide" start="0,-$PARAM[dist]" end="0,0" time="200" tween="cubic" easing="out"/>
+				<effect type="fade" start="70" end="100" time="200"/>
+			</animation>
+		</definition>
+	</include>
+	<!-- Shelf switch: slides in from the side you moved to (Window(Home).Property(void.dir)). -->
+	<include name="Void_Anim_Shelf">
+		<animation type="Visible" condition="String.IsEqual(Window(Home).Property(void.dir),next) + !Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="220" tween="cubic" easing="out"/>
+			<effect type="slide" start="64,0" end="0,0" time="260" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="String.IsEqual(Window(Home).Property(void.dir),prev) + !Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="220" tween="cubic" easing="out"/>
+			<effect type="slide" start="-64,0" end="0,0" time="260" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="Skin.HasSetting(void.reducemotion)">
+			<effect type="fade" start="0" end="100" time="100"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="80"/>
+		</animation>
+	</include>
+	<!-- Text buttons / rows: focus = brightness (focusedcolor) + this scale. param center ("auto").
+	     ONE Focus animation per control (0.9.8, LESSONS "Never give a control two Hidden animations"): Kodi resets only
+	     the FIRST Focus animation on unfocus (GetAnimation(type, false) ignores conditions), so a time-0 reduce-motion
+	     twin listed second stayed applied: rows kept their 108 % scale after focus left. The variant is picked when the
+	     window loads (include conditions; Kodi reloads a window whose include conditions changed on its next open). -->
+	<include name="Void_Anim_FocusText">
+		<param name="center" default="auto"/>
+		<param name="zoom" default="108"/>
+		<definition>
+			<include content="Void_Anim_FocusText_Moving" condition="!Skin.HasSetting(void.reducemotion)">
+				<param name="center" value="$PARAM[center]"/>
+				<param name="zoom" value="$PARAM[zoom]"/>
+			</include>
+			<include content="Void_Anim_FocusText_Still" condition="Skin.HasSetting(void.reducemotion)">
+				<param name="center" value="$PARAM[center]"/>
+				<param name="zoom" value="$PARAM[zoom]"/>
+			</include>
+		</definition>
+	</include>
+	<include name="Void_Anim_FocusText_Moving">
+		<param name="center" default="auto"/>
+		<param name="zoom" default="108"/>
+		<definition>
+			<animation type="Focus" reversible="true">
+				<effect type="zoom" start="100" end="$PARAM[zoom]" center="$PARAM[center]" time="140" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+	<include name="Void_Anim_FocusText_Still">
+		<param name="center" default="auto"/>
+		<param name="zoom" default="108"/>
+		<definition>
+			<animation type="Focus">
+				<effect type="zoom" start="$PARAM[zoom]" end="$PARAM[zoom]" center="$PARAM[center]" time="0"/>
+			</animation>
+		</definition>
+	</include>
+	<!-- Poster focus in the wall and the view picker: grow 6% (unfocused posters are dimmed elsewhere). One Focus
+	     animation, variant picked at window load (see Void_Anim_FocusText). -->
+	<include name="Void_Anim_FocusPoster">
+		<include condition="!Skin.HasSetting(void.reducemotion)">Void_Anim_FocusPoster_Moving</include>
+		<include condition="Skin.HasSetting(void.reducemotion)">Void_Anim_FocusPoster_Still</include>
+	</include>
+	<include name="Void_Anim_FocusPoster_Moving">
+		<animation type="Focus" reversible="true">
+			<effect type="zoom" start="100" end="106" center="auto" time="160" tween="cubic" easing="out"/>
+		</animation>
+	</include>
+	<include name="Void_Anim_FocusPoster_Still">
+		<animation type="Focus">
+			<effect type="zoom" start="106" end="106" center="auto" time="0"/>
+		</animation>
+	</include>
+</includes>

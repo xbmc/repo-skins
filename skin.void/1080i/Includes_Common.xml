@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Common building blocks. Prefix: Void_. Void furniture is only: a caps label top-left on the
+	x=160 axis, a 40% clock top-right, and text. No bars, no rules under headers, no outlines.
+	Focus = brightness (grey -> warm white) + scale (Void_Anim_FocusText) everywhere.
+-->
+<includes>
+	<!-- ============================================================ page -->
+	<include name="Void_Background">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="bg">common/white.png</texture>
+		</control>
+	</include>
+
+	<!-- 1px rule. params: top, left, width, color -->
+	<include name="Void_Rule">
+		<param name="top">0</param>
+		<param name="left">axis</param>
+		<param name="width">page_width</param>
+		<param name="color">hairline</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>1</height>
+				<texture colordiffuse="$PARAM[color]">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Clock, top right, 40% (setting void.noclock hides it). param visible -->
+	<include name="Void_Clock">
+		<param name="visible">true</param>
+		<definition>
+			<control type="label">
+				<right>160</right>
+				<top>clock_top</top>
+				<width>300</width>
+				<height>28</height>
+				<align>right</align>
+				<aligny>top</aligny>
+				<font>num_24</font>
+				<textcolor>clock</textcolor>
+				<label>$VAR[ClockLabel]</label>
+				<visible>$EXP[ClockOn] + $PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Section label (caps, grey) at the top of the axis. params: label, width -->
+	<include name="Void_SectionLabel">
+		<param name="label"></param>
+		<param name="width">1200</param>
+		<definition>
+			<control type="label">
+				<left>axis</left>
+				<top>label_top</top>
+				<width>$PARAM[width]</width>
+				<height>22</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Page header for every non-Home window: section label + clock.
+	     params: title (main words), sub (after a middot), index (ignored; engine compatibility) -->
+	<include name="Void_TopBar">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="grouplist">
+				<left>axis</left>
+				<top>label_top</top>
+				<width>1300</width>
+				<height>24</height>
+				<orientation>horizontal</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="900">auto</width>
+					<height>22</height>
+					<aligny>top</aligny>
+					<font>caps_20</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>22</height>
+					<aligny>top</aligny>
+					<font>caps_20</font>
+					<textcolor>sep_light</textcolor>
+					<label>  ·  </label>
+					<visible>!String.IsEmpty(Control.GetLabel(9991))</visible>
+				</control>
+				<control type="label" id="9991">
+					<width max="500">auto</width>
+					<height>22</height>
+					<aligny>top</aligny>
+					<font>caps_20</font>
+					<textcolor>grey</textcolor>
+					<label>$PARAM[sub]</label>
+				</control>
+			</control>
+			<include>Void_Clock</include>
+		</definition>
+	</include>
+
+	<!-- Hint line (dwell). params: label, top, visible -->
+	<include name="Void_Hint">
+		<param name="top">hint_top</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label">
+				<left>axis</left>
+				<top>$PARAM[top]</top>
+				<width>1600</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$EXP[HintsOn] + $PARAM[visible]</visible>
+				<include>Void_Anim_Dwell</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== artwork -->
+	<!-- Artwork with a quiet fallback (no art: nothing but the title in serif, grey).
+	     params: art, title, aspect -->
+	<include name="Void_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="aspect">scale</param>
+		<param name="color">white</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="bg_raised">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>14</left>
+				<right>14</right>
+				<top>14</top>
+				<bottom>14</bottom>
+				<font>serif_30</font>
+				<textcolor>grey</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>$PARAM[aspect]</aspectratio>
+				<fadetime>160</fadetime>
+				<texture background="true" colordiffuse="$PARAM[color]">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- In-progress hairline on the bottom edge of an artwork group (no badges in Void). -->
+	<include name="Void_WatchedMarkers">
+		<control type="progress">
+			<left>0</left>
+			<right>0</right>
+			<bottom>0</bottom>
+			<height>3</height>
+			<texturebg colordiffuse="scrim_track">common/white.png</texturebg>
+			<midtexture colordiffuse="text">common/white.png</midtexture>
+			<info>ListItem.PercentPlayed</info>
+			<visible>ListItem.IsResumable</visible>
+		</control>
+	</include>
+
+	<!-- ========================================================== text buttons -->
+
+	<include name="Void_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>56</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>56</height>
+					<label>$PARAM[label]</label>
+					<font>sans_28_med</font>
+					<textcolor>grey_dim</textcolor>
+					<focusedcolor>text</focusedcolor>
+					<align>center</align>
+					<textoffsetx>0</textoffsetx>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+					<include>Void_Anim_FocusText</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Caps sub-nav button (library options row, OSD text buttons). params: id, label, onclick, visible,
+	     width (default auto; give a FIXED width = widest label + 2 x 12 + (characters + 4) to any button whose label changes
+	     in place, e.g. a toggle, or the buttons after it shift when it is clicked; caps_20 measured with PIL; Kodi lays text out a few px wider than PIL on long labels, 2 px of slack truncated "Descending") -->
+	<include name="Void_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="width">auto</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>$PARAM[width]</width>
+				<height>40</height>
+				<font>caps_20</font>
+				<textcolor>grey_dim</textcolor>
+				<focusedcolor>text</focusedcolor>
+				<textoffsetx>12</textoffsetx>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+				<include>Void_Anim_FocusText</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="Void_Hidden">
+		<left>-3000</left>
+		<top>-3000</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+
+	<!-- ===================================================== retired engine pieces -->
+	<include name="Void_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<control type="group"><visible>false</visible></control>
+		</definition>
+	</include>
+	<include name="Void_TopRule">
+		<control type="group"><visible>false</visible></control>
+	</include>
+</includes>

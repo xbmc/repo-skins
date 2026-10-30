@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Void Library panel (custom dialog 1160; docs/requests/library-panel/BRIEF.md). The library's
+	"general purpose" menu: View, Sort, Order, Watched, Sets (films only), Search, Update library,
+	Clean library, Library settings. Opened by the Menu key's "View, sort, filter" row in the library windows (0.9.19, DialogContextMenu.xml),
+	by Left / Right past the edges of a library view, by Options at the end of the options row, and from the System menu (Update / Clean library, void.libmode).
+	Same language as the System menu: a text column on the axis over the dialog dim.
+	Clean library has no confirmation of its own in Kodi (CleanLibrary() just runs), so the panel
+	asks first: list 200, "No" focused.
+	Back closes the panel (Kodi's own Back) and the library keeps the item you came from.
+	Variables: Includes_LibraryPanel.xml. No Kodi-owned ids.
+-->
+<window type="dialog" id="1160">
+	<defaultcontrol always="true">100</defaultcontrol>
+	<include>Anim_DialogOpenClose</include>
+	<!-- Kodi restores a dialog list's last selection on reopen: always start on the first row, and
+	     the Clean confirmation always on "No" (SetFocus(200,0,absolute) in the Clean rows) -->
+	<onload>SetFocus(100,0,absolute)</onload>
+	<onunload>ClearProperty(void.libclean,home)</onunload>
+	<onunload>ClearProperty(void.libmode,home)</onunload>
+	<controls>
+		<control type="image">
+			<description>backdrop dim</description>
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="dim_dialog">common/white.png</texture>
+		</control>
+		<control type="group">
+			<left>146</left>
+			<top>230</top>  <!-- clear of the options row (y 124-168) it is often opened from -->
+			<width>900</width>
+			<height>800</height>
+			<control type="label">
+				<left>14</left>
+				<top>0</top>
+				<width>880</width>
+				<height>24</height>
+				<aligny>top</aligny>
+				<font>caps_20</font>
+				<textcolor>grey</textcolor>
+				<label>$VAR[LibPanel_Kicker]</label>
+			</control>
+			<!-- the menu -->
+			<control type="list" id="100">
+				<left>0</left>
+				<top>60</top>
+				<width>900</width>
+				<height>680</height>
+				<onup>100</onup>
+				<ondown>100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<visible allowhiddenfocus="true">String.IsEmpty(Window(Home).Property(void.libclean))</visible>
+				<include content="Dlg_IndexListLayout">
+					<param name="width" value="900"/>
+					<param name="height" value="68"/>
+					<param name="list_id" value="100"/>
+				</include>
+				<content>
+					<!-- ===== library underneath (void.libmode empty) ===== -->
+					<item>
+						<label>$LOCALIZE[31204]</label>
+						<label2>$INFO[Container.Viewmode]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>ActivateWindow(1161)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Integer.IsGreater(Container.ViewCount,1)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31010]</label>
+						<label2>$INFO[Container.SortMethod]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>SendClick(3)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + !String.IsEmpty(Container.SortMethod)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31205]</label>
+						<label2>$VAR[VidLib_Direction]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick condition="Window.IsActive(videos)">SendClick(4)</onclick>
+						<onclick condition="!Window.IsActive(videos)">Container.SetSortDirection</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + !String.IsEmpty(Container.SortMethod)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31206]</label>
+						<label2>$VAR[LibPanel_Watched]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>SendClick(14)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(videos) + !String.StartsWith(Container.FolderPath,videodb://inprogresstvshows) + [Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)]</visible>
+					</item>
+					<!-- Sets (0.9.8, docs/requests/SETS_AND_RM_BRIEF.md): the films' sets in this same Videos window.
+					     Container.Update keeps the history (Back: set -> all sets -> films); SetFocus(50) first puts
+					     focus on the view, wherever the panel was opened from. Never a Home item (Omar). -->
+					<item>
+						<label>$LOCALIZE[20434]</label>
+						<label2>$LOCALIZE[31207]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>SetFocus(50)</onclick>
+						<onclick>Container.Update(videodb://movies/sets/)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + $EXP[LibPanel_ShowSets]</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31208]</label>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>ActivateWindow(1150)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode))</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31200]</label>
+						<label2>$LOCALIZE[31209]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(video)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(videos) + !Library.IsScanningVideo + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31210]</label>
+						<label2>$LOCALIZE[31209]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(video)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(videos) + Library.IsScanningVideo + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31200]</label>
+						<label2>$LOCALIZE[31211]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(music)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(music) + !Library.IsScanningMusic + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31210]</label>
+						<label2>$LOCALIZE[31211]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(music)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(music) + Library.IsScanningMusic + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31202]</label>
+						<label2>$LOCALIZE[31209]</label2>
+						<onclick>SetProperty(void.libclean,video,home)</onclick>
+						<onclick>SetFocus(200,0,absolute)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(videos) + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31202]</label>
+						<label2>$LOCALIZE[31211]</label2>
+						<onclick>SetProperty(void.libclean,music,home)</onclick>
+						<onclick>SetFocus(200,0,absolute)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode)) + Window.IsActive(music) + String.IsEmpty(Container.PluginName) + !Container.Content(addons)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31212]</label>
+						<label2>Kodi</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>ActivateWindow(MediaSettings)</onclick>
+						<visible>String.IsEmpty(Window(Home).Property(void.libmode))</visible>
+					</item>
+					<!-- ===== from the System menu: Update library ===== -->
+					<item>
+						<label>$LOCALIZE[31209]</label>
+						<label2>$LOCALIZE[31213]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(video)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),update) + !Library.IsScanningVideo</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31209]</label>
+						<label2>$LOCALIZE[31210]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(video)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),update) + Library.IsScanningVideo</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31211]</label>
+						<label2>$LOCALIZE[31213]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(music)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),update) + !Library.IsScanningMusic</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31211]</label>
+						<label2>$LOCALIZE[31210]</label2>
+						<onclick>Dialog.Close(1160,true)</onclick>
+						<onclick>UpdateLibrary(music)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),update) + Library.IsScanningMusic</visible>
+					</item>
+					<!-- ===== from the System menu: Clean library ===== -->
+					<item>
+						<label>$LOCALIZE[31209]</label>
+						<label2>$LOCALIZE[31214]</label2>
+						<onclick>SetProperty(void.libclean,video,home)</onclick>
+						<onclick>SetFocus(200,0,absolute)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),clean)</visible>
+					</item>
+					<item>
+						<label>$LOCALIZE[31211]</label>
+						<label2>$LOCALIZE[31214]</label2>
+						<onclick>SetProperty(void.libclean,music,home)</onclick>
+						<onclick>SetFocus(200,0,absolute)</onclick>
+						<visible>String.IsEqual(Window(Home).Property(void.libmode),clean)</visible>
+					</item>
+				</content>
+			</control>
+			<!-- Clean library: ask first ("No" is focused) -->
+			<control type="group">
+				<visible>!String.IsEmpty(Window(Home).Property(void.libclean))</visible>
+				<control type="textbox">
+					<left>14</left>
+					<top>60</top>
+					<width>860</width>
+					<height>130</height>
+					<font>sans_26</font>
+					<textcolor>grey</textcolor>
+					<label>$VAR[LibPanel_CleanText]</label>
+				</control>
+			</control>
+			<control type="list" id="200">
+				<left>0</left>
+				<top>210</top>
+				<width>900</width>
+				<height>136</height>
+				<onup>200</onup>
+				<ondown>200</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<visible allowhiddenfocus="true">!String.IsEmpty(Window(Home).Property(void.libclean))</visible>
+				<include content="Dlg_IndexListLayout">
+					<param name="width" value="900"/>
+					<param name="height" value="68"/>
+					<param name="list_id" value="200"/>
+				</include>
+				<content>
+					<item>
+						<label>$LOCALIZE[31215]</label>
+						<onclick>ClearProperty(void.libclean,home)</onclick>
+						<onclick>SetFocus(100)</onclick>
+					</item>
+					<item>
+						<label>$LOCALIZE[31216]</label>
+						<onclick condition="String.IsEqual(Window(Home).Property(void.libclean),video)">CleanLibrary(video)</onclick>
+						<onclick condition="String.IsEqual(Window(Home).Property(void.libclean),music)">CleanLibrary(music)</onclick>
+						<onclick>Dialog.Close(1160,true)</onclick>
+					</item>
+				</content>
+			</control>
+		</control>
+	</controls>
+</window>
