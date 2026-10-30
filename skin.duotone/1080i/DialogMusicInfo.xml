@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Album / artist / song information (Duotone, acid field): the cover in full colour left with the
+	review / biography under it; Anton title, caps subline, stat cells between 8px rules, action blocks,
+	then the tracklist (Anton track numerals) / discography in two columns.
+	Kodi also loads this file for songinformation (CGUIDialogSongInfo).
+
+	Kodi id contract (Estuary Omega DialogMusicInfo.xml, GUIDialogMusicInfo.cpp / GUIDialogSongInfo.cpp, Omega):
+	  50  list Kodi fills: album -> songs, artist -> discography (click opens that album's info)
+	  6   Refresh            (Kodi label 184; hidden by Kodi for songs)
+	  8   Play               (Kodi label 208; album: plays the album, song: the song; hidden for artists)
+	  12  Artist info / Album info (Kodi label 21891 / 10523; hidden for artists)
+	  7 (user rating) and 10 (choose art) are deliberately not shipped.
+	Kodi toggles 8 / 12 with SET_CONTROL_HIDDEN, so their wrapper groups mirror the same conditions.
+	Duotone ids: 9000 button row (defaultcontrol), 9011 Shuffle, 9012 Play all (artist).
+	Navigation: buttons Left/Right (explicit chain; hidden ones are skipped by Kodi), Down -> list 50,
+	list Up (top row) -> buttons. Back closes (Kodi).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<include>DT_Background</include>
+		<include content="DT_TopBar">
+			<param name="index" value="04"/>
+			<param name="title" value="Music"/>
+			<param name="sub" value="Information"/>
+		</include>
+
+		<!-- ============================================================ cover column -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>176</top>
+			<width>420</width>
+			<control type="group">
+				<width>420</width>
+				<height>420</height>
+				<include content="Music_Cover">
+					<param name="title" value="$VAR[Music_InfoTitle]"/>
+					<param name="mask_round" value="masks/square_round8_large.png"/>
+					<param name="fadetime">200</param>
+				</include>
+			</control>
+			<!-- about (album review / artist biography / song comment), clamped -->
+			<control type="group">
+				<top>444</top>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>420</width>
+					<height>20</height>
+					<font>cap_20</font>
+					<label>$LOCALIZE[31308]</label>
+				</control>
+				<include content="DT_RuleThick">
+					<param name="top" value="30"/>
+					<param name="left" value="0"/>
+					<param name="width" value="420"/>
+				</include>
+				<control type="textbox">
+					<left>0</left>
+					<top>42</top>
+					<width>420</width>
+					<height>390</height>
+					<font>body_24</font>
+					<label>$VAR[Music_InfoDescription]</label>
+				</control>
+			</control>
+			<!-- no description: small facts list instead (each row hides when empty) -->
+			<control type="grouplist">
+				<top>444</top>
+				<width>420</width>
+				<height>420</height>
+				<orientation>vertical</orientation>
+				<itemgap>10</itemgap>
+				<visible>!$EXP[Music_InfoHasDescription]</visible>
+				<control type="label">
+					<width>420</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<label>$INFO[ListItem.DateAdded,Added  ,]</label>
+					<visible>!String.IsEmpty(ListItem.DateAdded)</visible>
+				</control>
+				<control type="label">
+					<width>420</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<label>$INFO[ListItem.LastPlayed,Last played  ,]</label>
+					<visible>!String.IsEmpty(ListItem.LastPlayed)</visible>
+				</control>
+				<control type="label">
+					<width>420</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<label>$INFO[ListItem.Property(Album_Label),Label  ,]</label>
+					<visible>!String.IsEmpty(ListItem.Property(Album_Label))</visible>
+				</control>
+				<control type="label">
+					<width>420</width>
+					<height>24</height>
+					<font>cap_20</font>
+					<label>$INFO[ListItem.Property(Album_Mood),Mood  ,]$INFO[ListItem.Property(Artist_Mood),Mood  ,]</label>
+					<visible>!String.IsEmpty(ListItem.Property(Album_Mood)) | !String.IsEmpty(ListItem.Property(Artist_Mood))</visible>
+				</control>
+			</control>
+		</control>
+
+		<!-- ============================================================= text column -->
+		<control type="group">
+			<left>576</left>
+			<top>176</top>
+			<width>1248</width>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1248</width>
+				<height>26</height>
+				<font>cap_20</font>
+				<label>$VAR[Music_InfoKicker]</label>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>32</top>
+				<width>1248</width>
+				<height>157</height>  <!-- 2 lines of display_72 = 69 + 72 asc + 16 desc (140 cut line 2's descenders) -->
+				<font>an_72</font>
+				<label>$VAR[Music_InfoTitle]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>192</top>
+				<width>1248</width>
+				<height>40</height>
+				<font>bold_28</font>
+				<label>$VAR[Music_InfoSubline]</label>
+			</control>
+
+			<!-- stat grid -->
+			<include content="DT_RuleThick">
+				<param name="top" value="240"/>
+				<param name="left" value="0"/>
+				<param name="width" value="1248"/>
+				<param name="color" value="$VAR[ink]"/>
+			</include>
+			<include content="DT_RuleThick">
+				<param name="top" value="330"/>
+				<param name="left" value="0"/>
+				<param name="width" value="1248"/>
+				<param name="color" value="$VAR[ink]"/>
+			</include>
+			<control type="grouplist">
+				<left>-20</left>
+				<top>248</top>
+				<width>1268</width>
+				<height>84</height>
+				<orientation>horizontal</orientation>
+				<include content="Music_StatCell">
+					<param name="label" value="Year"/>
+					<param name="value" value="$INFO[ListItem.Year]"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Year)"/>
+					<param name="first" value="true"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Genre"/>
+					<param name="value" value="$INFO[ListItem.Genre]"/>
+					<param name="width" value="420"/>
+					<param name="visible" value="!String.IsEmpty(ListItem.Genre)"/>
+					<param name="first" value="[$EXP[Music_InfoIsArtist] | String.IsEmpty(ListItem.Year)]"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Born"/>
+					<param name="value" value="$INFO[ListItem.Property(Artist_Born)]"/>
+					<param name="width" value="300"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Property(Artist_Born))"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Formed"/>
+					<param name="value" value="$INFO[ListItem.Property(Artist_Formed)]"/>
+					<param name="width" value="300"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + String.IsEmpty(ListItem.Property(Artist_Born)) + !String.IsEmpty(ListItem.Property(Artist_Formed))"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Tracks"/>
+					<param name="value" value="$INFO[Container(50).NumItems]"/>
+					<param name="visible" value="$EXP[Music_InfoIsAlbum] + Integer.IsGreater(Container(50).NumItems,0)"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Albums"/>
+					<param name="value" value="$INFO[Container(50).NumItems]"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(Container(50).NumItems,0)"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Length"/>
+					<param name="value" value="$INFO[ListItem.Duration]"/>
+					<param name="visible" value="$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Duration)"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Rating"/>
+					<param name="value" value="$INFO[ListItem.Rating]"/>
+					<param name="visible" value="!String.IsEmpty(ListItem.Rating) + !String.IsEqual(ListItem.Rating,0.0)"/>
+				</include>
+				<include content="Music_StatCell">
+					<param name="label" value="Plays"/>
+					<param name="value" value="$INFO[ListItem.PlayCount]"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.PlayCount,0)"/>  <!-- artist row would overflow 1268 -->
+				</include>
+			</control>
+
+			<!-- buttons (explicit Left/Right chain: groups in a grouplist don't get automatic navigation) -->
+			<control type="grouplist" id="9000">
+				<left>-8</left>  <!-- 8px frame room on every side (grouplists clip): children at left/top 8, itemgap - 8 -->
+				<top>352</top>
+				<width>1264</width>
+				<height>88</height>
+				<usecontrolcoords>true</usecontrolcoords>
+				<orientation>horizontal</orientation>
+				<itemgap>8</itemgap>
+				<onup>noop</onup>
+				<ondown>50</ondown>
+				<include content="DT_ButtonPrimary">
+					<param name="id" value="8"/>
+					<param name="left" value="8"/>
+					<param name="top" value="8"/>
+					<param name="width" value="200"/>
+					<param name="label" value="$LOCALIZE[208]"/>
+					<param name="onclick" value="noop"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+					<param name="onright" value="9012"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="DT_ButtonPrimary">
+					<param name="id" value="9012"/>
+					<param name="left" value="8"/>
+					<param name="top" value="8"/>
+					<param name="width" value="240"/>
+					<param name="label" value="Play all"/>
+					<param name="onclick" value="PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)"/>
+					<param name="onleft" value="8"/>
+					<param name="onright" value="9011"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="DT_ButtonSecondary">
+					<param name="id" value="9011"/>
+					<param name="left" value="8"/>
+					<param name="top" value="8"/>
+					<param name="width" value="220"/>
+					<param name="label" value="Shuffle"/>
+					<param name="onclick" value="$VAR[Music_InfoShuffleAction]"/>
+					<param name="onclick2" value="PlayerControl(RandomOn)"/>
+					<param name="visible" value="[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)"/>
+					<param name="onleft" value="9012"/>
+					<param name="onright" value="12"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="DT_ButtonSecondary">
+					<param name="id" value="12"/>
+					<param name="left" value="8"/>
+					<param name="top" value="8"/>
+					<param name="width" value="380"/>
+					<param name="label" value="$LOCALIZE[21891]"/>
+					<param name="onclick" value="noop"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+					<param name="onleft" value="9011"/>
+					<param name="onright" value="6"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="DT_ButtonSecondary">
+					<param name="id" value="6"/>
+					<param name="left" value="8"/>
+					<param name="top" value="8"/>
+					<param name="width" value="230"/>
+					<param name="label" value="$LOCALIZE[184]"/>
+					<param name="onclick" value="noop"/>
+					<param name="visible" value="!$EXP[Music_InfoIsSong]"/>
+					<param name="onleft" value="12"/>
+					<param name="ondown" value="50"/>
+				</include>
+			</control>
+
+			<!-- tracklist / discography (Kodi fills list 50) -->
+			<control type="group">
+				<top>460</top>
+				<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>1248</width>
+					<height>22</height>
+					<font>cap_20</font>
+					<label>$VAR[Music_InfoListCaption]</label>
+				</control>
+				<include content="DT_Rule">
+					<param name="top" value="30"/>
+					<param name="left" value="0"/>
+					<param name="width" value="1248"/>
+				</include>
+				<control type="panel" id="50">
+					<left>0</left>
+					<top>40</top>
+					<width>1248</width>
+					<height>392</height>
+					<orientation>horizontal</orientation>
+					<onup>9000</onup>
+					<ondown>noop</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<scrolltime tween="cubic" easing="out">200</scrolltime>
+					<itemlayout width="624" height="56">
+						<include content="Music_InfoRow">
+							<param name="focused" value="false"/>
+						</include>
+					</itemlayout>
+					<focusedlayout width="624" height="56">
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>612</width>
+							<height>56</height>
+							<texture colordiffuse="$VAR[ink]">common/white.png</texture>
+							<visible>Control.HasFocus(50)</visible>
+						</control>
+						<control type="group">
+							<width>612</width>
+							<visible>!Control.HasFocus(50)</visible>
+							<include content="Music_InfoRow">
+								<param name="focused" value="false"/>
+							</include>
+						</control>
+						<control type="group">
+							<width>612</width>
+							<visible>Control.HasFocus(50)</visible>
+							<include content="Music_InfoRowOnInk">
+								<param name="focused" value="true"/>
+							</include>
+						</control>
+					</focusedlayout>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library views (DuotoneMusic.dc.html), acid field. Listed in MyMusicNav <views>504,50</views>.
+	  504 Albums wall - albums and artists: 5 columns of 192 covers (pitch 210) in the left 7 grid
+	                    columns, monotone acid prints, the focused cover in full colour + 8px frame.
+	                    Masthead: "ARTIST" + the artist in Anton 200. Right: the artist fanart as a print
+	                    with an ink clock block; under it the focused album (Anton 150) and its real
+	                    tracklist (list 5041 loads musicdb://albums/<id>/ for the focused album).
+	  50  List        - songs, genres, years, roots, playlists, files (View_50_List, Includes_Views.xml)
+	The ".." parent item (Omar has filelists.showparentdiritems on) is an outlined back tile.
+-->
+<includes>
+	<!-- ============================================================ variables -->
+	<variable name="MusicWall_Artist">
+		<value condition="Container(504).ListItem.IsParentFolder">Back</value>
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,artist)">$INFO[Container(504).ListItem.Label]</value>
+		<value condition="!String.IsEmpty(Container(504).ListItem.Artist)">$INFO[Container(504).ListItem.Artist]</value>
+		<value>$INFO[Container(504).ListItem.Label]</value>
+	</variable>
+	<variable name="MusicWall_Fanart">
+		<value condition="!String.IsEmpty(Container(504).ListItem.Art(fanart))">$INFO[Container(504).ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(Container(504).ListItem.Art(artist.fanart))">$INFO[Container(504).ListItem.Art(artist.fanart)]</value>
+		<value condition="!String.IsEmpty(Container(504).ListItem.Art(albumartist.fanart))">$INFO[Container(504).ListItem.Art(albumartist.fanart)]</value>
+		<value>$INFO[Container(504).ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="MusicWall_Kicker">
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,artist)">Artist$INFO[Container(504).ListItem.Genre,  ·  ,]</value>
+		<value>Album$INFO[Container(504).ListItem.Year,  ·  ,]$INFO[Container(504).ListItem.Genre,  ·  ,]</value>
+	</variable>
+	<variable name="MusicWall_Big">
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,artist)">Albums</value>
+		<value>$INFO[Container(504).ListItem.Label]</value>
+	</variable>
+	<!-- the focused album's tracks / the focused artist's albums -->
+	<variable name="MusicWall_TracksPath">
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,album) + !String.IsEmpty(Container(504).ListItem.DBID)">musicdb://albums/$INFO[Container(504).ListItem.DBID]/</value>
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,artist) + !String.IsEmpty(Container(504).ListItem.DBID)">musicdb://artists/$INFO[Container(504).ListItem.DBID]/</value>
+	</variable>
+	<variable name="MusicWall_TracksCaption">
+		<value condition="String.IsEqual(Container(504).ListItem.DBType,artist)">Albums$INFO[Container(5041).NumItems,  ·  ,]</value>
+		<value>Tracks$INFO[Container(5041).NumItems,  ·  ,]$INFO[Container(504).ListItem.Property(Album_Duration),  ·  ,]</value>
+	</variable>
+	<variable name="MusicWall_TrackNum">
+		<value condition="String.IsEqual(ListItem.DBType,album)">$INFO[ListItem.Year]</value>
+		<value>$INFO[ListItem.TrackNumber]</value>
+	</variable>
+	<variable name="MusicWall_TrackTime">
+		<value condition="String.IsEqual(ListItem.DBType,album)"></value>
+		<value>$INFO[ListItem.Duration]</value>
+	</variable>
+	<expression name="MusicWall_IsPlayingItem">Player.HasAudio + String.IsEqual(ListItem.Label,MusicPlayer.Album)</expression>
+
+	<!-- ============================================================ 504 Albums wall -->
+	<include name="MusicWall_Cover">
+		<param name="tint">$VAR[SectionTint]</param>
+		<param name="dots">true</param>
+		<definition>
+			<control type="group">
+				<visible>!ListItem.IsParentFolder</visible>
+				<include content="DT_Artwork">
+					<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+					<param name="tint" value="$PARAM[tint]"/>
+					<param name="dots" value="$PARAM[dots]"/>
+				</include>
+				<!-- the album that is playing: ink tab with bars (mockup .pl) -->
+				<control type="group">
+					<right>0</right>
+					<top>0</top>
+					<width>44</width>
+					<height>44</height>
+					<visible>$EXP[MusicWall_IsPlayingItem]</visible>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>44</width>
+						<height>44</height>
+						<texture colordiffuse="$VAR[ink]">common/white.png</texture>
+					</control>
+					<control type="image">
+						<left>10</left>
+						<top>10</top>
+						<width>24</width>
+						<height>24</height>
+						<texture colordiffuse="$VAR[SectionColor]">icons/audio.png</texture>
+					</control>
+				</control>
+			</control>
+			<control type="group">
+				<visible>ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture border="16" colordiffuse="$VAR[SectionText]">common/rect_outline_8.png</texture>
+				</control>
+				<control type="image">
+					<centerleft>50%</centerleft>
+					<centertop>50%</centertop>
+					<width>64</width>
+					<height>64</height>
+					<texture colordiffuse="$VAR[SectionText]">icons/back.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="MusicWall_Masthead">
+		<control type="label">
+			<left>page_margin</left>
+			<top>164</top>
+			<width>1032</width>
+			<height>24</height>
+			<font>cap_20</font>
+			<textcolor>$VAR[SectionText]</textcolor>
+			<label>$VAR[MusicWall_ArtistCaption]</label>
+		</control>
+		<include content="Title_MusicArtist"><param name="left" value="58"/><param name="top" value="174"/></include>
+		<include content="DT_RuleThick"><param name="top" value="388"/><param name="width" value="1032"/></include>
+	</include>
+	<variable name="MusicWall_ArtistCaption">
+		<value condition="Container(504).ListItem.IsParentFolder">Up one level</value>
+		<value>Artist</value>
+	</variable>
+
+	<include name="MusicWall_Side">
+		<!-- the artist fanart as a print, 792x392 -->
+		<control type="group">
+			<left>1128</left>
+			<top>0</top>
+			<width>792</width>
+			<height>392</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>792</width>
+				<height>392</height>
+				<texture colordiffuse="$VAR[ink]">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>792</width>
+				<height>392</height>
+				<aspectratio aligny="top">scale</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true" colordiffuse="$VAR[SectionTint]">$VAR[MusicWall_Fanart]</texture>
+			</control>
+			<include>DT_PrintGhost</include>
+			<include>DT_PrintVeil</include>
+			<include>DT_ArtDots</include>
+			<control type="button">
+				<right>64</right>
+				<top>64</top>
+				<width>176</width>
+				<height>72</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>an_60</font>
+				<textoffsetx>0</textoffsetx>
+				<textcolor>$VAR[SectionColor]</textcolor>
+				<focusedcolor>$VAR[SectionColor]</focusedcolor>
+				<texturenofocus colordiffuse="$VAR[ink]">common/white.png</texturenofocus>
+				<texturefocus colordiffuse="$VAR[ink]">common/white.png</texturefocus>
+				<label>$VAR[ClockLabel]</label>
+				<onup>504</onup>
+				<ondown>504</ondown>
+				<onleft>504</onleft>
+				<onright>504</onright>
+			</control>
+		</control>
+		<include content="DT_RuleV"><param name="left" value="1120"/><param name="top" value="0"/><param name="height" value="400"/></include>
+		<include content="DT_RuleThick"><param name="top" value="392"/><param name="left" value="1120"/><param name="width" value="800"/></include>
+		<!-- the focused album -->
+		<control type="label">
+			<left>1160</left>
+			<top>428</top>
+			<width>696</width>
+			<height>24</height>
+			<font>cap_20</font>
+			<textcolor>$VAR[SectionText]</textcolor>
+			<label>$VAR[MusicWall_Kicker]</label>
+		</control>
+		<include content="Title_MusicAlbum"><param name="left" value="1156"/><param name="top" value="462"/></include>
+		<include content="DT_RuleThick"><param name="top" value="612"/><param name="left" value="1160"/><param name="width" value="696"/></include>
+		<control type="label">
+			<left>1160</left>
+			<top>640</top>
+			<width>696</width>
+			<height>24</height>
+			<font>cap_20</font>
+			<textcolor>$VAR[SectionText]</textcolor>
+			<label>$VAR[MusicWall_TracksCaption]</label>
+		</control>
+		<control type="list" id="5041">
+			<left>1160</left>
+			<top>672</top>
+			<width>696</width>
+			<height>252</height>
+			<orientation>vertical</orientation>
+			<scrolltime>0</scrolltime>
+			<itemlayout width="696" height="42">
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>96</width>
+					<height>40</height>
+					<aligny>center</aligny>
+					<font>an_32</font>
+					<textcolor>$VAR[SectionText]</textcolor>
+					<label>$VAR[MusicWall_TrackNum]</label>
+				</control>
+				<control type="label">
+					<left>96</left>
+					<top>0</top>
+					<width>480</width>
+					<height>40</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[SectionText]</textcolor>
+					<label>$INFO[ListItem.Title]</label>
+				</control>
+				<control type="label">
+					<left>576</left>
+					<top>0</top>
+					<width>120</width>
+					<height>40</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>$VAR[SectionText2]</textcolor>
+					<label>$VAR[MusicWall_TrackTime]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>40</top>
+					<width>696</width>
+					<height>2</height>
+					<texture colordiffuse="$VAR[ink_20]">common/white.png</texture>
+				</control>
+			</itemlayout>
+			<focusedlayout width="696" height="42">
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>96</width>
+					<height>40</height>
+					<aligny>center</aligny>
+					<font>an_32</font>
+					<textcolor>$VAR[SectionText]</textcolor>
+					<label>$VAR[MusicWall_TrackNum]</label>
+				</control>
+				<control type="label">
+					<left>96</left>
+					<top>0</top>
+					<width>480</width>
+					<height>40</height>
+					<font>ui_24</font>
+					<textcolor>$VAR[SectionText]</textcolor>
+					<label>$INFO[ListItem.Title]</label>
+				</control>
+				<control type="label">
+					<left>576</left>
+					<top>0</top>
+					<width>120</width>
+					<height>40</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>$VAR[SectionText2]</textcolor>
+					<label>$VAR[MusicWall_TrackTime]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>40</top>
+					<width>696</width>
+					<height>2</height>
+					<texture colordiffuse="$VAR[ink_20]">common/white.png</texture>
+				</control>
+			</focusedlayout>
+			<content target="music">$VAR[MusicWall_TracksPath]</content>
+		</control>
+	</include>
+
+	<include name="Music_View_504">
+		<control type="group">
+			<visible>Control.IsVisible(504)</visible>
+			<include>Anim_FadeVisible</include>
+			<include>MusicWall_Masthead</include>
+			<include>MusicWall_Side</include>
+			<control type="panel" id="504">
+				<left>48</left>
+				<top>404</top>
+				<width>1066</width>
+				<height>620</height>
+				<orientation>vertical</orientation>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.9: Library panel past the edges -->
+				<onright>ActivateWindow(1155)</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<preloaditems>1</preloaditems>
+				<viewtype label="31344">icon</viewtype>
+				<visible>Container.Content(albums) | Container.Content(artists)</visible>
+				<itemlayout width="210" height="210">
+					<control type="group">
+						<left>16</left>
+						<top>16</top>
+						<width>192</width>
+						<height>192</height>
+						<include>MusicWall_Cover</include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="210" height="210">
+					<control type="group">
+						<left>16</left>
+						<top>16</top>
+						<width>192</width>
+						<height>192</height>
+						<include>Anim_FocusZoom</include>
+						<control type="group">
+							<visible>!Control.HasFocus(504)</visible>
+							<include>MusicWall_Cover</include>
+						</control>
+						<control type="group">
+							<visible>Control.HasFocus(504)</visible>
+							<include content="MusicWall_Cover">
+								<param name="tint" value="white"/>
+								<param name="dots" value="false"/>
+							</include>
+							<include>DT_FocusFrame</include>
+						</control>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ 50 List -->
+	<include name="Music_View_50">
+		<include>View_50_List</include>
+	</include>
+</includes>

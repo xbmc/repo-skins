@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Generic list view (50) and the generic list window, Duotone language (DESIGN.md section 5.4).
+	View ids: 50 List (every content type) | 500 Wall (video library) | 503 Episodes | 504 Albums wall |
+	505 Tracks (music). Every view gates itself with Container.Content.
+	Header: caption (y 76) + filter/sort bar (grouplist 9000, right side of the header row, ends before
+	the clock) + 8px rule at y 136. Kodi media-window ids 3 = sort by, 4 = sort order.
+
+	View 50: rows of 72 (Inter Tight 700 26) between 2px rules, focused row = ink bar + paper text;
+	right column = the focused item printed in the section colour + Anton title, caption, plot.
+-->
+<includes>
+	<constant name="list_x">64</constant>
+	<constant name="list_y">176</constant>
+	<constant name="list_wd">1000</constant>
+	<constant name="list_row">72</constant>
+	<constant name="panel_x">1160</constant>
+	<constant name="panel_w">696</constant>
+
+	<!-- Focused item art for the panel: poster (or thumb), printed -->
+	<variable name="View_PanelArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+	</variable>
+	<variable name="View_PanelTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="View_PanelMeta">
+		<value condition="ListItem.IsParentFolder">Parent folder  ·  OK goes up one level</value>
+		<value condition="String.IsEqual(ListItem.DBType,album)">$INFO[ListItem.Artist]$INFO[ListItem.Year,  ·  ,]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Artist]$INFO[ListItem.Album,  ·  ,]$INFO[ListItem.Duration,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">$INFO[ListItem.Genre]</value>
+		<value condition="ListItem.IsFolder + String.IsEmpty(ListItem.DBType)">$INFO[ListItem.Label2]</value>
+		<value>$INFO[ListItem.Year]$INFO[ListItem.Duration(mins),  ·  , min]$INFO[ListItem.Rating,  ·  ,]$INFO[ListItem.Genre,  ·  ,]</value>
+	</variable>
+
+	<!-- ============================================================ View 50 -->
+	<include name="View_50_List">
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_VisibleFade</include>
+			<!-- audit 2026-10-30: an empty folder keeps its ".." row; move the list under the "Nothing here" message, as the
+			     other views do (video message 168-248, music message 200-276) -->
+			<animation effect="slide" start="0,0" end="0,96" time="0" condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating + !Window.IsActive(music)">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,120" time="0" condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating + Window.IsActive(music)">Conditional</animation>
+			<control type="list" id="50">
+				<left>list_x</left>
+				<top>list_y</top>
+				<width>list_wd</width>
+				<height>864</height>
+				<onup>9000</onup>
+				<ondown>50</ondown>
+				<onleft condition="Window.IsActive(videos) | Window.IsActive(music)">ActivateWindow(1155)</onleft>  <!-- 0.9.9: Library panel -->
+				<onleft>noop</onleft>
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">160</scrolltime>
+				<viewtype label="535">list</viewtype>
+				<include content="DT_ListLayout">
+					<param name="width" value="1000"/>
+					<param name="height" value="72"/>
+					<param name="list_id" value="50"/>
+				</include>
+			</control>
+			<include content="DT_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1084"/>
+				<param name="top" value="176"/>
+				<param name="height" value="864"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="$VAR[DT_Lib_ScrollRight]"/>
+			</include>
+			<include content="DT_RuleV">
+				<param name="left" value="1112"/>
+				<param name="top" value="176"/>
+				<param name="height" value="864"/>
+			</include>
+			<include>View_FocusPanel</include>
+		</control>
+	</include>
+
+	<!-- Right column: the focused item as a print (art 696x520, kept aspect, top-left), Anton title,
+	     caption meta, 3-line plot. Used by list views of every window. -->
+	<include name="View_FocusPanel">
+		<control type="group">
+			<left>panel_x</left>
+			<top>176</top>
+			<width>panel_w</width>
+			<height>864</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>panel_w</width>
+				<height>520</height>
+				<aspectratio align="left" aligny="top">keep</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true" colordiffuse="$VAR[SectionTint]">$VAR[View_PanelArt]</texture>
+			</control>
+			<!-- Light / Dark: the panel is a ghost print while list 50 hasn't focus (the veils cover the whole group, but
+			     over the field they are field colour on field colour, so only the art changes) -->
+			<include content="DT_PrintGhost">
+				<param name="visible" value="!Control.HasFocus(50)"/>
+			</include>
+			<include content="DT_PrintVeil">
+				<param name="visible" value="!Control.HasFocus(50)"/>
+			</include>
+			<control type="label">
+				<left>0</left>
+				<top>540</top>
+				<width>panel_w</width>
+				<height>80</height>
+				<aligny>center</aligny>
+				<font>an_72</font>
+				<textcolor>$VAR[SectionText]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>![String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster)) + String.IsEmpty(ListItem.Art(thumb)) + String.IsEmpty(ListItem.Art(fanart))]</visible>
+			</control>
+			<control type="textbox">
+				<left>-4</left>
+				<top>-16</top>
+				<width>700</width>
+				<height>520</height>
+				<font>an_104</font>
+				<textcolor>$VAR[SectionText]</textcolor>
+				<label>$VAR[View_PanelTitle]</label>
+				<visible>String.IsEmpty(ListItem.Art(poster)) + String.IsEmpty(ListItem.Art(tvshow.poster)) + String.IsEmpty(ListItem.Art(thumb)) + String.IsEmpty(ListItem.Art(fanart))</visible>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>632</top>
+				<width>panel_w</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<textcolor>$VAR[SectionText]</textcolor>
+				<label>$VAR[View_PanelMeta]</label>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>676</top>
+				<width>panel_w</width>
+				<height>136</height>
+				<font>body_24</font>
+				<textcolor>$VAR[SectionText]</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="6000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+		</control>
+	</include>
+
+</includes>

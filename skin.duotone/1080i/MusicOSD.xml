@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD (SPEC 5 Shared/OSD, M3 T20; Builder C). Opens over Now playing (MusicVisualisation.xml),
+	which already shows cover, title and progress at y 806. This adds the controls row at y 900 in the
+	OSD.dc.html language: 72 px outlined square transport buttons (Play = accent fill), and
+	caption + value text buttons on the right (SHUFFLE / REPEAT / QUEUE).
+
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (Stop 603 when pause is not
+	possible), 87 seek stepper (hidden; Left/Right step), group 200 with grouplists 201 (transport,
+	0.9.3 order: 602 play/pause, 603 stop, 600 prev, 607 next; 601 rewind / 606 forward not shipped) and 202 (secondary:
+	70054 shuffle, 70053 repeat, 70051 queue; 70056 visualiser presets, a Duotone id). Kodi itself only routes actions; no ids are filled.
+	Not shipped: 608 record / 70040-70050 PVR + RDS (radio unused), 70052 rating, 70055 lyrics,
+	70048 settings (Estuary's custom 1105 window is omitted in Duotone).
+
+	Navigation: buttons are groups inside grouplists, so Left/Right are chained explicitly
+	(hidden buttons are skipped by Kodi). Up -> 87 (seek), Up/Down from 87 -> back to the row.
+	Back closes the OSD (Kodi).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+
+		<!-- seek stepper: invisible; the thick accent line + caption show its focus -->
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>DT_Hidden</include>
+			<onup>200</onup>
+			<ondown>200</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+		</control>
+		<control type="group">
+			<visible>Control.HasFocus(87)</visible>
+			<control type="image">
+				<left>56</left>
+				<top>798</top>
+				<width>1808</width>
+				<height>32</height>
+				<texture border="16" colordiffuse="$VAR[ink]">focus/frame_8.png</texture>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>838</top>
+				<width>page_width</width>
+				<height>30</height>
+				<align>center</align>
+				<font>cap_20</font>
+				<label>◀ ▶  Seek</label>
+			</control>
+		</control>
+
+		<control type="group" id="200">
+			<!-- transport -->
+			<control type="grouplist" id="201">
+				<left>56</left>  <!-- page_margin - 8; children at left 8, itemgap - 8: frame room (grouplists clip). 0.9.3: was 88 (32 px inside the margin) -->
+				<top>music_osd_y_f</top>
+				<width>916</width>
+				<height>music_osd_btn_f</height>
+				<usecontrolcoords>true</usecontrolcoords>
+				<orientation>horizontal</orientation>
+				<itemgap>6</itemgap>  <!-- 14 - 8 (children carry left 8) -->
+				<onup>87</onup>
+				<ondown>noop</ondown>
+				<!-- 0.9.3 (Omar's rule): Play/Pause, Stop, Previous, Next. No rewind / forward blocks: Up = seek. -->
+				<control type="group">
+					<top>8</top>  <!-- matches the row's focus-frame room (usecontrolcoords) -->
+					<left>8</left>  <!-- 0.9.3: like the other buttons (Play sat 8 px left of the margin) -->
+					<width>music_osd_btn</width>
+					<height>music_osd_btn</height>
+					<visible>Player.PauseEnabled</visible>
+					<control type="button" id="602">
+						<width>music_osd_btn</width>
+						<height>music_osd_btn</height>
+						<label></label>
+						<include condition="false">DT_Tex_ButtonPrimary_Round</include>
+						<include condition="true">DT_Tex_ButtonPrimary</include>
+						<onclick>PlayerControl(Play)</onclick>
+						<onup>87</onup>
+						<ondown>noop</ondown>
+						<onleft>70056</onleft>
+						<onright>603</onright>
+					</control>
+					<control type="image">
+						<left>22</left>
+						<top>22</top>
+						<width>28</width>
+						<height>28</height>
+						<texture colordiffuse="$VAR[paper]">icons/pause.png</texture>
+						<visible>!Player.Paused + !Player.Forwarding + !Player.Rewinding</visible>
+					</control>
+					<control type="image">
+						<left>22</left>
+						<top>22</top>
+						<width>28</width>
+						<height>28</height>
+						<texture colordiffuse="$VAR[paper]">icons/play.png</texture>
+						<visible>Player.Paused | Player.Forwarding | Player.Rewinding</visible>
+					</control>
+					<include content="DT_FocusFrameAlways">
+						<param name="visible" value="Control.HasFocus(602)"/>
+					</include>
+				</control>
+				<include content="Music_OSDIconButton">
+					<param name="id" value="603"/>
+					<param name="icon" value="icons/stop.png"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onclick_paused" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="600"/>
+				</include>
+				<include content="Music_OSDIconButton">
+					<param name="id" value="600"/>
+					<param name="icon" value="icons/prev.png"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onclick_paused" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="607"/>
+				</include>
+				<include content="Music_OSDIconButton">
+					<param name="id" value="607"/>
+					<param name="icon" value="icons/next.png"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onclick_paused" value="PlayerControl(Next)"/>
+					<param name="onleft" value="600"/>
+					<param name="onright" value="70054"/>
+				</include>
+			</control>
+
+			<!-- secondary: caption + value buttons, right-aligned -->
+			<control type="grouplist" id="202">
+				<left>1024</left>  <!-- width + 16: frame room both sides (grouplists clip); last button ends at 1856 = page edge (0.9.3) -->
+				<top>music_osd_y_f</top>
+				<width>840</width>
+				<height>music_osd_btn_f</height>
+				<usecontrolcoords>true</usecontrolcoords>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>6</itemgap>  <!-- 14 - 8 (children carry left 8) -->
+				<onup>87</onup>
+				<ondown>noop</ondown>
+				<include content="Music_OSDTextButton">
+					<param name="id" value="70054"/>
+					<param name="width" value="150"/>
+					<param name="caption" value="Shuffle"/>
+					<param name="value" value="$VAR[Music_OSDShuffleValue]"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+					<param name="visible" value="!MusicPartyMode.Enabled"/>
+					<param name="onleft" value="607"/>
+					<param name="onright" value="70053"/>
+				</include>
+				<include content="Music_OSDTextButton">
+					<param name="id" value="70053"/>
+					<param name="width" value="150"/>
+					<param name="caption" value="Repeat"/>
+					<param name="value" value="$VAR[Music_OSDRepeatValue]"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+					<param name="visible" value="!MusicPartyMode.Enabled"/>
+					<param name="onleft" value="70054"/>
+					<param name="onright" value="70051"/>
+				</include>
+				<include content="Music_OSDTextButton">
+					<param name="id" value="70051"/>
+					<param name="width" value="200"/>
+					<param name="caption" value="Queue"/>
+					<param name="value" value="$INFO[Playlist.Length(music),, tracks]"/>
+					<param name="onclick" value="Dialog.Close(all,true)"/>
+					<param name="onclick2" value="ActivateWindow(musicplaylist)"/>
+					<param name="visible" value="Integer.IsGreater(Playlist.Length(music),0)"/>
+					<param name="onleft" value="70053"/>
+					<param name="onright" value="70056"/>
+				</include>
+				<!-- 0.9.12: Visualiser presets (Kodi's preset list opens in DialogSelect; Back returns here).
+				     Only with a running visualisation that has presets; hidden, Kodi skips it in the chain.
+				     Left from Play/Pause wraps to it (one press). -->
+				<include content="Music_OSDTextButton">
+					<param name="id" value="70056"/>
+					<param name="width" value="300"/>
+					<param name="caption" value="$LOCALIZE[31411]"/>
+					<param name="value" value="$VAR[Music_OSDPresetValue]"/>
+					<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+					<param name="visible" value="$EXP[Music_HasVisPresets]"/>
+					<param name="onleft" value="70051"/>
+					<param name="onright" value="602"/>
+				</include>
+				<control type="group">  <!-- trailing 2 + itemgap 6 = 8px room for the last button's focus frame (right-aligned grouplist) -->
+					<width>2</width>
+				</control>
+			</control>
+
+			<control type="label">
+				<left>page_margin</left>
+				<top>1010</top>
+				<width>page_width</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<textcolor>$VAR[SectionText3]</textcolor>
+				<label>$VAR[Music_OSDHint]</label>
+			</control>
+		</control>
+	</controls>
+</window>

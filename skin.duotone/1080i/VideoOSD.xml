@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD (Duotone): a solid slab of the section colour from y 584 (films vermilion, episodes cobalt)
+	with an 8px ink rule; kicker + ends + Anton clock; the elapsed time as a giant Anton numeral; title,
+	meta and flags to its right; a 16px bar; 72px blocks.
+
+	Id contract (Estuary Omega VideoOSD.xml): 602 play/pause (default, always), 603 stop (focus when
+	pause is not possible), 600 previous / 607 next (chapter or playlist item); 601 rewind / 606 forward
+	are not shipped (0.9.3: Omar wants no seek buttons; Left/Right seek in fullscreen), 87 hidden seek stepper (Left/Right = StepBack/StepForward, frame advance when
+	paused), 200 = transport group, 70043 info, 70044 bookmarks/chapters, 70046 subtitles,
+	70048 video settings, 70049 audio. Duotone adds 70051 = player process info.
+
+	Row order (0.9.3): Play/Pause, Stop, Previous, Next, Chapters | Subtitles, Audio, Video, Info, Player.
+	Focus map: open -> 602. Left/Right walk the row (wraps; hidden buttons are skipped). Up from any
+	button -> 87 (seek: the bar gets an 8px frame, the bubble shows the target), Down from 87 -> back
+	to the last focused button (group 200). Back closes the OSD (Kodi default).
+	The OSD chrome hides while a playback dialog is on top: $EXP[OSD_PanelOpen].
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+
+			<!-- solid slab of the section colour (no scrims in Duotone) -->
+			<include content="OSD_Slab">
+				<param name="top" value="584"/>
+			</include>
+			<include content="OSD_TopLine">
+				<param name="top" value="612"/>
+			</include>
+			<include content="OSD_TitleBlock">
+				<param name="top" value="690"/>
+			</include>
+			<include content="OSD_ProgressBlock">
+				<param name="top" value="676"/>
+			</include>
+
+			<!-- ====== seek stepper (invisible; the bubble + "SKIP" kicker show it) -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>DT_Hidden</include>
+				<onup>noop</onup>
+				<ondown>200</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<!-- focus hint on the progress track while the stepper has focus -->
+			<control type="image">
+				<left>56</left>
+				<top>888</top>
+				<width>1808</width>
+				<height>32</height>
+				<texture border="16" colordiffuse="$VAR[ink]">focus/frame_8.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+
+			<!-- ====== controls row -->
+			<control type="group" id="200">
+				<left>0</left>
+				<top>osd_buttons_top</top>
+				<width>screen_w</width>
+				<height>osd_box</height>
+				<!-- transport, left -->
+				<control type="grouplist">
+					<left>56</left>  <!-- page_margin - 8; children at left 8, itemgap - 8: frame room (grouplists clip). 0.9.3: was 88, the row sat 32 px inside the bar / captions -->
+					<top>-8</top>
+					<width>716</width>
+					<height>osd_box_f</height>  <!-- osd_box + 16 so the focus frame isn't clipped -->
+					<usecontrolcoords>true</usecontrolcoords>
+					<orientation>horizontal</orientation>
+					<itemgap>6</itemgap>  <!-- osd_box_gap - 8 (children carry left 8) -->
+					<!-- 0.9.3 (Omar's rule): Play/Pause, Stop, then skip / chapters. No rewind / forward blocks:
+					     Left/Right seek without the OSD, Up here focuses the seek stepper. -->
+					<include content="OSD_PlayButton">
+						<param name="onleft" value="70051"/>
+						<param name="onright" value="603"/>
+					</include>
+					<include content="OSD_BoxButton">
+						<param name="id" value="603"/>
+						<param name="icon" value="icons/stop.png"/>
+						<param name="onclick" value="PlayerControl(Stop)"/>
+						<param name="onleft" value="602"/>
+						<param name="onright" value="600"/>
+						<param name="icon_size" value="24"/>
+						<param name="icon_pos" value="24"/>
+					</include>
+					<include content="OSD_BoxButton">
+						<param name="id" value="600"/>
+						<param name="icon" value="icons/prev.png"/>
+						<param name="onclick" value="PlayerControl(Previous)"/>
+						<param name="onleft" value="603"/>
+						<param name="onright" value="607"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+					</include>
+					<include content="OSD_BoxButton">
+						<param name="id" value="607"/>
+						<param name="icon" value="icons/next.png"/>
+						<param name="onclick" value="PlayerControl(Next)"/>
+						<param name="onleft" value="600"/>
+						<param name="onright" value="70044"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+					</include>
+					<include content="OSD_BoxButton">
+						<param name="id" value="70044"/>
+						<param name="icon" value="icons/chapters.png"/>
+						<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+						<param name="onleft" value="607"/>
+						<param name="onright" value="70046"/>
+						<param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/>
+					</include>
+				</control>
+				<!-- streams / settings / info, right -->
+				<control type="grouplist">
+					<left>56</left>  <!-- page_margin - 8, width + 16: frame room both sides (grouplists clip); last button ends at 1856 = page edge (0.9.3) -->
+					<top>-8</top>
+					<width>1808</width>
+					<height>osd_box_f</height>
+					<usecontrolcoords>true</usecontrolcoords>
+					<orientation>horizontal</orientation>
+					<align>right</align>
+					<itemgap>6</itemgap>  <!-- osd_box_gap - 8 (children carry left 8) -->
+					<include content="OSD_TextButton">
+						<param name="id" value="70046"/>
+						<param name="width" value="264"/>  <!-- 0.9.3: "Portuguese (Brazil)" fits (bold 24 = 220 px + 36) -->
+						<param name="caption" value="SUBTITLES"/>
+						<param name="value" value="$VAR[OSD_SubtitleValue]"/>
+						<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+						<param name="onleft" value="70044"/>
+						<param name="onright" value="70049"/>
+						<param name="visible" value="Player.HasVideo"/>
+					</include>
+					<include content="OSD_TextButton">
+						<param name="id" value="70049"/>
+						<param name="width" value="264"/>  <!-- 0.9.3: "TRUEHD ATMOS 7.1" fits (224 px + 36) -->
+						<param name="caption" value="AUDIO"/>
+						<param name="value" value="$VAR[OSD_AudioValue]"/>
+						<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+						<param name="onleft" value="70046"/>
+						<param name="onright" value="70048"/>
+					</include>
+					<include content="OSD_TextButton">
+						<param name="id" value="70048"/>
+						<param name="width" value="160"/>
+						<param name="caption" value="VIDEO"/>
+						<param name="value" value="Settings"/>
+						<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+						<param name="onleft" value="70049"/>
+						<param name="onright" value="70043"/>
+						<param name="visible" value="Player.HasVideo"/>
+					</include>
+					<include content="OSD_TextButton">
+						<param name="id" value="70043"/>
+						<param name="width" value="150"/>
+						<param name="caption" value="$VAR[OSD_InfoCaption]"/>
+						<param name="value" value="Info"/>
+						<param name="onclick" value="Action(Info,fullscreenvideo)"/>  <!-- plain "Info" is swallowed by the OSD (device 2026-10-18) -->
+						<param name="onleft" value="70048"/>
+						<param name="onright" value="70051"/>
+					</include>
+					<include content="OSD_TextButton">
+						<param name="id" value="70051"/>
+						<param name="width" value="150"/>
+						<param name="caption" value="PLAYER"/>
+						<param name="value" value="Stats"/>
+						<param name="onclick" value="Action(PlayerProcessInfo)"/>
+						<param name="onleft" value="70043"/>
+						<param name="onright" value="602"/>
+					</include>
+					<control type="group">  <!-- trailing 2 + itemgap 6 = 8px room for the last button's focus frame (right-aligned grouplist) -->
+						<width>2</width>
+					</control>
+				</control>
+			</control>
+
+			<!-- ====== remote hint -->
+			<control type="label">
+				<left>page_margin</left>
+				<top>1032</top>
+				<width>page_width</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<textcolor>$VAR[SectionText2]</textcolor>
+				<label>$VAR[OSD_Hint]</label>
+			</control>
+		</control>
+	</controls>
+</window>

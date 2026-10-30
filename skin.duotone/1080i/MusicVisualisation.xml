@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing: full-screen music (Duotone, acid field). The playing cover in full colour (600x600,
+	left; a running visualisation takes its place when one is enabled), the album caption, the title
+	in Anton, the artist, tech + play-mode captions, the elapsed time as a giant Anton numeral, a 16px
+	bar at y 806 (full width) and times; "Up next" at y 900 (MusicOSD puts its controls row there).
+
+	Kodi id contract (Estuary Omega MusicVisualisation.xml / GUIWindowVisualisation.cpp):
+	  2 = visualisation control. No focusable controls (Kodi routes OK / Menu to MusicOSD, Back to the
+	  previous window).
+-->
+<window>
+	<defaultcontrol></defaultcontrol>
+	<backgroundcolor>ground_static</backgroundcolor>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>DT_Background</include>
+		<!-- header -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>76</top>
+			<width>1200</width>
+			<height>24</height>
+			<font>cap_20</font>
+			<label>$VAR[Music_NPKicker]</label>
+		</control>
+		<include>DT_Clock</include>
+		<include>DT_TopRule</include>
+
+		<!-- the cover (or the visualisation) -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>176</top>
+			<width>600</width>
+			<height>600</height>
+			<control type="group">
+				<visible>!Visualisation.Enabled</visible>
+				<include content="DT_Artwork">
+					<param name="art" value="$INFO[Player.Art(thumb)]"/>
+					<param name="title" value="$INFO[MusicPlayer.Album]"/>
+				</include>
+			</control>
+			<control type="visualisation" id="2">
+				<left>0</left>
+				<top>0</top>
+				<width>600</width>
+				<height>600</height>
+				<visible>Player.HasAudio + Visualisation.Enabled</visible>
+			</control>
+		</control>
+		<include content="DT_RuleV"><param name="left" value="696"/><param name="top" value="176"/><param name="height" value="600"/></include>
+
+		<!-- text column -->
+		<control type="group">
+			<left>728</left>
+			<top>176</top>
+			<width>1128</width>
+			<height>600</height>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1128</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year,  ·  ,]$INFO[MusicPlayer.TrackNumber,  ·  Track ,]</label>
+			</control>
+			<include content="Title_NowPlaying"><param name="left" value="0"/><param name="top" value="70"/></include>
+			<control type="label">
+				<left>-2</left>
+				<top>246</top>
+				<width>1130</width>
+				<height>64</height>
+				<font>an_60</font>
+				<label>$INFO[MusicPlayer.Artist]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>322</top>
+				<width>1128</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<label>$INFO[MusicPlayer.Genre,,  ·  ]$INFO[MusicPlayer.Codec]$INFO[MusicPlayer.BitRate,  ·  , kbps]$INFO[MusicPlayer.SampleRate,  ·  , kHz]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>356</top>
+				<width>1128</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<textcolor>$VAR[SectionText2]</textcolor>
+				<label>$VAR[Music_PlayModes]</label>
+			</control>
+			<include content="DT_RuleThick"><param name="top" value="400"/><param name="left" value="0"/><param name="width" value="1128"/></include>
+			<!-- giant elapsed time -->
+			<control type="label">
+				<left>-4</left>
+				<top>417</top>
+				<width>1132</width>
+				<height>136</height>
+				<font>an_136</font>
+				<label>$INFO[Player.Time]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>540</top>
+				<width>1128</width>
+				<height>24</height>
+				<align>right</align>
+				<font>cap_20</font>
+				<label>$INFO[Player.TimeRemaining,−,]$INFO[Player.Duration,  /  ,]</label>
+			</control>
+		</control>
+
+		<!-- 16px bar, full width -->
+		<control type="progress">
+			<left>page_margin</left>
+			<top>806</top>
+			<width>page_width</width>
+			<height>16</height>
+			<texturebg colordiffuse="$VAR[SectionFaint]">common/white.png</texturebg>
+			<midtexture colordiffuse="$VAR[SectionText]">common/white.png</midtexture>
+			<info>Player.Progress</info>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>838</top>
+			<width>page_width</width>
+			<height>24</height>
+			<font>cap_20</font>
+			<label>$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Artist,  ·  ,]</label>
+		</control>
+
+		<!-- 0.9.12: how to reach the visualiser presets (OK opens the controls, Left from Play wraps to them) -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>1010</top>
+			<width>page_width</width>
+			<height>24</height>
+			<align>right</align>
+			<font>cap_20</font>
+			<textcolor>$VAR[SectionText3]</textcolor>
+			<label>$LOCALIZE[31412]</label>
+			<visible>$EXP[Music_HasVisPresets] + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+
+		<!-- up next (MusicOSD's controls take this row while it is open) -->
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>900</top>
+			<width>page_width</width>
+			<height>40</height>
+			<orientation>horizontal</orientation>
+			<itemgap>16</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>MusicPlayer.HasNext + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="button">
+				<width>auto</width>
+				<height>40</height>
+				<font>cap_20</font>
+				<textoffsetx>14</textoffsetx>
+				<textcolor>$VAR[paper]</textcolor>
+				<texturenofocus colordiffuse="$VAR[ink]">common/white.png</texturenofocus>
+				<label>$LOCALIZE[31351]</label>
+			</control>
+			<control type="label">
+				<width max="1500">auto</width>
+				<height>40</height>
+				<font>bold_26</font>
+				<label>$INFO[MusicPlayer.offset(1).Title]$INFO[MusicPlayer.offset(1).Artist,  ·  ,]</label>
+			</control>
+		</control>
+	</controls>
+</window>
