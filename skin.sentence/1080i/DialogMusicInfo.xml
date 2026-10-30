@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Album / artist / song information as a paragraph (Kodi also loads this file for songinformation).
+	  "Mellon Collie… is a 1995 alternative album by The Smashing Pumpkins, with 28 songs. You haven't played it."
+	  then the review / biography, then "You can [play it], [shuffle it], [read about the artist] or [refresh it]."
+	  and the songs (or the discography) below.
+	Kodi id contract (Estuary Omega DialogMusicInfo.xml, GUIDialogMusicInfo.cpp / GUIDialogSongInfo.cpp):
+	  50 list Kodi fills (album: songs, artist: discography), 6 refresh, 8 play, 12 artist / album info.
+	  Kodi hides 8 / 12 itself (SET_CONTROL_HIDDEN); the skin mirrors the same conditions.
+	  Kodi also relabels 8 / 12 / 6, so they sit offscreen and the phrases click them (SendClick).
+	Skin ids: 9000 action row (default focus), 9011 shuffle, 9012 play all (artist),
+	  9021 play it -> 8, 9022 artist / album info -> 12, 9023 refresh it -> 6.
+	Focus: phrases Left/Right; Down -> list 50; list Up -> phrases. Back closes (Kodi).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<include>Sen_Background</include>
+		<include content="Sen_PageHeader"><param name="title" value="$VAR[MusicInfo_Crumb]"/></include>
+		<include>Sen_Clock</include>
+		<!-- Kodi writes its own labels into 8 / 12 / 6 ("Play", "Artist information", "Refresh"), which
+		     breaks the sentence: keep Kodi's buttons offscreen and click them from 9021 / 9022 / 9023. -->
+		<control type="group">
+			<left>-3000</left>
+			<control type="button" id="8"><width>1</width><height>1</height><texturefocus/></control>
+			<control type="button" id="12"><width>1</width><height>1</height><texturefocus/></control>
+			<control type="button" id="6"><width>1</width><height>1</height><texturefocus/></control>
+		</control>
+
+		<control type="group">
+			<left>page_margin</left>
+			<top>150</top>
+			<width>420</width>
+			<height>420</height>
+			<control type="image">
+				<left>-60</left>
+				<top>-50</top>
+				<width>540</width>
+				<height>560</height>
+				<texture colordiffuse="black">sentence/poster_shadow.png</texture>
+			</control>
+			<include content="Music_Cover">
+				<param name="title" value="$VAR[Music_InfoTitle]"/>
+				<param name="fadetime">200</param>
+			</include>
+		</control>
+
+		<control type="grouplist">
+			<left>600</left>
+			<top>140</top>
+			<width>1240</width>
+			<height>520</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup>noop</onup>
+			<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+			<control type="textbox">
+				<width>1180</width>
+				<height max="256">auto</height>
+				<font>serif_46</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[MusicInfo_P1]</label>
+			</control>
+			<control type="textbox">
+				<top>24</top>
+				<width>1100</width>
+				<height max="152">auto</height>
+				<font>body_24</font>
+				<label>$VAR[Music_InfoDescription]</label>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+			</control>
+			<control type="grouplist" id="9000">
+				<top>30</top>
+				<!-- album row measures ~1180-1196 px; slack so font rounding never clips "refresh it." -->
+				<width>1240</width>
+				<height>72</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<control type="label" id="28001">
+					<width>auto</width><height>72</height><font>serif_40</font>
+					<label>$LOCALIZE[31324]</label>
+				</control>
+				<include content="VidInfo_Action">
+					<param name="id" value="9021"/><param name="label" value="play it"/><param name="left" value="0"/><param name="onclick" value="SendClick(8)"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="VidInfo_Action">
+					<param name="id" value="9012"/><param name="label" value="play everything"/><param name="left" value="0"/>
+					<param name="onclick" value="PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="VidInfo_Comma"><param name="wid" value="28002"/><param name="after" value="Control.HasFocus(9021) | Control.HasFocus(9012)"/><param name="visible" value="[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)"/></include>
+				<control type="button" id="9011">
+					<left>0</left>
+					<width>auto</width>
+					<height>72</height>
+					<font>serif_40</font>
+					<label>$LOCALIZE[31325]</label>
+					<include>Sen_PhraseTextures</include>
+					<onclick>$VAR[Music_InfoShuffleAction]</onclick>
+					<onclick>PlayerControl(RandomOn)</onclick>
+					<ondown>50</ondown>
+					<visible>[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)</visible>
+				</control>
+				<include content="VidInfo_Comma"><param name="wid" value="28003"/><param name="after" value="Control.HasFocus(9011) | [Control.HasFocus(9021) + !Control.IsVisible(9011)]"/><param name="visible" value="!$EXP[Music_InfoIsArtist]"/></include>
+				<include content="VidInfo_Action">
+					<param name="id" value="9022"/><param name="label" value="$VAR[MusicInfo_OtherInfo]"/><param name="left" value="0"/><param name="onclick" value="SendClick(12)"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<control type="label" id="28004">
+					<left>8</left><width>auto</width><height>72</height><font>serif_40</font>
+					<label>or</label>
+					<visible>!$EXP[Music_InfoIsSong]</visible>
+				</control>
+				<include content="VidInfo_Action">
+					<param name="id" value="9023"/><param name="label" value="refresh it"/><param name="left" value="0"/><param name="onclick" value="SendClick(6)"/>
+					<param name="visible" value="!$EXP[Music_InfoIsSong]"/>
+					<param name="ondown" value="50"/>
+				</include>
+				<include content="VidInfo_Comma"><param name="wid" value="28005"/><param name="after" value="Control.HasFocus(9023) | [Control.HasFocus(9022) + !Control.IsVisible(9023)]"/><param name="mark" value="."/></include>
+			</control>
+		</control>
+
+		<!-- the songs / the discography (Kodi fills list 50) -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>640</top>
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>page_width</width>
+				<height>52</height>
+				<font>serif_34</font>
+				<label>$VAR[MusicInfo_ListHead]</label>
+			</control>
+			<control type="panel" id="50">
+				<left>0</left>
+				<top>64</top>
+				<width>page_width</width>
+				<height>336</height>
+				<orientation>vertical</orientation>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="840" height="56">
+					<control type="group">
+						<width>820</width>
+						<include content="Music_InfoRow"><param name="focused" value="false"/></include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="840" height="56">
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>820</width>
+						<height>56</height>
+						<texture border="8" colordiffuse="lilac">sentence/round6.png</texture>
+						<visible>Control.HasFocus(50)</visible>
+					</control>
+					<control type="group">
+						<width>820</width>
+						<visible>!Control.HasFocus(50)</visible>
+						<include content="Music_InfoRow"><param name="focused" value="false"/></include>
+					</control>
+					<control type="group">
+						<width>820</width>
+						<visible>Control.HasFocus(50)</visible>
+						<control type="label">
+							<left>20</left><top>0</top><width>44</width><height>56</height>
+							<font>num_20</font><textcolor>on_lilac</textcolor>
+							<label>$INFO[ListItem.TrackNumber]</label>
+							<visible>String.IsEqual(ListItem.DBType,song)</visible>
+						</control>
+						<control type="label">
+							<left>72</left><top>0</top><right>120</right><height>56</height>
+							<font>ui_22_bold</font><textcolor>on_lilac</textcolor><scroll>true</scroll>
+							<label>$VAR[MusicInfo_RowTitle]</label>
+						</control>
+						<control type="label">
+							<right>20</right><top>0</top><width>100</width><height>56</height>
+							<align>right</align><font>num_20</font><textcolor>on_lilac</textcolor>
+							<label>$VAR[MusicInfo_RowRight]</label>
+						</control>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</controls>
+</window>

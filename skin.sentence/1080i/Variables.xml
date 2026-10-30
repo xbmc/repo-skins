@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Variables: labels / textures that switch on conditions. Use as $VAR[Name].
+	Colours are NAMES from colors/defaults.xml. $VAR works in colordiffuse="" and <textcolor>, not in border="".
+	Sentence rule: every label reads as plain English. Missing facts drop their whole clause.
+	The Home sentence machinery (phrases, xsp paths) is generated into Includes_Sentence.xml.
+-->
+<includes>
+	<!-- ============================================================ shared textures -->
+	<!-- Generic focus frame drawn round a control (forked windows): a 3px lilac ring. -->
+	<variable name="FocusFrameAlways"><value>sentence/ring.png</value></variable>
+	<variable name="ButtonOutline"><value>sentence/outline6.png</value></variable>
+
+	<!-- ================================================================ time + clock -->
+	<variable name="ClockLabel"><value>$INFO[System.Time(hh:mm xx)]</value></variable>
+	<!-- "It's 21:47 and light rain." pieces (Sen_Clock draws: muted / bright time / muted) -->
+	<variable name="Sen_ClockTail">
+		<value condition="$EXP[ShowWeather]"> and [LOWERCASE]$INFO[Weather.Conditions][/LOWERCASE].</value>
+		<value>.</value>
+	</variable>
+	<!-- Greeting that starts the Home sentence -->
+	<variable name="Sen_Greeting">
+		<value condition="$EXP[TimeGreeting] + System.Time(04:00,11:59)">This morning I'd like</value>
+		<value condition="$EXP[TimeGreeting] + System.Time(12:00,17:29)">This afternoon I'd like</value>
+		<value>Tonight I'd like</value>
+	</variable>
+
+	<!-- ============================================================ durations (item) -->
+	<!-- "1 h 46" / "46 min" (Duration(mm) = 2-digit minutes within the hour) -->
+	<variable name="Sen_DurShort">
+		<value condition="Integer.IsGreater(ListItem.Duration(mins),59)">$INFO[ListItem.Duration(h)] h $INFO[ListItem.Duration(mm)]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">$INFO[ListItem.Duration(mins)] min</value>
+	</variable>
+	<!-- "1 hour 46 minutes" / "2 hours" / "46 minutes" -->
+	<variable name="Sen_DurLong">
+		<value condition="Integer.IsEqual(ListItem.Duration(h),1) + Integer.IsEqual(ListItem.Duration(m),0)">1 hour</value>
+		<value condition="Integer.IsEqual(ListItem.Duration(h),1)">1 hour $INFO[ListItem.Duration(m)] minutes</value>
+		<value condition="Integer.IsGreater(ListItem.Duration(h),1) + Integer.IsEqual(ListItem.Duration(m),0)">$INFO[ListItem.Duration(h)] hours</value>
+		<value condition="Integer.IsGreater(ListItem.Duration(h),1)">$INFO[ListItem.Duration(h)] hours $INFO[ListItem.Duration(m)] minutes</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">$INFO[ListItem.Duration(mins)] minutes</value>
+	</variable>
+	<!-- "finish 23:33" (resume point: when you'd finish if you pick it up) -->
+	<variable name="Sen_Finish">
+		<value condition="ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)">finish $INFO[ListItem.EndTimeResume]</value>
+		<value condition="!String.IsEmpty(ListItem.EndTime)">finish $INFO[ListItem.EndTime]</value>
+	</variable>
+
+	<!-- ===================================================== poster captions (item) -->
+	<!-- Line under every poster title: what the item is, in words -->
+	<variable name="Sen_Caption">
+		<value condition="ListItem.IsParentFolder">Back up a level</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie) + $EXP[CaptionsFinish] + ListItem.IsResumable">resume · ends $INFO[ListItem.EndTimeResume]</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie) + $EXP[CaptionsFinish] + !String.IsEmpty(ListItem.Duration)">$VAR[Sen_DurShort] · $VAR[Sen_Finish]</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Year]$INFO[ListItem.Rating, · rated ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + $EXP[CaptionsFinish]">S$INFO[ListItem.Season] E$INFO[ListItem.Episode]$INFO[ListItem.EndTime, · finish ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">S$INFO[ListItem.Season] E$INFO[ListItem.Episode]$VAR[Sen_DurShortSep]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0) + Integer.IsGreater(ListItem.Property(TotalEpisodes),0)">seen it all</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$VAR[Sen_Seasons]$INFO[ListItem.Property(UnWatchedEpisodes), · , to watch]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$VAR[PL_TotalEpisodes_Episode]$INFO[ListItem.Property(UnWatchedEpisodes), · , to watch]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">a collection$VAR[PL_Total_Film2]</value>
+		<value condition="String.IsEqual(ListItem.DBType,album)">$INFO[ListItem.Artist]$INFO[ListItem.Year, · ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">$INFO[ListItem.Genre]</value>
+		<value condition="String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Artist]$INFO[ListItem.Duration, · ,]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+	<!-- the same without the word "finish" (unfocused captions: 12-hour clocks add " PM") -->
+	<variable name="Sen_CaptionShort">
+		<value condition="String.IsEqual(ListItem.DBType,movie) + $EXP[CaptionsFinish] + ListItem.IsResumable">resume · $INFO[ListItem.EndTimeResume]</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie) + $EXP[CaptionsFinish] + !String.IsEmpty(ListItem.Duration)">$VAR[Sen_DurShort]$INFO[ListItem.EndTime, · ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + $EXP[CaptionsFinish]">S$INFO[ListItem.Season] E$INFO[ListItem.Episode]$INFO[ListItem.EndTime, · ,]</value>
+		<value>$VAR[Sen_Caption]</value>
+	</variable>
+	<variable name="Sen_DurShortSep">
+		<value condition="Integer.IsGreater(ListItem.Duration(mins),59)"> · $INFO[ListItem.Duration(h)] h $INFO[ListItem.Duration(mm)]</value>
+		<value condition="!String.IsEmpty(ListItem.Duration)"> · $INFO[ListItem.Duration(mins)] min</value>
+	</variable>
+	<variable name="Sen_Seasons">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalSeasons),1)">1 season</value>
+		<value condition="!String.IsEmpty(ListItem.Property(TotalSeasons))">$INFO[ListItem.Property(TotalSeasons)] seasons</value>
+		<value>$INFO[ListItem.Year]</value>
+	</variable>
+	<!-- Title for any item; the ".." parent item reads "Back" -->
+	<variable name="Sen_ItemTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.TVShowTitle)">$INFO[ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+
+	<!-- =================================================== facts as words (item) -->
+	<!-- genre as an adjective for "a 1997 science-fiction film" (first genre only) -->
+	<variable name="Sen_GenreWord">
+		<value condition="String.StartsWith(ListItem.Genre,Science Fiction)">science-fiction</value>
+		<value condition="String.StartsWith(ListItem.Genre,Sci-Fi)">science-fiction</value>
+		<value condition="String.StartsWith(ListItem.Genre,Animation)">animated</value>
+		<value condition="String.StartsWith(ListItem.Genre,History)">historical</value>
+		<value condition="String.StartsWith(ListItem.Genre,Romance)">romantic</value>
+		<value condition="String.StartsWith(ListItem.Genre,Documentary)">documentary</value>
+		<value condition="String.StartsWith(ListItem.Genre,Action)">action</value>
+		<value condition="String.StartsWith(ListItem.Genre,Adventure)">adventure</value>
+		<value condition="String.StartsWith(ListItem.Genre,Comedy)">comedy</value>
+		<value condition="String.StartsWith(ListItem.Genre,Crime)">crime</value>
+		<value condition="String.StartsWith(ListItem.Genre,Drama)">drama</value>
+		<value condition="String.StartsWith(ListItem.Genre,Family)">family</value>
+		<value condition="String.StartsWith(ListItem.Genre,Fantasy)">fantasy</value>
+		<value condition="String.StartsWith(ListItem.Genre,Horror)">horror</value>
+		<value condition="String.StartsWith(ListItem.Genre,Music)">music</value>
+		<value condition="String.StartsWith(ListItem.Genre,Mystery)">mystery</value>
+		<value condition="String.StartsWith(ListItem.Genre,Thriller)">thriller</value>
+		<value condition="String.StartsWith(ListItem.Genre,War)">war</value>
+		<value condition="String.StartsWith(ListItem.Genre,Western)">western</value>
+	</variable>
+	<!-- "a 1997 science-fiction film" / "an action film" / "a film" -->
+	<variable name="Sen_FilmNoun">
+		<value condition="!String.IsEmpty(ListItem.Year)">a $INFO[ListItem.Year]$VAR[Sen_GenreWordSep] film</value>
+		<value condition="String.StartsWith(ListItem.Genre,Action) | String.StartsWith(ListItem.Genre,Adventure) | String.StartsWith(ListItem.Genre,Animation)">an $VAR[Sen_GenreWord] film</value>
+		<value condition="!String.IsEmpty(ListItem.Genre)">a $VAR[Sen_GenreWord] film</value>
+		<value>a film</value>
+	</variable>
+	<variable name="Sen_GenreWordSep">
+		<value condition="!String.IsEmpty(ListItem.Genre)"> $VAR[Sen_GenreWord]</value>
+	</variable>
+	<!-- "You haven't seen it." / "You've seen it." / "You've seen it 3 times." / "You stopped 34% in." -->
+	<variable name="Sen_SeenSentence">
+		<value condition="ListItem.IsResumable">You stopped $INFO[ListItem.PercentPlayed]% of the way in.</value>
+		<value condition="Integer.IsEqual(ListItem.PlayCount,1)">You've seen it.</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1)">You've seen it $INFO[ListItem.PlayCount] times.</value>
+		<value condition="Integer.IsEqual(ListItem.PlayCount,0)">You haven't seen it.</value>
+	</variable>
+	<variable name="Sen_RatingSentence">
+		<value condition="$EXP[ListItemHasRating]">Viewers rate it $INFO[ListItem.Rating].</value>
+	</variable>
+
+	<!-- ======================================================= forked window labels -->
+	<variable name="ListItemArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+	<variable name="LibraryTitle">
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value condition="Window.IsActive(Music)">$LOCALIZE[2]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+</includes>

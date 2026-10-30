@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD as phrase buttons, over Now playing (MusicVisualisation.xml shows the sentence and progress):
+	  "Pause · Stop · Previous · Next · The queue · Shuffle off · Repeat off · Presets" (Presets = visualiser presets)
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (603 when pause isn't possible),
+	87 seek stepper (hidden; Left/Right step), 200 the row, 600 prev, 602 play/pause, 607 next, 603 stop,
+	70054 shuffle, 70053 repeat, 70051 queue, 70056 visualiser presets (Sentence id, only with a
+	visualisation that has presets; Left from the first phrase wraps to it). Up -> 87 (skip), Down from 87 -> the row. Back closes the OSD.
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="image">
+			<left>0</left>
+			<bottom>0</bottom>
+			<width>screen_w</width>
+			<height>320</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="e60f1412">sentence/ramp_bottom.png</texture>
+		</control>
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>Sen_Hidden</include>
+			<onup>200</onup>
+			<ondown>200</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+		</control>
+		<control type="image">
+			<left>page_margin</left>
+			<top>805</top>
+			<width>page_width</width>
+			<height>5</height>
+			<texture colordiffuse="lilac">sentence/round6.png</texture>
+			<visible>Control.HasFocus(87)</visible>
+		</control>
+		<control type="grouplist" id="200">
+			<left>96</left>
+			<top>896</top>
+			<width>page_width</width>
+			<height>64</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup>87</onup>
+			<ondown>noop</ondown>
+			<!-- 0.9.10: with visualiser presets, Left from the first phrase wraps to them (one press), Right back -->
+			<onleft condition="Visualisation.Enabled + Visualisation.HasPresets">70056</onleft>
+			<onleft condition="!Visualisation.Enabled | !Visualisation.HasPresets">noop</onleft>
+			<onright condition="Control.HasFocus(70056)">602</onright>
+			<onright condition="!Control.HasFocus(70056)">noop</onright>
+			<!-- Pause and Stop together first; the toggles last so their changing words shift nothing after them.
+			     Pause | Resume and the shuffle word have fixed widths (widest label) - no judder. -->
+			<include content="OSDS_Phrase"><param name="id" value="602"/><param name="label" value="$VAR[OSDS_PlayLabel]"/><param name="left" value="0"/><param name="width" value="206"/><param name="align" value="center"/><param name="onclick" value="PlayerControl(Play)"/><param name="visible" value="Player.PauseEnabled"/></include>
+			<include content="OSDS_Dot"><param name="wid" value="27001"/><param name="visible" value="Player.PauseEnabled"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="603"/><param name="label" value="Stop"/><param name="onclick" value="PlayerControl(Stop)"/></include>
+			<include content="OSDS_Dot"><param name="wid" value="27002"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="600"/><param name="label" value="Previous"/><param name="onclick" value="PlayerControl(Previous)"/></include>
+			<include content="OSDS_Dot"><param name="wid" value="27003"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="607"/><param name="label" value="Next"/><param name="onclick" value="PlayerControl(Next)"/></include>
+			<include content="OSDS_Dot"><param name="wid" value="27007"/><param name="visible" value="Integer.IsGreater(Playlist.Length(music),0)"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="70051"/><param name="label" value="The queue"/><param name="onclick" value="ActivateWindow(musicplaylist)"/><param name="visible" value="Integer.IsGreater(Playlist.Length(music),0)"/></include>
+			<include content="OSDS_Dot"><param name="wid" value="27005"/><param name="visible" value="!MusicPartyMode.Enabled"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="70054"/><param name="label" value="Shuffle"/><param name="onclick" value="PlayerControl(Random)"/><param name="visible" value="!MusicPartyMode.Enabled"/></include>
+			<control type="label" id="27004">
+				<left>4</left>
+				<width>36</width>  <!-- "off" 31 px in Manrope 22: on / off never moves Repeat -->
+				<height>64</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Music_OSDShuffleWord]</label>
+				<visible>!MusicPartyMode.Enabled</visible>
+			</control>
+			<include content="OSDS_Dot"><param name="wid" value="27008"/><param name="visible" value="!MusicPartyMode.Enabled"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="70053"/><param name="label" value="Repeat"/><param name="onclick" value="PlayerControl(Repeat)"/><param name="visible" value="!MusicPartyMode.Enabled"/></include>
+			<include content="OSDS_Value"><param name="wid" value="27006"/><param name="label" value="$VAR[Music_OSDRepeatWord]"/><param name="visible" value="!MusicPartyMode.Enabled"/></include>
+			<!-- 0.9.10: Kodi's preset list (DialogSelect); only for a running visualisation with presets -->
+			<include content="OSDS_Dot"><param name="wid" value="27009"/><param name="visible" value="Visualisation.Enabled + Visualisation.HasPresets"/></include>
+			<include content="OSDS_Phrase"><param name="id" value="70056"/><param name="label" value="$LOCALIZE[31499]"/><param name="onclick" value="ActivateWindow(visualisationpresetlist)"/><param name="visible" value="Visualisation.Enabled + Visualisation.HasPresets"/></include>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>1000</top>
+			<width>page_width</width>
+			<height>30</height>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$VAR[Music_OSDHintWords]</label>
+		</control>
+	</controls>
+</window>

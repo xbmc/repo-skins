@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	The player talks in sentences (docs/concepts/mockups/SentenceTV.dc.html, bottom half):
+	  "You're 1 h 12 into The Prestige. / It ends at 23:41."   thin progress line, "1 h 12 in ... 58 min to go of 2 h 10"
+	  phrase buttons: "Resume · Subtitles English · Audio DD 5.1 · Chapters · Stop", then a quiet "Also" row.
+	Used by VideoOSD.xml, DialogSeekBar.xml, DialogFullScreenInfo.xml. Prefix OSDS_.
+	Time formats: Player.Time/TimeRemaining/Duration take (h) hours, (mm) 2-digit minutes in the hour,
+	(mins) whole minutes - the same TranslateTimeFormat as ListItem.Duration.
+-->
+<includes>
+	<!-- ================================================================== words -->
+	<variable name="OSDS_TimeIn">
+		<value condition="Integer.IsGreater(Player.Time(mins),59)">$INFO[Player.Time(h)] h $INFO[Player.Time(mm)]</value>
+		<value condition="Integer.IsEqual(Player.Time(mins),1)">1 minute</value>
+		<value condition="Integer.IsGreater(Player.Time(mins),1)">$INFO[Player.Time(mins)] minutes</value>
+		<value>a moment</value>
+	</variable>
+	<variable name="OSDS_TimeInShort">
+		<value condition="Integer.IsGreater(Player.Time(mins),59)">$INFO[Player.Time(h)] h $INFO[Player.Time(mm)]</value>
+		<value>$INFO[Player.Time(mins)] min</value>
+	</variable>
+	<variable name="OSDS_Left">
+		<value condition="Integer.IsGreater(Player.TimeRemaining(mins),59)">$INFO[Player.TimeRemaining(h)] h $INFO[Player.TimeRemaining(mm)]</value>
+		<value>$INFO[Player.TimeRemaining(mins)] min</value>
+	</variable>
+	<variable name="OSDS_Total">
+		<value condition="Integer.IsGreater(Player.Duration(mins),59)">$INFO[Player.Duration(h)] h $INFO[Player.Duration(mm)]</value>
+		<value>$INFO[Player.Duration(mins)] min</value>
+	</variable>
+	<!-- what is playing, as the object of the sentence -->
+	<variable name="OSDS_What">
+		<value condition="VideoPlayer.Content(episodes) + !String.IsEmpty(VideoPlayer.TVShowTitle)">[I]$INFO[VideoPlayer.TVShowTitle][/I], season $INFO[VideoPlayer.Season], episode $INFO[VideoPlayer.Episode]</value>
+		<value condition="VideoPlayer.Content(musicvideos)">[I]$INFO[VideoPlayer.Title][/I]$INFO[VideoPlayer.Artist, by ,]</value>
+		<value condition="VideoPlayer.Content(livetv)">[I]$INFO[VideoPlayer.Title][/I]$INFO[VideoPlayer.ChannelName, on ,]</value>
+		<value condition="!String.IsEmpty(VideoPlayer.Title)">[I]$INFO[VideoPlayer.Title][/I]</value>
+		<value>[I]$INFO[Player.Title][/I]</value>
+	</variable>
+	<variable name="OSDS_LineA">
+		<value condition="Player.Caching">Just a moment: it's buffering$INFO[Player.CacheLevel, (,%)].</value>
+		<value condition="!String.IsEmpty(Player.SeekNumeric)">Going to $INFO[Player.SeekNumeric]…</value>
+		<value condition="!String.IsEmpty(Player.SeekStepSize)">Skipping $VAR[OSD_SkipValue], to $INFO[Player.SeekTime].</value>
+		<value condition="Player.Forwarding">Fast-forwarding at $VAR[OSD_Speed], now $INFO[Player.Time].</value>
+		<value condition="Player.Rewinding">Rewinding at $VAR[OSD_Speed], now $INFO[Player.Time].</value>
+		<value condition="Integer.IsLess(Player.Time(mins),1) + !Player.Paused">You've just started $VAR[OSDS_What].</value>
+		<value>You're $VAR[OSDS_TimeIn] into $VAR[OSDS_What].</value>
+	</variable>
+	<variable name="OSDS_LineB">
+		<value condition="VideoPlayer.Content(livetv) + !String.IsEmpty(VideoPlayer.EndTime)">It ends at $INFO[VideoPlayer.EndTime].</value>
+		<value condition="!String.IsEmpty(Player.FinishTime) + Player.Paused">It would end at $INFO[Player.FinishTime].</value>
+		<value condition="!String.IsEmpty(Player.FinishTime)">It ends at $INFO[Player.FinishTime].</value>
+	</variable>
+	<variable name="OSDS_Kicker">
+		<value condition="Player.Caching">Buffering</value>
+		<value condition="Player.Paused">Paused</value>
+		<value condition="Player.Forwarding | Player.Rewinding | Player.Seeking">Moving</value>
+		<value>Playing</value>
+	</variable>
+	<variable name="OSDS_Next">
+		<value condition="VideoPlayer.Content(episodes) + !String.IsEmpty(VideoPlayer.offset(1).Title)">Up next: episode $INFO[VideoPlayer.offset(1).Episode], “$INFO[VideoPlayer.offset(1).Title]”</value>
+		<value condition="!String.IsEmpty(VideoPlayer.offset(1).Title)">Up next: $INFO[VideoPlayer.offset(1).Title]</value>
+	</variable>
+	<variable name="OSDS_PlayLabel">
+		<value condition="Player.Paused | Player.Forwarding | Player.Rewinding">Resume</value>
+		<value>Pause</value>
+	</variable>
+	<variable name="OSDS_SubValue">
+		<value condition="VideoPlayer.SubtitlesEnabled + !String.IsEmpty(VideoPlayer.SubtitlesLanguage)">$INFO[VideoPlayer.SubtitlesLanguage]</value>
+		<value condition="VideoPlayer.SubtitlesEnabled">on</value>
+		<value condition="VideoPlayer.HasSubtitles">off</value>
+		<value>none</value>
+	</variable>
+	<variable name="OSDS_AudioValue">
+		<value condition="!String.IsEmpty(VideoPlayer.AudioCodec)">$VAR[OSD_AudioCodec] $VAR[OSD_AudioChannels]</value>
+		<value condition="!String.IsEmpty(VideoPlayer.AudioLanguage)">$INFO[VideoPlayer.AudioLanguage]</value>
+	</variable>
+	<!-- fullscreen info paragraph -->
+	<variable name="OSDS_InfoP1">
+		<value condition="VideoPlayer.Content(episodes)">“$INFO[VideoPlayer.Title]” is episode $INFO[VideoPlayer.Episode] of season $INFO[VideoPlayer.Season] of [I]$INFO[VideoPlayer.TVShowTitle][/I]. You're $VAR[OSDS_TimeIn] in; $VAR[OSDS_EndsLower]</value>
+		<value condition="VideoPlayer.Content(movies)">[I]$INFO[VideoPlayer.Title][/I] is a$INFO[VideoPlayer.Year, ,] film$INFO[VideoPlayer.Director, by ,]. You're $VAR[OSDS_TimeIn] in; $VAR[OSDS_EndsLower]</value>
+		<value>$VAR[OSDS_What]. You're $VAR[OSDS_TimeIn] in; $VAR[OSDS_EndsLower]</value>
+	</variable>
+	<variable name="OSDS_EndsLower">
+		<value condition="!String.IsEmpty(Player.FinishTime)">it ends at $INFO[Player.FinishTime].</value>
+	</variable>
+	<variable name="OSDS_ChaptersLabel">
+		<value condition="Integer.IsGreater(Player.ChapterCount,1)">Chapters</value>
+		<value>Bookmarks</value>
+	</variable>
+	<variable name="OSDS_PrevLabel">
+		<value condition="Integer.IsGreater(Player.ChapterCount,1)">previous chapter</value>
+		<value>previous</value>
+	</variable>
+	<variable name="OSDS_NextLabel">
+		<value condition="Integer.IsGreater(Player.ChapterCount,1)">next chapter</value>
+		<value>next</value>
+	</variable>
+	<!-- one-line sentence for the seek bar -->
+	<variable name="OSDS_SeekLine">
+		<value condition="Player.Caching">Just a moment: it's buffering$INFO[Player.CacheLevel, (,%)].</value>
+		<value condition="!String.IsEmpty(Player.SeekNumeric)">Going to $INFO[Player.SeekNumeric]…</value>
+		<value condition="!String.IsEmpty(Player.SeekStepSize)">Skipping $VAR[OSD_SkipValue], to $INFO[Player.SeekTime].</value>
+		<value condition="!String.IsEmpty(Player.SeekOffset) + Player.HasPerformedSeek(3)">Skipped $VAR[OSD_SkipValue]. You're $VAR[OSDS_TimeIn] in.</value>
+		<value condition="Player.Forwarding">Fast-forwarding at $VAR[OSD_Speed], now $INFO[Player.Time].</value>
+		<value condition="Player.Rewinding">Rewinding at $VAR[OSD_Speed], now $INFO[Player.Time].</value>
+		<value condition="Player.Paused">Paused, $VAR[OSDS_TimeIn] into $VAR[OSDS_What].</value>
+		<value>You're $VAR[OSDS_TimeIn] into $VAR[OSDS_What].</value>
+	</variable>
+	<variable name="OSDS_Hint">
+		<value condition="Control.HasFocus(87)">Left and right skip. Down goes back to the buttons.</value>
+		<value condition="Player.SeekEnabled">Up to skip through it. Back hides this.</value>
+		<value>Back hides this.</value>
+	</variable>
+
+	<!-- ================================================================== pieces -->
+	<!-- Scrims over the bottom half (mockup: dimmed frame, left-to-right ramp, soft top edge) -->
+	<include name="OSDS_Scrims">
+		<param name="top">380</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>screen_w</width>
+				<height>700</height>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+				<texture colordiffuse="f20f1412">sentence/ramp_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>460</top>
+				<width>screen_w</width>
+				<height>620</height>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+				<texture colordiffuse="scrim">sentence/osd_corner.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- kicker line + the two-line sentence. param top (kicker y) -->
+	<include name="OSDS_Sentence">
+		<param name="top">584</param>
+		<definition>
+			<control type="group">
+				<left>page_margin</left>
+				<top>$PARAM[top]</top>
+				<width>page_width</width>
+				<height>220</height>
+				<control type="grouplist">
+					<left>0</left>
+					<top>0</top>
+					<width>1000</width>
+					<height>28</height>
+					<orientation>horizontal</orientation>
+					<itemgap>14</itemgap>
+					<control type="image">
+						<top>3</top>
+						<width>22</width>
+						<height>22</height>
+						<texture colordiffuse="muted">icons/pause.png</texture>
+						<visible>Player.Paused</visible>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>28</height>
+						<font>cap_20</font>
+						<textcolor>muted</textcolor>
+						<label>$VAR[OSDS_Kicker]</label>
+					</control>
+					<control type="label">
+						<width max="760">auto</width>
+						<height>28</height>
+						<font>ui_20</font>
+						<textcolor>muted</textcolor>
+						<label>$VAR[OSDS_Next]</label>
+					</control>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>page_width</width>
+					<height>28</height>
+					<align>right</align>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>It's $VAR[ClockLabel].</label>
+				</control>
+				<!-- Two labels, not one textbox: a textbox clips to whole line heights, which cut the descending
+				     old-style figures of line B ("It would end at 3:59" lost the tails of 3, 5, 9), and a long title
+				     wrapped line A onto two lines and pushed line B out of the box entirely. -->
+				<control type="label">
+					<left>0</left>
+					<top>40</top>
+					<width>page_width</width>
+					<height>84</height>
+					<aligny>center</aligny>
+					<font>serif_60</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[OSDS_LineA]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>124</top>
+					<width>page_width</width>
+					<height>84</height>
+					<aligny>center</aligny>
+					<font>serif_60</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[OSDS_LineB]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- thin progress line + times. param top (line y) -->
+	<include name="OSDS_Progress">
+		<param name="top">840</param>
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>screen_w</width>
+				<height>60</height>
+				<include content="OSD_Track">
+					<param name="top" value="0"/>
+					<param name="track_h" value="3"/>
+					<param name="track_color" value="rule_strong"/>
+					<param name="cache_color" value="rule_strong"/>
+					<param name="playhead_h" value="21"/>
+					<param name="playhead_top" value="-9"/>
+				</include>
+				<include content="OSD_SeekBubble">
+					<param name="top" value="-50"/>
+					<param name="visible" value="$EXP[OSD_SeekActive] + Player.SeekEnabled"/>
+				</include>
+				<control type="label">
+					<left>page_margin</left>
+					<top>20</top>
+					<width>800</width>
+					<height>28</height>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[OSDS_TimeInShort] in</label>
+				</control>
+				<control type="label">
+					<left>page_margin</left>
+					<top>20</top>
+					<width>page_width</width>
+					<height>28</height>
+					<align>right</align>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[OSDS_Left] to go of $VAR[OSDS_Total]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- big OSD phrase (Young Serif 38). params: id, label, onclick, onleft/onright (unused in grouplists), visible -->
+	<include name="OSDS_Phrase">
+		<param name="onclick">noop</param>
+		<param name="visible">true</param>
+		<param name="left">-4</param>
+		<param name="width">auto</param>
+		<param name="align">left</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<width>$PARAM[width]</width>
+				<height>64</height>
+				<font>serif_38</font>
+				<label>$PARAM[label]</label>
+				<include>Sen_PhraseTextures</include>
+				<align>$PARAM[align]</align>
+				<onclick>$PARAM[onclick]</onclick>
+				<onup>87</onup>
+				<ondown>201</ondown>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="OSDS_Dot">
+		<param name="wid">0</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>6</left>
+				<width>auto</width>
+				<height>64</height>
+				<font>serif_38</font>
+				<textcolor>muted</textcolor>
+				<label>·</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="OSDS_Value">
+		<param name="wid">0</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>4</left>
+				<width max="260">auto</width>
+				<height>64</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- quiet "also" phrase (Manrope 22 bold). params: id, label, onclick, visible -->
+	<include name="OSDS_Also">
+		<param name="onclick">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>44</height>
+				<font>ui_22_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac_half">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onup>200</onup>
+				<ondown>noop</ondown>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+</includes>

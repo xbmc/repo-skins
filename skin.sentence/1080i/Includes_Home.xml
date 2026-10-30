@@ -1,0 +1,1904 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home (docs/concepts/mockups/SentenceHome.dc.html + SentenceTV.dc.html top half).
+	The sentence machinery (spinner lists, paths, spin/commit/restore) is generated:
+	_src/make_sentence.py -> Includes_Sentence.xml. This file is the layout.
+
+	Ids
+	  Page 1   100 top line: 101 current sentence, 102-104 saved sentences, 105 keep this sentence
+	           201 kind, 202 length, 203 genre, 204 decade, 205 seen   (big Young Serif phrases)
+	           206 order, 207 see them all, 208 empty-state suggestion  (count line)
+	           210/220/230 sentence rows, 240/245 count lines, 500 results row
+	  Page 2   601 show spinner (data 610), 602 play it, 604 shows on the go, 603 film spinner (data 620)
+	           611-614 / 615-618 link phrases; rows 640, 650, 660, 670, 680
+	  Data     311.. spinner lists, 399 rest timer (Includes_Sentence.xml)
+	  Page 3   0.9.11 custom rows 9881-9883 (Includes_CustomRows.xml): Down from page 2's last line
+	  0.9.18   custom menu items (Includes_CustomMenu.xml): page 2 line 665 "Or go straight to [1], [2] or [3]." between
+	           the browse line and the last line, phrases 621-623 (only the set slots; the punctuation follows them).
+	           While it shows, the browse line moves up 30, the last line down 60 and the hint down 34.
+
+	Navigation (Omar's d-pad)
+	  Phrases: Left/Right move between phrases, Up/Down change the phrase, OK = go to the results,
+	  Back = the first phrase (201, where Home opens; never the top line: that bounced). Results: Up = back to
+	  the phrase you came from, Down = page 2, OK = open, Back = the first phrase.
+	  Page 2: spinners spin on Up/Down; plain phrases move between rows; Back = the first phrase.
+	  Repeated Back from anywhere on Home ends on 201 (Omar: Back always ends on the home menu).
+	Main menu (0.9.11, Skin settings, HideMenu.*): Films / TV shows / Music take their kinds out of the kind
+	spinner (make_sentence.py KIND_HIDE) and their page-2 rows / links with them; Pictures, Search and Add-ons
+	their phrase. Rows close up, the punctuation follows the phrases left, Settings and Switch off never hide.
+	Window properties (Home)
+	  sentence.ret    last focused phrase (Up from the results returns there)
+	  sentence.back   control to refocus when Home reopens (set before leaving Home)
+	  sentence.page   2 while page 2 has focus (slides the pages)
+	  sentence.p2     page 2 data may load (set once the results row or page 2 was reached)
+	  sentence.reload stamp set on every Home open (next-up plugin path refreshes after playback)
+-->
+<includes>
+	<!-- ================================================================ constants -->
+	<constant name="home_row1_y">116</constant>   <!-- row grouplists: 200 tall, phrase at +50 (100 tall) -->
+	<constant name="home_row2_y">256</constant>
+	<constant name="home_row3_y">396</constant>
+	<constant name="home_count_y">596</constant>
+	<constant name="home_results_y">644</constant>  <!-- posters at 656 (12px zoom room above) -->
+	<constant name="home_poster_w">196</constant>
+	<constant name="home_poster_h">294</constant>
+	<constant name="home_item_w">247</constant>      <!-- 196 + gap 51: seven across 1680 -->
+
+	<!-- ============================================================== expressions -->
+	<expression name="Home_Page2">String.IsEqual(Window(Home).Property(sentence.page),2)</expression>
+	<expression name="Home_HasResults">Integer.IsGreater(Container(500).NumItems,0)</expression>
+	<expression name="Home_Empty">Integer.IsEqual(Container(500).NumItems,0) + !Container(500).IsUpdating</expression>
+	<expression name="Home_CT1">!Integer.IsGreater(Container(6091).NumPages,1)</expression>
+	<expression name="Home_CT2">Integer.IsGreater(Container(6091).NumPages,1) + !Integer.IsGreater(Container(6092).NumPages,1)</expression>
+	<expression name="Home_CT3">Integer.IsGreater(Container(6092).NumPages,1) + !Integer.IsGreater(Container(6093).NumPages,1)</expression>
+	<expression name="Home_CT4">Integer.IsGreater(Container(6093).NumPages,1)</expression>
+	<expression name="Home_HasNextUp">Integer.IsGreater(Container(610).NumItems,0) + !Skin.HasSetting(HideMenu.TVShows)</expression>
+	<expression name="Home_HasFilmsOnTheGo">Integer.IsGreater(Container(620).NumItems,0) + !Skin.HasSetting(HideMenu.Movies)</expression>
+	<!-- 0.9.11 main menu (HideMenu.*): the browse links and the last line's phrases that are shown -->
+	<expression name="Home_AnyBrowse">!Skin.HasSetting(HideMenu.Movies) | !Skin.HasSetting(HideMenu.TVShows) | !Skin.HasSetting(HideMenu.Music) | !Skin.HasSetting(HideMenu.Pictures)</expression>
+	<expression name="Home_SlotsFull">!String.IsEmpty(Skin.String(sentence.slot1.name)) + !String.IsEmpty(Skin.String(sentence.slot2.name)) + !String.IsEmpty(Skin.String(sentence.slot3.name))</expression>
+
+	<!-- ================================================================ variables -->
+	<variable name="Home_GreetingWord">
+		<value condition="$EXP[TimeGreeting] + System.Time(04:00,11:59)">This morning</value>
+		<value condition="$EXP[TimeGreeting] + System.Time(12:00,17:29)">This afternoon</value>
+		<value>Tonight</value>
+	</variable>
+	<!-- "14 films match" / "1 film matches" / "Looking" -->
+	<variable name="Home_CountText">
+		<value condition="Container(500).IsUpdating + Integer.IsEqual(Container(500).NumItems,0)">Looking</value>
+		<value condition="Integer.IsEqual(Container(500).NumItems,1)">1 $VAR[Sen_NounOne] matches</value>
+		<value>$INFO[Container(500).NumItems] $VAR[Sen_NounMany] match</value>
+	</variable>
+	<!-- page 2 data -->
+	<variable name="Home_PathNextUp">
+		<value condition="!String.IsEmpty(Window(Home).Property(sentence.p2)) + $EXP[HasNextUpHelper]">plugin://script.embuary.helper/?info=getnextup&amp;reload=$INFO[Window(Home).Property(sentence.reload)]</value>
+		<value condition="!String.IsEmpty(Window(Home).Property(sentence.p2))">special://skin/playlists/sentence_inprogress_tvshows.xsp</value>
+	</variable>
+	<variable name="Home_PathFilmsOnTheGo">
+		<value condition="!String.IsEmpty(Window(Home).Property(sentence.p2))">special://skin/playlists/sentence_inprogress_movies.xsp</value>
+	</variable>
+	<!-- Line 2 of "Continue [show]:" (season moved off line 1: with a long show name "season 1," ran past the
+	     1040 px column and the row scrolled "Continue" off-screen). Every value fits 1040 px in serif 62. -->
+	<variable name="Home_NextLine2">
+		<value condition="String.IsEqual(Container(610).ListItem.DBType,tvshow) + Integer.IsEqual(Container(610).ListItem.Property(TotalEpisodes),1)">$INFO[Container(610).ListItem.Property(WatchedEpisodes)] of 1 episode seen, $INFO[Container(610).ListItem.Property(UnWatchedEpisodes)] to go.</value>
+		<value condition="String.IsEqual(Container(610).ListItem.DBType,tvshow)">$INFO[Container(610).ListItem.Property(WatchedEpisodes)] of $INFO[Container(610).ListItem.Property(TotalEpisodes)] episodes seen, $INFO[Container(610).ListItem.Property(UnWatchedEpisodes)] to go.</value>
+		<value condition="Integer.IsEqual(Container(610).ListItem.Season,0) + Container(610).ListItem.IsResumable">special $INFO[Container(610).ListItem.Episode], started.</value>
+		<value condition="Integer.IsEqual(Container(610).ListItem.Season,0) + !String.IsEmpty(Container(610).ListItem.Duration)">special $INFO[Container(610).ListItem.Episode], $INFO[Container(610).ListItem.Duration(mins)] minutes.</value>
+		<value condition="Integer.IsEqual(Container(610).ListItem.Season,0)">special $INFO[Container(610).ListItem.Episode].</value>
+		<value condition="Container(610).ListItem.IsResumable">season $INFO[Container(610).ListItem.Season], episode $INFO[Container(610).ListItem.Episode], started.</value>
+		<value condition="!String.IsEmpty(Container(610).ListItem.Duration)">season $INFO[Container(610).ListItem.Season], episode $INFO[Container(610).ListItem.Episode], $INFO[Container(610).ListItem.Duration(mins)] minutes.</value>
+		<value>season $INFO[Container(610).ListItem.Season], episode $INFO[Container(610).ListItem.Episode].</value>
+	</variable>
+	<variable name="Home_NextFinish">
+		<value condition="Container(610).ListItem.IsResumable + !String.IsEmpty(Container(610).ListItem.EndTimeResume)"> · you'd finish at $INFO[Container(610).ListItem.EndTimeResume]</value>
+		<value condition="!String.IsEmpty(Container(610).ListItem.EndTime)"> · you'd finish at $INFO[Container(610).ListItem.EndTime]</value>
+	</variable>
+	<variable name="Home_NextStill">
+		<value condition="!String.IsEmpty(Container(610).ListItem.Art(thumb))">$INFO[Container(610).ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(Container(610).ListItem.Art(landscape))">$INFO[Container(610).ListItem.Art(landscape)]</value>
+		<value condition="!String.IsEmpty(Container(610).ListItem.Art(tvshow.fanart))">$INFO[Container(610).ListItem.Art(tvshow.fanart)]</value>
+		<value>$INFO[Container(610).ListItem.Art(fanart)]</value>
+	</variable>
+	<variable name="Home_NextName">
+		<value condition="!String.IsEmpty(Container(610).ListItem.TVShowTitle)">$INFO[Container(610).ListItem.TVShowTitle]</value>
+		<value>$INFO[Container(610).ListItem.Label]</value>
+	</variable>
+	<variable name="Home_NextNameM1">
+		<value condition="!String.IsEmpty(Container(610).ListItem(-1).TVShowTitle)">$INFO[Container(610).ListItem(-1).TVShowTitle]</value>
+		<value>$INFO[Container(610).ListItem(-1).Label]</value>
+	</variable>
+	<variable name="Home_NextNameP1">
+		<value condition="!String.IsEmpty(Container(610).ListItem(1).TVShowTitle)">$INFO[Container(610).ListItem(1).TVShowTitle]</value>
+		<value>$INFO[Container(610).ListItem(1).Label]</value>
+	</variable>
+	<variable name="Home_TVKicker">
+		<value condition="$EXP[Home_HasNextUp] + Integer.IsGreaterOrEqual(Container(610).NumItems,25)">Television · plenty on the go</value>
+		<value condition="$EXP[Home_HasNextUp] + Integer.IsEqual(Container(610).NumItems,1)">Television · 1 show on the go</value>
+		<value condition="$EXP[Home_HasNextUp]">Television · $INFO[Container(610).NumItems] shows on the go</value>
+		<value condition="Skin.HasSetting(HideMenu.TVShows)">$LOCALIZE[31600]</value>
+		<value>Television</value>
+	</variable>
+	<variable name="Home_ResultArt">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+
+	<!-- ===================================================================== pieces -->
+	<!-- One big spinner phrase inside a sentence row grouplist: the faint neighbours (a zero-width group,
+	     so it sits exactly where the phrase starts) + the phrase button.
+	     params: id, phrase (kind|len|genre|decade|seen), visible -->
+	<include name="Home_BigPhrase">
+		<param name="visible">true</param>
+		<definition>
+			<control type="group" id="$PARAM[id]0">
+				<left>0</left>
+				<top>0</top>
+				<width>0</width>
+				<height>200</height>
+				<visible>Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+				<include>Anim_SpinnerHints</include>
+				<control type="image">
+					<left>32</left>
+					<top>11</top>
+					<width>18</width>
+					<height>18</height>
+					<texture colordiffuse="lilac_half" flipy="true">icons/chevron_down.png</texture>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>0</top>
+					<width>760</width>
+					<height>40</height>
+					<font>serif_30</font>
+					<textcolor>lilac_half</textcolor>
+					<label>$VAR[Sen_LL_$PARAM[phrase]_m1]</label>
+				</control>
+				<control type="image">
+					<left>32</left>
+					<top>161</top>
+					<width>18</width>
+					<height>18</height>
+					<texture colordiffuse="lilac_half">icons/chevron_down.png</texture>
+				</control>
+				<control type="label">
+					<left>60</left>
+					<top>150</top>
+					<width>760</width>
+					<height>40</height>
+					<font>serif_30</font>
+					<textcolor>lilac_half</textcolor>
+					<label>$VAR[Sen_LL_$PARAM[phrase]_p1]</label>
+				</control>
+			</control>
+			<control type="button" id="$PARAM[id]">
+				<left>8</left>
+				<top>50</top>
+				<width>auto</width>
+				<height>100</height>
+				<font>serif_66</font>
+				<label>$VAR[Sen_LL_$PARAM[phrase]]</label>
+				<include>Sen_PhraseTextures</include>
+				<onfocus>SetProperty(sentence.ret,$PARAM[id],home)</onfocus>
+				<onfocus>ClearProperty(sentence.page,home)</onfocus>
+				<include>Sen_Spin_$PARAM[phrase]_onup</include>
+				<include>Sen_Spin_$PARAM[phrase]_ondown</include>
+				<include>Sen_Commit_onunfocus</include>
+				<onclick condition="$EXP[Home_HasResults]">SetFocus(500)</onclick>
+				<onclick condition="!$EXP[Home_HasResults] + $EXP[Sen_CanSuggest]">SetFocus(208)</onclick>
+				<onback>SetFocus(201)</onback>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- Plain sentence words in a row (serif 66). params: label, left (margin), visible -->
+	<include name="Home_Words">
+		<param name="wid">0</param>
+		<param name="left">0</param>
+		<param name="visible">true</param>
+		<param name="color">text</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>$PARAM[left]</left>
+				<top>50</top>
+				<width>auto</width>
+				<height>100</height>
+				<font>serif_66</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- Punctuation right after a phrase: tucks under the padding when the phrase is unfocused,
+	     sits after the lilac block when it is focused. params: id (the phrase), mark, visible -->
+	<include name="Home_Mark">
+		<param name="visible">true</param>
+		<param name="wid">0</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]1">
+				<left>-21</left>
+				<top>50</top>
+				<width>auto</width>
+				<height>100</height>
+				<font>serif_66</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[mark]</label>
+				<visible>!Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+			</control>
+			<control type="label" id="$PARAM[wid]2">
+				<left>-21</left>  <!-- same place as unfocused (was -4: everything after the phrase jumped 17 px on focus) -->
+				<top>50</top>
+				<width>auto</width>
+				<height>100</height>
+				<font>serif_66</font>
+				<textcolor>on_lilac</textcolor>
+				<label>$PARAM[mark]</label>
+				<visible>Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- Row grouplist for the sentence. params: id, top, onleft, onright -->
+	<include name="Home_Row">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<left>page_margin</left>
+			<top>$PARAM[top]</top>
+			<width>1700</width>
+			<height>200</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>$PARAM[onleft]</onleft>
+			<onright>$PARAM[onright]</onright>
+		</definition>
+	</include>
+
+	<!-- ===================================================================== page 1 -->
+	<include name="Home_Glow">
+		<control type="image">
+			<left>-200</left>
+			<top>-260</top>
+			<width>1500</width>
+			<height>900</height>
+			<texture colordiffuse="10b9a6ff">sentence/glow.png</texture>
+		</control>
+	</include>
+
+	<include name="Home_TopLine">
+		<control type="grouplist" id="100">
+			<left>page_margin</left>
+			<top>sen_topline_y</top>
+			<width>1180</width>
+			<height>sen_topline_h</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>10</itemgap>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onup>noop</onup>
+			<ondown>SetFocus($INFO[Window(Home).Property(sentence.ret)])</ondown>
+			<control type="label" id="25001">
+				<width>auto</width>
+				<height>sen_topline_h</height>
+				<font>cap_20</font>
+				<textcolor>muted</textcolor>
+				<label>$LOCALIZE[31342]</label>
+			</control>
+			<control type="button" id="101">
+				<left>10</left>
+				<width>auto</width>
+				<height>sen_topline_h</height>
+				<font>ui_22_bold</font>
+				<textoffsetx>14</textoffsetx>
+				<include>Sen_QuietTextures</include>
+				<label>$VAR[Home_GreetingWord]</label>
+				<onclick>SetFocus(201)</onclick>
+				<onback>SetFocus(201)</onback>
+				<ondown>201</ondown>
+				<onfocus>ClearProperty(sentence.page,home)</onfocus>
+			</control>
+			<control type="button" id="105">
+				<left>14</left>
+				<width>auto</width>
+				<height>sen_topline_h</height>
+				<font>ui_22_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$LOCALIZE[31343]</label>
+				<include>Sen_SlotSave1</include>
+				<include>Sen_SlotSave2</include>
+				<include>Sen_SlotSave3</include>
+				<!-- all three places taken: say so instead of doing nothing -->
+				<onclick condition="$EXP[Home_SlotsFull]">Notification(Keep this sentence,All three places are taken. Forget one in settings first.,5000)</onclick>
+				<onback>SetFocus(201)</onback>
+				<ondown>201</ondown>
+			</control>
+			<include content="Home_SlotButton"><param name="n" value="1"/><param name="id" value="102"/></include>
+			<include content="Home_SlotButton"><param name="n" value="2"/><param name="id" value="103"/></include>
+			<include content="Home_SlotButton"><param name="n" value="3"/><param name="id" value="104"/></include>
+		</control>
+		<include>Sen_Clock</include>
+	</include>
+	<include name="Home_SlotButton">
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>sen_topline_h</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<textoffsetx>14</textoffsetx>
+				<include>Sen_QuietTextures</include>
+				<label>$INFO[Skin.String(sentence.slot$PARAM[n].name)]</label>
+				<include>Sen_SlotLoad$PARAM[n]</include>
+				<onclick>SetFocus(201)</onclick>
+				<onback>SetFocus(201)</onback>
+				<ondown>201</ondown>
+				<visible>!String.IsEmpty(Skin.String(sentence.slot$PARAM[n].name)) + ![[[String.IsEmpty(Skin.String(sentence.slot$PARAM[n].kind)) | String.IsEqual(Skin.String(sentence.slot$PARAM[n].kind),1)] + Skin.HasSetting(HideMenu.Movies)] | [[String.IsEqual(Skin.String(sentence.slot$PARAM[n].kind),2) | String.IsEqual(Skin.String(sentence.slot$PARAM[n].kind),3)] + Skin.HasSetting(HideMenu.TVShows)] | [String.IsEqual(Skin.String(sentence.slot$PARAM[n].kind),4) + Skin.HasSetting(HideMenu.Music)]]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Home_Sentence">
+		<!-- row 1: "Tonight I'd like [a film]" -->
+		<control type="grouplist" id="210">
+			<include content="Home_Row">
+				<param name="top" value="home_row1_y"/>
+				<param name="onleft" value="100"/>
+				<param name="onright" value="SetFocus($VAR[Home_AfterKind])"/>
+			</include>
+			<include content="Home_Words"><param name="wid" value="21010"/><param name="label" value="$VAR[Sen_Greeting]"/></include>
+			<include content="Home_BigPhrase"><param name="id" value="201"/><param name="phrase" value="kind"/></include>
+		</control>
+		<!-- row 2: "that's [under 2 hours], [serious],"  (albums: "of [rock],") -->
+		<control type="grouplist" id="220">
+			<include content="Home_Row">
+				<param name="top" value="home_row2_y"/>
+				<param name="onleft" value="201"/>
+				<param name="onright" value="204"/>
+			</include>
+			<include content="Home_Words"><param name="wid" value="21020"/><param name="label" value="$VAR[Sen_Prefix]"/></include>
+			<include content="Home_BigPhrase"><param name="id" value="202"/><param name="phrase" value="len"/><param name="visible" value="$EXP[Sen_LiveHasLen]"/></include>
+			<include content="Home_Mark"><param name="wid" value="2103"/><param name="id" value="202"/><param name="mark" value=","/><param name="visible" value="$EXP[Sen_LiveHasLen]"/></include>
+			<include content="Home_BigPhrase"><param name="id" value="203"/><param name="phrase" value="genre"/></include>
+			<include content="Home_Mark"><param name="wid" value="2104"/><param name="id" value="203"/><param name="mark" value=","/></include>
+		</control>
+		<!-- row 3: "from [any decade], that I [haven't seen]." -->
+		<control type="grouplist" id="230">
+			<include content="Home_Row">
+				<param name="top" value="home_row3_y"/>
+				<param name="onleft" value="203"/>
+				<param name="onright" value="SetFocus($VAR[Home_AfterSeen])"/>
+			</include>
+			<include content="Home_Words"><param name="wid" value="21050"/><param name="label" value="from"/></include>
+			<include content="Home_BigPhrase"><param name="id" value="204"/><param name="phrase" value="decade"/></include>
+			<include content="Home_Mark"><param name="wid" value="2106"/><param name="id" value="204"/><param name="mark" value=","/></include>
+			<include content="Home_Words"><param name="wid" value="21070"/><param name="label" value="that I"/><param name="left" value="17"/></include>
+			<include content="Home_BigPhrase"><param name="id" value="205"/><param name="phrase" value="seen"/></include>
+			<include content="Home_Mark"><param name="wid" value="2108"/><param name="id" value="205"/><param name="mark" value="."/></include>
+		</control>
+	</include>
+	<variable name="Home_AfterKind">
+		<value condition="$EXP[Sen_LiveHasLen]">202</value>
+		<value>203</value>
+	</variable>
+	<variable name="Home_AfterSeen">
+		<!-- 0.9.20: with no matches and nothing to suggest, 208 is hidden: SetFocus on it dropped focus (one key lost) -->
+		<value condition="$EXP[Home_Empty] + $EXP[Sen_CanSuggest]">208</value>
+		<value condition="$EXP[Home_Empty]">205</value>
+		<value>206</value>
+	</variable>
+
+	<!-- Count line: "14 films match, [best rated first]. [See them all]" / empty: "Nothing matches. Try [any genre]." -->
+	<include name="Home_CountLine">
+		<control type="grouplist" id="240">
+			<left>page_margin</left>
+			<top>home_count_y</top>
+			<width>1300</width>
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>205</onleft>
+			<onright>noop</onright>
+			<visible>!$EXP[Home_Empty]</visible>
+			<control type="label" id="25002">
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24_bold</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Home_CountText]</label>
+			</control>
+			<control type="label" id="25003">
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>muted</textcolor>
+				<label>,</label>
+			</control>
+			<control type="button" id="206">
+				<left>-8</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$VAR[Sen_LL_order]</label>
+				<onfocus>SetProperty(sentence.ret,206,home)</onfocus>
+				<onfocus>ClearProperty(sentence.page,home)</onfocus>
+				<include>Sen_Spin_order_onup</include>
+				<include>Sen_Spin_order_ondown</include>
+				<include>Sen_Commit_onunfocus</include>
+				<onclick condition="$EXP[Home_HasResults]">SetFocus(500)</onclick>
+				<onback>SetFocus(201)</onback>
+			</control>
+			<control type="label" id="25004">
+				<left>-17</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>text</textcolor>
+				<label>.</label>
+				<visible>!Control.HasFocus(206)</visible>
+			</control>
+			<control type="label" id="250049">
+				<left>-17</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>on_lilac</textcolor>
+				<label>.</label>
+				<visible>Control.HasFocus(206)</visible>
+			</control>
+			<control type="label" id="25005">
+				<left>14</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_20</font>
+				<textcolor>lilac_half</textcolor>
+				<label>↑ $VAR[Sen_LL_order_m1]   ↓ $VAR[Sen_LL_order_p1]</label>
+				<visible>Control.HasFocus(206)</visible>
+			</control>
+			<control type="button" id="207">
+				<left>10</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$LOCALIZE[31344]</label>
+				<onfocus>SetProperty(sentence.ret,207,home)</onfocus>
+				<onfocus>ClearProperty(sentence.page,home)</onfocus>
+				<include>Sen_Commit_onclick</include>
+				<onclick>SetProperty(sentence.back,207,home)</onclick>
+				<onclick condition="$EXP[Sen_LK_album]">ActivateWindow(Music,$VAR[Sen_LibPathLive],return)</onclick>
+				<onclick condition="!$EXP[Sen_LK_album]">ActivateWindow(Videos,$VAR[Sen_LibPathLive],return)</onclick>
+				<onup>205</onup>
+				<ondown condition="$EXP[Home_HasResults]">500</ondown>
+				<onback>SetFocus(201)</onback>
+			</control>
+		</control>
+		<control type="grouplist" id="245">
+			<left>page_margin</left>
+			<top>home_count_y</top>
+			<width>1300</width>
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>205</onleft>
+			<onright>noop</onright>
+			<visible>$EXP[Home_Empty]</visible>
+			<control type="label" id="25006">
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24_bold</font>
+				<textcolor>text</textcolor>
+				<label>$LOCALIZE[31345]</label>
+			</control>
+			<control type="label" id="25007">
+				<left>8</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>muted</textcolor>
+				<label>$LOCALIZE[31346]</label>
+			</control>
+			<control type="button" id="208">
+				<left>-6</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$VAR[Sen_SuggestLabel]</label>
+				<onfocus>SetProperty(sentence.ret,208,home)</onfocus>
+				<onfocus>ClearProperty(sentence.page,home)</onfocus>
+				<include>Sen_SuggestClick</include>
+				<onclick>SetFocus(205)</onclick>
+				<onup>205</onup>
+				<ondown>SetFocus($VAR[Home_FirstOnPage2])</ondown>
+				<onback>SetFocus(201)</onback>
+				<visible>$EXP[Sen_CanSuggest]</visible>
+			</control>
+			<control type="label" id="25008">
+				<left>-17</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>text</textcolor>
+				<label>.</label>
+				<visible>!Control.HasFocus(208)</visible>
+			</control>
+			<control type="label" id="250089">
+				<left>-17</left>
+				<width>auto</width>
+				<height>48</height>
+				<font>ui_24</font>
+				<textcolor>on_lilac</textcolor>
+				<label>.</label>
+				<visible>Control.HasFocus(208)</visible>
+			</control>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>home_count_y</top>
+			<width>page_width</width>
+			<height>48</height>
+			<align>right</align>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$VAR[Home_Hint]</label>
+		</control>
+	</include>
+	<!-- 0.9.13 (navigation clarity): the hint follows the focused control and stays on for every phrase (it used to
+	     go while "from [..], that I [..]" had focus: the place where people press Down to reach the posters). -->
+	<variable name="Home_Hint">
+		<value condition="Control.HasFocus(500)">OK opens it. Up takes you back to the sentence, down to what's on the go.</value>
+		<value condition="ControlGroup(100).HasFocus()">OK uses a sentence. Down goes back to yours.</value>
+		<value condition="Control.HasFocus(206)">$LOCALIZE[31963]</value>
+		<value condition="Control.HasFocus(207)">$LOCALIZE[31964]</value>
+		<value condition="Control.HasFocus(208)">$LOCALIZE[31965]</value>
+		<value>$LOCALIZE[31962]</value>
+	</variable>
+	<!-- page 2 footer (0.9.13): what Up / Down / Left / OK do on the focused line, always ending with the way back -->
+	<variable name="Home_P2Hint">
+		<value condition="Control.HasFocus(601)">$LOCALIZE[31966]</value>
+		<value condition="Control.HasFocus(603)">$LOCALIZE[31967]</value>
+		<value condition="ControlGroup(670).HasFocus() + [$EXP[CustomRow1On] | $EXP[CustomRow2On] | $EXP[CustomRow3On]]">$LOCALIZE[31969]</value>
+		<value>$LOCALIZE[31968]</value>
+	</variable>
+
+	<!-- Results: one row of posters, each explained in words -->
+	<include name="Home_ResultItem">
+		<param name="focused">false</param>
+		<param name="dim">$VAR[Home_ResultDim]</param>
+		<param name="list">500</param>
+		<param name="art">$VAR[Home_ResultArt]</param>
+		<param name="titlecolor">$VAR[Home_ResultTitleColor]</param>
+		<definition>
+			<control type="group">
+				<left>12</left>
+				<top>12</top>
+				<width>home_poster_w</width>
+				<height>home_poster_h</height>
+				<animation type="Conditional" condition="$PARAM[focused] + Control.HasFocus($PARAM[list]) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="106" center="98,160" time="200" tween="cubic" easing="out"/>
+				</animation>
+				<control type="image">
+					<left>-60</left>
+					<top>-60</top>
+					<width>316</width>
+					<height>414</height>
+					<texture colordiffuse="black">sentence/poster_shadow.png</texture>
+					<visible>!String.IsEqual(ListItem.DBType,album)</visible>
+				</control>
+				<control type="group">
+					<visible>!String.IsEqual(ListItem.DBType,album)</visible>
+					<include content="Sen_Artwork">
+						<param name="art" value="$PARAM[art]"/>
+						<param name="diffuse" value="$PARAM[dim]"/>
+					</include>
+					<include>Sen_WatchedMarkers</include>
+				</control>
+				<control type="group">
+					<top>0</top>
+					<height>196</height>
+					<visible>String.IsEqual(ListItem.DBType,album)</visible>
+					<include content="Sen_Artwork">
+						<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+						<param name="diffuse" value="$PARAM[dim]"/>
+					</include>
+				</control>
+			</control>
+			<!-- focus bar under the art: two fixed positions ($VAR in <top> is not evaluated: the bar sat on top of the poster) -->
+			<control type="image">
+				<left>12</left>
+				<top>314</top>
+				<width>home_poster_w</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>[$PARAM[focused] + Control.HasFocus($PARAM[list])] + !String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="image">
+				<left>12</left>
+				<top>216</top>
+				<width>home_poster_w</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>[$PARAM[focused] + Control.HasFocus($PARAM[list])] + String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>322</top>
+				<width>home_poster_w</width>
+				<height>30</height>
+				<font>ui_22_bold</font>
+				<textcolor>$PARAM[titlecolor]</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>[!$PARAM[focused]] + !String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>224</top>
+				<width>home_poster_w</width>
+				<height>30</height>
+				<font>ui_22_bold</font>
+				<textcolor>$PARAM[titlecolor]</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>[!$PARAM[focused]] + String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>322</top>
+				<width>home_poster_w</width>
+				<height>30</height>
+				<font>ui_22_bold</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>[$PARAM[focused]] + !String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>224</top>
+				<width>home_poster_w</width>
+				<height>30</height>
+				<font>ui_22_bold</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>[$PARAM[focused]] + String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>352</top>
+				<width>home_poster_w</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Sen_CaptionShort]</label>
+				<visible>[!$PARAM[focused] | !Control.HasFocus($PARAM[list])] + !String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>254</top>
+				<width>home_poster_w</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Sen_CaptionShort]</label>
+				<visible>[!$PARAM[focused] | !Control.HasFocus($PARAM[list])] + String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>352</top>
+				<width>228</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>lilac</textcolor>
+				<label>$VAR[Sen_Caption]</label>
+				<visible>[$PARAM[focused] + Control.HasFocus($PARAM[list])] + !String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>254</top>
+				<width>228</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>lilac</textcolor>
+				<label>$VAR[Sen_Caption]</label>
+				<visible>[$PARAM[focused] + Control.HasFocus($PARAM[list])] + String.IsEqual(ListItem.DBType,album)</visible>
+			</control>
+		</definition>
+	</include>
+	<variable name="Home_ResultDim">
+		<value condition="Control.HasFocus(500)">dim_art</value>
+		<value>white</value>
+	</variable>
+	<variable name="Home_ResultTitleColor">
+		<value condition="Control.HasFocus(500)">muted</value>
+		<value>text</value>
+	</variable>
+	<include name="Home_Results">
+		<control type="list" id="500">
+			<left>108</left>
+			<top>home_results_y</top>
+			<width>1740</width>
+			<height>400</height>
+			<orientation>horizontal</orientation>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<onup>SetFocus($INFO[Window(Home).Property(sentence.ret)])</onup>
+			<ondown>SetFocus($VAR[Home_FirstOnPage2])</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>SetFocus(201)</onback>
+			<onfocus>SetProperty(sentence.p2,1,home)</onfocus>
+			<onfocus>ClearProperty(sentence.page,home)</onfocus>
+			<onclick>SetProperty(sentence.back,500,home)</onclick>
+			<onclick condition="String.IsEqual(Container(500).ListItem.DBType,tvshow)">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Container(500).ListItem.DBID]/,return)</onclick>
+			<onclick condition="!String.IsEqual(Container(500).ListItem.DBType,tvshow)">Action(Info)</onclick>
+			<itemlayout width="home_item_w" height="400">
+				<include>Home_ResultItem</include>
+			</itemlayout>
+			<focusedlayout width="home_item_w" height="400">
+				<include content="Home_ResultItem"><param name="focused" value="true"/><param name="dim" value="white"/></include>
+			</focusedlayout>
+			<content target="videos" sortby="$VAR[Sen_SortBy]" sortorder="$VAR[Sen_SortOrder]">$VAR[Sen_Path]</content>
+		</control>
+		<!-- empty / looking -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>700</top>
+			<width>page_width</width>
+			<height>64</height>
+			<font>serif_44</font>
+			<textcolor>muted</textcolor>
+			<label>$LOCALIZE[31347]</label>
+			<visible>$EXP[Home_Empty]</visible>
+		</control>
+	</include>
+
+	<include name="Home_Page1">
+		<control type="group">
+			<animation type="Conditional" condition="$EXP[Home_Page2] + !$EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="420" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[Home_Page2] + $EXP[ReduceMotion]" reversible="true">
+				<effect type="fade" start="100" end="0" time="160"/>
+				<effect type="slide" start="0,0" end="0,-1080" time="0" delay="160"/>
+			</animation>
+			<include>Home_Glow</include>
+			<include>Home_TopLine</include>
+			<include>Home_Sentence</include>
+			<include>Home_CountLine</include>
+			<include>Home_Results</include>
+		</control>
+	</include>
+
+	<!-- ===================================================================== page 2 -->
+	<!-- serif 44 phrase for page 2 rows. params: id, label, onclick, onup, ondown, visible -->
+	<include name="Home_MidPhrase">
+		<param name="push">false</param>
+		<param name="visible">true</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="left">8</param>  <!-- like Home's big phrases: the focused block keeps a gap from the word before -->
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<label>$PARAM[label]</label>
+				<include>Sen_PhraseTextures</include>
+				<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+				<onfocus>SetProperty(sentence.p2,1,home)</onfocus>
+				<onclick>SetProperty(sentence.back,$PARAM[id],home)</onclick>
+				<onclick>$PARAM[onclick]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onback>SetFocus(201)</onback>
+				<visible>$PARAM[visible]</visible>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+			</control>
+		</definition>
+	</include>
+	<!-- 0.9.18 a custom menu item as a page-2 phrase (params id, n): opens the item (CustomMenu_OnClick); Home comes back to it -->
+	<include name="Home_CustomPhrase">
+		<param name="push">false</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<left>8</left>
+				<top>0</top>
+				<width max="400">auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<label>$VAR[CustomMenu_Label$PARAM[n]]</label>
+				<include>Sen_PhraseTextures</include>
+				<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+				<onfocus>SetProperty(sentence.p2,1,home)</onfocus>
+				<onclick>SetProperty(sentence.back,$PARAM[id],home)</onclick>
+				<include content="CustomMenu_OnClick"><param name="item" value="$PARAM[n]"/></include>
+				<onup>SetFocus($VAR[Home_AboveCustom])</onup>
+				<ondown>SetFocus($VAR[Home_FirstLast])</ondown>
+				<onback>SetFocus(201)</onback>
+				<visible>$EXP[CustomMenu$PARAM[n]On]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- 0.9.18 the "or" / marks of the custom line (params as Home_MidWords / Home_MidMark, plus push). The lilac block of a
+	     focused phrase fills its 24 px right padding, so the "or" after it would touch the block: while the phrase before
+	     an "or" has focus, that "or" and the words after it ease 20 px right (Shield check 2026-10-28). -->
+	<include name="Home_CustomWords">
+		<param name="push">false</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[label]</label>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Home_CustomMark">
+		<param name="push">false</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>-20</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[mark]</label>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<visible>!Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+			</control>
+			<control type="label" id="$PARAM[wid]9">
+				<left>-20</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>[COLOR on_lilac]$PARAM[mark][/COLOR]</label>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<visible>Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Home_MidWords">
+		<param name="push">false</param>
+		<param name="wid">0</param>
+		<param name="left">0</param>
+		<param name="color">text</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+			</control>
+		</definition>
+	</include>
+	<!-- 0.9.21 param push (Home_MidPhrase / Home_MidWords / Home_MidMark): a focused phrase's lilac block fills its 24 px
+	     right padding, so a WORD right after it ("or", "open") touched the block. While the phrase before such a word
+	     has focus, the word and the rest of the line ease 20 px right (marks stay inside the block). -->
+	<!-- A mark right after a page-2 phrase (left -20, under its right padding): ink while the phrase has focus,
+	     so it reads inside the lilac block. params: wid, id (the phrase), mark, rest (words after the mark) -->
+	<include name="Home_MidMark">
+		<param name="push">false</param>
+		<param name="rest"></param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>-20</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[mark]$PARAM[rest]</label>
+				<visible>!Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+			</control>
+			<control type="label" id="$PARAM[wid]9">
+				<left>-20</left>
+				<top>0</top>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>[COLOR on_lilac]$PARAM[mark][/COLOR]$PARAM[rest]</label>
+				<visible>Control.HasFocus($PARAM[id]) + [$PARAM[visible]]</visible>
+				<animation effect="slide" start="0,0" end="20,0" time="120" tween="cubic" easing="out" condition="[$PARAM[push]] + !$EXP[ReduceMotion]" reversible="true">Conditional</animation>
+				<animation effect="slide" start="0,0" end="20,0" time="0" condition="[$PARAM[push]] + $EXP[ReduceMotion]" reversible="true">Conditional</animation>
+			</control>
+		</definition>
+	</include>
+	<!-- One size tier of "Continue [show]:" (drawn only; focus lives on the clear button 601).
+	     params: gid, font, max (phrase width cap = text room + 2 x 24 pad), visible, scroll (last-resort tier) -->
+	<include name="Home_ContinueTier">
+		<param name="scroll">false</param>
+		<definition>
+			<control type="grouplist" id="$PARAM[gid]">
+				<left>page_margin</left>
+				<top>110</top>
+				<width>1040</width>
+				<height>200</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<itemgap>0</itemgap>
+				<visible>$PARAM[visible]</visible>
+				<control type="label">
+					<left>0</left>
+					<top>50</top>
+					<width>auto</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>text</textcolor>
+					<label>$LOCALIZE[31348]</label>
+					<visible>true</visible>
+				</control>
+				<control type="group">
+					<width>0</width>
+					<height>200</height>
+					<visible>Control.HasFocus(601)</visible>
+					<include>Anim_SpinnerHints</include>
+					<control type="image">
+						<left>20</left><top>11</top><width>18</width><height>18</height>
+						<texture colordiffuse="lilac_half" flipy="true">icons/chevron_down.png</texture>
+					</control>
+					<control type="label">
+						<left>48</left><top>0</top><width>700</width><height>40</height>
+						<font>serif_30</font><textcolor>lilac_half</textcolor>
+						<label>$VAR[Home_NextNameM1]</label>
+					</control>
+					<control type="image">
+						<left>20</left><top>171</top><width>18</width><height>18</height>
+						<texture colordiffuse="lilac_half">icons/chevron_down.png</texture>
+					</control>
+					<control type="label">
+						<left>48</left><top>160</top><width>700</width><height>40</height>
+						<font>serif_30</font><textcolor>lilac_half</textcolor>
+						<label>$VAR[Home_NextNameP1]</label>
+					</control>
+				</control>
+				<!-- fitting tiers: disabled auto-width buttons draw the underline / the lilac block at the text's width -->
+				<control type="button">
+					<left>14</left>
+					<top>50</top>
+					<width max="$PARAM[max]">auto</width>
+					<height>100</height>
+					<font>$PARAM[font]</font>
+					<label>$VAR[Home_NextName]</label>
+					<texturefocus />
+					<texturenofocus border="24,0,24,6" colordiffuse="lilac">sentence/phrase_under.png</texturenofocus>
+					<disabledcolor>lilac</disabledcolor>
+					<textoffsetx>sen_phrase_pad</textoffsetx>
+					<aligny>center</aligny>
+					<enable>false</enable>
+					<visible>!Control.HasFocus(601) + ![$PARAM[scroll]]</visible>
+				</control>
+				<control type="button">
+					<left>14</left>
+					<top>50</top>
+					<width max="$PARAM[max]">auto</width>
+					<height>100</height>
+					<font>$PARAM[font]</font>
+					<label>$VAR[Home_NextName]</label>
+					<texturefocus />
+					<texturenofocus border="14" colordiffuse="lilac">sentence/phrase_block.png</texturenofocus>
+					<disabledcolor>on_lilac</disabledcolor>
+					<textoffsetx>sen_phrase_pad</textoffsetx>
+					<aligny>center</aligny>
+					<enable>false</enable>
+					<visible>Control.HasFocus(601) + ![$PARAM[scroll]]</visible>
+				</control>
+				<!-- last resort: a full-width phrase with the name scrolling inside it (765 px text room at 44) -->
+				<control type="button">
+					<left>14</left>
+					<top>50</top>
+					<width>$PARAM[max]</width>
+					<height>100</height>
+					<font>$PARAM[font]</font>
+					<label></label>
+					<texturefocus />
+					<texturenofocus border="24,0,24,6" colordiffuse="lilac">sentence/phrase_under.png</texturenofocus>
+					<disabledcolor>lilac</disabledcolor>
+					<textoffsetx>sen_phrase_pad</textoffsetx>
+					<aligny>center</aligny>
+					<enable>false</enable>
+					<visible>!Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+				<control type="button">
+					<left>14</left>
+					<top>50</top>
+					<width>$PARAM[max]</width>
+					<height>100</height>
+					<font>$PARAM[font]</font>
+					<label></label>
+					<texturefocus />
+					<texturenofocus border="14" colordiffuse="lilac">sentence/phrase_block.png</texturenofocus>
+					<disabledcolor>on_lilac</disabledcolor>
+					<textoffsetx>sen_phrase_pad</textoffsetx>
+					<aligny>center</aligny>
+					<enable>false</enable>
+					<visible>Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+				<control type="label">
+					<left>-789</left>
+					<top>50</top>
+					<width>765</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>lilac</textcolor>
+					<label>$VAR[Home_NextName]</label>
+					<scroll>true</scroll>
+					<visible>!Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+				<control type="label">
+					<left>-789</left>
+					<top>50</top>
+					<width>765</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>on_lilac</textcolor>
+					<label>$VAR[Home_NextName]</label>
+					<scroll>true</scroll>
+					<visible>Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+				<!-- the colon: one place in both states (under the phrase padding; ink inside the block on focus) -->
+				<control type="label">
+					<left>-21</left>
+					<top>50</top>
+					<width>auto</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>text</textcolor>
+					<label>:</label>
+					<visible>!Control.HasFocus(601) + ![$PARAM[scroll]]</visible>
+				</control>
+				<control type="label">
+					<left>-21</left>
+					<top>50</top>
+					<width>auto</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>on_lilac</textcolor>
+					<label>:</label>
+					<visible>Control.HasFocus(601) + ![$PARAM[scroll]]</visible>
+				</control>
+				<control type="label">
+					<left>3</left>
+					<top>50</top>
+					<width>auto</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>text</textcolor>
+					<label>:</label>
+					<visible>!Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+				<control type="label">
+					<left>3</left>
+					<top>50</top>
+					<width>auto</width>
+					<height>100</height>
+					<aligny>center</aligny>
+					<font>$PARAM[font]</font>
+					<textcolor>on_lilac</textcolor>
+					<label>:</label>
+					<visible>Control.HasFocus(601) + [$PARAM[scroll]]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Home_MidRow">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<left>page_margin</left>
+			<top>$PARAM[top]</top>
+			<width>1700</width>
+			<height>72</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>$PARAM[onleft]</onleft>
+			<onright>$PARAM[onright]</onright>
+			<visible>$PARAM[visible]</visible>
+		</definition>
+	</include>
+
+	<include name="Home_Page2">
+		<control type="group">
+			<top>1080</top>
+			<animation type="Conditional" condition="$EXP[Home_Page2] + !$EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="420" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[Home_Page2] + $EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="0"/>
+			</animation>
+			<!-- 0.9.11: on up again while a custom row (page 3) has focus -->
+			<animation type="Conditional" condition="$EXP[CustomRowsFocus] + !$EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="420" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[CustomRowsFocus] + $EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="0"/>
+			</animation>
+			<!-- top line -->
+			<control type="label">
+				<left>page_margin</left>
+				<top>sen_topline_y</top>
+				<width>1000</width>
+				<height>sen_topline_h</height>
+				<font>cap_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Home_TVKicker]</label>
+			</control>
+			<include>Sen_Clock</include>
+
+			<!-- Continue [Arcane]: / season 2, episode 1, 40 minutes. -->
+			<control type="group">
+				<visible>$EXP[Home_HasNextUp]</visible>
+				<!-- invisible probes for the Continue tiers: NumPages > 1 = the name needs more than one line at that size -->
+				<control type="textbox" id="6091"><left>page_margin</left><top>160</top><width>677</width><height>130</height><font>serif_62</font><textcolor>00ffffff</textcolor><label>$VAR[Home_NextName]</label></control>
+				<control type="textbox" id="6092"><left>page_margin</left><top>160</top><width>727</width><height>109</height><font>serif_52</font><textcolor>00ffffff</textcolor><label>$VAR[Home_NextName]</label></control>
+				<control type="textbox" id="6093"><left>page_margin</left><top>160</top><width>765</width><height>92</height><font>serif_44</font><textcolor>00ffffff</textcolor><label>$VAR[Home_NextName]</label></control>
+				<control type="image">
+					<left>1180</left>
+					<top>128</top>
+					<width>620</width>
+					<height>349</height>
+					<texture>sentence/poster_shadow.png</texture>
+					<visible>false</visible>
+				</control>
+				<control type="image">
+					<left>1180</left>
+					<top>128</top>
+					<width>620</width>
+					<height>349</height>
+					<aspectratio>scale</aspectratio>
+					<fadetime>200</fadetime>
+					<texture background="true">$VAR[Home_NextStill]</texture>
+				</control>
+				<!-- "Continue [show]:" fitted to the 1040 px column: Young Serif 62 / 52 / 44, then 44 scrolling (probes 6091-6093
+				     pick the tier; measured on all 284 shows: 36 need 52, 18 need 44, 4 need the scroll).
+				     The phrase is drawn by non-focusable pieces per tier; the focus holder 601 is one always-visible clear
+				     button, so a tier change while spinning never leaves focus on a hidden control. -->
+				<control type="button" id="601">
+					<left>page_margin</left>
+					<top>160</top>
+					<width>1</width>
+					<height>1</height>
+					<label></label>
+					<texturefocus />
+					<texturenofocus />
+					<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+					<onfocus>SetProperty(sentence.p2,1,home)</onfocus>
+					<onup>Control.Move(610,-1)</onup>
+					<ondown>Control.Move(610,1)</ondown>
+					<onleft>SetFocus($VAR[Home_BackToPage1])</onleft>
+					<onright>602</onright>
+					<onclick>SetProperty(sentence.back,601,home)</onclick>
+					<onclick condition="String.IsEqual(Container(610).ListItem.DBType,tvshow)">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Container(610).ListItem.DBID]/,return)</onclick>
+					<onclick condition="!String.IsEqual(Container(610).ListItem.DBType,tvshow)">PlayMedia($ESCINFO[Container(610).ListItem.FilenameAndPath],resume)</onclick>
+					<onback>SetFocus(201)</onback>
+				</control>
+				<include content="Home_ContinueTier"><param name="gid" value="640"/><param name="font" value="serif_62"/><param name="max" value="725"/><param name="visible" value="$EXP[Home_CT1]"/></include>
+				<include content="Home_ContinueTier"><param name="gid" value="641"/><param name="font" value="serif_52"/><param name="max" value="775"/><param name="visible" value="$EXP[Home_CT2]"/></include>
+				<include content="Home_ContinueTier"><param name="gid" value="642"/><param name="font" value="serif_44"/><param name="max" value="813"/><param name="visible" value="$EXP[Home_CT3]"/></include>
+				<include content="Home_ContinueTier"><param name="gid" value="643"/><param name="font" value="serif_44"/><param name="max" value="813"/><param name="visible" value="$EXP[Home_CT4]"/><param name="scroll" value="true"/></include>
+				<control type="label">
+					<left>page_margin</left>
+					<top>284</top>
+					<width>1040</width>
+					<height>100</height>
+					<font>serif_62</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Home_NextLine2]</label>
+				</control>
+				<!-- “Heavy Is the Crown” · you'd finish at 22:27 · [Play it] · [All shows on the go] -->
+				<control type="grouplist" id="645">
+					<left>page_margin</left>
+					<top>410</top>
+					<width>1040</width>
+					<height>48</height>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>true</usecontrolcoords>
+					<itemgap>0</itemgap>
+					<onleft>601</onleft>
+					<onright>SetFocus($VAR[Home_AfterInfoLine])</onright>
+					<control type="label" id="25018">
+						<width max="350">auto</width>  <!-- the rest of the line is 683 px (12 h clock): Play it / Every show stay inside 1040 -->
+						<height>48</height>
+						<font>ui_24</font>
+						<textcolor>muted</textcolor>
+						<label>$INFO[Container(610).ListItem.Title,“,”]</label>
+					</control>
+					<control type="label" id="25019">
+						<width>auto</width>
+						<height>48</height>
+						<font>ui_24_bold</font>
+						<textcolor>text</textcolor>
+						<label>$VAR[Home_NextFinish]</label>
+					</control>
+					<control type="label" id="25020">
+						<width>auto</width>
+						<height>48</height>
+						<font>ui_24</font>
+						<textcolor>muted</textcolor>
+						<label> · </label>
+					</control>
+					<control type="button" id="602">
+						<left>-6</left>
+						<width>auto</width>
+						<height>48</height>
+						<font>ui_24_bold</font>
+						<textoffsetx>16</textoffsetx>
+						<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+						<include>Sen_PhraseTextures</include>
+						<label>$LOCALIZE[31349]</label>
+						<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+						<onclick>SetProperty(sentence.back,602,home)</onclick>
+						<onclick condition="String.IsEqual(Container(610).ListItem.DBType,tvshow)">ActivateWindow(Videos,videodb://tvshows/titles/$INFO[Container(610).ListItem.DBID]/,return)</onclick>
+						<onclick condition="!String.IsEqual(Container(610).ListItem.DBType,tvshow)">PlayMedia($ESCINFO[Container(610).ListItem.FilenameAndPath],resume)</onclick>
+						<onup>601</onup>
+						<ondown>SetFocus($VAR[Home_BelowContinue])</ondown>
+						<onback>SetFocus(201)</onback>
+					</control>
+					<control type="button" id="604">
+						<width>auto</width>
+						<height>48</height>
+						<font>ui_24_bold</font>
+						<textoffsetx>16</textoffsetx>
+						<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+						<include>Sen_PhraseTextures</include>
+						<label>$LOCALIZE[31350]</label>
+						<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+						<onclick>SetProperty(sentence.back,604,home)</onclick>
+						<onclick>ActivateWindow(Videos,videodb://inprogresstvshows/,return)</onclick>
+						<onup>601</onup>
+						<ondown>SetFocus($VAR[Home_BelowContinue])</ondown>
+						<onback>SetFocus(201)</onback>
+					</control>
+				</control>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>160</top>
+				<width>1040</width>
+				<height>124</height>
+				<font>serif_62</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Home_NoNextUp]</label>
+				<visible>!$EXP[Home_HasNextUp] + !Skin.HasSetting(HideMenu.TVShows)</visible>
+			</control>
+
+			<!-- Or finish [The Prestige]: you stopped 55% of the way in, done by 23:41. -->
+			<control type="grouplist" id="650">
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<include content="Home_MidRow">
+					<param name="top" value="560"/>
+					<param name="onleft" value="SetFocus($VAR[Home_AboveFilm])"/>
+					<param name="onright" value="SetFocus($VAR[Home_FirstLink])"/>
+					<param name="visible" value="$EXP[Home_HasFilmsOnTheGo]"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="21090"/><param name="label" value="Or finish"/></include>
+				<control type="button" id="603">
+					<left>8</left>
+					<width max="820">auto</width>
+					<height>72</height>
+					<font>serif_44</font>
+					<label>$INFO[Container(620).ListItem.Title]</label>
+					<include>Sen_PhraseTextures</include>
+					<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+					<onup>Control.Move(620,-1)</onup>
+					<ondown>Control.Move(620,1)</ondown>
+					<onclick>SetProperty(sentence.back,603,home)</onclick>
+					<onclick>PlayMedia($ESCINFO[Container(620).ListItem.FilenameAndPath],resume)</onclick>
+					<onback>SetFocus(201)</onback>
+				</control>
+				<include content="Home_MidMark"><param name="wid" value="21100"/><param name="id" value="603"/><param name="mark" value=":"/><param name="rest" value=""/></include>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>636</top>
+				<width>1680</width>
+				<height>40</height>
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<font>ui_24</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Home_FilmOnTheGoLine]</label>
+				<visible>$EXP[Home_HasFilmsOnTheGo]</visible>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>676</top>
+				<width>1680</width>
+				<height>32</height>
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<font>ui_20</font>
+				<textcolor>lilac_half</textcolor>
+				<label>↑ $INFO[Container(620).ListItem(-1).Title]   ↓ $INFO[Container(620).ListItem(1).Title]</label>
+				<visible>Control.HasFocus(603) + Integer.IsGreater(Container(620).NumItems,1)</visible>
+			</control>
+
+			<!-- Or browse [all films], [all shows], [your music] or [your pictures]. -->
+			<control type="grouplist" id="660">
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-210" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-30" time="0" condition="$EXP[CustomMenuAnyOn]">Conditional</animation>
+				<include content="Home_MidRow">
+					<param name="top" value="770"/>
+					<param name="onleft" value="SetFocus($VAR[Home_AboveLinks])"/>
+					<param name="onright" value="SetFocus($VAR[Home_BelowBrowse])"/>
+					<param name="visible" value="$EXP[Home_AnyBrowse]"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="21110"/><param name="label" value="Or browse"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="611"/><param name="label" value="all films"/>
+					<param name="onclick" value="ActivateWindow(Videos,videodb://movies/titles/,return)"/>
+					<param name="onup" value="SetFocus($VAR[Home_AboveLinks])"/><param name="ondown" value="SetFocus($VAR[Home_BelowBrowse])"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.Movies)"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="22001"/><param name="id" value="611"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]"/></include>
+				<include content="Home_MidWords"><param name="wid" value="22002"/><param name="label" value="or"/><param name="left" value="-6"/><param name="visible" value="[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidMark"><param name="wid" value="22003"/><param name="id" value="611"/><param name="mark" value="."/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="612"/><param name="label" value="all shows"/>
+					<param name="onclick" value="ActivateWindow(Videos,videodb://tvshows/titles/,return)"/>
+					<param name="onup" value="SetFocus($VAR[Home_AboveLinks])"/><param name="ondown" value="SetFocus($VAR[Home_BelowBrowse])"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.TVShows)"/>
+				<param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="22011"/><param name="id" value="612"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidWords"><param name="wid" value="22012"/><param name="label" value="or"/><param name="left" value="-6"/><param name="visible" value="[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidMark"><param name="wid" value="22013"/><param name="id" value="612"/><param name="mark" value="."/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="613"/><param name="label" value="your music"/>
+					<param name="onclick" value="ActivateWindow(Music,musicdb://albums/,return)"/>
+					<param name="onup" value="SetFocus($VAR[Home_AboveLinks])"/><param name="ondown" value="SetFocus($VAR[Home_BelowBrowse])"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.Music)"/>
+				<param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="22022"/><param name="label" value="or"/><param name="left" value="-6"/><param name="visible" value="[!Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(613) + [[!Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidMark"><param name="wid" value="22023"/><param name="id" value="613"/><param name="mark" value="."/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="614"/><param name="label" value="your pictures"/>
+					<param name="onclick" value="ActivateWindow(Pictures)"/>
+					<param name="onup" value="SetFocus($VAR[Home_AboveLinks])"/><param name="ondown" value="SetFocus($VAR[Home_BelowBrowse])"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.Pictures)"/>
+				<param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(613) + [[!Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="22033"/><param name="id" value="614"/><param name="mark" value="."/><param name="rest" value=""/><param name="visible" value="[!Skin.HasSetting(HideMenu.Pictures)]"/><param name="push" value="[Control.HasFocus(611) + [[!Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(612) + [[!Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures)] | [!Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]] | [Control.HasFocus(613) + [[!Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)]]]"/></include>
+			</control>
+			<!-- 0.9.18 custom menu items: Or go straight to [CM Test Videos], [Weather] or [Films A-Z].
+			     Only the set slots show; the comma / "or" / full stop after each follow the slots after it. -->
+			<control type="grouplist" id="665">
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-210" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-90" time="0" condition="!$EXP[Home_AnyBrowse]">Conditional</animation>
+				<include content="Home_MidRow">
+					<param name="top" value="830"/>
+					<param name="onleft" value="SetFocus($VAR[Home_LastBrowse])"/>
+					<param name="onright" value="SetFocus($VAR[Home_FirstLast])"/>
+					<param name="visible" value="$EXP[CustomMenuAnyOn]"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="21300"/><param name="label" value="$LOCALIZE[31977]"/></include>
+				<include content="Home_CustomPhrase"><param name="id" value="621"/><param name="n" value="1"/></include>
+				<include content="Home_MidMark"><param name="wid" value="21311"/><param name="id" value="621"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="$EXP[CustomMenu1On] + [$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomWords"><param name="wid" value="21312"/><param name="label" value="or"/><param name="left" value="-6"/><param name="push" value="Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]"/><param name="visible" value="$EXP[CustomMenu1On] + [[$EXP[CustomMenu2On] + !$EXP[CustomMenu3On]] | [!$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]]"/></include>
+				<include content="Home_MidMark"><param name="wid" value="21313"/><param name="id" value="621"/><param name="mark" value="."/><param name="rest" value=""/><param name="visible" value="$EXP[CustomMenu1On] + [!$EXP[CustomMenu2On] + !$EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomPhrase"><param name="id" value="622"/><param name="n" value="2"/><param name="push" value="Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomWords"><param name="wid" value="21314"/><param name="label" value="or"/><param name="left" value="-6"/><param name="push" value="[Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]] | [Control.HasFocus(622) + $EXP[CustomMenu3On]]"/><param name="visible" value="$EXP[CustomMenu2On] + [$EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomMark"><param name="wid" value="21315"/><param name="id" value="622"/><param name="mark" value="."/><param name="push" value="Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]"/><param name="visible" value="$EXP[CustomMenu2On] + [!$EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomPhrase"><param name="id" value="623"/><param name="n" value="3"/><param name="push" value="[Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]] | [Control.HasFocus(622) + $EXP[CustomMenu3On]]"/></include>
+				<include content="Home_CustomMark"><param name="wid" value="21316"/><param name="id" value="623"/><param name="mark" value="."/><param name="push" value="[Control.HasFocus(621) + ![$EXP[CustomMenu2On] + $EXP[CustomMenu3On]]] | [Control.HasFocus(622) + $EXP[CustomMenu3On]]"/><param name="visible" value="$EXP[CustomMenu3On]"/></include>
+			</control>
+			<!-- Or [find something], open [add-ons], change [settings] or [switch off].
+			     ("You could also ..." was 1720 px: the full stop fell off the 1700 px row) -->
+			<control type="grouplist" id="670">
+				<animation effect="slide" start="0,0" end="0,-400" time="0" condition="Skin.HasSetting(HideMenu.TVShows)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-210" time="0" condition="Skin.HasSetting(HideMenu.Movies)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,-90" time="0" condition="!$EXP[Home_AnyBrowse]">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,60" time="0" condition="$EXP[CustomMenuAnyOn]">Conditional</animation>
+				<include content="Home_MidRow">
+					<param name="top" value="860"/>
+					<param name="onleft" value="SetFocus($VAR[Home_LeftOfLast])"/>
+					<param name="onright" value="noop"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="21160"/><param name="label" value="Or"/></include>
+				<!-- 0.9.11: find something / add-ons can be hidden (HideMenu.Search / Addons): the verbs move to stay grammatical -->
+				<include content="Home_MidWords"><param name="wid" value="21161"/><param name="label" value="$LOCALIZE[31601]"/><param name="left" value="14"/><param name="visible" value="Skin.HasSetting(HideMenu.Search) + !Skin.HasSetting(HideMenu.Addons)"/></include>
+				<include content="Home_MidWords"><param name="wid" value="21162"/><param name="label" value="$LOCALIZE[31602]"/><param name="left" value="14"/><param name="visible" value="Skin.HasSetting(HideMenu.Search) + Skin.HasSetting(HideMenu.Addons)"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="615"/><param name="label" value="find something"/>
+					<param name="onclick" value="ActivateWindow(1150)"/>
+					<param name="onup" value="SetFocus($VAR[Home_LastAbove])"/><param name="ondown" value="$VAR[Home_DownToCustom]"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.Search)"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="21170"/><param name="id" value="615"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="!Skin.HasSetting(HideMenu.Search) + !Skin.HasSetting(HideMenu.Addons)"/></include>
+				<include content="Home_MidWords"><param name="wid" value="21172"/><param name="label" value=" open"/><param name="visible" value="!Skin.HasSetting(HideMenu.Search) + !Skin.HasSetting(HideMenu.Addons)"/><param name="push" value="[Control.HasFocus(615)]"/></include>
+				<include content="Home_MidMark"><param name="wid" value="21171"/><param name="id" value="615"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="!Skin.HasSetting(HideMenu.Search) + Skin.HasSetting(HideMenu.Addons)"/></include>
+				<include content="Home_MidWords"><param name="wid" value="21173"/><param name="label" value=" change"/><param name="visible" value="!Skin.HasSetting(HideMenu.Search) + Skin.HasSetting(HideMenu.Addons)"/><param name="push" value="[Control.HasFocus(615)]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="616"/><param name="label" value="add-ons"/>
+					<param name="onclick" value="ActivateWindow(AddonBrowser)"/>
+					<param name="onup" value="SetFocus($VAR[Home_LastAbove])"/><param name="ondown" value="$VAR[Home_DownToCustom]"/>
+					<param name="visible" value="!Skin.HasSetting(HideMenu.Addons)"/>
+				<param name="push" value="[Control.HasFocus(615)]"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="21180"/><param name="id" value="616"/><param name="mark" value=","/><param name="rest" value=""/><param name="visible" value="!Skin.HasSetting(HideMenu.Addons)"/><param name="push" value="[Control.HasFocus(615)]"/></include>
+				<include content="Home_MidWords"><param name="wid" value="21182"/><param name="label" value=" change"/><param name="visible" value="!Skin.HasSetting(HideMenu.Addons)"/><param name="push" value="[Control.HasFocus(615)] | [Control.HasFocus(616)]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="617"/><param name="label" value="settings"/>
+					<param name="onclick" value="ActivateWindow(1151)"/>
+					<param name="onup" value="SetFocus($VAR[Home_LastAbove])"/><param name="ondown" value="$VAR[Home_DownToCustom]"/>
+				<param name="push" value="[Control.HasFocus(615)] | [Control.HasFocus(616)]"/>
+				</include>
+				<include content="Home_MidWords"><param name="wid" value="21190"/><param name="label" value="or"/><param name="left" value="-6"/><param name="push" value="[Control.HasFocus(615)] | [Control.HasFocus(616)] | [Control.HasFocus(617)]"/></include>
+				<include content="Home_MidPhrase">
+					<param name="id" value="618"/><param name="label" value="switch off"/>
+					<param name="onclick" value="ActivateWindow(shutdownmenu)"/>
+					<param name="onup" value="SetFocus($VAR[Home_LastAbove])"/><param name="ondown" value="$VAR[Home_DownToCustom]"/>
+				<param name="push" value="[Control.HasFocus(615)] | [Control.HasFocus(616)] | [Control.HasFocus(617)]"/>
+				</include>
+				<include content="Home_MidMark"><param name="wid" value="21200"/><param name="id" value="618"/><param name="mark" value="."/><param name="rest" value=""/><param name="push" value="[Control.HasFocus(615)] | [Control.HasFocus(616)] | [Control.HasFocus(617)]"/></include>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>976</top>
+				<width>page_width</width>
+				<height>32</height>
+				<animation effect="slide" start="0,0" end="0,34" time="0" condition="$EXP[CustomMenuAnyOn]">Conditional</animation>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Home_P2Hint]</label>
+			</control>
+		</control>
+	</include>
+	<!-- 0.9.11 custom rows: Down from the last line of page 2 goes on to page 3 (noop while there is none) -->
+	<variable name="Home_DownToCustom">
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<variable name="Home_NoNextUp">
+		<value condition="Container(610).IsUpdating | String.IsEmpty(Window(Home).Property(sentence.p2))">Looking for what's next…</value>
+		<value>No show is on the go right now.</value>
+	</variable>
+	<variable name="Home_FilmOnTheGoLine">
+		<value condition="!String.IsEmpty(Container(620).ListItem.EndTimeResume)">You stopped $INFO[Container(620).ListItem.PercentPlayed]% of the way in. If you pick it up now you'd be done by $INFO[Container(620).ListItem.EndTimeResume].</value>
+		<value>You stopped $INFO[Container(620).ListItem.PercentPlayed]% of the way in.</value>
+	</variable>
+	<variable name="Home_BackToPage1">
+		<value condition="$EXP[Home_HasResults]">500</value>
+		<value>$INFO[Window(Home).Property(sentence.ret)]</value>
+	</variable>
+	<variable name="Home_FirstOnPage2">
+		<value condition="$EXP[Home_HasNextUp]">601</value>
+		<value condition="$EXP[Home_HasFilmsOnTheGo]">603</value>
+		<value>$VAR[Home_FirstLink]</value>
+	</variable>
+	<variable name="Home_AfterInfoLine">
+		<value condition="$EXP[Home_HasFilmsOnTheGo]">603</value>
+		<value>$VAR[Home_FirstLink]</value>
+	</variable>
+	<variable name="Home_BelowContinue">
+		<value condition="$EXP[Home_HasFilmsOnTheGo]">603</value>
+		<value>$VAR[Home_FirstLink]</value>
+	</variable>
+	<!-- 0.9.11: hidden phrases (HideMenu.*) are skipped: first / last shown browse link, first phrase of the last line -->
+	<variable name="Home_FirstLink">
+		<value condition="!Skin.HasSetting(HideMenu.Movies)">611</value>
+		<value condition="Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows)">612</value>
+		<value condition="Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music)">613</value>
+		<value condition="Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !Skin.HasSetting(HideMenu.Pictures)">614</value>
+		<value>$VAR[Home_BelowBrowse]</value>
+	</variable>
+	<!-- 0.9.18 custom menu items: first / last shown phrase of the custom line, and the moves around it -->
+	<variable name="Home_FirstCustom">
+		<value condition="$EXP[CustomMenu1On]">621</value>
+		<value condition="$EXP[CustomMenu2On]">622</value>
+		<value condition="$EXP[CustomMenu3On]">623</value>
+	</variable>
+	<variable name="Home_LastCustom">
+		<value condition="$EXP[CustomMenu3On]">623</value>
+		<value condition="$EXP[CustomMenu2On]">622</value>
+		<value condition="$EXP[CustomMenu1On]">621</value>
+	</variable>
+	<variable name="Home_BelowBrowse">
+		<value condition="$EXP[CustomMenuAnyOn]">$VAR[Home_FirstCustom]</value>
+		<value>$VAR[Home_FirstLast]</value>
+	</variable>
+	<variable name="Home_LeftOfLast">
+		<value condition="$EXP[CustomMenuAnyOn]">$VAR[Home_LastCustom]</value>
+		<value>$VAR[Home_LastBrowse]</value>
+	</variable>
+	<variable name="Home_AboveCustom">
+		<value condition="$EXP[Home_AnyBrowse]">$VAR[Home_FirstLink]</value>
+		<value>$VAR[Home_AboveLinks]</value>
+	</variable>
+	<variable name="Home_LastBrowse">
+		<value condition="!Skin.HasSetting(HideMenu.Pictures)">614</value>
+		<value condition="Skin.HasSetting(HideMenu.Pictures) + !Skin.HasSetting(HideMenu.Music)">613</value>
+		<value condition="Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures) + !Skin.HasSetting(HideMenu.TVShows)">612</value>
+		<value condition="Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + Skin.HasSetting(HideMenu.Pictures) + !Skin.HasSetting(HideMenu.Movies)">611</value>
+		<value>$VAR[Home_AboveLinks]</value>
+	</variable>
+	<variable name="Home_FirstLast">
+		<value condition="!Skin.HasSetting(HideMenu.Search)">615</value>
+		<value condition="Skin.HasSetting(HideMenu.Search) + !Skin.HasSetting(HideMenu.Addons)">616</value>
+		<value>617</value>
+	</variable>
+	<variable name="Home_LastAbove">
+		<value condition="$EXP[CustomMenuAnyOn]">$VAR[Home_FirstCustom]</value>
+		<value>$VAR[Home_AboveCustom]</value>
+	</variable>
+	<variable name="Home_AboveFilm">
+		<value condition="$EXP[Home_HasNextUp]">604</value>
+		<value>$VAR[Home_BackToPage1]</value>
+	</variable>
+	<variable name="Home_AboveLinks">
+		<value condition="$EXP[Home_HasFilmsOnTheGo]">603</value>
+		<value condition="$EXP[Home_HasNextUp]">602</value>
+		<value>$VAR[Home_BackToPage1]</value>
+	</variable>
+
+	<!-- Page 2 data lists (offscreen, processed). Content only once page 2 may load (sentence.p2). -->
+	<include name="Home_Page2Data">
+		<control type="wraplist" id="610">
+			<left>offscreen</left>
+			<top>offscreen</top>
+			<width>1</width>
+			<height>1</height>
+			<orientation>vertical</orientation>
+			<focusposition>0</focusposition>
+			<scrolltime>0</scrolltime>
+			<itemlayout width="1" height="1">
+				<control type="image"><width>1</width><height>1</height><texture colordiffuse="clear">$INFO[ListItem.Art(thumb)]</texture></control>
+			</itemlayout>
+			<focusedlayout width="1" height="1">
+				<control type="image"><width>1</width><height>1</height><texture colordiffuse="clear">$INFO[ListItem.Art(thumb)]</texture></control>
+			</focusedlayout>
+			<content target="videos" limit="25">$VAR[Home_PathNextUp]</content>
+		</control>
+		<control type="wraplist" id="620">
+			<left>offscreen</left>
+			<top>offscreen</top>
+			<width>1</width>
+			<height>1</height>
+			<orientation>vertical</orientation>
+			<focusposition>0</focusposition>
+			<scrolltime>0</scrolltime>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content target="videos">$VAR[Home_PathFilmsOnTheGo]</content>
+		</control>
+	</include>
+	<!-- ============================================================ page marker (0.9.13) -->
+	<!-- Where you are on Home: one short bar per page in the right margin (x 1856, clear of every page), the current
+	     page in lilac. The third bar exists only while a custom row has items. Pages stack downwards, so the rail does. -->
+	<include name="Home_PageBar">
+		<definition>
+			<control type="group">
+				<width>4</width>
+				<height>28</height>
+				<visible>$PARAM[shown]</visible>
+				<control type="image">
+					<width>4</width>
+					<height>28</height>
+					<texture border="2" colordiffuse="lilac">sentence/round6.png</texture>
+					<visible>$PARAM[current]</visible>
+				</control>
+				<control type="image">
+					<width>4</width>
+					<height>28</height>
+					<texture border="2" colordiffuse="598c918b">sentence/round6.png</texture>
+					<visible>![$PARAM[current]]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Home_PageMarker">
+		<control type="grouplist">
+			<left>1856</left>
+			<top>0</top>
+			<width>4</width>
+			<height>1080</height>
+			<orientation>vertical</orientation>
+			<align>center</align>
+			<itemgap>12</itemgap>
+			<include content="Home_PageBar">
+				<param name="shown" value="true"/>
+				<param name="current" value="!$EXP[Home_Page2] + !$EXP[CustomRowsFocus]"/>
+			</include>
+			<include content="Home_PageBar">
+				<param name="shown" value="true"/>
+				<param name="current" value="$EXP[Home_Page2] + !$EXP[CustomRowsFocus]"/>
+			</include>
+			<include content="Home_PageBar">
+				<param name="shown" value="$EXP[CustomRow1On] | $EXP[CustomRow2On] | $EXP[CustomRow3On]"/>
+				<param name="current" value="$EXP[CustomRowsFocus]"/>
+			</include>
+		</control>
+	</include>
+	<!-- ===================================================================== page 3 (0.9.11) -->
+	<!-- Custom rows (Includes_CustomRows.xml, opt-in in Skin settings > Custom rows): a third page under page 2,
+	     reached with Down from its last line. Each row is a sentence ("From [Popular]:") over a results-row
+	     strip (Home_ResultItem: dim the others, zoom, lilac bar, title + caption). Up returns to the row above /
+	     page 2, Back to the first phrase. The page sits below the screen until a row has focus; empty rows draw
+	     nothing and are skipped. -->
+	<variable name="Home_CustomDim1">
+		<value condition="Control.HasFocus(9881)">dim_art</value>
+		<value>white</value>
+	</variable>
+	<variable name="Home_CustomTitleColor1">
+		<value condition="Control.HasFocus(9881)">muted</value>
+		<value>text</value>
+	</variable>
+	<variable name="Home_CustomDim2">
+		<value condition="Control.HasFocus(9882)">dim_art</value>
+		<value>white</value>
+	</variable>
+	<variable name="Home_CustomTitleColor2">
+		<value condition="Control.HasFocus(9882)">muted</value>
+		<value>text</value>
+	</variable>
+	<variable name="Home_CustomDim3">
+		<value condition="Control.HasFocus(9883)">dim_art</value>
+		<value>white</value>
+	</variable>
+	<variable name="Home_CustomTitleColor3">
+		<value condition="Control.HasFocus(9883)">muted</value>
+		<value>text</value>
+	</variable>
+	<include name="Home_Page3">
+		<control type="group">
+			<top>2160</top>
+			<animation type="Conditional" condition="$EXP[Home_Page2] + !$EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="420" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[Home_Page2] + $EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="0"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[CustomRowsFocus] + !$EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="420" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="$EXP[CustomRowsFocus] + $EXP[ReduceMotion]" reversible="true">
+				<effect type="slide" start="0,0" end="0,-1080" time="0"/>
+			</animation>
+			<!-- top line: "YOUR ROWS" + where Up / Back lead (0.9.13; the rows fill the page, so no footer) -->
+			<control type="grouplist">
+				<left>page_margin</left>
+				<top>sen_topline_y</top>
+				<width>1180</width>
+				<height>sen_topline_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>24</itemgap>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31960]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31970]</label>
+					<visible>!Player.HasAudio | Player.HasVideo</visible>
+				</control>
+				<!-- while music plays the clock line on the right grows with the song title: keep the short form -->
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31351]</label>
+					<visible>Player.HasAudio + !Player.HasVideo</visible>
+				</control>
+			</control>
+			<include>Sen_Clock</include>
+			<control type="group">
+				<!-- a third row scrolls the page so it fits -->
+				<animation type="Conditional" condition="Control.HasFocus(9883) + $EXP[CustomRow1On] + $EXP[CustomRow2On] + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="slide" start="0,0" end="0,-450" time="260" tween="cubic" easing="out"/>
+				</animation>
+				<animation type="Conditional" condition="Control.HasFocus(9883) + $EXP[CustomRow1On] + $EXP[CustomRow2On] + $EXP[ReduceMotion]" reversible="true">
+					<effect type="slide" start="0,0" end="0,-450" time="0"/>
+				</animation>
+			<!-- row 1 -->
+			<control type="group">
+				<top>150</top>
+				<!-- scrolled up for row 3 it would run over the top line and the clock: let it go -->
+				<animation effect="fade" start="100" end="0" time="200" condition="Control.HasFocus(9883) + $EXP[CustomRow1On] + $EXP[CustomRow2On]" reversible="true">Conditional</animation>
+				<control type="label">
+					<left>page_margin</left>
+					<top>0</top>
+					<width>1300</width>
+					<height>64</height>
+					<font>serif_44</font>
+					<textcolor>text</textcolor>
+					<label>$LOCALIZE[31961] [COLOR lilac]$VAR[CustomRow_Title1][/COLOR]:</label>
+					<visible>$EXP[CustomRow1On]</visible>
+				</control>
+				<control type="label">
+					<left>1420</left>
+					<top>20</top>
+					<width>380</width>
+					<height>32</height>
+					<align>right</align>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[CustomRow_Count1]</label>
+					<visible>$EXP[CustomRow1On]</visible>
+				</control>
+				<control type="list" id="9881">
+					<left>108</left>
+					<top>72</top>
+					<width>1740</width>
+					<height>400</height>
+					<orientation>horizontal</orientation>
+					<preloaditems>2</preloaditems>
+					<scrolltime tween="cubic" easing="out">260</scrolltime>
+					<onup>SetFocus($VAR[Home_FirstLast])</onup>
+					<ondown condition="$EXP[CustomRow2On]">9882</ondown>
+					<ondown condition="!$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+					<ondown>noop</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>SetFocus(201)</onback>
+					<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+					<itemlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9881"/><param name="dim" value="$VAR[Home_CustomDim1]"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor1]"/></include>
+					</itemlayout>
+					<focusedlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9881"/><param name="focused" value="true"/><param name="dim" value="white"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor1]"/></include>
+					</focusedlayout>
+					<include content="CustomRow_Content"><param name="row" value="1"/></include>
+				</control>
+			</control>
+			<!-- row 2 -->
+			<control type="group">
+				<top>150</top>
+				<animation effect="slide" start="0,0" end="0,450" time="0" condition="$EXP[CustomRow1On]">Conditional</animation>
+				<control type="label">
+					<left>page_margin</left>
+					<top>0</top>
+					<width>1300</width>
+					<height>64</height>
+					<font>serif_44</font>
+					<textcolor>text</textcolor>
+					<label>$LOCALIZE[31961] [COLOR lilac]$VAR[CustomRow_Title2][/COLOR]:</label>
+					<visible>$EXP[CustomRow2On]</visible>
+				</control>
+				<control type="label">
+					<left>1420</left>
+					<top>20</top>
+					<width>380</width>
+					<height>32</height>
+					<align>right</align>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[CustomRow_Count2]</label>
+					<visible>$EXP[CustomRow2On]</visible>
+				</control>
+				<control type="list" id="9882">
+					<left>108</left>
+					<top>72</top>
+					<width>1740</width>
+					<height>400</height>
+					<orientation>horizontal</orientation>
+					<preloaditems>2</preloaditems>
+					<scrolltime tween="cubic" easing="out">260</scrolltime>
+					<onup condition="$EXP[CustomRow1On]">9881</onup>
+					<onup condition="!$EXP[CustomRow1On]">SetFocus($VAR[Home_FirstLast])</onup>
+					<ondown condition="$EXP[CustomRow3On]">9883</ondown>
+					<ondown>noop</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>SetFocus(201)</onback>
+					<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+					<itemlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9882"/><param name="dim" value="$VAR[Home_CustomDim2]"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor2]"/></include>
+					</itemlayout>
+					<focusedlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9882"/><param name="focused" value="true"/><param name="dim" value="white"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor2]"/></include>
+					</focusedlayout>
+					<include content="CustomRow_Content"><param name="row" value="2"/></include>
+				</control>
+			</control>
+			<!-- row 3 -->
+			<control type="group">
+				<top>150</top>
+				<animation effect="slide" start="0,0" end="0,450" time="0" condition="$EXP[CustomRow1On]">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,450" time="0" condition="$EXP[CustomRow2On]">Conditional</animation>
+				<control type="label">
+					<left>page_margin</left>
+					<top>0</top>
+					<width>1300</width>
+					<height>64</height>
+					<font>serif_44</font>
+					<textcolor>text</textcolor>
+					<label>$LOCALIZE[31961] [COLOR lilac]$VAR[CustomRow_Title3][/COLOR]:</label>
+					<visible>$EXP[CustomRow3On]</visible>
+				</control>
+				<control type="label">
+					<left>1420</left>
+					<top>20</top>
+					<width>380</width>
+					<height>32</height>
+					<align>right</align>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[CustomRow_Count3]</label>
+					<visible>$EXP[CustomRow3On]</visible>
+				</control>
+				<control type="list" id="9883">
+					<left>108</left>
+					<top>72</top>
+					<width>1740</width>
+					<height>400</height>
+					<orientation>horizontal</orientation>
+					<preloaditems>2</preloaditems>
+					<scrolltime tween="cubic" easing="out">260</scrolltime>
+					<onup condition="$EXP[CustomRow2On]">9882</onup>
+					<onup condition="!$EXP[CustomRow2On] + $EXP[CustomRow1On]">9881</onup>
+					<onup condition="!$EXP[CustomRow2On] + !$EXP[CustomRow1On]">SetFocus($VAR[Home_FirstLast])</onup>
+					<ondown>noop</ondown>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<onback>SetFocus(201)</onback>
+					<onfocus>SetProperty(sentence.page,2,home)</onfocus>
+					<itemlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9883"/><param name="dim" value="$VAR[Home_CustomDim3]"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor3]"/></include>
+					</itemlayout>
+					<focusedlayout width="home_item_w" height="400">
+						<include content="Home_ResultItem"><param name="list" value="9883"/><param name="focused" value="true"/><param name="dim" value="white"/><param name="art" value="$VAR[CustomRow_PosterArt]"/><param name="titlecolor" value="$VAR[Home_CustomTitleColor3]"/></include>
+					</focusedlayout>
+					<include content="CustomRow_Content"><param name="row" value="3"/></include>
+				</control>
+			</control>
+			</control>
+		</control>
+	</include>
+</includes>

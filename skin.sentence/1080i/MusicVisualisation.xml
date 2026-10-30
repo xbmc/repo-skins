@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing, as a sentence: "You're listening to “Song” by Artist, from Album (1995)."
+	Cover left, the sentence right, progress at y 806, phrase buttons at y 896 (MusicOSD.xml).
+	Kodi id contract (Estuary Omega MusicVisualisation.xml): 2 = visualisation control (only shown
+	when a visualisation add-on is enabled). 9900 = a clear full-screen button: Kodi's Visualisation window
+	does nothing on Select, so OK / Up / Down open the music OSD and Left / Right skip through the song.
+-->
+<window>
+	<defaultcontrol always="true">9900</defaultcontrol>
+	<backgroundcolor>ground</backgroundcolor>
+	<include>Music_PlayerBlurOnload</include>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<control type="button" id="9900">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<label></label>
+			<texturefocus />
+			<onclick>ActivateWindow(musicosd)</onclick>
+			<onup>ActivateWindow(musicosd)</onup>
+			<ondown>ActivateWindow(musicosd)</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+		</control>
+		<include>Sen_Background</include>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<visible>Player.HasAudio + Visualisation.Enabled</visible>
+		</control>
+		<include content="Music_StageBackground">
+			<param name="art" value="$VAR[Music_PlayerArt]"/>
+			<param name="visible" value="!Visualisation.Enabled"/>
+			<param name="scrim_left" value="true"/>
+		</include>
+		<!-- over a visualisation: scrims under the text (DESIGN 2.5) -->
+		<control type="group">
+			<visible>Visualisation.Enabled</visible>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>520</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/gradient_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>200</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/gradient_top.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>2600</width>
+				<height>screen_h</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/scrim_left.png</texture>
+				<visible>Player.ShowInfo | Window.IsVisible(musicosd)</visible>
+			</control>
+		</control>
+
+		<!-- ============================================================ top line -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>sen_topline_y</top>
+			<width>1100</width>
+			<height>sen_topline_h</height>
+			<font>cap_20</font>
+			<textcolor>muted</textcolor>
+			<label>$VAR[Music_NPKicker]</label>
+		</control>
+		<include>Sen_Clock</include>
+
+		<!-- ============================================ cover + the sentence about what's playing -->
+		<control type="group">
+			<visible>!Visualisation.Enabled | Player.ShowInfo | Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="group">
+				<left>page_margin</left>
+				<top>170</top>
+				<width>music_np_cover</width>
+				<height>music_np_cover</height>
+				<control type="image">
+					<left>-60</left>
+					<top>-50</top>
+					<width>680</width>
+					<height>700</height>
+					<texture colordiffuse="black">sentence/poster_shadow.png</texture>
+				</control>
+				<include content="Music_Cover">
+					<param name="art" value="$INFO[Player.Art(thumb)]"/>
+					<param name="title" value="$INFO[MusicPlayer.Album]"/>
+					<param name="fadetime" value="250"/>
+				</include>
+			</control>
+			<control type="group">
+				<left>music_np_text_x</left>
+				<top>200</top>
+				<width>1080</width>
+				<control type="textbox">
+					<description>4 lines max (serif 52)</description>
+					<left>0</left>
+					<top>0</top>
+					<width>1080</width>
+					<height>292</height>
+					<font>serif_52</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Music_NowSentence]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>320</top>
+					<width>1000</width>
+					<height>110</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Music_NowFacts]</label>
+				</control>
+			</control>
+		</control>
+		<!-- compact line over a running visualisation -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>730</top>
+			<width>page_width</width>
+			<height>56</height>
+			<font>serif_34</font>
+			<label>$VAR[Music_NPSentence]</label>
+			<visible>Visualisation.Enabled + !Player.ShowInfo + !Window.IsVisible(musicosd)</visible>
+		</control>
+
+		<!-- ============================================================= progress -->
+		<control type="progress">
+			<left>page_margin</left>
+			<top>music_progress_y</top>
+			<width>page_width</width>
+			<height>3</height>
+			<info>Player.Progress</info>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>826</top>
+			<width>800</width>
+			<height>30</height>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$INFO[Player.Time,, in]</label>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>826</top>
+			<width>page_width</width>
+			<height>30</height>
+			<align>right</align>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$INFO[Player.TimeRemaining,, to go]$INFO[Player.Duration, of ,]</label>
+		</control>
+
+		<!-- ============================================================== up next -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>900</top>
+			<width>page_width</width>
+			<height>56</height>
+			<font>serif_34</font>
+			<textcolor>muted</textcolor>
+			<label>Next comes “$INFO[MusicPlayer.offset(1).Title]”$INFO[MusicPlayer.offset(1).Artist, by ,].</label>
+			<visible>MusicPlayer.HasNext + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		<!-- 0.9.10: how to reach the visualiser presets (OK opens the buttons; Left from the first wraps to Presets) -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>1000</top>
+			<width>page_width</width>
+			<height>30</height>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$LOCALIZE[31500]</label>
+			<visible>Visualisation.Enabled + Visualisation.HasPresets + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+	</controls>
+</window>

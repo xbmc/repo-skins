@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD as a sentence (Includes_OSDSentence.xml; mockup SentenceTV.dc.html bottom half).
+	"You're 1 h 12 into The Prestige. It ends at 23:41." + thin progress line + phrase buttons.
+
+	Ids (Estuary Omega VideoOSD.xml contract, as in Majan): 602 play/pause (default), 603 stop,
+	600 previous / 607 next, 87 hidden seek stepper (no rewind / forward words: Omar seeks with Left/Right), 200 main phrase row,
+	70043 info, 70044 bookmarks/chapters, 70046 subtitles, 70048 video settings, 70049 audio,
+	70051 player process info. 201 = the quiet "Also" row.
+	Focus: open -> 602. Left/Right along the row; Up -> 87 (skip; the sentence says where to),
+	Down from 87 -> row 200; Down from 200 -> 201. Back closes the OSD (Kodi default).
+	The OSD hides under playback dialogs (settings, track picker, offset strip, info): $EXP[OSD_PanelOpen].
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+			<include>OSDS_Scrims</include>
+			<include>OSDS_Sentence</include>
+			<include>OSDS_Progress</include>
+
+			<!-- seek stepper (invisible; the sentence says "Skipping +30s, to 1:12:30") -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>Sen_Hidden</include>
+				<onup>noop</onup>
+				<ondown>200</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<control type="image">
+				<left>page_margin</left>
+				<top>839</top>
+				<width>page_width</width>
+				<height>5</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+
+			<!-- phrase buttons: Pause · Stop · Chapters · Audio DD 5.1 · Subtitles English -->
+			<control type="grouplist" id="200">
+				<left>96</left>
+				<top>916</top>
+				<width>1704</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>87</onup>
+				<ondown>201</ondown>
+				<!-- Omar's order: Pause, Stop, then Chapters / Audio / Subtitles. Pause | Resume has a fixed width
+				     (widest label "Resume" 155 px in serif 38 + 2 x 24 pad) so nothing after it shifts on pause. -->
+				<include content="OSDS_Phrase">
+					<param name="id" value="602"/>
+					<param name="label" value="$VAR[OSDS_PlayLabel]"/>
+					<param name="left" value="0"/>
+					<param name="width" value="206"/>
+					<param name="align" value="center"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="visible" value="Player.PauseEnabled"/>
+				</include>
+				<include content="OSDS_Dot"><param name="wid" value="24010"/><param name="visible" value="Player.PauseEnabled"/></include>
+				<include content="OSDS_Phrase">
+					<param name="id" value="603"/>
+					<param name="label" value="Stop"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+				</include>
+				<include content="OSDS_Dot"><param name="wid" value="24050"/><param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/></include>
+				<include content="OSDS_Phrase">
+					<param name="id" value="70044"/>
+					<param name="label" value="$VAR[OSDS_ChaptersLabel]"/>
+					<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+					<param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/>
+				</include>
+				<include content="OSDS_Dot"><param name="wid" value="24030"/></include>
+				<include content="OSDS_Phrase">
+					<param name="id" value="70049"/>
+					<param name="label" value="Audio"/>
+					<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+				</include>
+				<include content="OSDS_Value"><param name="wid" value="24040"/><param name="label" value="$VAR[OSDS_AudioValue]"/></include>
+				<include content="OSDS_Dot"><param name="wid" value="24060"/><param name="visible" value="Player.HasVideo"/></include>
+				<include content="OSDS_Phrase">
+					<param name="id" value="70046"/>
+					<param name="label" value="Subtitles"/>
+					<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+					<param name="visible" value="Player.HasVideo"/>
+				</include>
+				<include content="OSDS_Value"><param name="wid" value="24020"/><param name="label" value="$VAR[OSDS_SubValue]"/><param name="visible" value="Player.HasVideo"/></include>
+			</control>
+
+			<!-- Also: previous, next, picture, about it, player stats (no rewind / fast-forward words: Left/Right seek without the OSD) -->
+			<control type="grouplist" id="201">
+				<left>page_margin</left>
+				<top>996</top>
+				<width>page_width</width>
+				<height>44</height>
+				<orientation>horizontal</orientation>
+				<itemgap>8</itemgap>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>200</onup>
+				<ondown>noop</ondown>
+				<control type="label" id="24901">
+					<width>auto</width>
+					<height>44</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31363]</label>
+				</control>
+				<include content="OSDS_Also"><param name="id" value="600"/><param name="label" value="$VAR[OSDS_PrevLabel]"/><param name="onclick" value="PlayerControl(Previous)"/><param name="visible" value="$EXP[OSD_HasPrevNext]"/></include>
+				<include content="OSDS_Also"><param name="id" value="607"/><param name="label" value="$VAR[OSDS_NextLabel]"/><param name="onclick" value="PlayerControl(Next)"/><param name="visible" value="$EXP[OSD_HasPrevNext]"/></include>
+				<include content="OSDS_Also"><param name="id" value="70048"/><param name="label" value="picture settings"/><param name="onclick" value="ActivateWindow(osdvideosettings)"/><param name="visible" value="Player.HasVideo"/></include>
+				<include content="OSDS_Also"><param name="id" value="70043"/><param name="label" value="about it"/><param name="onclick" value="Action(Info,fullscreenvideo)"/></include>
+				<include content="OSDS_Also"><param name="id" value="70051"/><param name="label" value="player stats"/><param name="onclick" value="Action(PlayerProcessInfo)"/></include>
+			</control>
+			<control type="label">
+				<left>page_margin</left>
+				<top>996</top>
+				<width>page_width</width>
+				<height>44</height>
+				<align>right</align>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[OSDS_Hint]</label>
+			</control>
+		</control>
+	</controls>
+</window>

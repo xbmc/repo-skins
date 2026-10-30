@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library (MyMusicNav.xml): the same collapsed-sentence header as the video library, and
+	  504 A grid with notes - albums, artists: 5 x 2 square covers + a paragraph about the focused one
+	  50  A list            - songs, genres, years, roots, playlists, files (always valid)
+	Header (grouplist 9000, menucontrol):
+	  opened from the Home sentence ("an album"): "Albums of [rock], from [the 90s], that you [haven't played] · 33"
+	  browsing: "Your music as [albums], by [date added], [newest first], as [a grid] · 229"
+	  [albums] cycles Albums > Artists > Songs > Genres with Container.Update (no replace: Back walks the history).
+	Ids: 9320 node phrase, 9321 sort, 9322 direction, 9324 view, 9332-9334 sentence phrases; 3/4 Kodi sort buttons.
+-->
+<includes>
+	<expression name="Music_IsSentence">String.Contains(Container.FolderPath,~~~)</expression>
+	<variable name="Music_Node">
+		<value condition="$EXP[Music_TabArtists]">artists</value>
+		<value condition="$EXP[Music_TabSongs]">songs</value>
+		<value condition="$EXP[Music_TabGenres]">genres</value>
+		<value condition="$EXP[Music_TabAlbums]">albums</value>
+		<value>folders</value>
+	</variable>
+	<variable name="Music_Crumb">
+		<value condition="$EXP[Music_IsSentence] + Integer.IsEqual(Container.NumItems,1)">Your sentence · 1 album</value>
+		<value condition="$EXP[Music_IsSentence]">Your sentence · $INFO[Container.NumItems] albums</value>
+		<value condition="!$EXP[Music_AtTabRoot] + !String.IsEmpty(Container.FolderName)">Music / $INFO[Container.FolderName]</value>
+		<value>Music</value>
+	</variable>
+	<variable name="Music_About">
+		<value condition="ListItem.IsParentFolder + $EXP[Lib_BackHomeStrict]">$LOCALIZE[31976]</value>
+		<value condition="ListItem.IsParentFolder">Back takes you up one level.</value>
+		<value condition="String.IsEqual(ListItem.DBType,album)">[I]$INFO[ListItem.Album][/I] is $VAR[Music_AlbumNoun]$INFO[ListItem.Artist, by ,]. $VAR[Music_Played]</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">[I]$INFO[ListItem.Artist][/I]$INFO[ListItem.Genre, makes ,]. Open it to see the albums you have.</value>
+		<value condition="String.IsEqual(ListItem.DBType,song)">[I]“$INFO[ListItem.Title]”[/I]$INFO[ListItem.Artist, is by ,]$INFO[ListItem.Album,$COMMA from ,]. $VAR[Music_SongLength]</value>
+		<value>[I]$INFO[ListItem.Label][/I]$INFO[ListItem.Label2, · ,]</value>
+	</variable>
+	<variable name="Music_AlbumNoun">
+		<value condition="!String.IsEmpty(ListItem.Year) + !String.IsEmpty(ListItem.Genre)">a $INFO[ListItem.Year] [LOWERCASE]$INFO[ListItem.Genre][/LOWERCASE] album</value>
+		<value condition="!String.IsEmpty(ListItem.Year)">an album from $INFO[ListItem.Year]</value>
+		<value>an album</value>
+	</variable>
+	<variable name="Music_Played">
+		<value condition="Integer.IsEqual(ListItem.PlayCount,1)">You've played it once.</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1)">You've played it $INFO[ListItem.PlayCount] times.</value>
+		<value>You haven't played it here yet.</value>
+	</variable>
+	<variable name="Music_SongLength">
+		<value condition="!String.IsEmpty(ListItem.Duration)">It lasts $INFO[ListItem.Duration].</value>
+	</variable>
+	<variable name="Music_GridCaption">
+		<value condition="ListItem.IsParentFolder">up a level</value>
+		<value condition="String.IsEqual(ListItem.DBType,artist)">$INFO[ListItem.Genre]</value>
+		<value>$INFO[ListItem.Artist]$INFO[ListItem.Year, · ,]</value>
+	</variable>
+	<variable name="Music_EmptySentence">
+		<value condition="$EXP[Music_IsSentence]">No album matches that sentence. Try loosening a phrase.</value>
+		<value>There's nothing here yet.</value>
+	</variable>
+	<variable name="Music_CoverDim">
+		<value condition="Control.HasFocus(504)">dim_art</value>
+		<value>white</value>
+	</variable>
+
+	<!-- ================================================================ header -->
+	<include name="Music_Header">
+		<include content="Sen_PageHeader"><param name="title" value="$VAR[Music_Crumb]"/></include>
+		<include>Sen_Clock</include>
+		<control type="grouplist" id="9000">
+			<left>page_margin</left>
+			<top>116</top>
+			<width>1700</width>
+			<height>72</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onup>noop</onup>
+			<ondown>50</ondown>
+			<include>Lib_BackHomeNav</include><onback>50</onback>
+			<!-- sentence mode -->
+			<include content="Lib_Words"><param name="wid" value="26001"/><param name="label" value="$VAR[Sen_LibLead]"/><param name="visible" value="$EXP[Music_IsSentence]"/></include>
+			<control type="button" id="9332">
+				<left>-4</left><width>auto</width><height>72</height><font>serif_40</font>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<label>$VAR[Sen_CL_genre]</label>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_genre</include>
+				<ondown>50</ondown><onup>noop</onup><include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Music_IsSentence]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="26002"/><param name="visible" value="$EXP[Music_IsSentence]"/></include>
+			<include content="Lib_Words"><param name="wid" value="26003"/><param name="label" value="from"/><param name="left" value="12"/><param name="visible" value="$EXP[Music_IsSentence]"/></include>
+			<control type="button" id="9333">
+				<left>-4</left><width>auto</width><height>72</height><font>serif_40</font>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<label>$VAR[Sen_CL_decade]</label>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_decade</include>
+				<ondown>50</ondown><onup>noop</onup><include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Music_IsSentence]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="26004"/><param name="visible" value="$EXP[Music_IsSentence]"/></include>
+			<include content="Lib_Words"><param name="wid" value="26005"/><param name="label" value="that you"/><param name="left" value="12"/><param name="visible" value="$EXP[Music_IsSentence]"/></include>
+			<control type="button" id="9334">
+				<left>-4</left><width>auto</width><height>72</height><font>serif_40</font>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<label>$VAR[Sen_CL_seen]</label>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_seen</include>
+				<ondown>50</ondown><onup>noop</onup><include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Music_IsSentence]</visible>
+			</control>
+			<!-- browsing mode -->
+			<include content="Lib_Words"><param name="wid" value="26006"/><param name="label" value="Your music as"/><param name="visible" value="!$EXP[Music_IsSentence]"/></include>
+			<control type="button" id="9320">
+				<left>-4</left><width>auto</width><height>72</height><font>serif_40</font>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<label>$VAR[Music_Node]</label>
+				<include>Sen_PhraseTextures</include>
+				<onclick condition="$EXP[Music_TabAlbums]">Container.Update(musicdb://artists/)</onclick>
+				<onclick condition="$EXP[Music_TabArtists]">Container.Update(musicdb://songs/)</onclick>
+				<onclick condition="$EXP[Music_TabSongs]">Container.Update(musicdb://genres/)</onclick>
+				<onclick condition="!$EXP[Music_TabAlbums] + !$EXP[Music_TabArtists] + !$EXP[Music_TabSongs]">Container.Update(musicdb://albums/)</onclick>
+				<ondown>50</ondown><onup>noop</onup><include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>!$EXP[Music_IsSentence]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="26007"/><param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/></include>
+			<include content="Lib_Words"><param name="wid" value="26008"/><param name="label" value="by"/><param name="left" value="12"/><param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9321"/><param name="label" value="[LOWERCASE]$INFO[Container.SortMethod][/LOWERCASE]"/><param name="onclick" value="SendClick(3)"/><param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/></include>
+			<include content="Lib_Comma"><param name="wid" value="26009"/><param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9322"/><param name="label" value="$VAR[Lib_Direction]"/><param name="left" value="10"/><param name="onclick" value="Container.SetSortDirection"/><param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/></include>
+			<include content="Lib_Comma"><param name="wid" value="26010"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<include content="Lib_Words"><param name="wid" value="26011"/><param name="label" value="as"/><param name="left" value="12"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9324"/><param name="label" value="[LOWERCASE]$INFO[Container.Viewmode][/LOWERCASE]"/><param name="onclick" value="ActivateWindow(1156)"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<include content="Lib_Comma"><param name="wid" value="26012"/></include>
+			<include content="Lib_Words"><param name="wid" value="26013"/><param name="label" value="or"/><param name="left" value="12"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9326"/><param name="label" value="more"/><param name="onclick" value="ActivateWindow(1155)"/></include>
+			<include>Lib_CountLabel</include>
+		</control>
+		<include content="Sen_Rule"><param name="top" value="lib_rule_y"/></include>
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>Sen_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>Sen_Hidden</include>
+		</control>
+	</include>
+
+	<!-- ================================================================ 504 grid with notes -->
+	<include name="Music_GridItem">
+		<param name="focused">false</param>
+		<param name="dim">$VAR[Music_CoverDim]</param>
+		<definition>
+			<control type="group">
+				<left>12</left>
+				<top>12</top>
+				<width>188</width>
+				<height>188</height>
+				<animation type="Conditional" condition="$PARAM[focused] + Control.HasFocus(504) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="106" center="auto" time="200" tween="cubic" easing="out"/>
+				</animation>
+				<include content="Music_Cover">
+					<param name="diffuse" value="$PARAM[dim]"/>
+					<param name="parent_icon" value="40"/>
+				</include>
+			</control>
+			<control type="image">
+				<left>12</left>
+				<top>212</top>
+				<width>188</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(504)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>222</top>
+				<width>188</width>
+				<height>28</height>
+				<font>ui_20_bold</font>
+				<textcolor>$VAR[Music_GridTitleColor]</textcolor>
+				<scroll>false</scroll>
+				<label>$VAR[Music_ItemLabel]</label>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>250</top>
+				<width>188</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Music_GridCaption]</label>
+			</control>
+		</definition>
+	</include>
+	<variable name="Music_GridTitleColor">
+		<value condition="Control.HasFocus(504)">muted</value>
+		<value>text</value>
+	</variable>
+
+	<include name="Music_View_504">
+		<control type="group">
+			<visible>Control.IsVisible(504)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="panel" id="504">
+				<include>Lib_BackHomeNav</include>
+				<left>108</left>
+				<top>244</top>
+				<width>1160</width>
+				<height>730</height>
+				<orientation>vertical</orientation>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.8: past the edges = the Library panel -->
+				<onright>ActivateWindow(1155)</onright>
+				<scrolltime tween="cubic" easing="out">240</scrolltime>
+				<preloaditems>2</preloaditems>
+				<viewtype label="31368">icon</viewtype>
+				<visible>Container.Content(albums) | Container.Content(artists)</visible>
+				<itemlayout width="228" height="292">
+					<include>Music_GridItem</include>
+				</itemlayout>
+				<focusedlayout width="228" height="292">
+					<include content="Music_GridItem"><param name="focused" value="true"/><param name="dim" value="white"/></include>
+				</focusedlayout>
+			</control>
+			<control type="group">
+				<left>1308</left>
+				<top>256</top>
+				<width>492</width>
+				<height>700</height>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>492</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Lib_Position]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>46</top>
+					<width>492</width>
+					<height>362</height>
+					<font>serif_36</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Music_About]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>640</top>
+					<width>492</width>
+					<height>60</height>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31367]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== 50 list -->
+	<include name="Music_View_50">
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="list" id="50">
+				<include>Lib_BackHomeNav</include>
+				<left>page_margin</left>
+				<top>music_list_top</top>
+				<width>list_w</width>
+				<height>music_list_h</height>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.8: the Library panel -->
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<viewtype label="31366">list</viewtype>
+				<include content="Music_SongLayout">
+					<param name="condition" value="Container.Content(songs)"/>
+				</include>
+				<include content="Music_RowLayout">
+					<param name="condition" value="!Container.Content(songs)"/>
+				</include>
+			</control>
+			<include content="Sen_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1216"/>
+				<param name="top" value="music_list_top"/>
+				<param name="height" value="music_list_h"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="ActivateWindow(1155)"/>
+			</include>
+			<include>Music_ListPanel</include>
+		</control>
+	</include>
+</includes>

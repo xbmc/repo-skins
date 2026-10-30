@@ -1,0 +1,809 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music building blocks (Builder C). Prefix: Music_ (includes, variables, expressions), music_ (constants).
+	Used by MyMusicNav, Includes_Views_Music, DialogMusicInfo, MusicVisualisation, MusicOSD,
+	MyPlaylist, MyMusicPlaylistEditor. Home may reuse Music_NowPlayingBar (SPEC 4.2 "music playing").
+	Sources: mockups Music.dc.html / MusicStage.dc.html / OSD.dc.html, DESIGN 5-7, DATA 4.9-4.11.
+
+	TMDb Helper (optional, guarded by $EXP[ArtBackgroundOn] which includes System.AddonIsEnabled):
+	- Library + info dialog: the TMDb Helper image monitor blurs the focused item / info item
+	  (MyMusicNav.xml and DialogMusicInfo.xml are both monitored windows) using
+	  Window(Home).Property(TMDbHelper.Blur.SourceImage) = Art(thumb), output
+	  Window(Home).Property(TMDbHelper.ListItem.BlurImage) (+ .Original = source path).
+	  Needs Skin.HasSetting(TMDbHelper.EnableBlur).
+	- Now playing: no list item, so the cover is blurred on demand with
+	  RunScript(plugin.video.themoviedb.helper,blur_image=<path>,prefix=SentencePlayer)
+	  -> Window(Home).Property(TMDbHelper.SentencePlayer.BlurImage) (checked in tmdbhelper 6.17.x
+	  script/method/image_functions.py + monitor/images.py).
+-->
+<includes>
+	<!-- ============================================================ constants -->
+	<!-- Albums grid (view 504): 7 columns, cover 219, column gap 32, row gap 30 (Music.dc.html).
+	     The panel is padded 14 px on every side of each cell so the focus frame (+7) and the
+	     5 % zoom (+6) are not clipped by the container. -->
+	<constant name="music_tile">219</constant>
+	<constant name="music_cell_w">251</constant>          <!-- 219 + 32 -->
+	<constant name="music_cell_h">310</constant>          <!-- 219 + 12 + 25 + 3 + 21 + 30 -->
+	<constant name="music_pad">14</constant>
+	<constant name="music_grid_left">82</constant>        <!-- 96 - 14 -->
+	<constant name="music_grid_top">146</constant>        <!-- 160 - 14 -->
+	<constant name="music_grid_w">1757</constant>         <!-- 7 x 251 -->
+	<constant name="music_grid_h">838</constant>          <!-- clip at y 984 (top of the now-playing bar) -->
+	<!-- Big Album (view 505): 380 squares, gap 28, focus slot 2 at x 504, top 230 (MusicStage.dc.html).
+	     Item content is offset (20, 130) inside the container so the focused item's soft shadow,
+	     zoom and frame fit; the container's left edge (76) hides the item before slot 1. -->
+	<constant name="music_big">380</constant>
+	<constant name="music_big_pitch">408</constant>       <!-- 380 + 28 -->
+	<constant name="music_big_left">76</constant>
+	<constant name="music_big_top">100</constant>
+	<constant name="music_big_w">1844</constant>
+	<constant name="music_big_h">668</constant>
+	<constant name="music_big_pad_x">20</constant>
+	<constant name="music_big_pad_y">130</constant>
+	<constant name="music_details_x">504</constant>
+	<constant name="music_details_y">662</constant>
+	<!-- Lists / panels -->
+	<constant name="music_list_top">244</constant>
+	<constant name="music_list_h">726</constant>          <!-- 11 rows of 66 from y 244, ends at 970 -->
+	<constant name="music_panel_x">1264</constant>
+	<constant name="music_panel_art">560</constant>
+	<!-- Header tabs (inside the 120 px top bar, Music.dc.html) -->
+	<constant name="music_tab_top">47</constant>  <!-- centre 65 = the header date's centre (Sen_Clock) -->
+	<constant name="music_tab_h">36</constant>
+	<!-- Now-playing bar (DESIGN 7.9) -->
+	<constant name="music_np_top">984</constant>
+	<constant name="music_np_h">96</constant>
+	<!-- Now playing window / OSD (OSD.dc.html geometry) -->
+	<constant name="music_np_cover">560</constant>
+	<constant name="music_np_text_x">720</constant>
+	<constant name="music_np_text_w">1104</constant>
+	<constant name="music_progress_y">806</constant>
+	<constant name="music_osd_y">900</constant>
+	<constant name="music_osd_btn">72</constant>
+	<constant name="music_osd_btn_f">88</constant>
+	<constant name="music_osd_y_f">892</constant>
+
+	<!-- ========================================================== expressions -->
+	<expression name="Music_IsPlaying">Player.HasAudio</expression>
+	<!-- Header tab that matches the current library node (path based, so drilling into an artist keeps ARTISTS lit) -->
+	<expression name="Music_TabArtists">String.StartsWith(Container.FolderPath,musicdb://artists/)</expression>
+	<expression name="Music_TabGenres">String.StartsWith(Container.FolderPath,musicdb://genres/)</expression>
+	<expression name="Music_TabSongs">String.StartsWith(Container.FolderPath,musicdb://songs/)</expression>
+	<expression name="Music_TabAlbums">String.StartsWith(Container.FolderPath,musicdb://albums/) | String.StartsWith(Container.FolderPath,musicdb://recentlyaddedalbums/) | String.StartsWith(Container.FolderPath,musicdb://compilations/) | [Container.Content(albums) + !String.StartsWith(Container.FolderPath,musicdb://artists/) + !String.StartsWith(Container.FolderPath,musicdb://genres/)]</expression>
+	<!-- At a tab root (used to hide the folder caption in the page header) -->
+	<expression name="Music_AtTabRoot">String.IsEqual(Container.FolderPath,musicdb://albums/) | String.IsEqual(Container.FolderPath,musicdb://artists/) | String.IsEqual(Container.FolderPath,musicdb://songs/) | String.IsEqual(Container.FolderPath,musicdb://genres/)</expression>
+	<!-- Soft / Visible artwork background: add the focus halo behind the frame (DESIGN 7.2) -->
+	<expression name="Music_ArtStrong">$EXP[ArtBackgroundOn] + [String.IsEqual(Skin.String(sentence.artbackground),soft) | String.IsEqual(Skin.String(sentence.artbackground),visible)]</expression>
+	<expression name="Music_InfoIsAlbum">String.IsEqual(ListItem.DBType,album)</expression>
+	<expression name="Music_InfoIsArtist">String.IsEqual(ListItem.DBType,artist)</expression>
+	<expression name="Music_InfoIsSong">String.IsEqual(ListItem.DBType,song)</expression>
+	<!-- Now playing: the cover blur exists and belongs to the track that is playing now -->
+	<expression name="Music_PlayerBlurReady">!String.IsEmpty(Window(Home).Property(TMDbHelper.SentencePlayer.BlurImage)) + String.IsEqual(Window(Home).Property(sentence.np.blursrc),Player.Art(thumb))</expression>
+
+	<!-- ============================================================ variables -->
+	<!-- Artwork background opacity (setting 4; Big Album / info / Now playing use the same level) -->
+	<variable name="Music_ArtOpacity">
+		<value condition="String.IsEqual(Skin.String(sentence.artbackground),soft)">art_bg</value>
+		<value condition="String.IsEqual(Skin.String(sentence.artbackground),visible)">art_bg</value>
+		<value>art_bg</value>
+	</variable>
+
+	<!-- Big Album background: artist fanart -> TMDb Helper blurred cover -> none (SPEC 6 / DATA 4.10).
+	     The blur is not synced to the focused item on purpose: while scrolling, the last blur stays
+	     up and crossfades, instead of flashing to black. -->
+	<variable name="Music_StageArt">
+		<value condition="!String.IsEmpty(Container(505).ListItem.Art(artist.fanart))">$INFO[Container(505).ListItem.Art(artist.fanart)]</value>
+		<value condition="!String.IsEmpty(Window(Home).Property(TMDbHelper.ListItem.BlurImage))">$INFO[Window(Home).Property(TMDbHelper.ListItem.BlurImage)]</value>
+	</variable>
+
+	<!-- Now playing background: artist fanart -> blurred cover of the current track -> none -->
+	<variable name="Music_PlayerArt">
+		<value condition="!String.IsEmpty(Player.Art(artist.fanart))">$INFO[Player.Art(artist.fanart)]</value>
+		<value condition="!String.IsEmpty(Player.Art(fanart))">$INFO[Player.Art(fanart)]</value>
+		<value condition="$EXP[Music_PlayerBlurReady]">$INFO[Window(Home).Property(TMDbHelper.SentencePlayer.BlurImage)]</value>
+	</variable>
+
+	<!-- Title for any item; the ".." parent item (filelists.showparentdiritems = on) reads "Back" -->
+	<variable name="Music_ItemLabel">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+
+	<!-- "Playing “Song” by Artist." / "Paused on ..." -->
+	<variable name="Music_NPSentence">
+		<value condition="Player.Paused">Paused on “$INFO[MusicPlayer.Title]”$INFO[MusicPlayer.Artist, by ,].</value>
+		<value>Playing “$INFO[MusicPlayer.Title]”$INFO[MusicPlayer.Artist, by ,].</value>
+	</variable>
+	<variable name="Music_NowSentence">
+		<value condition="Player.Paused">You paused “$INFO[MusicPlayer.Title]”$INFO[MusicPlayer.Artist, by ,]$INFO[MusicPlayer.Album,$COMMA from [I],[/I]]$INFO[MusicPlayer.Year, (,)].</value>
+		<value>You're listening to “$INFO[MusicPlayer.Title]”$INFO[MusicPlayer.Artist, by ,]$INFO[MusicPlayer.Album,$COMMA from [I],[/I]]$INFO[MusicPlayer.Year, (,)].</value>
+	</variable>
+	<variable name="Music_NowFacts">
+		<value>$VAR[Music_NowPosition]$INFO[MusicPlayer.Genre,It's filed under ,. ]$VAR[Music_NowModes]</value>
+	</variable>
+	<variable name="Music_NowPosition">
+		<value condition="Integer.IsGreater(Playlist.Length(music),1)">Song $INFO[Playlist.Position(music)] of $INFO[Playlist.Length(music)] in the queue. </value>
+	</variable>
+	<variable name="Music_NowModes">
+		<value condition="Playlist.IsRandom + Playlist.IsRepeatOne">Shuffled, and this song repeats.</value>
+		<value condition="Playlist.IsRandom + Playlist.IsRepeat">Shuffled, and the queue repeats.</value>
+		<value condition="Playlist.IsRandom">The queue is shuffled.</value>
+		<value condition="Playlist.IsRepeatOne">This song repeats.</value>
+		<value condition="Playlist.IsRepeat">The queue repeats.</value>
+	</variable>
+	<variable name="Music_OSDShuffleWord">
+		<value condition="Playlist.IsRandom">on</value>
+		<value>off</value>
+	</variable>
+	<variable name="Music_OSDRepeatWord">
+		<value condition="Playlist.IsRepeatOne">this song</value>
+		<value condition="Playlist.IsRepeat">everything</value>
+		<value>off</value>
+	</variable>
+	<variable name="Music_OSDHintWords">
+		<value condition="Control.HasFocus(87)">Left and right skip through the song. Down goes back to the buttons.</value>
+		<value condition="Control.HasFocus(70056)">$LOCALIZE[31501]</value>
+		<value>Up to skip through the song. Back hides this.</value>
+	</variable>
+	<!-- DialogMusicInfo as a paragraph -->
+	<variable name="MusicInfo_Crumb">
+		<value condition="$EXP[Music_InfoIsArtist]">About this artist</value>
+		<value condition="$EXP[Music_InfoIsSong]">About this song</value>
+		<value>About this album</value>
+	</variable>
+	<variable name="MusicInfo_P1">
+		<value condition="$EXP[Music_InfoIsArtist]">[I]$INFO[ListItem.Artist][/I]$INFO[ListItem.Genre, makes [LOWERCASE],[/LOWERCASE]]$VAR[MusicInfo_ArtistAlbums]</value>
+		<value condition="$EXP[Music_InfoIsSong]">“$INFO[ListItem.Title]” is$INFO[ListItem.TrackNumber, track , of] [I]$INFO[ListItem.Album][/I]$INFO[ListItem.Artist, by ,].$INFO[ListItem.Duration, It lasts ,.]</value>
+		<value>[I]$INFO[ListItem.Album][/I] is $VAR[MusicInfo_AlbumNoun]$INFO[ListItem.Artist, by ,]$VAR[MusicInfo_Songs]. $VAR[MusicInfo_Played]</value>
+	</variable>
+	<variable name="MusicInfo_AlbumNoun">
+		<value condition="!String.IsEmpty(ListItem.Year) + !String.IsEmpty(ListItem.Genre)">a $INFO[ListItem.Year] [LOWERCASE]$INFO[ListItem.Genre][/LOWERCASE] album</value>
+		<value condition="!String.IsEmpty(ListItem.Year)">an album from $INFO[ListItem.Year]</value>
+		<value>an album</value>
+	</variable>
+	<variable name="MusicInfo_Songs">
+		<value condition="Integer.IsGreater(Container(50).NumItems,1)">, with $INFO[Container(50).NumItems] songs</value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,1)">, with one song</value>
+	</variable>
+	<variable name="MusicInfo_ArtistAlbums">
+		<value condition="Integer.IsGreater(Container(50).NumItems,1)">. You have $INFO[Container(50).NumItems] of their albums.</value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,1)">. You have one of their albums.</value>
+		<value>.</value>
+	</variable>
+	<variable name="MusicInfo_Played">
+		<value condition="Integer.IsEqual(ListItem.PlayCount,1)">You've played it once.</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1)">You've played it $INFO[ListItem.PlayCount] times.</value>
+		<value>You haven't played it here yet.</value>
+	</variable>
+	<variable name="MusicInfo_OtherInfo">
+		<value condition="$EXP[Music_InfoIsSong]">read about the album</value>
+		<value>meet the artist</value>
+	</variable>
+	<variable name="MusicInfo_ListHead">
+		<value condition="$EXP[Music_InfoIsArtist]">Their albums</value>
+		<value>The songs</value>
+	</variable>
+	<variable name="MusicInfo_RowTitle">
+		<value condition="String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="MusicInfo_RowRight">
+		<value condition="String.IsEqual(ListItem.DBType,song)">$INFO[ListItem.Duration]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+	<!-- Now playing kicker -->
+	<variable name="Music_NPKicker">
+		<value condition="Player.Paused">Paused$INFO[Playlist.Position(music),  ·  ,]$INFO[Playlist.Length(music), / ,]</value>
+		<value>Now playing$INFO[Playlist.Position(music),  ·  ,]$INFO[Playlist.Length(music), / ,]</value>
+	</variable>
+	<!-- Info dialog -->
+	<variable name="Music_InfoTitle">
+		<value condition="$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Artist)">$INFO[ListItem.Artist]</value>
+		<value condition="$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value condition="$EXP[Music_InfoIsAlbum] + !String.IsEmpty(ListItem.Album)">$INFO[ListItem.Album]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="Music_InfoDescription">
+		<value condition="$EXP[Music_InfoIsArtist]">$INFO[ListItem.Property(Artist_Description)]</value>
+		<value condition="$EXP[Music_InfoIsSong]">$INFO[ListItem.Comment]</value>
+		<value>$INFO[ListItem.Property(Album_Description)]</value>
+	</variable>
+	<!-- Shuffle (skin action; Kodi has no shuffle button in this dialog). PlayMedia clears the music
+	     playlist (which resets shuffle), then the button's second action turns RandomOn. -->
+	<variable name="Music_InfoShuffleAction">
+		<value condition="$EXP[Music_InfoIsArtist]">PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)</value>
+		<value>PlayMedia(musicdb://albums/$INFO[ListItem.DBID]/,isdir)</value>
+	</variable>
+	<!-- Queue window (MyPlaylist) -->
+	<variable name="Music_QueueTitle">
+		<value condition="Window.IsActive(videoplaylist)">Video queue</value>
+		<value>Queue</value>
+	</variable>
+	<variable name="Music_QueueIndex">
+		<value condition="Window.IsActive(videoplaylist)">02</value>
+		<value>04</value>
+	</variable>
+	<variable name="Music_QueueShuffleLabel">
+		<value condition="Playlist.IsRandom">Shuffle: on</value>
+		<value>Shuffle: off</value>
+	</variable>
+
+	<!-- ================================================================ cover -->
+	<!-- Square cover with corner mask (picked at window load, DESIGN 7.1) and an optional opaque
+	     dim (colordiffuse). Fallback = raised tile with the name, covered by the art when it loads.
+	     Sits inside a group of the cover size.
+	     params: art, title, mask_round (default 219 grid mask), diffuse (default white = undimmed),
+	             fadetime (embedded MP3 art loads slowly: default 160) -->
+	<include name="Music_Cover">
+		<param name="art">$INFO[ListItem.Art(thumb)]</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="mask_round">masks/square_round8.png</param>
+		<param name="diffuse">white</param>
+		<param name="fadetime">160</param>
+		<param name="parent_icon">40</param>
+		<param name="parent_caption">false</param>
+		<definition>
+			<include content="Music_ParentTile">
+				<param name="icon" value="$PARAM[parent_icon]"/>
+				<param name="caption_visible" value="$PARAM[parent_caption]"/>
+			</include>
+			<control type="group">
+			<left>0</left>
+			<top>0</top>
+			<right>0</right>
+			<bottom>0</bottom>
+			<visible>!ListItem.IsParentFolder</visible>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="raised">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>14</left>
+				<top>14</top>
+				<right>14</right>
+				<bottom>14</bottom>
+				<font>serif_26</font>
+				<textcolor>muted</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>$PARAM[fadetime]</fadetime>
+				<texture background="true" diffuse="$PARAM[mask_round]" colordiffuse="$PARAM[diffuse]">$PARAM[art]</texture>
+				<visible>false</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>$PARAM[fadetime]</fadetime>
+				<texture background="true" colordiffuse="$PARAM[diffuse]">$PARAM[art]</texture>
+				<visible>true</visible>
+			</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ".." parent item tile (same look as Builder B's VidView_ParentTile): hairline box + back
+	     chevron + optional "UP ONE LEVEL" caption. Inside the cover group. params: icon, caption_visible -->
+	<include name="Music_ParentTile">
+		<param name="icon">40</param>
+		<param name="caption_visible">false</param>
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<visible>ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture border="10" colordiffuse="rule_strong">$VAR[ButtonOutline]</texture>
+				</control>
+				<control type="image">
+					<centerleft>50%</centerleft>
+					<centertop>50%</centertop>
+					<width>$PARAM[icon]</width>
+					<height>$PARAM[icon]</height>
+					<texture colordiffuse="muted">icons/back.png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<right>0</right>
+					<bottom>24</bottom>
+					<height>22</height>
+					<align>center</align>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31354]</label>
+					<visible>$PARAM[caption_visible]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Own open/close fades for large translucent images (device rule, BUILD_BRIEF 2026-10-18:
+	     without them they are drawn on top of the window content during window animations). -->
+	<include name="Music_Anim_BackdropFade">
+		<animation effect="fade" start="0" end="100" time="200" tween="cubic" easing="out">WindowOpen</animation>
+		<animation effect="fade" start="100" end="0" time="140" tween="cubic" easing="in">WindowClose</animation>
+	</include>
+
+	<!-- ===================================================== now-playing bar -->
+	<!-- Bottom bar when audio plays (Music.dc.html / DESIGN 7.9). Not focusable.
+	     params: visible (default: audio is playing) -->
+	<include name="Music_NowPlayingBar">
+		<param name="visible">$EXP[Music_IsPlaying]</param>
+		<definition>
+			<!-- the music that's playing, as one sentence along the bottom edge -->
+			<control type="group">
+				<left>0</left>
+				<top>music_np_top</top>
+				<width>screen_w</width>
+				<height>music_np_h</height>
+				<visible>$PARAM[visible]</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>screen_w</width>
+					<height>music_np_h</height>
+					<texture colordiffuse="ground">common/white.png</texture>
+				</control>
+				<control type="progress">
+					<left>0</left>
+					<top>0</top>
+					<width>screen_w</width>
+					<height>3</height>
+					<texturebg colordiffuse="rule">common/white.png</texturebg>
+					<midtexture colordiffuse="lilac">common/white.png</midtexture>
+					<info>Player.Progress</info>
+				</control>
+				<control type="group">
+					<left>page_margin</left>
+					<top>22</top>
+					<width>56</width>
+					<height>56</height>
+					<include content="Music_Cover">
+						<param name="art" value="$INFO[Player.Art(thumb)]"/>
+						<param name="title" value=""/>
+					</include>
+				</control>
+				<control type="label">
+					<left>200</left>
+					<top>22</top>
+					<width>1300</width>
+					<height>56</height>
+					<font>serif_34</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Music_NPSentence]</label>
+				</control>
+				<control type="label">
+					<left>page_margin</left>
+					<top>22</top>
+					<width>page_width</width>
+					<height>56</height>
+					<align>right</align>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[Player.Time]$INFO[Player.Duration, of ,]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================== stage background -->
+	<!-- One art layer + the stage gradient (DESIGN 6 "Music stage"). Off = not rendered at all.
+	     params: art (variable), visible -->
+	<include name="Music_StageBackground">
+		<param name="art">$VAR[Music_StageArt]</param>
+		<param name="visible">true</param>
+		<param name="scrim_left">false</param>
+		<definition>
+			<control type="group">
+				<visible>$EXP[ArtBackgroundOn] + $PARAM[visible]</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>screen_w</width>
+					<height>screen_h</height>
+					<aspectratio>scale</aspectratio>
+					<include>Anim_BackgroundCrossfade</include>
+					<include>Music_Anim_BackdropFade</include>
+					<texture background="true" colordiffuse="$VAR[Music_ArtOpacity]">$PARAM[art]</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>screen_w</width>
+					<height>screen_h</height>
+					<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+					<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+					<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+					<include>Music_Anim_BackdropFade</include>
+					<texture colordiffuse="scrim">common/gradient_stage.png</texture>
+				</control>
+				<!-- text-column scrim (DESIGN 2.5) for screens with text over the upper half -->
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>2600</width>
+					<height>screen_h</height>
+					<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+					<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+					<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+					<include>Music_Anim_BackdropFade</include>
+					<texture colordiffuse="scrim">common/scrim_left.png</texture>
+					<visible>$PARAM[scrim_left]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ===================================================== Now playing blur -->
+	<!-- Blur the playing cover once per album (window onload; MusicOSD re-checks on open).
+	     Only when the setting is on, TMDb Helper is enabled and there is no artist fanart. -->
+	<include name="Music_PlayerBlurOnload">
+		<onload condition="$EXP[ArtBackgroundOn] + String.IsEmpty(Player.Art(fanart)) + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(sentence.np.blursrc),Player.Art(thumb))">ClearProperty(TMDbHelper.SentencePlayer.BlurImage,Home)</onload>
+		<onload condition="$EXP[ArtBackgroundOn] + String.IsEmpty(Player.Art(fanart)) + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(sentence.np.blursrc),Player.Art(thumb))">RunScript(plugin.video.themoviedb.helper,"blur_image=$INFO[Player.Art(thumb)]",prefix=SentencePlayer)</onload>
+		<onload condition="$EXP[ArtBackgroundOn] + String.IsEmpty(Player.Art(fanart)) + !String.IsEmpty(Player.Art(thumb))">SetProperty(sentence.np.blursrc,$ESCINFO[Player.Art(thumb)],Home)</onload>
+	</include>
+
+	<!-- Info dialog: a description exists for this item type -->
+	<expression name="Music_InfoHasDescription">[$EXP[Music_InfoIsAlbum] + !String.IsEmpty(ListItem.Property(Album_Description))] | [$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Property(Artist_Description))] | [$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Comment)]</expression>
+
+	<!-- Info dialog list row (album tracklist: no · title · duration; artist discography: album · year) -->
+	<include name="Music_InfoRow">
+		<param name="focused">false</param>
+		<definition>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<width>44</width>
+				<height>56</height>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.TrackNumber]</label>
+				<visible>String.IsEqual(ListItem.DBType,song)</visible>
+			</control>
+			<control type="label">
+				<left>72</left>
+				<top>0</top>
+				<right>120</right>
+				<height>56</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Title]</label>
+				<visible>!$PARAM[focused] + String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Title)</visible>
+			</control>
+			<control type="label">
+				<left>72</left>
+				<top>0</top>
+				<right>120</right>
+				<height>56</height>
+				<font>ui_22_bold</font>
+				<textcolor>text</textcolor>
+				<scroll>true</scroll>
+				<label>$INFO[ListItem.Title]</label>
+				<visible>$PARAM[focused] + String.IsEqual(ListItem.DBType,song) + !String.IsEmpty(ListItem.Title)</visible>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<right>120</right>
+				<height>56</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!$PARAM[focused] + [!String.IsEqual(ListItem.DBType,song) | String.IsEmpty(ListItem.Title)]</visible>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>0</top>
+				<right>120</right>
+				<height>56</height>
+				<font>ui_22_bold</font>
+				<textcolor>text</textcolor>
+				<scroll>true</scroll>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>$PARAM[focused] + [!String.IsEqual(ListItem.DBType,song) | String.IsEmpty(ListItem.Title)]</visible>
+			</control>
+			<control type="label">
+				<right>20</right>
+				<top>0</top>
+				<width>100</width>
+				<height>56</height>
+				<align>right</align>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Duration]</label>
+				<visible>String.IsEqual(ListItem.DBType,song)</visible>
+			</control>
+			<control type="label">
+				<right>20</right>
+				<top>0</top>
+				<width>100</width>
+				<height>56</height>
+				<align>right</align>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Label2]</label>
+				<visible>!String.IsEqual(ListItem.DBType,song)</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<right>0</right>
+				<height>rule_h</height>
+				<texture colordiffuse="rule">common/hairline.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================== text rows (lists 50/100) -->
+	<!-- Generic text row (genres, years, roots, files, playlist editor): label left, label2 right.
+	     params: width, list_id, condition (layout selection) -->
+	<include name="Music_RowLayout">
+		<param name="width">1080</param>
+		<param name="list_id">50</param>
+		<param name="condition">true</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="66" condition="$PARAM[condition]">
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<right>200</right>
+					<height>66</height>
+					<font>ui_24_bold</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Music_ItemLabel]</label>
+				</control>
+				<control type="label">
+					<right>list_text_x</right>
+					<top>0</top>
+					<width>180</width>
+					<height>66</height>
+					<align>right</align>
+					<font>num_20</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule">common/hairline.png</texture>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="66" condition="$PARAM[condition]">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>66</height>
+					<texture colordiffuse="raised">common/white.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>list_bar_w</width>
+					<height>66</height>
+					<texture colordiffuse="lilac">common/white.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="label">
+					<left>list_text_x</left>
+					<top>0</top>
+					<right>200</right>
+					<height>66</height>
+					<font>ui_24_bold</font>
+					<textcolor>text</textcolor>
+					<scroll>true</scroll>
+					<label>$VAR[Music_ItemLabel]</label>
+				</control>
+				<control type="label">
+					<right>list_text_x</right>
+					<top>0</top>
+					<width>180</width>
+					<height>66</height>
+					<align>right</align>
+					<font>num_20</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<bottom>0</bottom>
+					<width>$PARAM[width]</width>
+					<height>rule_h</height>
+					<texture colordiffuse="rule">common/hairline.png</texture>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Song row: track no (or ▶ when playing) · title · artist · duration.
+	     params: width (1080), list_id, number (infolabel for the left column), condition -->
+	<include name="Music_SongLayout">
+		<param name="width">1080</param>
+		<param name="list_id">50</param>
+		<param name="number">$INFO[ListItem.TrackNumber]</param>
+		<param name="condition">true</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="66" condition="$PARAM[condition]">
+				<include content="Music_SongRow">
+					<param name="width" value="$PARAM[width]"/>
+					<param name="number" value="$PARAM[number]"/>
+					<param name="title_font" value="ui_24_bold"/>
+					<param name="title_color" value="muted"/>
+					<param name="scroll" value="false"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="66" condition="$PARAM[condition]">
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>66</height>
+					<texture colordiffuse="raised">common/white.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>list_bar_w</width>
+					<height>66</height>
+					<texture colordiffuse="lilac">common/white.png</texture>
+					<visible>Control.HasFocus($PARAM[list_id])</visible>
+				</control>
+				<include content="Music_SongRow">
+					<param name="width" value="$PARAM[width]"/>
+					<param name="number" value="$PARAM[number]"/>
+					<param name="title_font" value="ui_24_bold"/>
+					<param name="title_color" value="text"/>
+					<param name="scroll" value="true"/>
+				</include>
+			</focusedlayout>
+		</definition>
+	</include>
+	<include name="Music_SongRow">
+		<param name="width">1080</param>
+		<param name="number">$INFO[ListItem.TrackNumber]</param>
+		<param name="title_font">ui_24_bold</param>
+		<param name="title_color">muted</param>
+		<param name="scroll">false</param>
+		<definition>
+			<control type="label">
+				<left>list_text_x</left>
+				<top>0</top>
+				<width>52</width>
+				<height>66</height>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>[UPPERCASE]$PARAM[number][/UPPERCASE]</label>
+				<visible>!ListItem.IsPlaying</visible>
+			</control>
+			<control type="label">
+				<left>list_text_x</left>
+				<top>0</top>
+				<width>52</width>
+				<height>66</height>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>▶</label>
+				<visible>ListItem.IsPlaying</visible>
+			</control>
+			<control type="label">
+				<left>92</left>
+				<top>0</top>
+				<width>480</width>
+				<height>66</height>
+				<font>$PARAM[title_font]</font>
+				<textcolor>$PARAM[title_color]</textcolor>
+				<scroll>$PARAM[scroll]</scroll>
+				<label>$VAR[Music_ItemLabel]</label>
+				<visible>String.IsEmpty(ListItem.Title)</visible>
+			</control>
+			<control type="label">
+				<left>92</left>
+				<top>0</top>
+				<width>480</width>
+				<height>66</height>
+				<font>$PARAM[title_font]</font>
+				<textcolor>$PARAM[title_color]</textcolor>
+				<scroll>$PARAM[scroll]</scroll>
+				<label>$INFO[ListItem.Title]</label>
+				<visible>!String.IsEmpty(ListItem.Title)</visible>
+			</control>
+			<control type="label">
+				<left>596</left>
+				<top>0</top>
+				<right>150</right>
+				<height>66</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Artist]$INFO[ListItem.TVShowTitle]</label>
+			</control>
+			<control type="label">
+				<right>list_text_x</right>
+				<top>0</top>
+				<width>110</width>
+				<height>66</height>
+				<align>right</align>
+				<font>num_20</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Duration]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>$PARAM[width]</width>
+				<height>rule_h</height>
+				<texture colordiffuse="rule">common/hairline.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Focused-item panel to the right of a 1080 px list: 560 cover + title + meta (fixed heights) -->
+	<include name="Music_ListPanel">
+		<param name="top">music_list_top</param>
+		<definition>
+			<control type="group">
+				<left>music_panel_x</left>
+				<top>$PARAM[top]</top>
+				<width>music_panel_art</width>
+				<control type="group">
+					<width>music_panel_art</width>
+					<height>music_panel_art</height>
+					<include content="Music_Cover">
+						<param name="mask_round" value="music/square_round8_560.png"/>
+						<param name="parent_icon" value="96"/>
+						<param name="parent_caption" value="true"/>
+					</include>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>584</top>
+					<width>music_panel_art</width>
+					<height>36</height>
+					<font>ui_22_bold</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Music_ItemLabel]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>624</top>
+					<width>music_panel_art</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[ListItem.Artist]$INFO[ListItem.Album,  ·  ,]$INFO[ListItem.Year,  ·  ,]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>656</top>
+					<width>music_panel_art</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[ListItem.Genre]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+</includes>

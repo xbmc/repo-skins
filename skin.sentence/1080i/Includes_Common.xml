@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Common building blocks (prefix Sen_). Sentence language:
+	  * ground #0F1412, text #EDEAE0, connective/caption text #8C918B
+	  * a PHRASE (anything you can change or press) is lilac with a 3px underline;
+	    the focused phrase is a lilac block (6px radius, 6px halo) with ink text
+	  * top line: breadcrumb in tracked caps (left), the time as a sentence (right)
+	Parameterised includes document their params.
+-->
+<includes>
+	<!-- ============================================================ page -->
+	<include name="Sen_Background">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<texture colordiffuse="ground">common/white.png</texture>
+		</control>
+	</include>
+
+	<!-- 1px rule. params: top, left, width, color -->
+	<include name="Sen_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">rule</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$PARAM[color]">common/hairline.png</texture>
+			</control>
+		</definition>
+	</include>
+	<include name="Sen_TopRule">
+		<include content="Sen_Rule">
+			<param name="top" value="topbar_rule_y"/>
+		</include>
+	</include>
+
+	<!-- The time as a sentence, right of the top line: "It's 21:47 and light rain." -->
+	<include name="Sen_Clock">
+		<param name="top">sen_topline_y</param>
+		<definition>
+			<control type="grouplist">
+				<left>page_margin</left>
+				<top>$PARAM[top]</top>
+				<width>page_width</width>
+				<height>sen_topline_h</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>0</itemgap>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$INFO[MusicPlayer.Title,Playing “,”$COMMA ]</label>
+					<visible>Player.HasAudio + !Player.HasVideo</visible>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Sen_ClockLead]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>num_22</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[ClockLabel]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Sen_ClockTail]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="Sen_ClockLead">
+		<value condition="Player.HasAudio + !Player.HasVideo">it's </value>
+		<value>It's </value>
+	</variable>
+
+	<!-- Breadcrumb top line: "HOME / ALL FILMS". params: index (ignored, kept for forked calls), title, sub -->
+	<include name="Sen_PageHeader">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="grouplist">
+				<left>page_margin</left>
+				<top>sen_topline_y</top>
+				<width>1100</width>
+				<height>sen_topline_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>16</itemgap>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[10000]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_20</font>
+					<textcolor>faint</textcolor>
+					<label>/</label>
+				</control>
+				<control type="label">
+					<width max="640">auto</width>
+					<height>sen_topline_h</height>
+					<font>cap_20</font>
+					<textcolor>text</textcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<width max="300">auto</width>
+					<height>sen_topline_h</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$PARAM[sub]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Full top line for non-Home windows: breadcrumb + clock sentence + faint rule -->
+	<include name="Sen_TopBar">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="Sen_PageHeader">
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include>Sen_Clock</include>
+			<include>Sen_TopRule</include>
+		</definition>
+	</include>
+
+	<!-- ===================================================== focus frames -->
+	<!-- Ring round a control (forked windows). Inside a group sized to the item; grows 7px. -->
+	<include name="Sen_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="lilac">sentence/ring.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== posters -->
+	<!-- Poster/cover with a raised fallback block + title. params: art, title, diffuse -->
+	<include name="Sen_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask_round"></param>
+		<param name="mask_square"></param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="diffuse">white</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="raised">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>14</left>
+				<right>14</right>
+				<top>14</top>
+				<bottom>14</bottom>
+				<font>serif_26</font>
+				<textcolor>muted</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>160</fadetime>
+				<texture background="true" colordiffuse="$PARAM[diffuse]">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Watched state on a poster: a small "seen" tick (lilac block, ink check) top-right; resume = lilac
+	     progress line on the bottom edge. Unwatched carries no mark (the sentence says it). -->
+	<include name="Sen_WatchedMarkers">
+		<control type="group">
+			<right>10</right>
+			<top>10</top>
+			<width>30</width>
+			<height>30</height>
+			<visible>$EXP[ShowWatchedMarkers] + $EXP[ListItemIsVideoFile] + $EXP[ListItemWatched]</visible>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>30</width>
+				<height>30</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+			</control>
+			<control type="image">
+				<left>5</left>
+				<top>5</top>
+				<width>20</width>
+				<height>20</height>
+				<texture colordiffuse="on_lilac">markers/check.png</texture>
+			</control>
+		</control>
+		<control type="progress">
+			<left>0</left>
+			<right>0</right>
+			<bottom>0</bottom>
+			<height>5</height>
+			<texturebg colordiffuse="scrim_80">common/white.png</texturebg>
+			<midtexture colordiffuse="lilac">common/white.png</midtexture>
+			<info>ListItem.PercentPlayed</info>
+			<visible>$EXP[ShowUnwatchedMarkers] + ListItem.IsResumable</visible>
+		</control>
+	</include>
+
+	<!-- ========================================================== phrases + buttons -->
+	<!-- Phrase textures: underline under the text (unfocused), lilac block (focused). -->
+	<include name="Sen_PhraseTextures">
+		<texturefocus border="14" colordiffuse="lilac">sentence/phrase_block.png</texturefocus>
+		<texturenofocus border="24,0,24,6" colordiffuse="lilac">sentence/phrase_under.png</texturenofocus>
+		<textcolor>lilac</textcolor>
+		<focusedcolor>on_lilac</focusedcolor>
+		<disabledcolor>muted</disabledcolor>
+		<textoffsetx>sen_phrase_pad</textoffsetx>
+		<aligny>center</aligny>
+	</include>
+	<!-- Same block, no underline when unfocused (quiet buttons: dialogs, keyboard rows) -->
+	<include name="Sen_QuietTextures">
+		<texturefocus border="14" colordiffuse="lilac">sentence/phrase_block.png</texturefocus>
+		<texturenofocus />
+		<textcolor>text</textcolor>
+		<focusedcolor>on_lilac</focusedcolor>
+		<disabledcolor>muted</disabledcolor>
+		<textoffsetx>sen_phrase_pad</textoffsetx>
+		<aligny>center</aligny>
+	</include>
+
+	<!-- Legacy button includes from the forked engine, restyled as phrases (fixed width group) -->
+	<include name="Sen_Tex_ButtonPrimary">
+		<include>Sen_PhraseTextures</include>
+	</include>
+	<include name="Sen_Tex_ButtonPrimary_Round">
+		<include>Sen_PhraseTextures</include>
+	</include>
+	<include name="Sen_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<label>$PARAM[label]</label>
+					<font>ui_24_bold</font>
+					<align>center</align>
+					<textoffsetx>0</textoffsetx>
+					<textcolor>lilac</textcolor>
+					<include>Sen_QuietTextures</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Small header phrase (library sub-nav, OSD text buttons). params: id, label, onclick, visible -->
+	<include name="Sen_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>subnav_h</height>
+				<font>ui_22_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="Sen_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>

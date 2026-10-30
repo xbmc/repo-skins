@@ -1,0 +1,845 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video library (MyVideoNav.xml). Mockup: docs/concepts/mockups/SentenceResults.dc.html.
+	The page header is the sentence, collapsed to one editable line:
+	  opened from the Home sentence (path carries the "~~~" base rule):
+	    "Films [under 2 hours], [serious], from [any decade], that you [haven't seen] · 38"
+	    (OK on a phrase moves it on and re-filters in place: Includes_Sentence.xml Sen_LibOnclick_*)
+	  any other library node:
+	    "All films by [date added], [newest first], showing [everything], [as a grid] · 1360"
+
+	View ids (Container.Content gates each view, so VIEW only cycles valid ones):
+	  500 Grid with notes (movies, sets, shows, seasons, music videos) | 501 Wall (same, denser)
+	  503 Episodes | 50 List (everything; Includes_Views.xml)
+	Kodi id contract (Estuary Omega MyVideoNav + CGUIWindowVideoNav): <views>; menucontrol 9000 (the header);
+	3 sort-by / 4 sort-order (hidden buttons the header clicks); 14 watched toggle (SendClick only).
+	Header ids: 9321 sort, 9322 direction, 9323 watched filter, 9324 view, 9325 on-the-go (TV root),
+	9331-9334 sentence phrases (length, genre, decade, seen).
+-->
+<includes>
+	<!-- ================================================================== constants -->
+	<constant name="lib_head_y">116</constant>
+	<constant name="lib_rule_y">214</constant>
+	<constant name="lib_grid_y">244</constant>           <!-- 256 - 12 zoom room -->
+	<constant name="lib_grid_x">108</constant>
+	<constant name="lib_cell_w">228</constant>
+	<constant name="lib_cell_h">392</constant>
+	<constant name="lib_poster_w">188</constant>
+	<constant name="lib_poster_h">282</constant>
+	<constant name="lib_note_x">1308</constant>
+	<constant name="lib_note_w">492</constant>
+
+	<!-- ================================================================ expressions -->
+	<expression name="Lib_IsSentence">String.Contains(Container.FolderPath,~~~)</expression>
+	<expression name="Lib_IsLike">String.Contains(Container.FolderPath,~like~)</expression>
+	<expression name="VidView_IsInProgressTV">String.StartsWith(Container.FolderPath,videodb://inprogresstvshows)</expression>
+	<expression name="VidView_IsMoviesRoot">Container.Content(movies) + String.StartsWith(Container.FolderPath,videodb://movies/titles)</expression>
+	<expression name="VidView_IsTVRoot">Container.Content(tvshows) + String.StartsWith(Container.FolderPath,videodb://tvshows/titles)</expression>
+	<expression name="VidView_IsLibraryVideo">Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</expression>
+	<expression name="VidView_IsFolderType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,set)</expression>
+	<expression name="VidView_IsTVType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)</expression>
+
+	<!-- ============================================================ back to Home
+	     Omar: "pressing back several times should always end up getting us to the home menu".
+	     The header phrases re-filter the window with Container.Update(path,replace) and the in-progress toggle swaps
+	     to videodb://tvshows/titles/ the same way; replace rebuilds Kodi's path history from the path's parents, so
+	     Back then walked through Kodi's raw nodes (videodb://movies/ = Genres, Titles, Years..., then the Videos root)
+	     before leaving. At a sentence root (or the TV titles root) Back goes to 9398 instead, whose onfocus goes Home.
+	     Drilled folders (a show's seasons) are not roots: Back there still goes up first. Condition written out in full
+	     (no $EXP) because it sits in a navigation condition. Numeric onback = Kodi consumes the key (a builtin onback
+	     would run AND let the window handle Back). -->
+	<include name="Lib_BackHomeNav">
+		<onback condition="[String.Contains(Container.FolderPath,~~~) + [String.StartsWith(Container.FolderPath,videodb://movies/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/-1/-1/-1/-1/?) | String.StartsWith(Container.FolderPath,musicdb://albums/?)]] | String.IsEqual(Container.FolderPath,videodb://tvshows/titles/)">9398</onback>
+	</include>
+	<include name="Lib_BackHomeButton">
+		<control type="button" id="9398">
+			<description>Back from a sentence library: straight to Home</description>
+			<left>-100</left>
+			<top>-100</top>
+			<width>1</width>
+			<height>1</height>
+			<texturefocus/>
+			<texturenofocus/>
+			<onfocus>ActivateWindow(Home)</onfocus>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+	</include>
+	<expression name="Lib_SortAlpha">Container.SortMethod(1) | Container.SortMethod(7) | Container.SortMethod(29) | Container.SortMethod(10) | Container.SortMethod(12) | Container.SortMethod(28)</expression>
+	<expression name="Lib_SortDate">Container.SortMethod(2) | Container.SortMethod(16) | Container.SortMethod(40) | Container.SortMethod(41)</expression>
+
+	<!-- ================================================================== variables -->
+	<!-- what the page is about, as the subject of the header sentence -->
+	<variable name="Lib_Subject">
+		<value condition="String.Contains(Container.FolderPath,~like~) + Container.Content(tvshows)">Shows like [I]$INFO[Window(Home).Property(sentence.liketitle)][/I]</value>
+		<value condition="String.Contains(Container.FolderPath,~like~)">Films like [I]$INFO[Window(Home).Property(sentence.liketitle)][/I]</value>
+		<value condition="$EXP[VidView_IsInProgressTV]">Shows on the go</value>
+		<value condition="$EXP[VidView_IsMoviesRoot]">All films</value>
+		<value condition="$EXP[VidView_IsTVRoot]">All shows</value>
+		<value condition="Container.Content(sets) + String.StartsWith(Container.FolderPath,videodb://movies/sets)">Every collection</value>
+		<value condition="Container.Content(episodes) + !String.IsEmpty(ListItem.TVShowTitle)">$INFO[ListItem.TVShowTitle], $INFO[Container.FolderName]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>Videos</value>
+	</variable>
+	<variable name="Lib_Crumb">
+		<value condition="$EXP[Lib_IsSentence] + Container.IsUpdating">Your sentence</value>
+		<value condition="$EXP[Lib_IsSentence]">Your sentence · $INFO[Container.NumItems] $VAR[Sen_NounManyC]</value>
+		<value condition="Container.IsUpdating + Integer.IsEqual(Container.NumItems,0)">$VAR[Lib_Subject] · looking</value>
+		<value>$VAR[Lib_Subject]$INFO[Container.NumItems, · ,]</value>
+	</variable>
+	<variable name="Lib_Direction">
+		<value condition="$EXP[Lib_SortAlpha] + Container.SortDirection(ascending)">A to Z</value>
+		<value condition="$EXP[Lib_SortAlpha]">Z to A</value>
+		<value condition="$EXP[Lib_SortDate] + Container.SortDirection(ascending)">oldest first</value>
+		<value condition="$EXP[Lib_SortDate]">newest first</value>
+		<value condition="Container.SortDirection(ascending)">lowest first</value>
+		<value>highest first</value>
+	</variable>
+	<variable name="Lib_Watched">
+		<value condition="$EXP[VidView_IsInProgressTV]">shows on the go</value>
+		<value condition="System.Setting(hidewatched)">only the unseen</value>
+		<value>everything</value>
+	</variable>
+	<variable name="Lib_Count">
+		<value condition="Container.IsUpdating + Integer.IsEqual(Container.NumItems,0)">· looking</value>
+		<value>· $INFO[Container.NumItems]</value>
+	</variable>
+
+	<!-- "Number 5 of 38" -->
+	<variable name="Lib_Position">
+		<value condition="ListItem.IsParentFolder">Back up a level</value>
+		<value>Number $INFO[Container.CurrentItem] of $INFO[Container.NumItems]</value>
+	</variable>
+
+	<!-- The focused item, explained in a paragraph (Young Serif 36). Missing facts drop their clause. -->
+	<variable name="Lib_About">
+		<value condition="ListItem.IsParentFolder + $EXP[Lib_BackGoesHome]">$LOCALIZE[31976]</value>  <!-- 0.9.13: at a root Home opened, OK here and Back on the remote go different ways -->
+		<value condition="ListItem.IsParentFolder">Back takes you up one level.</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie)">[I]$INFO[ListItem.Title][/I] is $VAR[Sen_FilmNoun]$INFO[ListItem.Director, by ,]. $VAR[Lib_Runs]$VAR[Sen_SeenSentence] $VAR[Sen_RatingSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">[I]$INFO[ListItem.Title][/I] is $VAR[Lib_ShowNoun]$INFO[ListItem.Studio, on ,]. $VAR[Lib_ShowProgress] $VAR[Sen_RatingSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">[I]$INFO[ListItem.Label][/I] of $INFO[ListItem.TVShowTitle] has $VAR[PL_TotalEpisodes_Episode]. $VAR[Lib_SeasonProgress]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">[I]$INFO[ListItem.Title][/I] is episode $INFO[ListItem.Episode] of season $INFO[ListItem.Season]$INFO[ListItem.TVShowTitle, of ,]. $VAR[Lib_Runs]$VAR[Sen_SeenSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">[I]$INFO[ListItem.Title][/I] gathers $VAR[PL_Total_Film]. $VAR[Lib_SetProgress]</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">[I]$INFO[ListItem.Title][/I]$INFO[ListItem.Artist, is by ,]$INFO[ListItem.Year, from ,]. $VAR[Lib_Runs]</value>
+		<value>[I]$INFO[ListItem.Label][/I]$INFO[ListItem.Label2, · ,]</value>
+	</variable>
+	<variable name="Lib_Runs">
+		<value condition="ListItem.IsResumable + !String.IsEmpty(ListItem.EndTimeResume)">If you pick it up now you'd finish at $INFO[ListItem.EndTimeResume]. </value>
+		<value condition="!String.IsEmpty(ListItem.Duration) + !String.IsEmpty(ListItem.EndTime)">It runs $VAR[Sen_DurLong], so you'd finish at $INFO[ListItem.EndTime]. </value>
+		<value condition="!String.IsEmpty(ListItem.Duration)">It runs $VAR[Sen_DurLong]. </value>
+	</variable>
+	<variable name="Lib_ShowNoun">
+		<value condition="!String.IsEmpty(ListItem.Year) + !String.IsEmpty(ListItem.Genre)">a $INFO[ListItem.Year] $VAR[Sen_GenreWord] show</value>
+		<value condition="!String.IsEmpty(ListItem.Year)">a show from $INFO[ListItem.Year]</value>
+		<value>a show</value>
+	</variable>
+	<variable name="Lib_ShowProgress">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),0)">There are no episodes in your library yet.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1) + Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">You've seen its one episode.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">You haven't started its one episode.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">You've seen all $INFO[ListItem.Property(TotalEpisodes)] episodes$VAR[PL_TotalSeasons_Season].</value>
+		<value condition="Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">You haven't started its $INFO[ListItem.Property(TotalEpisodes)] episodes$VAR[PL_TotalSeasons_Season].</value>
+		<value>You've seen $INFO[ListItem.Property(WatchedEpisodes)] of $INFO[ListItem.Property(TotalEpisodes)] episodes; $INFO[ListItem.Property(UnWatchedEpisodes)] to go.</value>
+	</variable>
+	<variable name="Lib_SeasonProgress">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1) + Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">You've seen it.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">You haven't seen it yet.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0)">You've seen them all.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">You haven't seen any yet.</value>
+		<value>You've seen $INFO[ListItem.Property(WatchedEpisodes)] of them.</value>
+	</variable>
+	<variable name="Lib_SetProgress">
+		<value condition="Integer.IsEqual(ListItem.Property(Total),1) + Integer.IsEqual(ListItem.Property(Watched),1)">You've seen it.</value>
+		<value condition="Integer.IsEqual(ListItem.Property(Total),1)">You haven't seen it.</value>
+		<value condition="String.IsEqual(ListItem.Property(Watched),ListItem.Property(Total))">You've seen them all.</value>
+		<value condition="Integer.IsGreater(ListItem.Property(Watched),0)">You've seen $INFO[ListItem.Property(Watched)] of them.</value>
+		<value>You haven't seen any of them.</value>
+	</variable>
+	<variable name="Lib_Plot">
+		<value condition="!String.IsEmpty(ListItem.Plot)">$INFO[ListItem.Plot]</value>
+		<value>$INFO[ListItem.Tagline]</value>
+	</variable>
+	<!-- 0.9.13: the hint also says where Back leads: Home from a sentence / start folder (Lib_BackHomeNav roots and the
+	     roots Home's links open with "return"), otherwise up a level -->
+	<expression name="Lib_BackHomeStrict">[String.Contains(Container.FolderPath,~~~) + [String.StartsWith(Container.FolderPath,videodb://movies/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/-1/-1/-1/-1/?) | String.StartsWith(Container.FolderPath,musicdb://albums/?)]] | String.IsEqual(Container.FolderPath,videodb://tvshows/titles/)</expression>
+	<expression name="Lib_BackGoesHome">[String.Contains(Container.FolderPath,~~~) + [String.StartsWith(Container.FolderPath,videodb://movies/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/?) | String.StartsWith(Container.FolderPath,videodb://tvshows/titles/-1/-1/-1/-1/?) | String.StartsWith(Container.FolderPath,musicdb://albums/?)]] | String.IsEqual(Container.FolderPath,videodb://tvshows/titles/) | String.IsEqual(Container.FolderPath,videodb://movies/titles/) | String.IsEqual(Container.FolderPath,videodb://inprogresstvshows/)</expression>
+	<variable name="Lib_Hint">
+		<value condition="ControlGroup(9000).HasFocus() + $EXP[Lib_BackHomeStrict]">$LOCALIZE[31973]</value>
+		<value condition="ControlGroup(9000).HasFocus()">OK changes the phrase. Down goes back to the list.</value>
+		<value condition="ListItem.IsFolder + $EXP[Lib_BackGoesHome]">$LOCALIZE[31974]</value>
+		<value condition="ListItem.IsFolder">$LOCALIZE[31975]</value>
+		<value condition="$EXP[Lib_BackGoesHome]">$LOCALIZE[31971]</value>
+		<value>$LOCALIZE[31972]</value>
+	</variable>
+	<variable name="Lib_Art">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<!-- Kodi stores US certifications as "Rated PG-13" -->
+	<variable name="VidView_MPAA">
+		<value condition="String.StartsWith(ListItem.MPAA,Rated)">$INFO[ListItem.MPAA]</value>
+		<value condition="!String.IsEmpty(ListItem.MPAA)">Rated $INFO[ListItem.MPAA]</value>
+	</variable>
+	<variable name="Lib_EpisodeLine">
+		<value condition="ListItem.IsParentFolder">Back up a level</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$VAR[PL_TotalEpisodes_Episode]$INFO[ListItem.Property(UnWatchedEpisodes), · , to watch]</value>
+		<value>$VAR[Sen_DurShort]$INFO[ListItem.Premiered, · aired ,]$VAR[Lib_EpSeen]</value>
+	</variable>
+	<variable name="Lib_EpSeen">
+		<value condition="ListItem.IsResumable"> · you stopped $INFO[ListItem.PercentPlayed]% in</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)"> · you've seen it</value>
+		<value> · not seen yet</value>
+	</variable>
+	<variable name="Lib_EpisodeTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.Episode,,. ]“$INFO[ListItem.Title]”</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="Lib_PosterDim">
+		<value condition="Control.HasFocus(500) | Control.HasFocus(501)">dim_art</value>
+		<value>white</value>
+	</variable>
+
+	<!-- ================================================================== art pieces (shared) -->
+	<!-- Raised fallback with the title. params: label_visible -->
+	<include name="VidView_ArtFallback">
+		<param name="label_visible">true</param>
+		<param name="mask"></param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="raised">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>12</left>
+				<top>12</top>
+				<right>12</right>
+				<bottom>12</bottom>
+				<font>serif_26</font>
+				<textcolor>muted</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>$PARAM[label_visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_ArtImage">
+		<param name="art">$VAR[ListItemArt]</param>
+		<param name="mask"></param>
+		<param name="diffuse">white</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>140</fadetime>
+				<texture background="true" colordiffuse="$PARAM[diffuse]">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+	<!-- ".." parent tile: a raised block with "Back" in Young Serif. params: icon (unused), caption_visible -->
+	<include name="VidView_ParentTile">
+		<param name="icon">48</param>
+		<param name="caption_visible">false</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="raised">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>16</left>
+				<right>16</right>
+				<top>0</top>
+				<bottom>0</bottom>
+				<align>center</align>
+				<font>serif_34</font>
+				<textcolor>lilac</textcolor>
+				<label>$LOCALIZE[31369]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================== header -->
+	<!-- Sentence phrase in the header (serif 44). params: id, label, onclick, visible -->
+	<include name="Lib_Phrase">
+		<param name="visible">true</param>
+		<param name="left">-4</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$PARAM[label]</label>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<onclick>$PARAM[onclick]</onclick>
+				<ondown>50</ondown>
+				<onup>noop</onup>
+				<include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Lib_Words">
+		<param name="wid">0</param>
+		<param name="left">0</param>
+		<param name="visible">true</param>
+		<param name="color">text</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>$PARAM[left]</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Lib_Comma">
+		<param name="wid">0</param>
+		<param name="visible">true</param>
+		<param name="mark">,</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>-16</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[mark]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Lib_CountLabel">
+		<control type="label" id="23999">
+			<visible>!String.Contains(Container.FolderPath,~~~)</visible>
+			<left>18</left>
+			<width>auto</width>
+			<height>72</height>
+			<font>ui_28_bold</font>
+			<textcolor>muted</textcolor>
+			<label>$VAR[Lib_Count]</label>
+		</control>
+	</include>
+
+	<include name="VidView_Header">
+		<include content="Sen_PageHeader">
+			<param name="title" value="$VAR[Lib_Crumb]"/>
+		</include>
+		<include>Sen_Clock</include>
+		<control type="grouplist" id="9000">
+			<left>page_margin</left>
+			<top>lib_head_y</top>
+			<width>1740</width>
+			<height>72</height>
+			<orientation>horizontal</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<itemgap>0</itemgap>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onup>noop</onup>
+			<ondown>50</ondown>
+			<include>Lib_BackHomeNav</include><onback>50</onback>
+			<!-- sentence mode: the Home sentence, collapsed -->
+			<include content="Lib_Words"><param name="wid" value="23010"/><param name="label" value="$VAR[Sen_LibLead]"/><param name="visible" value="$EXP[Lib_IsSentence]"/></include>
+			<control type="button" id="9331">
+				<left>-4</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$VAR[Sen_CL_len]</label>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_len</include>
+				<ondown>50</ondown>
+				<onup>noop</onup>
+				<include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Lib_IsSentence] + $EXP[Sen_CHas_len]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="23020"/><param name="visible" value="$EXP[Lib_IsSentence] + $EXP[Sen_CHas_len]"/></include>
+			<control type="button" id="9332">
+				<left>-4</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$VAR[Sen_CL_genre]</label>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_genre</include>
+				<ondown>50</ondown>
+				<onup>noop</onup>
+				<include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Lib_IsSentence]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="23030"/><param name="visible" value="$EXP[Lib_IsSentence]"/></include>
+			<include content="Lib_Words"><param name="wid" value="23040"/><param name="label" value="from"/><param name="left" value="12"/><param name="visible" value="$EXP[Lib_IsSentence]"/></include>
+			<control type="button" id="9333">
+				<left>-4</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$VAR[Sen_CL_decade]</label>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_decade</include>
+				<ondown>50</ondown>
+				<onup>noop</onup>
+				<include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Lib_IsSentence]</visible>
+			</control>
+			<include content="Lib_Comma"><param name="wid" value="23050"/><param name="visible" value="$EXP[Lib_IsSentence]"/></include>
+			<include content="Lib_Words"><param name="wid" value="23060"/><param name="label" value="that you"/><param name="left" value="12"/><param name="visible" value="$EXP[Lib_IsSentence]"/></include>
+			<control type="button" id="9334">
+				<left>-4</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$VAR[Sen_CL_seen]</label>
+				<textoffsetx>18</textoffsetx>
+				<texturenofocus border="18,0,18,6" colordiffuse="lilac">sentence/phrase_under_m.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<include>Sen_LibOnclick_seen</include>
+				<ondown>50</ondown>
+				<onup>noop</onup>
+				<include>Lib_BackHomeNav</include><onback>50</onback>
+				<visible>$EXP[Lib_IsSentence]</visible>
+			</control>
+			<!-- browsing mode -->
+			<include content="Lib_Words"><param name="wid" value="23070"/><param name="label" value="$VAR[Lib_Subject]"/><param name="visible" value="!$EXP[Lib_IsSentence]"/></include>
+			<include content="Lib_Words"><param name="wid" value="23080"/><param name="label" value="by"/><param name="left" value="12"/><param name="visible" value="Control.IsEnabled(3)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9321"/><param name="label" value="[LOWERCASE]$INFO[Container.SortMethod][/LOWERCASE]"/><param name="onclick" value="SendClick(3)"/><param name="visible" value="Control.IsEnabled(3)"/></include>
+			<include content="Lib_Comma"><param name="wid" value="23090"/><param name="visible" value="Control.IsEnabled(3)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9322"/><param name="label" value="$VAR[Lib_Direction]"/><param name="left" value="10"/><param name="onclick" value="SendClick(4)"/><param name="visible" value="Control.IsEnabled(4)"/></include>
+			<include content="Lib_Comma"><param name="wid" value="23100"/><param name="visible" value="Control.IsEnabled(4) + [$EXP[VidView_IsLibraryVideo] | $EXP[VidView_IsInProgressTV]] + !$EXP[Lib_IsSentence] + !$EXP[Lib_IsLike]"/></include>
+			<include content="Lib_Words"><param name="wid" value="23110"/><param name="label" value="showing"/><param name="left" value="12"/><param name="visible" value="[$EXP[VidView_IsLibraryVideo] | $EXP[VidView_IsInProgressTV]] + !$EXP[Lib_IsSentence] + !$EXP[Lib_IsLike]"/></include>
+			<include content="Lib_Phrase">
+				<param name="id" value="9323"/>
+				<param name="label" value="$VAR[Lib_Watched]"/>
+				<param name="onclick" value="$VAR[Lib_WatchedAction]"/>
+				<param name="visible" value="[$EXP[VidView_IsLibraryVideo] | $EXP[VidView_IsInProgressTV]] + !$EXP[Lib_IsSentence] + !$EXP[Lib_IsLike]"/>
+			</include>
+			<include content="Lib_Comma"><param name="wid" value="23120"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<include content="Lib_Words"><param name="wid" value="23130"/><param name="label" value="as"/><param name="left" value="12"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9324"/><param name="label" value="[LOWERCASE]$INFO[Container.Viewmode][/LOWERCASE]"/><param name="onclick" value="ActivateWindow(1156)"/><param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/></include>
+			<!-- 0.9.8: ", or [more]" = the Library panel (Custom_1155); the count moved up into the crumb to make room -->
+			<include content="Lib_Comma"><param name="wid" value="23135"/></include>
+			<include content="Lib_Words"><param name="wid" value="23140"/><param name="label" value="or"/><param name="left" value="12"/></include>
+			<include content="Lib_Phrase"><param name="id" value="9326"/><param name="label" value="more"/><param name="onclick" value="ActivateWindow(1155)"/></include>
+		</control>
+		<include content="Sen_Rule"><param name="top" value="lib_rule_y"/></include>
+		<!-- Kodi media-window buttons the header clicks into -->
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>Sen_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>Sen_Hidden</include>
+		</control>
+	</include>
+	<!-- watched filter: All -> Unwatched (Kodi button 14); at the TV root a third state lists shows on the go -->
+	<variable name="Lib_WatchedAction">
+		<value condition="$EXP[VidView_IsInProgressTV]">Container.Update(videodb://tvshows/titles/,replace)</value>
+		<value condition="$EXP[VidView_IsTVRoot] + System.Setting(hidewatched)">SendClick(14)</value>
+		<value>SendClick(14)</value>
+	</variable>
+
+	<!-- Empty folder (or everything filtered away) -->
+	<include name="VidView_Empty">
+		<control type="group">
+			<left>page_margin</left>
+			<top>280</top>
+			<width>page_width</width>
+			<height>200</height>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>page_width</width>
+				<height>72</height>
+				<font>serif_44</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Lib_EmptySentence]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>84</top>
+				<width>page_width</width>
+				<height>40</height>
+				<font>ui_24</font>
+				<textcolor>muted</textcolor>
+				<label>$LOCALIZE[31370]</label>
+			</control>
+		</control>
+	</include>
+	<variable name="Lib_EmptySentence">
+		<value condition="$EXP[Lib_IsSentence]">Nothing matches that sentence. Try loosening a phrase.</value>
+		<value condition="System.Setting(hidewatched)">You've seen everything here.</value>
+		<value>There's nothing here yet.</value>
+	</variable>
+
+	<!-- ================================================================== the note (right of the grid) -->
+	<include name="Lib_Note">
+		<param name="visible">true</param>
+		<definition>
+			<control type="group">
+				<left>lib_note_x</left>
+				<top>256</top>
+				<width>lib_note_w</width>
+				<height>760</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>lib_note_w</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Lib_Position]</label>
+				</control>
+				<control type="textbox">
+					<description>7 lines max at 52px leading: 6 x 52 + 50 descender-safe</description>
+					<left>0</left>
+					<top>46</top>
+					<width>lib_note_w</width>
+					<height>362</height>
+					<font>serif_36</font>
+					<textcolor>text</textcolor>
+					<label>$VAR[Lib_About]</label>
+				</control>
+				<control type="textbox">
+					<description>4 lines at 38px leading</description>
+					<left>0</left>
+					<top>436</top>
+					<width>lib_note_w</width>
+					<height>148</height>
+					<font>body_24</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Lib_Plot]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>700</top>
+					<width>lib_note_w</width>
+					<height>60</height>
+					<font>ui_20</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Lib_Hint]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================== 500 grid with notes -->
+	<include name="Lib_GridCell">
+		<param name="focused">false</param>
+		<param name="list">500</param>
+		<param name="pw">lib_poster_w</param>
+		<param name="ph">lib_poster_h</param>
+		<param name="dim">$VAR[Lib_PosterDim]</param>
+		<definition>
+			<control type="group">
+				<left>12</left>
+				<top>12</top>
+				<width>$PARAM[pw]</width>
+				<height>$PARAM[ph]</height>
+				<animation type="Conditional" condition="$PARAM[focused] + Control.HasFocus($PARAM[list]) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="106" center="auto" time="200" tween="cubic" easing="out"/>
+				</animation>
+				<control type="group">
+					<visible>!ListItem.IsParentFolder</visible>
+					<include content="Sen_Artwork">
+						<param name="art" value="$VAR[Lib_Art]"/>
+						<param name="diffuse" value="$PARAM[dim]"/>
+					</include>
+					<include>Sen_WatchedMarkers</include>
+				</control>
+				<control type="group">
+					<visible>ListItem.IsParentFolder</visible>
+					<include>VidView_ParentTile</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Lib_GridText">
+		<param name="focused">false</param>
+		<param name="list">500</param>
+		<param name="top">306</param>
+		<param name="ttop">318</param>
+		<param name="ctop">346</param>
+		<param name="w">lib_poster_w</param>
+		<definition>
+			<control type="image">
+				<left>12</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[w]</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus($PARAM[list])</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>$PARAM[ttop]</top>
+				<width>$PARAM[w]</width>
+				<height>28</height>
+				<font>ui_20_bold</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus($PARAM[list])</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>$PARAM[ttop]</top>
+				<width>$PARAM[w]</width>
+				<height>28</height>
+				<font>ui_20_bold</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Sen_ItemTitle]</label>
+				<visible>$PARAM[focused] + Control.HasFocus($PARAM[list])</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>$PARAM[ctop]</top>
+				<width>$PARAM[w]</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[Sen_CaptionShort]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus($PARAM[list])</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>$PARAM[ctop]</top>
+				<width>216</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>lilac</textcolor>
+				<label>$VAR[Sen_Caption]</label>
+				<visible>$PARAM[focused] + Control.HasFocus($PARAM[list])</visible>
+			</control>
+		</definition>
+	</include>
+
+	<include name="VidView_500_Grid">
+		<control type="group">
+			<visible>Control.IsVisible(500)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="panel" id="500">
+				<include>Lib_BackHomeNav</include>
+				<left>lib_grid_x</left>
+				<top>lib_grid_y</top>
+				<width>1160</width>
+				<height>808</height>
+				<orientation>vertical</orientation>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">260</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.8: past the edges = the Library panel -->
+				<onright>ActivateWindow(1155)</onright>
+				<viewtype label="31368">panel</viewtype>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)</visible>
+				<itemlayout width="lib_cell_w" height="lib_cell_h">
+					<include>Lib_GridCell</include>
+					<include>Lib_GridText</include>
+				</itemlayout>
+				<focusedlayout width="lib_cell_w" height="lib_cell_h">
+					<include content="Lib_GridCell"><param name="focused" value="true"/><param name="dim" value="white"/></include>
+					<include content="Lib_GridText"><param name="focused" value="true"/></include>
+				</focusedlayout>
+			</control>
+			<include content="Lib_Note"/>
+		</control>
+	</include>
+
+	<!-- ================================================================== 501 wall -->
+	<include name="VidView_501_Wall">
+		<control type="group">
+			<visible>Control.IsVisible(501)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="panel" id="501">
+				<include>Lib_BackHomeNav</include>
+				<left>lib_grid_x</left>
+				<top>lib_grid_y</top>
+				<width>1720</width>
+				<height>700</height>
+				<orientation>vertical</orientation>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">260</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.8: past the edges = the Library panel -->
+				<onright>ActivateWindow(1155)</onright>
+				<viewtype label="31371">panel</viewtype>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(musicvideos)</visible>
+				<itemlayout width="210" height="350">
+					<include content="Lib_GridCell"><param name="list" value="501"/><param name="pw">174</param><param name="ph">261</param></include>
+				</itemlayout>
+				<focusedlayout width="210" height="350">
+					<include content="Lib_GridCell"><param name="list" value="501"/><param name="focused" value="true"/><param name="dim" value="white"/><param name="pw">174</param><param name="ph">261</param></include>
+					<control type="image">
+						<left>12</left>
+						<top>285</top>
+						<width>174</width>
+						<height>3</height>
+						<texture colordiffuse="lilac">sentence/round6.png</texture>
+						<visible>Control.HasFocus(501)</visible>
+					</control>
+				</focusedlayout>
+			</control>
+			<!-- the focused one, in one sentence under the wall -->
+			<control type="textbox">
+				<left>page_margin</left>
+				<top>950</top>
+				<width>page_width</width>
+				<height>52</height>
+				<font>serif_36</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[Lib_About]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== 503 episodes -->
+	<include name="Lib_EpisodeRow">
+		<param name="focused">false</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>page_width</width>
+				<height>174</height>
+				<texture colordiffuse="raised">sentence/round6.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(503)</visible>
+			</control>
+			<control type="group">
+				<left>16</left>
+				<top>15</top>
+				<width>256</width>
+				<height>144</height>
+				<visible>String.IsEqual(ListItem.DBType,episode)</visible>
+				<include content="VidView_ArtFallback"><param name="label_visible" value="false"/></include>
+				<include content="VidView_ArtImage"><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+				<include>Sen_WatchedMarkers</include>
+			</control>
+			<control type="group">
+				<left>16</left>
+				<top>15</top>
+				<width>96</width>
+				<height>144</height>
+				<visible>!String.IsEqual(ListItem.DBType,episode)</visible>
+				<include content="VidView_ArtFallback"><param name="label_visible" value="false"/></include>
+				<include content="VidView_ArtImage"><param name="art" value="$VAR[ListItemArt]"/></include>
+			</control>
+			<control type="image">
+				<left>16</left>
+				<top>162</top>
+				<width>256</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(503) + String.IsEqual(ListItem.DBType,episode)</visible>
+			</control>
+			<control type="group">
+				<left>300</left>
+				<top>0</top>
+				<width>1350</width>
+				<height>174</height>
+				<control type="label">
+					<left>0</left>
+					<top>14</top>
+					<width>1350</width>
+					<height>52</height>
+					<font>serif_34</font>
+					<textcolor>$VAR[Lib_EpTitleColor]</textcolor>
+					<label>$VAR[Lib_EpisodeTitle]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>66</top>
+					<width>1350</width>
+					<height>30</height>
+					<font>ui_22</font>
+					<textcolor>muted</textcolor>
+					<label>$VAR[Lib_EpisodeLine]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>102</top>
+					<width>1300</width>
+					<height>66</height>
+					<font>ui_20</font>
+					<textcolor>body</textcolor>
+					<label>$INFO[ListItem.Plot]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="Lib_EpTitleColor">
+		<value condition="Control.HasFocus(503) + ListItem.IsSelected">text</value>
+		<value>text</value>
+	</variable>
+	<include name="VidView_503_Episodes">
+		<control type="group">
+			<visible>Control.IsVisible(503)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="list" id="503">
+				<include>Lib_BackHomeNav</include>
+				<left>page_margin</left>
+				<top>240</top>
+				<width>page_width</width>
+				<height>808</height>
+				<orientation>vertical</orientation>
+				<preloaditems>1</preloaditems>
+				<scrolltime tween="cubic" easing="out">220</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>  <!-- 0.9.8: the Library panel -->
+				<onright>ActivateWindow(1155)</onright>
+				<viewtype label="31372">list</viewtype>
+				<visible>Container.Content(episodes) | Container.Content(seasons)</visible>
+				<itemlayout width="page_width" height="190">
+					<include>Lib_EpisodeRow</include>
+				</itemlayout>
+				<focusedlayout width="page_width" height="190">
+					<include content="Lib_EpisodeRow"><param name="focused" value="true"/></include>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================== window composition -->
+	<include name="VidView_Window">
+		<include>Sen_Background</include>
+		<include>VidView_500_Grid</include>
+		<include>VidView_501_Wall</include>
+		<include>VidView_503_Episodes</include>
+		<include>VidView_505_Page</include>
+		<include>VidView_506_Scenes</include>
+		<include>VidView_509_Rows</include>
+		<include content="View_50_List">
+			<param name="top" value="244"/>
+			<param name="height" value="792"/>
+			<param name="note" value="true"/>
+		</include>
+		<include>VidView_Empty</include>
+		<include>VidView_Header</include>
+		<include>Lib_BackHomeButton</include>
+	</include>
+</includes>

@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	DialogVideoInfo as a paragraph (docs/concepts/mockups/SentenceInfo.dc.html).
+	  P1 (Young Serif 46): what it is, how long, when you'd finish, whether you've seen it, the rating
+	  P2 (Manrope 26): the plot          P3 (Manrope 22): the cast, the rating, your copy in words
+	  then the actions as the end of the paragraph: "You can [play it], [watch the trailer], ..."
+	Every clause is its own variable value with its own condition, so a missing fact drops the clause.
+	Kodi ids (Estuary Omega + CGUIDialogVideoInfo, proven in Majan): 8 play / browse, 9 resume, 11 trailer,
+	50 cast (collections: their films), 6 refresh, 7 user rating, 10 art, 12 fanart, 13 director search,
+	14 versions, 15 extras, 443 collection. Skin ids: 9000/9002 action rows, 9100 "also" row,
+	9013 start again, 9012 browse, 9014 who's in it, 9015 more like this, 9016 whole plot, 9200 plot overlay.
+	Focus: action rows (Left/Right along the sentence, Up/Down between rows) -> Down "also" row -> Down cast.
+-->
+<includes>
+	<!-- ================================================================== expressions -->
+	<expression name="VidInfo_ShowResume">Control.IsEnabled(9) + !$EXP[VidView_IsFolderType]</expression>
+	<expression name="VidInfo_ShowPlay">!Control.IsEnabled(9) + !$EXP[VidView_IsFolderType]</expression>
+	<expression name="VidInfo_ShowTrailer">$EXP[ShowTrailerButton] + !String.IsEmpty(ListItem.Trailer)</expression>
+	<expression name="VidInfo_HasCast">Integer.IsGreater(Container(50).NumItems,0)</expression>
+	<!-- "find more like this" = your own library, same first genre; TMDb suggestions are the second option ("Also") -->
+	<expression name="VidInfo_MoreLike">[String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)] + !String.IsEmpty(ListItem.Genre)</expression>
+	<expression name="VidInfo_TMDbLike">$EXP[HasTMDbHelper] + !String.IsEmpty(ListItem.UniqueID(tmdb)) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]</expression>
+
+	<!-- ================================================================== the paragraph -->
+	<variable name="VidInfo_Crumb">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">About this film</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">About this episode</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">About this show</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">About this season</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">About this collection</value>
+		<value>About this</value>
+	</variable>
+	<variable name="VidInfo_Title">
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="VidInfo_P1">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">[I]$INFO[ListItem.Title][/I] is $VAR[Sen_FilmNoun]$INFO[ListItem.Director, by ,]. $VAR[Lib_Runs]$VAR[Sen_SeenSentence] $VAR[Sen_RatingSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">[I]$INFO[ListItem.Title][/I] is $VAR[Lib_ShowNoun]$INFO[ListItem.Studio, on ,]. $VAR[Lib_ShowProgress] $VAR[Sen_RatingSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">[I]$INFO[ListItem.Label][/I] of $INFO[ListItem.TVShowTitle] has $VAR[PL_TotalEpisodes_Episode]. $VAR[Lib_SeasonProgress]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">[I]“$INFO[ListItem.Title]”[/I] is episode $INFO[ListItem.Episode] of season $INFO[ListItem.Season]$INFO[ListItem.TVShowTitle, of ,]$INFO[ListItem.Premiered,$COMMA first shown on ,]. $VAR[Lib_Runs]$VAR[Sen_SeenSentence]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">[I]$INFO[ListItem.Title][/I] gathers $VAR[PL_Total_Film]. $VAR[Lib_SetProgress]</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">[I]$INFO[ListItem.Title][/I]$INFO[ListItem.Artist, is by ,]$INFO[ListItem.Year, from ,]. $VAR[Lib_Runs]</value>
+		<value>[I]$VAR[VidInfo_Title][/I]$INFO[ListItem.Year, is from ,].</value>
+	</variable>
+	<variable name="VidInfo_Plot">
+		<value condition="!String.IsEmpty(ListItem.Plot)">$INFO[ListItem.Plot]</value>
+		<value condition="!String.IsEmpty(ListItem.PlotOutline)">$INFO[ListItem.PlotOutline]</value>
+	</variable>
+	<!-- "With A, B, C and D. Rated PG-13. Your copy is 720p HEVC with 5.1 Dolby Digital sound." -->
+	<variable name="VidInfo_P3">
+		<value condition="String.IsEqual(ListItem.DBType,set) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,tvshow)">$VAR[VidInfo_With]$VAR[VidInfo_Rated]</value>
+		<value>$VAR[VidInfo_With]$VAR[VidInfo_Rated]$VAR[VidInfo_Copy]</value>
+	</variable>
+	<variable name="VidInfo_With">
+		<value condition="String.IsEqual(ListItem.DBType,set)"></value>
+		<value condition="Integer.IsGreater(Container(50).NumItems,3)">With $INFO[Container(50).ListItemAbsolute(0).Label], $INFO[Container(50).ListItemAbsolute(1).Label], $INFO[Container(50).ListItemAbsolute(2).Label] and $INFO[Container(50).ListItemAbsolute(3).Label]. </value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,3)">With $INFO[Container(50).ListItemAbsolute(0).Label], $INFO[Container(50).ListItemAbsolute(1).Label] and $INFO[Container(50).ListItemAbsolute(2).Label]. </value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,2)">With $INFO[Container(50).ListItemAbsolute(0).Label] and $INFO[Container(50).ListItemAbsolute(1).Label]. </value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,1)">With $INFO[Container(50).ListItemAbsolute(0).Label]. </value>
+	</variable>
+	<variable name="VidInfo_Rated">
+		<value condition="!String.IsEmpty(ListItem.MPAA)">$VAR[VidView_MPAA]. </value>
+	</variable>
+	<variable name="VidInfo_Copy">
+		<value condition="!String.IsEmpty(ListItem.VideoResolution) + !String.IsEmpty(ListItem.AudioCodec)">Your copy is $VAR[VidInfo_Res]$VAR[VidInfo_HDR]$VAR[VidInfo_Codec] with $VAR[VidInfo_Channels]$VAR[VidInfo_Audio] sound.</value>
+		<value condition="!String.IsEmpty(ListItem.VideoResolution)">Your copy is $VAR[VidInfo_Res]$VAR[VidInfo_HDR]$VAR[VidInfo_Codec].</value>
+	</variable>
+	<variable name="VidInfo_Res">
+		<value condition="String.IsEqual(ListItem.VideoResolution,8K)">8K</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,4K) | String.IsEqual(ListItem.VideoResolution,2160)">4K</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,1080)">1080p</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,720)">720p</value>
+		<value>standard-definition</value>
+	</variable>
+	<variable name="VidInfo_HDR">
+		<value condition="String.IsEqual(ListItem.HdrType,dolbyvision)"> Dolby Vision</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hdr10)"> HDR10</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hlg)"> HLG</value>
+	</variable>
+	<variable name="VidInfo_Codec">
+		<value condition="String.IsEqual(ListItem.VideoCodec,hevc) | String.IsEqual(ListItem.VideoCodec,h265) | String.IsEqual(ListItem.VideoCodec,hev1) | String.IsEqual(ListItem.VideoCodec,hvc1)"> HEVC</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,h264) | String.IsEqual(ListItem.VideoCodec,avc1) | String.IsEqual(ListItem.VideoCodec,avc)"> H.264</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,av1)"> AV1</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,mpeg2video) | String.IsEqual(ListItem.VideoCodec,mpeg2)"> MPEG-2</value>
+		<value condition="String.IsEqual(ListItem.VideoCodec,vc1) | String.IsEqual(ListItem.VideoCodec,wvc1)"> VC-1</value>
+		<value condition="!String.IsEmpty(ListItem.VideoCodec)"> [UPPERCASE]$INFO[ListItem.VideoCodec][/UPPERCASE]</value>
+	</variable>
+	<variable name="VidInfo_Channels">
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,8)">7.1 </value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,7)">6.1 </value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,6)">5.1 </value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,1)">mono </value>
+	</variable>
+	<variable name="VidInfo_Audio">
+		<value condition="String.IsEqual(ListItem.AudioCodec,truehd_atmos) | String.IsEqual(ListItem.AudioCodec,eac3_ddp_atmos)">Dolby Atmos</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,truehd)">Dolby TrueHD</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,eac3)">Dolby Digital Plus</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,ac3) | String.IsEqual(ListItem.AudioCodec,dolbydigital)">Dolby Digital</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,dtshd_ma_x) | String.IsEqual(ListItem.AudioCodec,dtshd_ma_x_imax)">DTS:X</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,dtshd)">DTS-HD</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,dts) | String.IsEqual(ListItem.AudioCodec,dca)">DTS</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,aac) | String.StartsWith(ListItem.AudioCodec,he_aac)">AAC</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,pcm)">PCM</value>
+		<value condition="String.IsEqual(ListItem.AudioCodec,flac)">FLAC</value>
+		<value condition="String.StartsWith(ListItem.AudioCodec,mp3)">MP3</value>
+		<value condition="Integer.IsEqual(ListItem.AudioChannels,2)">stereo</value>
+		<value>[UPPERCASE]$INFO[ListItem.AudioCodec][/UPPERCASE]</value>
+	</variable>
+	<variable name="VidInfo_Backdrop">
+		<value condition="!String.IsEmpty(ListItem.Art(fanart))">$INFO[ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.fanart))">$INFO[ListItem.Art(tvshow.fanart)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.Art(thumb)]</value>
+		<value>$INFO[ListItem.Art(landscape)]</value>
+	</variable>
+	<variable name="VidInfo_Tagline">
+		<value condition="!String.IsEmpty(ListItem.Tagline)">“$INFO[ListItem.Tagline]”</value>
+	</variable>
+	<variable name="VidInfo_CastHeader">
+		<value condition="String.IsEqual(ListItem.DBType,set)">The films in it</value>
+		<value>Who's in it</value>
+	</variable>
+	<variable name="VidInfo_CastArt">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="VidInfo_CastLine2">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Year]</value>
+		<value condition="!String.IsEmpty(ListItem.Label2)">as $INFO[ListItem.Label2]</value>
+	</variable>
+	<!-- "pick it up where you stopped" only when the row has room: with the trailer phrase too it ran past
+	     the 1300 px row (1475 px) and the grouplist cut the end off -->
+	<variable name="VidInfo_ResumeLabel">
+		<value condition="$EXP[VidInfo_ShowTrailer]">carry on</value>
+		<value>pick it up where you stopped</value>
+	</variable>
+	<variable name="VidInfo_PlayLabel">
+		<value condition="String.IsEqual(ListItem.DBType,episode)">play it</value>
+		<value>play it</value>
+	</variable>
+	<variable name="VidInfo_Hint">
+		<value condition="Control.HasFocus(50)">Up goes back to the paragraph.</value>
+		<value condition="ControlGroup(9100).HasFocus()">Up goes back to the sentence. Down shows who's in it.</value>
+		<value>Left and right move along the sentence. Down for more.</value>
+	</variable>
+
+	<!-- ================================================================== phrases -->
+	<!-- Action phrase (Young Serif 40). params: id, label, onclick, visible, onup, ondown -->
+	<include name="VidInfo_Action">
+		<param name="onclick">noop</param>
+		<param name="visible">true</param>
+		<param name="left">-4</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<label>$PARAM[label]</label>
+				<include>Sen_PhraseTextures</include>
+				<onclick>$PARAM[onclick]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidInfo_Words">
+		<param name="wid">0</param>
+		<param name="left">0</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>$PARAM[left]</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidInfo_Comma">
+		<param name="wid">0</param>
+		<param name="visible">true</param>
+		<param name="mark">,</param>
+		<param name="after">false</param>
+		<definition>
+			<control type="label" id="$PARAM[wid]">
+				<left>-21</left>
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<textcolor>text</textcolor>
+				<label>$PARAM[mark]</label>
+				<visible>[$PARAM[visible]] + ![$PARAM[after]]</visible>
+			</control>
+			<control type="label" id="$PARAM[wid]9">
+				<left>-21</left>  <!-- same advance as unfocused: inside the block, in ink (was -4: the rest of the row jumped) -->
+				<width>auto</width>
+				<height>72</height>
+				<font>serif_40</font>
+				<textcolor>on_lilac</textcolor>
+				<label>$PARAM[mark]</label>
+				<visible>[$PARAM[visible]] + [$PARAM[after]]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- small "also" phrase (Manrope 22 bold) -->
+	<include name="VidInfo_Also">
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>44</height>
+				<font>ui_22_bold</font>
+				<textoffsetx>16</textoffsetx>
+				<texturenofocus border="16,0,16,6" colordiffuse="lilac_half">sentence/phrase_under_s.png</texturenofocus>
+				<include>Sen_PhraseTextures</include>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================== page -->
+	<include name="VidInfo_Backdrop">
+		<control type="image">
+			<left>640</left>
+			<top>0</top>
+			<width>1280</width>
+			<height>1080</height>
+			<aspectratio>scale</aspectratio>
+			<fadetime>300</fadetime>
+			<texture background="true" colordiffuse="ff7a7a7a">$VAR[VidInfo_Backdrop]</texture>
+		</control>
+		<control type="image">
+			<left>640</left>
+			<top>0</top>
+			<width>760</width>
+			<height>1080</height>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="scrim">sentence/ramp_info_left.png</texture>
+		</control>
+		<control type="image">
+			<left>640</left>
+			<top>760</top>
+			<width>1280</width>
+			<height>320</height>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="e60f1412">sentence/ramp_bottom.png</texture>
+		</control>
+		<control type="image">
+			<left>640</left>
+			<top>0</top>
+			<width>1280</width>
+			<height>200</height>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="bf0f1412">sentence/ramp_top.png</texture>
+		</control>
+	</include>
+
+	<include name="VidInfo_Article">
+		<!-- invisible probes: NumPages > 1 = the facts need 5+ (9301) / 6 (9302) lines, the credits 3 (9303) -->
+		<control type="textbox" id="9301"><left>page_margin</left><top>150</top><width>900</width><height>288</height><font>serif_46</font><textcolor>00ffffff</textcolor><label>$VAR[VidInfo_P1]</label></control>
+		<control type="textbox" id="9302"><left>page_margin</left><top>150</top><width>900</width><height>352</height><font>serif_46</font><textcolor>00ffffff</textcolor><label>$VAR[VidInfo_P1]</label></control>
+		<control type="textbox" id="9303"><left>page_margin</left><top>150</top><width>820</width><height>85</height><font>ui_22</font><textcolor>00ffffff</textcolor><label>$VAR[VidInfo_P3]</label></control>
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>150</top>
+			<width>page_width</width>  <!-- the Also row needs the full width; the paragraphs keep their own -->
+			<height>880</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup>noop</onup>
+			<ondown condition="$EXP[VidInfo_HasCast]">50</ondown>
+			<control type="textbox">
+				<description>P1: the facts, written out (6 lines max)</description>
+				<width>900</width>
+				<height max="384">auto</height>
+				<font>serif_46</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[VidInfo_P1]</label>
+			</control>
+			<!-- P2: the plot, clamped so the Also row never reaches the hint line (y 1020); "read the whole plot" has it all.
+			     Line counts of P1 / P3 come from the probes 9301-9303 (VidInfo_Probes). -->
+			<control type="textbox">
+				<description>P2: the plot, 4 lines: facts in 4 lines or fewer</description>
+				<top>34</top>
+				<width>820</width>
+				<height max="160">auto</height>
+				<font>body_26</font>
+				<textcolor>body</textcolor>
+				<label>$VAR[VidInfo_Plot]</label>
+				<visible>[!String.IsEmpty(ListItem.Plot) | !String.IsEmpty(ListItem.PlotOutline)] + !Integer.IsGreater(Container(9301).NumPages,1)</visible>
+			</control>
+			<control type="textbox">
+				<description>P2: the plot, 3 lines: facts run to 5 lines</description>
+				<top>34</top>
+				<width>820</width>
+				<height max="120">auto</height>
+				<font>body_26</font>
+				<textcolor>body</textcolor>
+				<label>$VAR[VidInfo_Plot]</label>
+				<visible>[!String.IsEmpty(ListItem.Plot) | !String.IsEmpty(ListItem.PlotOutline)] + Integer.IsGreater(Container(9301).NumPages,1) + !Integer.IsGreater(Container(9302).NumPages,1)</visible>
+			</control>
+			<control type="textbox">
+				<description>P2: the plot, 2 lines: facts run to 6 lines</description>
+				<top>34</top>
+				<width>820</width>
+				<height max="80">auto</height>
+				<font>body_26</font>
+				<textcolor>body</textcolor>
+				<label>$VAR[VidInfo_Plot]</label>
+				<visible>[!String.IsEmpty(ListItem.Plot) | !String.IsEmpty(ListItem.PlotOutline)] + Integer.IsGreater(Container(9302).NumPages,1) + !Integer.IsGreater(Container(9303).NumPages,1)</visible>
+			</control>
+			<control type="textbox">
+				<description>P2: the plot, 1 line: 6 lines of facts and 3 of credits</description>
+				<top>34</top>
+				<width>820</width>
+				<height max="40">auto</height>
+				<font>body_26</font>
+				<textcolor>body</textcolor>
+				<label>$VAR[VidInfo_Plot]</label>
+				<visible>[!String.IsEmpty(ListItem.Plot) | !String.IsEmpty(ListItem.PlotOutline)] + Integer.IsGreater(Container(9302).NumPages,1) + Integer.IsGreater(Container(9303).NumPages,1)</visible>
+			</control>
+			<control type="textbox">
+				<description>P3: credits and your copy, in words (3 lines)</description>
+				<top>22</top>
+				<width>820</width>
+				<height max="102">auto</height>
+				<font>ui_22</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[VidInfo_P3]</label>
+			</control>
+			<!-- the actions, as the end of the paragraph -->
+			<control type="grouplist" id="9000">
+				<top>40</top>
+				<width>1300</width>
+				<height>72</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<itemgap>0</itemgap>
+				<onleft>noop</onleft>
+				<onright>9002</onright>
+				<onup>noop</onup>
+				<ondown>9002</ondown>
+				<include content="VidInfo_Words"><param name="wid" value="22010"/><param name="label" value="You can"/></include>
+				<include content="VidInfo_Action">
+					<param name="id" value="9"/><param name="label" value="$VAR[VidInfo_ResumeLabel]"/><param name="left" value="8"/>
+					<param name="visible" value="$EXP[VidInfo_ShowResume]"/><param name="ondown" value="9002"/>
+				</include>
+				<include content="VidInfo_Comma"><param name="wid" value="22020"/><param name="visible" value="$EXP[VidInfo_ShowResume]"/><param name="after" value="Control.HasFocus(9)"/></include>
+				<include content="VidInfo_Action">
+					<param name="id" value="9013"/><param name="label" value="start again"/><param name="left" value="0"/>
+					<param name="onclick" value="SendClick(8)"/>
+					<param name="visible" value="$EXP[VidInfo_ShowResume]"/><param name="ondown" value="9002"/>
+				</include>
+				<include content="VidInfo_Action">
+					<param name="id" value="8"/><param name="label" value="$VAR[VidInfo_PlayLabel]"/><param name="left" value="8"/>
+					<param name="visible" value="$EXP[VidInfo_ShowPlay]"/><param name="ondown" value="9002"/>
+				</include>
+				<include content="VidInfo_Action">
+					<param name="id" value="9012"/><param name="label" value="look inside"/><param name="left" value="8"/>
+					<param name="onclick" value="SendClick(8)"/>
+					<param name="visible" value="$EXP[VidView_IsFolderType]"/><param name="ondown" value="9002"/>
+				</include>
+				<include content="VidInfo_Comma"><param name="wid" value="22030"/><param name="visible" value="$EXP[VidInfo_ShowTrailer]"/><param name="after" value="Control.HasFocus(9013) | Control.HasFocus(8) | Control.HasFocus(9012)"/></include>
+				<include content="VidInfo_Action">
+					<param name="id" value="11"/><param name="label" value="watch the trailer"/><param name="left" value="0"/>
+					<param name="visible" value="$EXP[VidInfo_ShowTrailer]"/><param name="ondown" value="9002"/>
+				</include>
+				<include content="VidInfo_Comma"><param name="wid" value="22040"/><param name="visible" value="$EXP[VidInfo_HasCast] | $EXP[VidInfo_MoreLike]"/><param name="after" value="Control.HasFocus(11) | [!$EXP[VidInfo_ShowTrailer] + [Control.HasFocus(9013) | Control.HasFocus(8) | Control.HasFocus(9012)]]"/></include>
+				<include content="VidInfo_Comma"><param name="wid" value="22050"/><param name="visible" value="!$EXP[VidInfo_HasCast] + !$EXP[VidInfo_MoreLike]"/><param name="mark" value="."/><param name="after" value="Control.HasFocus(11) | Control.HasFocus(8) | Control.HasFocus(9013) | Control.HasFocus(9012)"/></include>
+			</control>
+			<control type="grouplist" id="9002">
+				<width>1300</width>
+				<height>72</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<itemgap>0</itemgap>
+				<onleft>9000</onleft>
+				<onright>noop</onright>
+				<onup>9000</onup>
+				<ondown>9100</ondown>
+				<visible>$EXP[VidInfo_HasCast] | $EXP[VidInfo_MoreLike]</visible>
+				<include content="VidInfo_Action">
+					<param name="id" value="9014"/><param name="label" value="$VAR[VidInfo_WhoLabel]"/><param name="left" value="-24"/>
+					<param name="onclick" value="SetFocus(50)"/>
+					<param name="visible" value="$EXP[VidInfo_HasCast]"/><param name="onup" value="9000"/><param name="ondown" value="9100"/>
+				</include>
+				<include content="VidInfo_Words"><param name="wid" value="22060"/><param name="label" value="or"/><param name="left" value="8"/><param name="visible" value="$EXP[VidInfo_HasCast] + $EXP[VidInfo_MoreLike]"/></include>
+				<control type="button" id="9015">
+					<left>8</left>
+					<width>auto</width>
+					<height>72</height>
+					<font>serif_40</font>
+					<label>$LOCALIZE[31362]</label>
+					<include>Sen_PhraseTextures</include>
+					<onclick>SetProperty(sentence.liketitle,$ESCINFO[ListItem.Title],home)</onclick>
+					<onclick>Dialog.Close(all,true)</onclick>
+					<onclick>ActivateWindow(Videos,$VAR[VidInfo_LikePath],return)</onclick>
+					<onup>9000</onup>
+					<ondown>9100</ondown>
+					<visible>$EXP[VidInfo_MoreLike]</visible>
+				</control>
+				<include content="VidInfo_Comma"><param name="wid" value="22070"/><param name="mark" value="."/><param name="after" value="Control.HasFocus(9015) | [Control.HasFocus(9014) + !$EXP[VidInfo_MoreLike]]"/></include>
+			</control>
+			<!-- the tagline, right-aligned just above the Also row (audit 2026-10-30). It sat at a fixed y 866, but the
+			     Also row rides up with a short sentence and plot (to ~880 for a film with no art) and ran into it. A group
+			     of height 0 in the flow puts it 70 px above wherever the Also row lands (two lines end 16 px above it). -->
+			<control type="group">
+				<width>page_width</width>
+				<height>0</height>
+				<control type="textbox">
+					<right>0</right>
+					<top>-70</top>
+					<width>560</width>
+					<height>80</height>
+					<align>right</align>
+					<font>serif_28</font>
+					<textcolor>b3edeae0</textcolor>
+					<label>$VAR[VidInfo_Tagline]</label>
+					<visible>!Control.HasFocus(50)</visible>
+				</control>
+			</control>
+			<!-- also: Kodi's own info actions, quietly -->
+			<control type="grouplist" id="9100">
+				<top>26</top>
+				<width>page_width</width>  <!-- 1300 cut a full row (up to 1900 px) mid-word at x 1420 -->
+				<height>44</height>
+				<orientation>horizontal</orientation>
+				<itemgap>10</itemgap>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onup>9002</onup>
+				<ondown condition="$EXP[VidInfo_HasCast]">50</ondown>
+				<control type="label" id="22901">
+					<width>auto</width>
+					<height>44</height>
+					<font>cap_20</font>
+					<textcolor>muted</textcolor>
+					<label>$LOCALIZE[31363]</label>
+				</control>
+				<include content="VidInfo_Also"><param name="id" value="9016"/><param name="label" value="read the whole plot"/><param name="onclick" value="SetFocus(61)"/><param name="visible" value="!String.IsEmpty(ListItem.Plot)"/></include>
+				<include content="VidInfo_Also">
+					<param name="id" value="443"/><param name="label" value="the collection"/>
+					<param name="onclick" value="Dialog.Close(all,true)"/>
+					<param name="onclick2" value="ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId],return)"/>
+					<param name="visible" value="!String.IsEmpty(ListItem.SetID)"/>
+				</include>
+				<include content="VidInfo_Also"><param name="id" value="9017"/><param name="label" value="TMDb's suggestions"/><param name="onclick" value="$VAR[VidInfo_MoreLikeAction]"/><param name="visible" value="$EXP[VidInfo_TMDbLike]"/></include>
+				<include content="VidInfo_Also"><param name="id" value="13"/><param name="label" value="more by the director"/><param name="visible" value="!String.IsEmpty(ListItem.Director)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="7"/><param name="label" value="rate it$INFO[ListItem.UserRating, (,)]"/><param name="visible" value="Control.IsEnabled(7)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="14"/><param name="label" value="versions"/><param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="15"/><param name="label" value="extras"/><param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="10"/><param name="label" value="choose art"/><param name="visible" value="Control.IsEnabled(10)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="12"/><param name="label" value="choose fanart"/><param name="visible" value="Control.IsEnabled(12)"/></include>
+				<include content="VidInfo_Also"><param name="id" value="6"/><param name="label" value="refresh"/><param name="visible" value="Control.IsEnabled(6)"/></include>
+			</control>
+		</control>
+	</include>
+	<variable name="VidInfo_WhoLabel">
+		<value condition="String.IsEqual(ListItem.DBType,set)">see the films</value>
+		<value>see who's in it</value>
+	</variable>
+	<variable name="VidInfo_GenreStem">
+		<value condition="String.StartsWith(ListItem.Genre,Science)">Science</value>
+		<value condition="String.StartsWith(ListItem.Genre,Sci-Fi)">Sci-Fi</value>
+		<value condition="String.StartsWith(ListItem.Genre,Animation)">Animation</value>
+		<value condition="String.StartsWith(ListItem.Genre,History)">History</value>
+		<value condition="String.StartsWith(ListItem.Genre,Romance)">Romance</value>
+		<value condition="String.StartsWith(ListItem.Genre,Documentary)">Documentary</value>
+		<value condition="String.StartsWith(ListItem.Genre,Action)">Action</value>
+		<value condition="String.StartsWith(ListItem.Genre,Adventure)">Adventure</value>
+		<value condition="String.StartsWith(ListItem.Genre,Comedy)">Comedy</value>
+		<value condition="String.StartsWith(ListItem.Genre,Crime)">Crime</value>
+		<value condition="String.StartsWith(ListItem.Genre,Drama)">Drama</value>
+		<value condition="String.StartsWith(ListItem.Genre,Family)">Family</value>
+		<value condition="String.StartsWith(ListItem.Genre,Fantasy)">Fantasy</value>
+		<value condition="String.StartsWith(ListItem.Genre,Horror)">Horror</value>
+		<value condition="String.StartsWith(ListItem.Genre,Music)">Music</value>
+		<value condition="String.StartsWith(ListItem.Genre,Mystery)">Mystery</value>
+		<value condition="String.StartsWith(ListItem.Genre,Thriller)">Thriller</value>
+		<value condition="String.StartsWith(ListItem.Genre,War)">War</value>
+		<value condition="String.StartsWith(ListItem.Genre,Western)">Western</value>
+	</variable>
+	<variable name="VidInfo_LikePath">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">videodb://tvshows/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22doesnotcontain%22%2C%22value%22%3A%5B%22~like~%22%5D%7D%2C%7B%22field%22%3A%22genre%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22$VAR[VidInfo_GenreStem]%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D</value>
+		<value>videodb://movies/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22doesnotcontain%22%2C%22value%22%3A%5B%22~like~%22%5D%7D%2C%7B%22field%22%3A%22genre%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22$VAR[VidInfo_GenreStem]%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D</value>
+	</variable>
+	<variable name="VidInfo_MoreLikeAction">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">ActivateWindow(Videos,plugin://plugin.video.themoviedb.helper/?info=recommendations&amp;tmdb_type=tv&amp;tmdb_id=$INFO[ListItem.UniqueID(tmdb)],return)</value>
+		<value>ActivateWindow(Videos,plugin://plugin.video.themoviedb.helper/?info=recommendations&amp;tmdb_type=movie&amp;tmdb_id=$INFO[ListItem.UniqueID(tmdb)],return)</value>
+	</variable>
+
+	<include name="VidInfo_TaglineAndHint">
+		<!-- the tagline moved into VidInfo_Article, just above the Also row (audit 2026-10-30) -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>1020</top>
+			<width>1000</width>
+			<height>30</height>
+			<font>ui_20</font>
+			<textcolor>muted</textcolor>
+			<label>$VAR[VidInfo_Hint]</label>
+		</control>
+	</include>
+
+	<!-- Cast (or the films of a collection): page slides up while it has focus -->
+	<include name="VidInfo_CastRow">
+		<control type="group">
+			<left>page_margin</left>
+			<top>1110</top>
+			<width>page_width</width>
+			<height>440</height>
+			<visible>$EXP[VidInfo_HasCast]</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1200</width>
+				<height>56</height>
+				<font>serif_44</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[VidInfo_CastHeader]</label>
+			</control>
+			<control type="list" id="50">
+				<left>-12</left>
+				<top>70</top>
+				<width>1720</width>
+				<height>370</height>
+				<orientation>horizontal</orientation>
+				<preloaditems>1</preloaditems>
+				<scrolltime tween="cubic" easing="out">220</scrolltime>
+				<onup>9100</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback>9000</onback>
+				<itemlayout width="210" height="370">
+					<include>VidInfo_CastItem</include>
+				</itemlayout>
+				<focusedlayout width="210" height="370">
+					<include content="VidInfo_CastItem"><param name="focused" value="true"/></include>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+	<include name="VidInfo_CastItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>12</left>
+				<top>12</top>
+				<width>180</width>
+				<height>270</height>
+				<animation type="Conditional" condition="$PARAM[focused] + Control.HasFocus(50) + !$EXP[ReduceMotion]" reversible="true">
+					<effect type="zoom" start="100" end="106" center="auto" time="200" tween="cubic" easing="out"/>
+				</animation>
+				<include content="Sen_Artwork">
+					<param name="art" value="$VAR[VidInfo_CastArt]"/>
+					<param name="diffuse" value="$VAR[VidInfo_CastDim]"/>
+				</include>
+			</control>
+			<control type="image">
+				<left>12</left>
+				<top>292</top>
+				<width>180</width>
+				<height>3</height>
+				<texture colordiffuse="lilac">sentence/round6.png</texture>
+				<visible>$PARAM[focused] + Control.HasFocus(50)</visible>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>300</top>
+				<width>180</width>
+				<height>28</height>
+				<font>ui_20_bold</font>
+				<textcolor>text</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<top>328</top>
+				<width>180</width>
+				<height>28</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$VAR[VidInfo_CastLine2]</label>
+			</control>
+		</definition>
+	</include>
+	<variable name="VidInfo_CastDim">
+		<value condition="Control.HasFocus(50) + !ListItem.IsSelected">white</value>
+		<value>white</value>
+	</variable>
+
+	<!-- Full plot: shown while scrollbar 61 (inside group 9200) has focus. Back / Left / Right close it. -->
+	<include name="VidInfo_FullPlot">
+		<control type="group" id="9200">
+			<visible allowhiddenfocus="true">ControlGroup(9200).HasFocus()</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="ground">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>360</left>
+				<top>130</top>
+				<width>1200</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>muted</textcolor>
+				<label>$LOCALIZE[31364]</label>
+			</control>
+			<control type="label">
+				<left>360</left>
+				<top>166</top>
+				<width>1200</width>
+				<height>84</height>
+				<font>serif_60</font>
+				<textcolor>text</textcolor>
+				<label>$VAR[VidInfo_Title]</label>
+			</control>
+			<control type="textbox">
+				<left>360</left>
+				<top>290</top>
+				<width>1160</width>
+				<height>680</height>
+				<font>body_26</font>
+				<textcolor>body</textcolor>
+				<pagecontrol>61</pagecontrol>
+				<label>$INFO[ListItem.Plot]</label>
+			</control>
+			<control type="scrollbar" id="61">
+				<left>1556</left>
+				<top>290</top>
+				<width>4</width>
+				<height>680</height>
+				<orientation>vertical</orientation>
+				<showonepage>true</showonepage>
+				<onleft>9016</onleft>
+				<onright>9016</onright>
+				<onback>9016</onback>
+			</control>
+			<control type="label">
+				<left>360</left>
+				<top>996</top>
+				<width>1200</width>
+				<height>30</height>
+				<font>ui_20</font>
+				<textcolor>muted</textcolor>
+				<label>$LOCALIZE[31365]</label>
+			</control>
+		</control>
+	</include>
+</includes>
