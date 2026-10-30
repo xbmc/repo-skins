@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD = the circular scrubber (OrbitOSD.dc.html). Paused, playing, seeking, ff/rw and
+	buffering share the layout; the state line in the ring centre carries the state.
+
+	Id contract (Estuary Omega VideoOSD.xml): 602 play/pause (default), 603 stop (focus when pause is
+	not possible), 600 previous / 607 next (chapter or playlist item); no rewind / forward buttons
+	(Omar: Left/Right seek without the OSD), 87 hidden seek stepper (Left/Right = StepBack /
+	StepForward, frame advance when paused), 70043 info, 70044 bookmarks/chapters, 70046 subtitles,
+	70048 video settings, 70049 audio. Orbit adds 70051 = player process info.
+
+	Focus map: open -> 602. Transport arc 600-602-603-607 (Previous, Play/Pause, Stop, Next;
+	Left/Right, hidden ones are skipped by Kodi's navigation chain); Right from 607 / Down from the
+	arc -> tools row 9300 (Chapters, Audio, Subtitles, Video settings, Info, Player stats); Up from
+	the tools -> 602 (603 when pause is off). Up from the arc -> 87 seek (the chapter track lights
+	up; the ring centre shows the target), Down from 87 -> 602. Back closes the OSD (Kodi default).
+	The OSD hides while a playback dialog is on top ($EXP[OSD_PanelOpen]).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<animation type="WindowOpen" condition="!Skin.HasSetting(orbit.reducemotion)">
+		<effect type="fade" start="0" end="100" time="200" tween="cubic" easing="out"/>
+	</animation>
+	<animation type="WindowOpen" condition="Skin.HasSetting(orbit.reducemotion)">
+		<effect type="fade" start="0" end="100" time="80"/>
+	</animation>
+	<animation type="WindowClose">
+		<effect type="fade" start="100" end="0" time="140" tween="cubic" easing="in"/>
+	</animation>
+	<controls>
+		<!-- fit-to-width probes for the wide titles (Includes_Titles.xml) -->
+		<include content="Fit_OSD_Probes">
+			<param name="label" value="$VAR[OSD_Title]"/>
+		</include>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+
+			<!-- scrims, each with its own fades (LESSONS 4) -->
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="dim_video">common/white.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			</control>
+			<control type="image">
+				<left>-380</left>
+				<top>-300</top>
+				<width>1640</width>
+				<height>1640</height>
+				<texture colordiffuse="scrim">common/radial_osd.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="scrim">common/scrim_right.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			</control>
+
+			<include>Orbit_Clock</include>
+
+			<!-- the ring: dials in from a slight rotation -->
+			<control type="group">
+				<animation type="WindowOpen" condition="!Skin.HasSetting(orbit.reducemotion)">
+					<effect type="rotate" start="-12" end="0" center="440,520" time="320" tween="cubic" easing="out"/>
+					<effect type="zoom" start="94" end="100" center="440,520" time="320" tween="cubic" easing="out"/>
+				</animation>
+				<include>OSDO_Ring</include>
+			</control>
+
+			<!-- ====== seek stepper (invisible; the chapter track lights up while it has focus) -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>Orbit_Hidden</include>
+				<onup>noop</onup>
+				<ondown>602</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+
+			<!-- ====== transport on the bottom arc of the ring (Omar: no seek buttons, Stop next to
+			     Play/Pause). Stations on the ring's circle (centre 440,520, r 338): Previous -30 deg,
+			     Play/Pause -10, Stop +10, Next +30 from 6 o'clock, so the visible gaps are even (43 px)
+			     and Play + Stop stay a centred pair when Previous / Next are hidden. -->
+			<control type="group" id="200">
+				<left>0</left>
+				<top>0</top>
+				<control type="button" id="600">
+					<left>227</left>
+					<top>769</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/prev_f.png</texturefocus>
+					<texturenofocus>btn/r64/prev_n.png</texturenofocus>
+					<onclick>PlayerControl(Previous)</onclick>
+					<onleft>noop</onleft>
+					<onright>602</onright>
+					<onup>87</onup>
+					<ondown>9300</ondown>
+					<visible>$EXP[OSD_HasPrevNext]</visible>
+				</control>
+				<control type="button" id="602">
+					<left>327</left>
+					<top>799</top>
+					<width>108</width>
+					<height>108</height>
+					<label></label>
+					<texturefocus>btn/r84/blank_f.png</texturefocus>
+					<texturenofocus>btn/r84/blank_p.png</texturenofocus>
+					<onclick>PlayerControl(Play)</onclick>
+					<onleft>600</onleft>
+					<onright>603</onright>
+					<onup>87</onup>
+					<ondown>9300</ondown>
+					<visible>Player.PauseEnabled</visible>
+				</control>
+				<control type="button" id="603">
+					<left>455</left>
+					<top>809</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/stop_f.png</texturefocus>
+					<texturenofocus>btn/r64/stop_n.png</texturenofocus>
+					<onclick>PlayerControl(Stop)</onclick>
+					<onleft>602</onleft>
+					<onright>607</onright>
+					<onup>87</onup>
+					<ondown>9300</ondown>
+				</control>
+				<control type="button" id="607">
+					<left>565</left>
+					<top>769</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/next_f.png</texturefocus>
+					<texturenofocus>btn/r64/next_n.png</texturenofocus>
+					<onclick>PlayerControl(Next)</onclick>
+					<onleft>603</onleft>
+					<onright>9300</onright>
+					<onup>87</onup>
+					<ondown>9300</ondown>
+					<visible>$EXP[OSD_HasPrevNext]</visible>
+				</control>
+			</control>
+			<!-- play / pause glyph on the 84px disc (state-dependent, so drawn as an image) -->
+			<control type="image">
+				<left>366</left>
+				<top>838</top>
+				<width>30</width>
+				<height>30</height>
+				<texture colordiffuse="ink">$VAR[OSD_PlayIcon]</texture>
+				<visible>Player.PauseEnabled</visible>
+			</control>
+			<!-- name of the focused control under the arc -->
+			<control type="label">
+				<left>140</left>
+				<top>922</top>
+				<width>600</width>
+				<height>26</height>
+				<align>center</align>
+				<font>label_20</font>
+				<label>$VAR[OSDO_FocusLabel]</label>
+				<visible>!ControlGroup(9300).HasFocus()</visible>
+			</control>
+			<include>OSDO_ChapterTrack</include>
+
+			<!-- ====== now playing panel -->
+			<control type="grouplist">
+				<left>1000</left>
+				<top>292</top>
+				<width>856</width>
+				<height>500</height>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width>856</width>
+					<height>24</height>
+					<font>label_20</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$VAR[OSDO_Kicker]</label>
+				</control>
+				<include content="Fit_OSD">
+					<param name="top" value="16"/>
+					<param name="label" value="$VAR[OSD_Title]"/>
+				</include>
+				<control type="grouplist">
+					<top>14</top>
+					<width>856</width>
+					<height>26</height>
+					<orientation>horizontal</orientation>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width>auto</width>
+						<height>26</height>
+						<font>mono_20</font>
+						<textcolor>text_meta</textcolor>
+						<label>$VAR[OSDO_Year]</label>
+						<visible>!VideoPlayer.Content(episodes)</visible>
+					</control>
+					<control type="label">
+						<width max="840">auto</width>
+						<height>26</height>
+						<font>label_20</font>
+						<textcolor>text_meta</textcolor>
+						<label>$VAR[OSDO_Meta]</label>
+					</control>
+				</control>
+				<control type="image">
+					<top>36</top>
+					<width>856</width>
+					<height>2</height>
+					<texture colordiffuse="line">common/white.png</texture>
+				</control>
+				<control type="grouplist">
+					<top>30</top>
+					<width>856</width>
+					<height>80</height>
+					<orientation>horizontal</orientation>
+					<itemgap>72</itemgap>
+					<include content="OSDO_Readout">
+						<param name="w" value="200"/>
+						<param name="label" value="Chapter"/>
+						<param name="value" value="$INFO[Player.Chapter][COLOR text_dim]$INFO[Player.ChapterCount, / ,][/COLOR]"/>
+						<param name="visible" value="$EXP[OSD_HasChapters]"/>
+					</include>
+					<include content="OSDO_Readout">
+						<param name="w" value="220"/>
+						<param name="label" value="Remaining"/>
+						<param name="value" value="$INFO[Player.TimeRemaining(h:mm:ss)]"/>
+					</include>
+					<include content="OSDO_Readout">
+						<param name="w" value="200"/>
+						<param name="label" value="Progress"/>
+						<param name="value" value="[COLOR accent]$INFO[Player.Progress][/COLOR][COLOR text_dim]%[/COLOR]"/>
+					</include>
+				</control>
+				<control type="grouplist">
+					<top>36</top>
+					<width>856</width>
+					<height>36</height>
+					<orientation>horizontal</orientation>
+					<itemgap>10</itemgap>
+					<include content="Orbit_Chip">
+						<param name="label" value="$VAR[OSD_FlagResolution]"/>
+						<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoResolution)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="$VAR[OSD_FlagHDR]"/>
+						<param name="visible" value="!String.IsEmpty(VideoPlayer.HdrType)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="[UPPERCASE]$VAR[OSD_FlagVideoCodec][/UPPERCASE]"/>
+						<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoCodec)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="[UPPERCASE]$VAR[OSD_AudioCodec][/UPPERCASE]"/>
+						<param name="visible" value="!String.IsEmpty(VideoPlayer.AudioCodec)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="$VAR[OSD_AudioChannels]"/>
+						<param name="visible" value="!String.IsEmpty(VideoPlayer.AudioChannels)"/>
+					</include>
+				</control>
+			</control>
+
+			<!-- ====== tools: round buttons in the right panel -->
+			<control type="label">
+				<left>1000</left>
+				<top>826</top>
+				<width>400</width>
+				<height>24</height>
+				<font>label_20</font>
+				<textcolor>text_dim</textcolor>
+				<label>$LOCALIZE[31256]</label>
+			</control>
+			<control type="grouplist" id="9300">
+				<left>988</left>
+				<top>858</top>
+				<width>880</width>
+				<height>80</height>
+				<orientation>horizontal</orientation>
+				<itemgap>4</itemgap>
+				<onup condition="Player.PauseEnabled">602</onup>
+				<onup>603</onup>
+				<ondown>noop</ondown>
+				<onleft>607</onleft>
+				<onright>noop</onright>
+				<include content="OSDO_Tool">
+					<param name="id" value="70044"/>
+					<param name="icon" value="chapters"/>
+					<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+					<param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/>
+				</include>
+				<include content="OSDO_Tool">
+					<param name="id" value="70049"/>
+					<param name="icon" value="audio"/>
+					<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+				</include>
+				<include content="OSDO_Tool">
+					<param name="id" value="70046"/>
+					<param name="icon" value="subtitles"/>
+					<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+					<param name="visible" value="Player.HasVideo"/>
+				</include>
+				<include content="OSDO_Tool">
+					<param name="id" value="70048"/>
+					<param name="icon" value="sliders"/>
+					<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+					<param name="visible" value="Player.HasVideo"/>
+				</include>
+				<include content="OSDO_Tool">
+					<param name="id" value="70043"/>
+					<param name="icon" value="info"/>
+					<param name="onclick" value="Action(Info,fullscreenvideo)"/>
+				</include>
+				<include content="OSDO_Tool">
+					<param name="id" value="70051"/>
+					<param name="icon" value="pulse"/>
+					<param name="onclick" value="Action(PlayerProcessInfo)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>1000</left>
+				<top>946</top>
+				<width>856</width>
+				<height>26</height>
+				<font>label_20</font>
+				<label>$VAR[OSDO_FocusLabel]</label>
+				<visible>ControlGroup(9300).HasFocus()</visible>
+			</control>
+		</control>
+	</controls>
+</window>

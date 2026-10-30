@@ -1,0 +1,1236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home: the dial (OrbitHome.dc.html). Prefix Home_.
+	Ids
+	  9000 section dial: hidden 5-item wraplist (Movies, TV, Music, Search, Settings), labels drawn by
+	       (0.9.12: Movies / TV / Music / Search can be hidden in Skin settings, HideMenu.*; Settings never)
+	       Arc_HomeDial (Includes_Arc.xml) from Container(9000).ListItem(-2..2).
+	  9300 poster arc list (Movies band / TV next up), 9301 album arc list (Music), 9310 settings arc,
+	  9302 probe: in-progress shows (decides the TV band when the Next-up helper is missing).
+	  0.9.12 custom rows (Includes_CustomRows.xml): arcs 9881-9883 (Arc_HomeCustom) with an info panel each, past the
+	  station arcs: Right off 9300 / 9301 / 9310 -> the first row with items, Right / Left between them, Left from the
+	  first -> the station arc, Back -> the dial. The dial itself never changes.
+	  0.9.18 custom menu items (Includes_CustomMenu.xml, CustomMenu_ListItem): up to three more dial items after Music,
+	  before Search / Settings (static items with <visible>, so an empty slot is not on the dial at all). The dial still
+	  shows five stations of the wraplist, so 8 items don't crowd it; labels are capped (Includes_Arc.xml). A custom item
+	  has no arc: the station panel Home_CustomStation (minimal ring + the add-on's icon as the lens, its name, "Opens <add-on>").
+	  OK or Right opens it (folders with return: Back comes straight to the item on the dial).
+	Window properties: orbit.reload (stamp per Home open, appended to the Next-up plugin path).
+	Library totals come from the Home window properties Kodi core sets (RecentlyAddedJob.cpp):
+	Movies.Count / Movies.UnWatched / TVShows.Count / Episodes.UnWatched / Music.AlbumsCount /
+	Music.ArtistsCount.
+-->
+<includes>
+	<!-- ============================================================== expressions -->
+	<expression name="Home_KindMovies">String.IsEqual(Container(9000).ListItem.Property(kind),movies)</expression>
+	<expression name="Home_KindTV">String.IsEqual(Container(9000).ListItem.Property(kind),tv)</expression>
+	<expression name="Home_KindMusic">String.IsEqual(Container(9000).ListItem.Property(kind),music)</expression>
+	<expression name="Home_KindSearch">String.IsEqual(Container(9000).ListItem.Property(kind),search)</expression>
+	<expression name="Home_KindSettings">String.IsEqual(Container(9000).ListItem.Property(kind),settings)</expression>
+	<!-- 0.9.18: the dial rests on custom menu item n (ListItem.Property(custommenu), CustomMenu_ListItem) -->
+	<expression name="Home_KindCustom">!String.IsEmpty(Container(9000).ListItem.Property(custommenu))</expression>
+	<expression name="Home_Custom1">String.IsEqual(Container(9000).ListItem.Property(custommenu),1)</expression>
+	<expression name="Home_Custom2">String.IsEqual(Container(9000).ListItem.Property(custommenu),2)</expression>
+	<expression name="Home_Custom3">String.IsEqual(Container(9000).ListItem.Property(custommenu),3)</expression>
+	<expression name="Home_CustomArcReady1">Control.HasFocus(9881) + Integer.IsGreater(Container(9881).NumItems,0)</expression>
+	<expression name="Home_CustomArcReady2">Control.HasFocus(9882) + Integer.IsGreater(Container(9882).NumItems,0)</expression>
+	<expression name="Home_CustomArcReady3">Control.HasFocus(9883) + Integer.IsGreater(Container(9883).NumItems,0)</expression>
+	<expression name="Home_HasNextUpHelper">System.AddonIsEnabled(script.embuary.helper)</expression>
+	<expression name="Home_PosterArcReady">[String.IsEqual(Container(9000).ListItem.Property(kind),movies) | String.IsEqual(Container(9000).ListItem.Property(kind),tv)] + Integer.IsGreater(Container(9300).NumItems,0) + !Container(9300).IsUpdating + !$EXP[CustomRowsFocus]</expression>
+	<expression name="Home_AlbumArcReady">String.IsEqual(Container(9000).ListItem.Property(kind),music) + Integer.IsGreater(Container(9301).NumItems,0) + !Container(9301).IsUpdating + !$EXP[CustomRowsFocus]</expression>
+	<!-- the info panel follows the arc that has focus, else the dial's section -->
+	<expression name="Home_ItemIsEpisode">String.IsEqual(Container(9300).ListItem.DBType,episode)</expression>
+	<expression name="Home_ItemIsShow">String.IsEqual(Container(9300).ListItem.DBType,tvshow)</expression>
+
+	<!-- ================================================================ variables -->
+	<!-- Poster arc source. TV when the dial rests on TV, otherwise the Movies band (also while the dial
+	     rests on Music / Search / Settings, where the arc is hidden): an empty path made Kodi log
+	     "GetDirectory - Error getting" on every Home refresh, and Movies <-> Settings no longer reloads. -->
+	<variable name="Home_PathPosters">
+		<value condition="$EXP[Home_KindTV] + $EXP[Home_HasNextUpHelper]">plugin://script.embuary.helper/?info=getnextup&amp;reload=$INFO[Window(Home).Property(orbit.reload)]</value>
+		<value condition="$EXP[Home_KindTV] + Integer.IsGreater(Container(9302).NumItems,0)">special://skin/playlists/orbit_inprogress_tvshows.xsp</value>
+		<value condition="$EXP[Home_KindTV] + !Container(9302).IsUpdating">videodb://recentlyaddedepisodes/</value>
+		<!-- while the in-progress probe is still loading: its own playlist (empty -> NumItems 0 keeps the
+		     arc hidden until the path settles; never the Movies band under a TV kicker) -->
+		<value condition="$EXP[Home_KindTV]">special://skin/playlists/orbit_inprogress_tvshows.xsp</value>
+		<value condition="String.IsEqual(Skin.String(orbit.homemovies),recent)">videodb://recentlyaddedmovies/</value>
+		<value condition="String.IsEqual(Skin.String(orbit.homemovies),inprogress)">special://skin/playlists/orbit_inprogress_movies.xsp</value>
+		<value>special://skin/playlists/orbit_home_toprated.xsp</value>
+	</variable>
+	<!-- always the albums band (hidden away from Music; no empty path, no reload when coming back) -->
+	<variable name="Home_PathAlbums">
+		<value>musicdb://recentlyaddedalbums/</value>
+	</variable>
+	<!-- Kicker over the title: which band the arc is showing -->
+	<variable name="Home_Band">
+		<value condition="$EXP[Home_KindMovies] + String.IsEqual(Skin.String(orbit.homemovies),recent)">Recently added</value>
+		<value condition="$EXP[Home_KindMovies] + String.IsEqual(Skin.String(orbit.homemovies),inprogress)">Continue watching</value>
+		<value condition="$EXP[Home_KindMovies]">Unwatched · rated 7.5+</value>
+		<value condition="$EXP[Home_KindTV] + $EXP[Home_HasNextUpHelper]">Next up</value>
+		<value condition="$EXP[Home_KindTV] + Integer.IsGreater(Container(9302).NumItems,0)">Shows in progress</value>
+		<value condition="$EXP[Home_KindTV]">New episodes</value>
+		<value condition="$EXP[Home_KindMusic]">Recently added albums</value>
+	</variable>
+	<!-- custom row 1: lens item title and meta (episodes: show + code; else year / genre or the add-on's label2) -->
+	<variable name="Home_CustomTitle1">
+		<value condition="String.IsEqual(Container(9881).ListItem.DBType,episode) + !String.IsEmpty(Container(9881).ListItem.TVShowTitle)">$INFO[Container(9881).ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container(9881).ListItem.Title)">$INFO[Container(9881).ListItem.Title]</value>
+		<value>$INFO[Container(9881).ListItem.Label]</value>
+	</variable>
+	<variable name="Home_CustomMeta1">
+		<value condition="String.IsEqual(Container(9881).ListItem.DBType,episode)">$INFO[Container(9881).ListItem.Season,S,]$INFO[Container(9881).ListItem.Episode,E,]$INFO[Container(9881).ListItem.Title, · ,]</value>
+		<value condition="!String.IsEmpty(Container(9881).ListItem.Year)">$INFO[Container(9881).ListItem.Year]$INFO[Container(9881).ListItem.Genre,  ·  ,]</value>
+		<value>$INFO[Container(9881).ListItem.Label2]</value>
+	</variable>
+	<!-- custom row 2: lens item title and meta (episodes: show + code; else year / genre or the add-on's label2) -->
+	<variable name="Home_CustomTitle2">
+		<value condition="String.IsEqual(Container(9882).ListItem.DBType,episode) + !String.IsEmpty(Container(9882).ListItem.TVShowTitle)">$INFO[Container(9882).ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container(9882).ListItem.Title)">$INFO[Container(9882).ListItem.Title]</value>
+		<value>$INFO[Container(9882).ListItem.Label]</value>
+	</variable>
+	<variable name="Home_CustomMeta2">
+		<value condition="String.IsEqual(Container(9882).ListItem.DBType,episode)">$INFO[Container(9882).ListItem.Season,S,]$INFO[Container(9882).ListItem.Episode,E,]$INFO[Container(9882).ListItem.Title, · ,]</value>
+		<value condition="!String.IsEmpty(Container(9882).ListItem.Year)">$INFO[Container(9882).ListItem.Year]$INFO[Container(9882).ListItem.Genre,  ·  ,]</value>
+		<value>$INFO[Container(9882).ListItem.Label2]</value>
+	</variable>
+	<!-- custom row 3: lens item title and meta (episodes: show + code; else year / genre or the add-on's label2) -->
+	<variable name="Home_CustomTitle3">
+		<value condition="String.IsEqual(Container(9883).ListItem.DBType,episode) + !String.IsEmpty(Container(9883).ListItem.TVShowTitle)">$INFO[Container(9883).ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container(9883).ListItem.Title)">$INFO[Container(9883).ListItem.Title]</value>
+		<value>$INFO[Container(9883).ListItem.Label]</value>
+	</variable>
+	<variable name="Home_CustomMeta3">
+		<value condition="String.IsEqual(Container(9883).ListItem.DBType,episode)">$INFO[Container(9883).ListItem.Season,S,]$INFO[Container(9883).ListItem.Episode,E,]$INFO[Container(9883).ListItem.Title, · ,]</value>
+		<value condition="!String.IsEmpty(Container(9883).ListItem.Year)">$INFO[Container(9883).ListItem.Year]$INFO[Container(9883).ListItem.Genre,  ·  ,]</value>
+		<value>$INFO[Container(9883).ListItem.Label2]</value>
+	</variable>
+	<!-- Ring centre readout per section -->
+	<!-- custom rows (0.9.12): Right off the last arc you were on goes on to them, Left comes back -->
+	<variable name="Home_RightToCustom">
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+	</variable>
+	<variable name="Home_LeftFromCustom">
+		<value condition="[$EXP[Home_KindMovies] | $EXP[Home_KindTV]] + Integer.IsGreater(Container(9300).NumItems,0)">SetFocus(9300)</value>
+		<value condition="$EXP[Home_KindMusic] + Integer.IsGreater(Container(9301).NumItems,0)">SetFocus(9301)</value>
+		<value condition="$EXP[Home_KindSettings]">SetFocus(9310)</value>
+		<value>SetFocus(9000)</value>
+	</variable>
+	<!-- under the count while a custom row has focus: the row's name -->
+	<variable name="Home_CustomSub">
+		<value condition="Control.HasFocus(9881)">$VAR[CustomRow_Title1]</value>
+		<value condition="Control.HasFocus(9882)">$VAR[CustomRow_Title2]</value>
+		<value condition="Control.HasFocus(9883)">$VAR[CustomRow_Title3]</value>
+	</variable>
+	<!-- the next custom row, named at the foot of the arc ("Popular TV  ›") -->
+	<variable name="Home_CustomNext">
+		<value condition="[Control.HasFocus(9300) | Control.HasFocus(9301) | Control.HasFocus(9310)] + $EXP[CustomRow1On]">$VAR[CustomRow_Title1]  ›</value>
+		<value condition="[Control.HasFocus(9300) | Control.HasFocus(9301) | Control.HasFocus(9310)] + $EXP[CustomRow2On]">$VAR[CustomRow_Title2]  ›</value>
+		<value condition="Control.HasFocus(9881) + $EXP[CustomRow2On]">$VAR[CustomRow_Title2]  ›</value>
+		<value condition="[Control.HasFocus(9300) | Control.HasFocus(9301) | Control.HasFocus(9310) | Control.HasFocus(9881) | Control.HasFocus(9882)] + $EXP[CustomRow3On]">$VAR[CustomRow_Title3]  ›</value>
+	</variable>
+	<variable name="Home_DialCount">
+		<value condition="Control.HasFocus(9881)">$INFO[Container(9881).NumItems]</value>
+		<value condition="Control.HasFocus(9882)">$INFO[Container(9882).NumItems]</value>
+		<value condition="Control.HasFocus(9883)">$INFO[Container(9883).NumItems]</value>
+		<value condition="$EXP[Home_KindMovies]">$INFO[Window(Home).Property(Movies.Count)]</value>
+		<value condition="$EXP[Home_KindTV]">$INFO[Window(Home).Property(TVShows.Count)]</value>
+		<value condition="$EXP[Home_KindMusic]">$INFO[Window(Home).Property(Music.AlbumsCount)]</value>
+	</variable>
+	<variable name="Home_DialUnit">
+		<value condition="$EXP[CustomRowsFocus]">$LOCALIZE[31954]</value>
+		<value condition="$EXP[Home_KindMovies]">Films</value>
+		<value condition="$EXP[Home_KindTV]">Shows</value>
+		<value condition="$EXP[Home_KindMusic]">Albums</value>
+		<value condition="$EXP[Home_KindSearch]">Search</value>
+		<value condition="$EXP[Home_KindSettings]">System</value>
+		<value condition="$EXP[Home_Custom1]">$VAR[CustomMenu_Kind1]</value>
+		<value condition="$EXP[Home_Custom2]">$VAR[CustomMenu_Kind2]</value>
+		<value condition="$EXP[Home_Custom3]">$VAR[CustomMenu_Kind3]</value>
+	</variable>
+	<!-- 0.9.18: engraved glyph of the custom item the dial rests on: add-on, else a library / folder item, else a shortcut -->
+	<variable name="Home_CustomGlyph">
+		<value condition="[$EXP[Home_Custom1] + !String.IsEmpty(Skin.String(CustomMenu.1.Addon))] | [$EXP[Home_Custom2] + !String.IsEmpty(Skin.String(CustomMenu.2.Addon))] | [$EXP[Home_Custom3] + !String.IsEmpty(Skin.String(CustomMenu.3.Addon))]">icons/addons.png</value>
+		<value condition="[$EXP[Home_Custom1] + !String.IsEmpty(Skin.String(CustomMenu.1.Target))] | [$EXP[Home_Custom2] + !String.IsEmpty(Skin.String(CustomMenu.2.Target))] | [$EXP[Home_Custom3] + !String.IsEmpty(Skin.String(CustomMenu.3.Target))]">icons/folder.png</value>
+		<value>icons/arrow_right.png</value>
+	</variable>
+	<!-- 0.9.18: the custom menu item the dial rests on: its name (the station panel title and its fit probe) -->
+	<variable name="Home_CustomName">
+		<value condition="$EXP[Home_Custom1]">$VAR[CustomMenu_Label1]</value>
+		<value condition="$EXP[Home_Custom2]">$VAR[CustomMenu_Label2]</value>
+		<value condition="$EXP[Home_Custom3]">$VAR[CustomMenu_Label3]</value>
+	</variable>
+	<variable name="Home_DialSub">
+		<value condition="$EXP[CustomRowsFocus]">$VAR[Home_CustomSub]</value>
+		<value condition="$EXP[Home_KindMovies]">$INFO[Window(Home).Property(Movies.UnWatched),, unwatched]</value>
+		<value condition="$EXP[Home_KindTV]">$VAR[PL_Episodes_UnWatched_Episode]</value>
+		<value condition="$EXP[Home_KindMusic]">$VAR[PL_Music_ArtistsCount_Artist]</value>
+		<value condition="$EXP[Home_KindSettings]">$INFO[System.BuildVersionShort,Kodi ,]</value>
+	</variable>
+	<!-- Title / meta for the poster arc lens item -->
+	<!-- what the Fit_Home probes (9711 / 9712, Home.xml) measure: the focused custom row's title, else the poster panel's -->
+	<variable name="Home_FitTitle">
+		<value condition="Control.HasFocus(9881)">$VAR[Home_CustomTitle1]</value>
+		<value condition="Control.HasFocus(9882)">$VAR[Home_CustomTitle2]</value>
+		<value condition="Control.HasFocus(9883)">$VAR[Home_CustomTitle3]</value>
+		<value>$VAR[Home_PosterTitle]</value>
+	</variable>
+	<variable name="Home_PosterTitle">
+		<value condition="$EXP[Home_ItemIsEpisode]">$INFO[Container(9300).ListItem.TVShowTitle]</value>
+		<value>$INFO[Container(9300).ListItem.Title]</value>
+	</variable>
+	<variable name="Home_PosterMPAA">
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated R)">R</value>
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated PG-13)">PG-13</value>
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated PG)">PG</value>
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated G)">G</value>
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated NR)">NR</value>
+		<value condition="String.IsEqual(Container(9300).ListItem.MPAA,Rated NC-17)">NC-17</value>
+		<value>$INFO[Container(9300).ListItem.MPAA]</value>
+	</variable>
+	<variable name="Home_PosterMeta">
+		<value condition="$EXP[Home_ItemIsEpisode]">$INFO[Container(9300).ListItem.Season,S,]$INFO[Container(9300).ListItem.Episode,E,]$INFO[Container(9300).ListItem.Title, · ,]</value>
+		<value>$INFO[Container(9300).ListItem.Genre]</value>
+	</variable>
+	<!-- the meta line as one string, for the fit probe 9718 (Home.xml) -->
+	<expression name="Home_MetaWraps">Integer.IsGreater(Container(9718).NumPages,1) + !$EXP[Home_ItemIsEpisode]</expression>
+	<variable name="Home_MetaProbe">
+		<value condition="!$EXP[Home_ItemIsEpisode] + !String.IsEmpty(Container(9300).ListItem.MPAA)">$INFO[Container(9300).ListItem.Year,,  ·  ]$VAR[Home_PosterMPAA]  ·  $VAR[Home_PosterMeta]</value>
+		<value condition="!$EXP[Home_ItemIsEpisode]">$INFO[Container(9300).ListItem.Year,,  ·  ]$VAR[Home_PosterMeta]</value>
+	</variable>
+	<variable name="Home_MetaYear">
+		<value condition="$EXP[Home_MetaWraps] + String.IsEmpty(Container(9300).ListItem.MPAA)">$INFO[Container(9300).ListItem.Year]</value>
+		<value>$INFO[Container(9300).ListItem.Year,,  ·  ]</value>
+	</variable>
+	<variable name="Home_MetaMPAA">
+		<value condition="$EXP[Home_MetaWraps]">$VAR[Home_PosterMPAA]</value>
+		<value>$VAR[Home_PosterMPAA]  ·  </value>
+	</variable>
+	<variable name="Home_PosterRuntime">
+		<value condition="Integer.IsGreater(Container(9300).ListItem.Duration(h),0)">$INFO[Container(9300).ListItem.Duration(h),,h ]$INFO[Container(9300).ListItem.Duration(m),,m]</value>
+		<value condition="!String.IsEmpty(Container(9300).ListItem.Duration)">$INFO[Container(9300).ListItem.Duration(m),,m]</value>
+	</variable>
+	<variable name="Home_PosterEnds">
+		<value condition="Container(9300).ListItem.IsResumable">$INFO[Container(9300).ListItem.EndTimeResume]</value>
+		<value>$INFO[Container(9300).ListItem.EndTime]</value>
+	</variable>
+	<variable name="Home_PosterLine">
+		<value condition="!String.IsEmpty(Container(9300).ListItem.Tagline)">$INFO[Container(9300).ListItem.Tagline]</value>
+		<value>$INFO[Container(9300).ListItem.Plot]</value>
+	</variable>
+	<variable name="Home_ShowProgressLabel">
+		<value condition="Integer.IsGreater(Container(9300).ListItem.Property(WatchedEpisodes),0)">$INFO[Container(9300).ListItem.Property(WatchedEpisodes)] / $INFO[Container(9300).ListItem.Property(TotalEpisodes)] watched</value>
+		<value>$VAR[PL_Container_9300_TotalEpisodes_Episode]</value>
+	</variable>
+
+	<!-- ================================================================ furniture -->
+	<include name="Home_Furniture">
+		<control type="image">
+			<left>0</left>
+			<top>280</top>
+			<width>470</width>
+			<height>520</height>
+			<texture>rings/home_dial.png</texture>
+		</control>
+		<control type="image">
+			<left>760</left>
+			<top>0</top>
+			<width>1160</width>
+			<height>1080</height>
+			<texture>rings/home_arc.png</texture>
+		</control>
+		<control type="label">
+			<left>64</left>
+			<top>64</top>
+			<width>600</width>
+			<height>24</height>
+			<font>label_20</font>
+			<textcolor>text_secondary</textcolor>
+			<label>$LOCALIZE[31019]</label>
+		</control>
+		<include>Orbit_Clock</include>
+	</include>
+
+	<!-- ================================================================ data lists -->
+	<include name="Home_DataLists">
+		<!-- the dial: Up/Down turns it, Right enters the arc, OK opens the section -->
+		<control type="wraplist" id="9000">
+			<left>200</left>
+			<top>538</top>
+			<width>1</width>
+			<height>5</height>
+			<orientation>vertical</orientation>
+			<focusposition>2</focusposition>
+			<scrolltime>0</scrolltime>
+			<onleft>noop</onleft>
+			<onright condition="$EXP[Home_PosterArcReady]">9300</onright>
+			<onright condition="$EXP[Home_AlbumArcReady]">9301</onright>
+			<onright condition="$EXP[Home_KindSettings]">9310</onright>
+			<onright condition="$EXP[Home_KindSearch]">ActivateWindow(1150)</onright>
+			<!-- 0.9.18: a custom item has no arc: Right opens it, as OK does (and as Right opens Search) -->
+			<onright condition="$EXP[Home_KindCustom]">Action(Select)</onright>
+			<onback>noop</onback>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content>
+				<item>
+					<label>$LOCALIZE[137]</label>
+					<property name="kind">search</property>
+					<visible>!Skin.HasSetting(HideMenu.Search)</visible>
+					<onclick>ActivateWindow(1150)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[5]</label>
+					<property name="kind">settings</property>
+					<onclick>SetFocus(9310)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[342]</label>
+					<label2>$INFO[Window(Home).Property(Movies.Count)]</label2>
+					<property name="kind">movies</property>
+					<visible>!Skin.HasSetting(HideMenu.Movies)</visible>
+					<onclick>ActivateWindow(Videos,videodb://movies/titles/,return)</onclick>
+				</item>
+				<item>
+					<label>TV</label>
+					<label2>$INFO[Window(Home).Property(TVShows.Count)]</label2>
+					<property name="kind">tv</property>
+					<visible>!Skin.HasSetting(HideMenu.TVShows)</visible>
+					<onclick>ActivateWindow(Videos,videodb://tvshows/titles/,return)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[2]</label>
+					<label2>$INFO[Window(Home).Property(Music.AlbumsCount)]</label2>
+					<property name="kind">music</property>
+					<visible>!Skin.HasSetting(HideMenu.Music)</visible>
+					<onclick>ActivateWindow(Music,musicdb://albums/,return)</onclick>
+				</item>
+				<!-- 0.9.18 custom menu items 1-3 (only set ones exist; wrap order: Music, these, Search, Settings) -->
+				<include content="CustomMenu_ListItem"><param name="item" value="1"/></include>
+				<include content="CustomMenu_ListItem"><param name="item" value="2"/></include>
+				<include content="CustomMenu_ListItem"><param name="item" value="3"/></include>
+			</content>
+		</control>
+		<!-- custom row 1: the arc's focus-owning list (always processed: a hidden list never loads) -->
+		<control type="wraplist" id="9881">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft>$VAR[Home_LeftFromCustom]</onleft>
+			<onright condition="$EXP[CustomRow2On]">9882</onright>
+			<onright condition="$EXP[CustomRow3On]">9883</onright>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<include content="CustomRow_Content"><param name="row" value="1"/></include>
+		</control>
+		<!-- custom row 2: the arc's focus-owning list (always processed: a hidden list never loads) -->
+		<control type="wraplist" id="9882">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft condition="$EXP[CustomRow1On]">9881</onleft>
+			<onleft>$VAR[Home_LeftFromCustom]</onleft>
+			<onright condition="$EXP[CustomRow3On]">9883</onright>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<include content="CustomRow_Content"><param name="row" value="2"/></include>
+		</control>
+		<!-- custom row 3: the arc's focus-owning list (always processed: a hidden list never loads) -->
+		<control type="wraplist" id="9883">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft condition="$EXP[CustomRow2On]">9882</onleft>
+			<onleft condition="$EXP[CustomRow1On]">9881</onleft>
+			<onleft>$VAR[Home_LeftFromCustom]</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<include content="CustomRow_Content"><param name="row" value="3"/></include>
+		</control>
+
+		<!-- poster arc (Movies band, TV next up) -->
+		<control type="wraplist" id="9300">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft>9000</onleft>
+			<onright condition="$EXP[CustomRowsAnyOn]">$VAR[Home_RightToCustom]</onright>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="videos">$VAR[Home_PathPosters]</content>
+		</control>
+		<!-- album arc (Music) -->
+		<control type="wraplist" id="9301">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenListSquare</include>
+			<onleft>9000</onleft>
+			<onright condition="$EXP[CustomRowsAnyOn]">$VAR[Home_RightToCustom]</onright>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="music">$VAR[Home_PathAlbums]</content>
+		</control>
+		<!-- settings stations -->
+		<control type="wraplist" id="9310">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenListIcon</include>
+			<onleft>9000</onleft>
+			<onright condition="$EXP[CustomRowsAnyOn]">$VAR[Home_RightToCustom]</onright>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content>
+				<item>
+					<label>$LOCALIZE[31021]</label>
+					<label2>$LOCALIZE[31227]</label2>
+					<icon>icons/knob.png</icon>
+					<onclick>ActivateWindow(skinsettings)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[5]</label>
+					<label2>$LOCALIZE[31228]</label2>
+					<icon>icons/sliders.png</icon>
+					<onclick>ActivateWindow(settings)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[24001]</label>
+					<label2>$LOCALIZE[31229]</label2>
+					<icon>icons/addons.png</icon>
+					<onclick>ActivateWindow(addonbrowser)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[1036]</label>
+					<label2>$LOCALIZE[31230]</label2>
+					<icon>icons/star.png</icon>
+					<onclick>ActivateWindow(favouritesbrowser)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[10003]</label>
+					<label2>$LOCALIZE[31231]</label2>
+					<icon>icons/folder.png</icon>
+					<onclick>ActivateWindow(filemanager)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[138]</label>
+					<label2>$LOCALIZE[31232]</label2>
+					<icon>icons/info.png</icon>
+					<onclick>ActivateWindow(systeminfo)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[31022]</label>
+					<label2>$LOCALIZE[31233]</label2>
+					<icon>icons/power.png</icon>
+					<onclick>ActivateWindow(shutdownmenu)</onclick>
+				</item>
+				<!-- 0.9.9: library upkeep (Library panel 1160, orbit.libmode); after Power so the station's
+				     default item (wraplist focus position) stays the same -->
+				<item>
+					<label>$LOCALIZE[31202]</label>
+					<label2>$LOCALIZE[31234]</label2>
+					<icon>icons/refresh.png</icon>
+					<onclick>SetProperty(orbit.libmode,update,home)</onclick>
+					<onclick>ActivateWindow(1160)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[31204]</label>
+					<label2>$LOCALIZE[31235]</label2>
+					<icon>icons/minus.png</icon>
+					<onclick>SetProperty(orbit.libmode,clean,home)</onclick>
+					<onclick>ActivateWindow(1160)</onclick>
+				</item>
+				<!-- 0.9.15: the media browsers (Live TV, Pictures, Files) lived only in the System menu (1151), which nothing
+				     opens; they are stations here now, appended so the station's default item stays the same -->
+				<item>
+					<label>$LOCALIZE[31200]</label>
+					<label2>$LOCALIZE[31958]</label2>
+					<icon>icons/pvr.png</icon>
+					<onclick>ActivateWindow(TVChannels)</onclick>
+					<visible>System.HasPVRAddon</visible>
+				</item>
+				<item>
+					<label>$LOCALIZE[1]</label>
+					<label2>$LOCALIZE[31959]</label2>
+					<icon>icons/pictures.png</icon>
+					<onclick>ActivateWindow(Pictures)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[744]</label>
+					<label2>$LOCALIZE[31960]</label2>
+					<icon>icons/folder.png</icon>
+					<onclick>ActivateWindow(Videos,sources://video/,return)</onclick>
+				</item>
+			</content>
+		</control>
+		<!-- probe: in-progress shows (no art needed: only NumItems is read) -->
+		<control type="list" id="9302">
+			<left>offscreen</left>
+			<top>offscreen</top>
+			<width>1</width>
+			<height>1</height>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content target="videos">special://skin/playlists/orbit_inprogress_tvshows.xsp</content>
+		</control>
+	</include>
+
+	<!-- ================================================================ dial centre -->
+	<!-- mockup: count mono 58, unit label, sub mono 20, centred on the ring centre (x 200) -->
+	<include name="Home_DialReadout">
+		<control type="group">
+			<left>50</left>
+			<top>470</top>
+			<width>300</width>
+			<height>140</height>
+			<animation effect="fade" start="0" end="100" time="200" delay="60" condition="!Container(9000).OnNext + !Container(9000).OnPrevious" reversible="false">Conditional</animation>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>300</width>
+				<height>66</height>
+				<align>center</align>
+				<font>mono_58</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[Home_DialCount]</label>
+			</control>
+			<!-- search / settings: an engraved icon instead of a number -->
+			<control type="image">
+				<left>117</left>
+				<top>0</top>
+				<width>66</width>
+				<height>66</height>
+				<texture colordiffuse="text_primary">icons/search.png</texture>
+				<visible>$EXP[Home_KindSearch]</visible>
+			</control>
+			<control type="image">
+				<left>117</left>
+				<top>0</top>
+				<width>66</width>
+				<height>66</height>
+				<texture colordiffuse="text_primary">icons/knob.png</texture>
+				<visible>$EXP[Home_KindSettings]</visible>
+			</control>
+			<!-- 0.9.18 custom menu item: engraved add-on / folder glyph (the add-on's own icon sits in the station ring) -->
+			<control type="image">
+				<left>117</left>
+				<top>0</top>
+				<width>66</width>
+				<height>66</height>
+				<texture colordiffuse="text_primary">$VAR[Home_CustomGlyph]</texture>
+				<visible>$EXP[Home_KindCustom]</visible>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>68</top>
+				<width>300</width>
+				<height>24</height>
+				<align>center</align>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[Home_DialUnit]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>98</top>
+				<width>300</width>
+				<height>28</height>
+				<align>center</align>
+				<font>mono_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[Home_DialSub]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ arcs -->
+	<include name="Home_ArcReveal">
+		<animation type="Visible" condition="!$EXP[ReduceMotion]">
+			<effect type="fade" start="0" end="100" time="260" tween="cubic" easing="out"/>
+			<effect type="slide" start="60,0" end="0,0" time="260" tween="cubic" easing="out"/>
+		</animation>
+		<animation type="Visible" condition="$EXP[ReduceMotion]">
+			<effect type="fade" start="0" end="100" time="80"/>
+		</animation>
+		<animation type="Hidden">
+			<effect type="fade" start="100" end="0" time="100"/>
+		</animation>
+	</include>
+	<include name="Home_Arcs">
+		<control type="group">
+			<visible>$EXP[Home_PosterArcReady]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_HomePosters">
+				<param name="id" value="9300"/>
+			</include>
+		</control>
+		<control type="group">
+			<visible>$EXP[Home_AlbumArcReady]</visible>
+			<include>Home_ArcReveal</include>
+			<!-- record dial: the lens album's record peeks out of the right of its sleeve -->
+			<control type="group">
+				<left>1010</left>
+				<top>400</top>
+				<width>280</width>
+				<height>280</height>
+				<animation effect="slide" start="-110,0" end="0,0" time="320" delay="120" tween="cubic" easing="out" condition="[!Container(9301).OnNext + !Container(9301).OnPrevious] + !Skin.HasSetting(orbit.reducemotion)" reversible="false">Conditional</animation>
+				<animation effect="slide" start="-110,0" end="0,0" time="0" delay="0" tween="cubic" easing="out" condition="[!Container(9301).OnNext + !Container(9301).OnPrevious] + Skin.HasSetting(orbit.reducemotion)" reversible="false">Conditional</animation>
+				<control type="image">
+					<left>45</left>
+					<top>45</top>
+					<width>190</width>
+					<height>190</height>
+					<texture background="true" diffuse="masks/circle.png">$INFO[Container(9301).ListItem.Art(thumb)]</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>280</width>
+					<height>280</height>
+					<texture>music/vinyl.png</texture>
+				</control>
+				<control type="image">
+					<left>128</left>
+					<top>128</top>
+					<width>24</width>
+					<height>24</height>
+					<texture>music/spindle.png</texture>
+				</control>
+			</control>
+			<include content="Arc_HomeSquares">
+				<param name="id" value="9301"/>
+			</include>
+		</control>
+		<control type="group">
+			<visible>$EXP[Home_KindSettings] + !$EXP[CustomRowsFocus]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_HomeIcons">
+				<param name="id" value="9310"/>
+			</include>
+		</control>
+		<control type="group">
+			<visible>$EXP[Home_CustomArcReady1]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_HomeCustom">
+				<param name="id" value="9881"/>
+			</include>
+		</control>
+		<control type="group">
+			<visible>$EXP[Home_CustomArcReady2]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_HomeCustom">
+				<param name="id" value="9882"/>
+			</include>
+		</control>
+		<control type="group">
+			<visible>$EXP[Home_CustomArcReady3]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_HomeCustom">
+				<param name="id" value="9883"/>
+			</include>
+		</control>
+		<!-- loading / empty band -->
+		<control type="label">
+			<left>860</left>
+			<top>520</top>
+			<width>300</width>
+			<height>40</height>
+			<align>center</align>
+			<font>label_20</font>
+			<textcolor>text_dim</textcolor>
+			<label>$LOCALIZE[31013]</label>
+			<visible>[[$EXP[Home_KindMovies] | $EXP[Home_KindTV]] + Container(9300).IsUpdating] | [$EXP[Home_KindMusic] + Container(9301).IsUpdating]</visible>
+		</control>
+		<control type="label">
+			<left>820</left>
+			<top>520</top>
+			<width>380</width>
+			<height>40</height>
+			<align>center</align>
+			<font>label_20</font>
+			<textcolor>text_dim</textcolor>
+			<label>$LOCALIZE[31012]</label>
+			<visible>[[$EXP[Home_KindMovies] | $EXP[Home_KindTV]] + !Container(9300).IsUpdating + Integer.IsEqual(Container(9300).NumItems,0)] | [$EXP[Home_KindMusic] + !Container(9301).IsUpdating + Integer.IsEqual(Container(9301).NumItems,0)]</visible>
+		</control>
+		<!-- 0.9.12: the next custom row (Right) -->
+		<control type="label">
+			<left>1290</left>
+			<top>1000</top>
+			<width>566</width>
+			<height>26</height>
+			<align>right</align>
+			<font>label_20</font>
+			<textcolor>text_dim</textcolor>
+			<label>$VAR[Home_CustomNext]</label>
+		</control>
+	</include>
+
+	<!-- ================================================================ info panels -->
+	<!-- Kicker: band name + mono position "005 / 209" -->
+	<include name="Home_Kicker">
+		<param name="list">9300</param>
+		<param name="label">$VAR[Home_Band]</param>
+		<definition>
+			<control type="grouplist">
+				<height>24</height>
+				<width>566</width>
+				<orientation>horizontal</orientation>
+				<itemgap>22</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="400">auto</width>
+					<height>24</height>
+					<font>label_20</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>24</height>
+					<font>mono_20</font>
+					<textcolor>text_primary</textcolor>
+					<label>$INFO[Container($PARAM[list]).CurrentItem]</label>
+				</control>
+				<control type="label">
+					<left>-14</left>
+					<width>auto</width>
+					<height>24</height>
+					<font>mono_20</font>
+					<textcolor>text_dim</textcolor>
+					<label>$INFO[Container($PARAM[list]).NumItems,/ ,]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="Home_InfoPanels">
+		<!-- Movies / TV -->
+		<control type="grouplist">
+			<left>1290</left>
+			<top>230</top>
+			<width>566</width>
+			<height>800</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_PosterArcReady]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9300"/>
+			</include>
+			<include content="Fit_Home">
+				<param name="top" value="22"/>
+				<param name="label" value="$VAR[Home_PosterTitle]"/>
+			</include>
+			<!-- meta: year (mono) + certification / genres or episode code (label). When the whole line
+			     does not fit in 566 (probe 9718 in Home.xml), the genres move to a line of their own
+			     instead of being clipped ("DRAMA / ROMANCE / FANTA"). -->
+			<control type="grouplist">
+				<top>12</top>
+				<width>566</width>
+				<height>26</height>
+				<orientation>horizontal</orientation>
+				<itemgap>0</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width>auto</width>
+					<height>26</height>
+					<font>mono_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$VAR[Home_MetaYear]</label>
+					<visible>!$EXP[Home_ItemIsEpisode]</visible>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>26</height>
+					<font>label_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$VAR[Home_MetaMPAA]</label>
+					<visible>!$EXP[Home_ItemIsEpisode] + !String.IsEmpty(Container(9300).ListItem.MPAA)</visible>
+				</control>
+				<control type="label">
+					<width max="560">auto</width>
+					<height>26</height>
+					<font>label_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$VAR[Home_PosterMeta]</label>
+					<visible>!$EXP[Home_MetaWraps]</visible>
+				</control>
+			</control>
+			<control type="label">
+				<top>6</top>
+				<width>566</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[Home_PosterMeta]</label>
+				<visible>$EXP[Home_MetaWraps]</visible>
+			</control>
+			<!-- instruments -->
+			<control type="group">
+				<top>44</top>
+				<width>566</width>
+				<height>230</height>
+				<!-- rating -->
+				<control type="group">
+					<left>0</left>
+					<top>0</top>
+					<width>180</width>
+					<height>220</height>
+					<include content="Orbit_GaugeRating">
+						<param name="S" value="180"/>
+						<param name="rating" value="Container(9300).ListItem.Rating"/>
+						<param name="value_font" value="mono_40"/>
+					</include>
+					<control type="label">
+						<left>0</left>
+						<top>194</top>
+						<width>180</width>
+						<height>24</height>
+						<align>center</align>
+						<font>label_20</font>
+						<textcolor>text_secondary</textcolor>
+						<label>$LOCALIZE[563]</label>
+					</control>
+				</control>
+				<!-- runtime clock sector (films, episodes) -->
+				<control type="group">
+					<left>244</left>
+					<top>0</top>
+					<width>180</width>
+					<height>220</height>
+					<visible>Integer.IsGreater(Container(9300).ListItem.Duration(mins),0)</visible>
+					<include content="Orbit_GaugeRuntime">
+						<param name="S" value="180"/>
+						<param name="c" value="90"/>
+						<param name="mins" value="Container(9300).ListItem.Duration(mins)"/>
+					</include>
+					<control type="label">
+						<!-- 460 wide (centre 90): "2h 12m  ·  ends 10:14 PM" on a 12 h region is ~317 px in mono_22 -->
+						<left>-140</left>
+						<top>192</top>
+						<width>460</width>
+						<height>28</height>
+						<align>center</align>
+						<font>mono_22</font>
+						<textcolor>text_primary</textcolor>
+						<label>$VAR[Home_PosterRuntime]  ·  ends [COLOR accent]$VAR[Home_PosterEnds][/COLOR]</label>
+					</control>
+				</control>
+				<!-- show progress (in-progress shows band) -->
+				<control type="group">
+					<left>244</left>
+					<top>0</top>
+					<width>180</width>
+					<height>220</height>
+					<visible>$EXP[Home_ItemIsShow]</visible>
+					<include content="Orbit_GaugeProgress">
+						<param name="S" value="180"/>
+						<param name="info" value="Container(9300).ListItem.Property(WatchedEpisodePercent)"/>
+						<param name="value_font" value="mono_34"/>
+						<param name="value" value="$INFO[Container(9300).ListItem.Property(WatchedEpisodePercent),,[COLOR text_dim]%[/COLOR]]"/>
+					</include>
+					<control type="label">
+						<left>-60</left>
+						<top>192</top>
+						<width>300</width>
+						<height>28</height>
+						<align>center</align>
+						<font>mono_22</font>
+						<textcolor>text_primary</textcolor>
+						<label>$VAR[Home_ShowProgressLabel]</label>
+					</control>
+				</control>
+			</control>
+			<control type="textbox">
+				<top>26</top>
+				<width>566</width>
+				<height max="76">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[Home_PosterLine]</label>
+			</control>
+		</control>
+
+		<!-- Music -->
+		<control type="grouplist">
+			<left>1340</left>
+			<top>300</top>
+			<width>516</width>
+			<height>700</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_AlbumArcReady]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9301"/>
+			</include>
+			<include content="Fit_HomeMusic">
+				<param name="top" value="22"/>
+				<param name="label" value="$INFO[Container(9301).ListItem.Label]"/>
+			</include>
+			<control type="label">
+				<top>14</top>
+				<width>516</width>
+				<height>40</height>
+				<font>text_30_med</font>
+				<textcolor>text_primary</textcolor>
+				<label>$INFO[Container(9301).ListItem.Artist]</label>
+			</control>
+			<control type="grouplist">
+				<top>8</top>
+				<width>516</width>
+				<height>26</height>
+				<orientation>horizontal</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width>auto</width>
+					<height>26</height>
+					<font>mono_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$INFO[Container(9301).ListItem.Year,,  ·  ]</label>
+				</control>
+				<control type="label">
+					<width max="500">auto</width>
+					<height>26</height>
+					<font>label_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$INFO[Container(9301).ListItem.Genre]</label>
+				</control>
+			</control>
+			<control type="label">
+				<top>40</top>
+				<width>516</width>
+				<height>28</height>
+				<font>label_20</font>
+				<textcolor>text_dim</textcolor>
+				<label>$LOCALIZE[31236]</label>
+				<visible>Control.HasFocus(9301)</visible>
+			</control>
+		</control>
+
+		<!-- Settings -->
+		<control type="grouplist">
+			<left>1340</left>
+			<top>420</top>
+			<width>516</width>
+			<height>400</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_KindSettings] + !$EXP[CustomRowsFocus]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9310"/>
+				<param name="label" value="$LOCALIZE[31020]"/>
+			</include>
+			<include content="Fit_HomeStation">
+				<param name="top" value="22"/>
+				<param name="label" value="$INFO[Container(9310).ListItem.Label]"/>
+			</include>
+			<control type="textbox">
+				<top>18</top>
+				<width>516</width>
+				<height max="76">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Container(9310).ListItem.Label2]</label>
+			</control>
+		</control>
+		<!-- custom row 1 -->
+		<control type="grouplist">
+			<left>1290</left>
+			<top>300</top>
+			<width>566</width>
+			<height>700</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_CustomArcReady1]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9881"/>
+				<param name="label" value="$VAR[CustomRow_Title1]"/>
+			</include>
+			<!-- fitted like the poster panel's title (probes 9711 / 9712 read Home_FitTitle, which follows the focused custom row) -->
+			<include content="Fit_Home">
+				<param name="top" value="22"/>
+				<param name="label" value="$VAR[Home_CustomTitle1]"/>
+			</include>
+			<control type="label">
+				<top>12</top>
+				<width>566</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[Home_CustomMeta1]</label>
+			</control>
+			<control type="textbox">
+				<top>26</top>
+				<width>566</width>
+				<height max="114">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Container(9881).ListItem.Plot]</label>
+			</control>
+		</control>
+		<!-- custom row 2 -->
+		<control type="grouplist">
+			<left>1290</left>
+			<top>300</top>
+			<width>566</width>
+			<height>700</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_CustomArcReady2]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9882"/>
+				<param name="label" value="$VAR[CustomRow_Title2]"/>
+			</include>
+			<!-- fitted like the poster panel's title (probes 9711 / 9712 read Home_FitTitle, which follows the focused custom row) -->
+			<include content="Fit_Home">
+				<param name="top" value="22"/>
+				<param name="label" value="$VAR[Home_CustomTitle2]"/>
+			</include>
+			<control type="label">
+				<top>12</top>
+				<width>566</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[Home_CustomMeta2]</label>
+			</control>
+			<control type="textbox">
+				<top>26</top>
+				<width>566</width>
+				<height max="114">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Container(9882).ListItem.Plot]</label>
+			</control>
+		</control>
+		<!-- custom row 3 -->
+		<control type="grouplist">
+			<left>1290</left>
+			<top>300</top>
+			<width>566</width>
+			<height>700</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$EXP[Home_CustomArcReady3]</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="9883"/>
+				<param name="label" value="$VAR[CustomRow_Title3]"/>
+			</include>
+			<!-- fitted like the poster panel's title (probes 9711 / 9712 read Home_FitTitle, which follows the focused custom row) -->
+			<include content="Fit_Home">
+				<param name="top" value="22"/>
+				<param name="label" value="$VAR[Home_CustomTitle3]"/>
+			</include>
+			<control type="label">
+				<top>12</top>
+				<width>566</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[Home_CustomMeta3]</label>
+			</control>
+			<control type="textbox">
+				<top>26</top>
+				<width>566</width>
+				<height max="114">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Container(9883).ListItem.Plot]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ search station -->
+	<include name="Home_SearchStation">
+		<control type="group">
+			<visible>$EXP[Home_KindSearch]</visible>
+			<include>Home_ArcReveal</include>
+			<control type="image">
+				<left>830</left>
+				<top>370</top>
+				<width>340</width>
+				<height>340</height>
+				<texture>rings/dial_clock_260.png</texture>
+				<visible>!$EXP[RingMinimal]</visible>
+			</control>
+			<control type="image">
+				<left>830</left>
+				<top>370</top>
+				<width>340</width>
+				<height>340</height>
+				<texture>rings/dial_min_260.png</texture>
+				<visible>$EXP[RingMinimal]</visible>
+			</control>
+			<control type="image">
+				<left>952</left>
+				<top>492</top>
+				<width>96</width>
+				<height>96</height>
+				<texture colordiffuse="accent">icons/search.png</texture>
+			</control>
+			<control type="grouplist">
+				<left>1290</left>
+				<top>420</top>
+				<width>566</width>
+				<height>400</height>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width>566</width>
+					<height>24</height>
+					<font>label_20</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$LOCALIZE[31237]</label>
+				</control>
+				<control type="label">
+					<top>22</top>
+					<width>566</width>
+					<height>66</height>
+					<font>wide_56</font>
+					<textcolor>text_primary</textcolor>
+					<label>$LOCALIZE[137]</label>
+				</control>
+				<control type="textbox">
+					<top>18</top>
+					<width>566</width>
+					<height>76</height>
+					<font>text_26</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$LOCALIZE[31238]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ custom menu item station (0.9.18) -->
+	<!-- A custom item has no arc: the Search station's layout (minimal dial ring at 830,370 + text column at 1290) with the
+	     add-on's own icon as the round lens, else the engraved glyph in amber; kicker = what it is, the name fitted
+	     (56 / 44), "Opens <add-on>", "OK to open". Param n = the slot. -->
+	<include name="Home_CustomStation">
+		<definition>
+			<control type="group">
+				<visible>$EXP[Home_Custom$PARAM[n]]</visible>
+				<include>Home_ArcReveal</include>
+				<!-- the minimal ring always: the clock numerals would peek round the add-on's icon -->
+				<control type="image">
+					<left>830</left>
+					<top>370</top>
+					<width>340</width>
+					<height>340</height>
+					<texture>rings/dial_min_260.png</texture>
+				</control>
+				<control type="image">
+					<left>900</left>
+					<top>440</top>
+					<width>200</width>
+					<height>200</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<fadetime>200</fadetime>
+					<texture diffuse="masks/circle.png">$VAR[CustomMenu_Icon$PARAM[n]]</texture>
+					<visible>$EXP[CustomMenu$PARAM[n]HasIcon]</visible>
+				</control>
+				<control type="image">
+					<left>952</left>
+					<top>492</top>
+					<width>96</width>
+					<height>96</height>
+					<texture colordiffuse="accent">$VAR[Home_CustomGlyph]</texture>
+					<visible>!$EXP[CustomMenu$PARAM[n]HasIcon]</visible>
+				</control>
+				<control type="grouplist">
+					<left>1290</left>
+					<top>420</top>
+					<width>566</width>
+					<height>400</height>
+					<orientation>vertical</orientation>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="label">
+						<width>566</width>
+						<height>24</height>
+						<font>label_20</font>
+						<textcolor>text_secondary</textcolor>
+						<label>$VAR[CustomMenu_Kind$PARAM[n]]</label>
+					</control>
+					<include content="Fit_HomeCustom">
+						<param name="top" value="22"/>
+						<param name="label" value="$VAR[CustomMenu_Label$PARAM[n]]"/>
+					</include>
+					<control type="label">
+						<top>18</top>
+						<width>566</width>
+						<height>34</height>
+						<font>text_26</font>
+						<textcolor>text_secondary</textcolor>
+						<label>$VAR[CustomMenu_Opens$PARAM[n]]</label>
+					</control>
+					<control type="label">
+						<top>6</top>
+						<width>566</width>
+						<height>26</height>
+						<font>label_20</font>
+						<textcolor>text_dim</textcolor>
+						<label>$LOCALIZE[31995]</label>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ now playing -->
+	<!-- While something plays: compact readout under the dial (mono time, title, amber progress) -->
+	<include name="Home_NowPlaying">
+		<control type="group">
+			<left>64</left>
+			<top>900</top>
+			<width>640</width>
+			<height>120</height>
+			<visible>Player.HasMedia</visible>
+			<animation effect="fade" start="0" end="100" time="200">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="140">Hidden</animation>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>640</width>
+				<height>24</height>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31017]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>30</top>
+				<width>640</width>
+				<height>40</height>
+				<font>text_30_med</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[OSDTitle]</label>
+			</control>
+			<control type="progress">
+				<left>0</left>
+				<top>80</top>
+				<width>420</width>
+				<height>3</height>
+				<texturebg colordiffuse="line">common/white.png</texturebg>
+				<midtexture colordiffuse="accent">common/white.png</midtexture>
+				<info>Player.Progress</info>
+			</control>
+			<control type="label">
+				<left>440</left>
+				<top>66</top>
+				<width>200</width>
+				<height>30</height>
+				<font>mono_22</font>
+				<textcolor>text_primary</textcolor>
+				<label>$INFO[Player.Time]</label>
+			</control>
+		</control>
+	</include>
+</includes>

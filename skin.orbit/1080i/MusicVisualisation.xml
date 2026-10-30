@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing (music) = the record dial: the playing album's record turns slowly inside the amber
+	scrubber ring (OrbitOSD geometry, centre 440,520), track readouts on the right. MusicOSD.xml adds
+	the transport on the ring's bottom arc and the tools row.
+
+	Kodi id contract (Estuary Omega MusicVisualisation.xml / GUIWindowVisualisation.cpp):
+	  2 = visualisation control (only when a visualisation add-on is enabled; then the record dial
+	  steps back and the visualisation fills the screen, info shows on Info / OSD).
+	No focusable controls (Kodi routes OK / Menu to MusicOSD, Back to the previous window).
+	The turning record is the one intended ambient animation (off with Reduce motion).
+-->
+<window>
+	<defaultcontrol></defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<include>Music_PlayerBlurOnload</include>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<!-- fit-to-width probes for the wide titles (Includes_Titles.xml) -->
+		<include content="Fit_NowPlaying_Probes">
+			<param name="label" value="$INFO[MusicPlayer.Title]"/>
+		</include>
+		<include content="Orbit_Background">
+			<param name="ground" value="osd"/>
+		</include>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<visible>Player.HasAudio + Visualisation.Enabled</visible>
+		</control>
+		<include content="Music_StageBackground">
+			<param name="art" value="$VAR[Music_PlayerArt]"/>
+			<param name="visible" value="!Visualisation.Enabled"/>
+			<param name="scrim_left" value="true"/>
+		</include>
+
+		<control type="group">
+			<visible>!Visualisation.Enabled | Player.ShowInfo | Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>-380</left>
+				<top>-300</top>
+				<width>1640</width>
+				<height>1640</height>
+				<texture colordiffuse="scrim">common/radial_osd.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+				<visible>Visualisation.Enabled</visible>
+			</control>
+			<include>Orbit_Clock</include>
+
+			<!-- ====== the record dial -->
+			<control type="image">
+				<left>120</left>
+				<top>200</top>
+				<width>640</width>
+				<height>640</height>
+				<texture>rings/osd_face.png</texture>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<animation effect="rotate" start="0" end="-360" center="440,520" time="36000" loop="true" reversible="false" condition="Player.Playing + !Skin.HasSetting(orbit.reducemotion)">Conditional</animation>
+				<control type="image">
+					<left>300</left>
+					<top>380</top>
+					<width>280</width>
+					<height>280</height>
+					<aspectratio scalediffuse="false">scale</aspectratio>
+					<texture background="true" diffuse="masks/circle.png">$INFO[Player.Art(thumb)]</texture>
+				</control>
+				<control type="image">
+					<left>200</left>
+					<top>280</top>
+					<width>480</width>
+					<height>480</height>
+					<texture>music/vinyl.png</texture>
+				</control>
+			</control>
+			<control type="image">
+				<left>428</left>
+				<top>508</top>
+				<width>24</width>
+				<height>24</height>
+				<texture>music/spindle.png</texture>
+			</control>
+			<control type="image">
+				<left>120</left>
+				<top>200</top>
+				<width>640</width>
+				<height>640</height>
+				<texture fallback="rings/osd/0.png">rings/osd/$INFO[Player.Progress].png</texture>
+			</control>
+			<!-- time under the dial (hidden while the OSD puts its transport there) -->
+			<control type="grouplist">
+				<left>140</left>
+				<top>880</top>
+				<width>600</width>
+				<height>44</height>
+				<orientation>horizontal</orientation>
+				<align>center</align>
+				<itemgap>12</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<visible>!Window.IsVisible(musicosd)</visible>
+				<control type="label">
+					<width>auto</width>
+					<height>44</height>
+					<font>mono_34</font>
+					<label>$INFO[Player.Time]</label>
+				</control>
+				<control type="label">
+					<top>8</top>
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$INFO[Player.Duration,of ,]</label>
+				</control>
+			</control>
+
+			<!-- ====== now playing panel -->
+			<control type="grouplist">
+				<left>1000</left>
+				<top>260</top>
+				<width>856</width>
+				<height>560</height>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width>856</width>
+					<height>24</height>
+					<font>label_20</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$VAR[Music_NPKicker]</label>
+				</control>
+				<include content="Fit_NowPlaying">
+					<param name="top" value="16"/>
+					<param name="label" value="$INFO[MusicPlayer.Title]"/>
+				</include>
+				<control type="label">
+					<top>14</top>
+					<width>856</width>
+					<height>40</height>
+					<font>text_30_med</font>
+					<label>$INFO[MusicPlayer.Artist]</label>
+				</control>
+				<control type="label">
+					<top>6</top>
+					<width>856</width>
+					<height>26</height>
+					<font>label_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year,  ·  ,]</label>
+				</control>
+				<control type="image">
+					<top>32</top>
+					<width>856</width>
+					<height>2</height>
+					<texture colordiffuse="line">common/white.png</texture>
+				</control>
+				<control type="grouplist">
+					<top>28</top>
+					<width>856</width>
+					<height>80</height>
+					<orientation>horizontal</orientation>
+					<itemgap>72</itemgap>
+					<include content="OSDO_Readout">
+						<param name="w" value="200"/>
+						<param name="label" value="Track"/>
+						<param name="value" value="$INFO[Playlist.Position(music)][COLOR text_dim]$INFO[Playlist.Length(music), / ,][/COLOR]"/>
+					</include>
+					<include content="OSDO_Readout">
+						<param name="w" value="200"/>
+						<param name="label" value="Remaining"/>
+						<param name="value" value="$INFO[Player.TimeRemaining]"/>
+					</include>
+					<include content="OSDO_Readout">
+						<param name="w" value="200"/>
+						<param name="label" value="Progress"/>
+						<param name="value" value="[COLOR accent]$INFO[Player.Progress][/COLOR][COLOR text_dim]%[/COLOR]"/>
+					</include>
+				</control>
+				<control type="grouplist">
+					<top>32</top>
+					<width>856</width>
+					<height>36</height>
+					<orientation>horizontal</orientation>
+					<itemgap>10</itemgap>
+					<include content="Orbit_Chip">
+						<param name="label" value="[UPPERCASE]$INFO[MusicPlayer.Codec][/UPPERCASE]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.Codec)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="$INFO[MusicPlayer.BitRate,, kbps]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.BitRate)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="$INFO[MusicPlayer.SampleRate,, kHz]"/>
+						<param name="visible" value="!String.IsEmpty(MusicPlayer.SampleRate)"/>
+					</include>
+					<include content="Orbit_Chip">
+						<param name="label" value="$VAR[Music_PlayModes]"/>
+						<param name="visible" value="Playlist.IsRandom | Playlist.IsRepeat | Playlist.IsRepeatOne"/>
+					</include>
+				</control>
+			</control>
+			<!-- next -->
+			<control type="label">
+				<left>1000</left>
+				<top>840</top>
+				<width>856</width>
+				<height>30</height>
+				<font>mono_22</font>
+				<label>[COLOR text_secondary]Next  [/COLOR]$INFO[MusicPlayer.offset(1).Title]$INFO[MusicPlayer.offset(1).Artist,  ·  ,]</label>
+				<visible>!String.IsEmpty(MusicPlayer.offset(1).Title) + !Window.IsVisible(musicosd)</visible>
+			</control>
+		</control>
+		<!-- 0.9.11: how to reach the visualiser presets (OK opens the controls, Down from Play) -->
+		<control type="label">
+			<left>1000</left>
+			<top>1000</top>
+			<width>856</width>
+			<height>26</height>
+			<align>right</align>
+			<font>label_20</font>
+			<textcolor>text_secondary</textcolor>
+			<label>$LOCALIZE[31317]</label>
+			<visible>Visualisation.Enabled + Visualisation.HasPresets + !Window.IsVisible(musicosd)</visible>
+		</control>
+	</controls>
+</window>

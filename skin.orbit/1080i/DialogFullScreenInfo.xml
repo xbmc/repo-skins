@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Fullscreen info (Info during playback) = the instrument strip: a 260px progress ring with the time
+	in its centre, poster, title, meta, plot (3-line clamp), codec chips, "next" line, and the straight
+	chapter track. Info again or Back closes it (GUIDialogFullScreenInfo.cpp).
+
+	Id contract (Estuary Omega DialogFullScreenInfo.xml): 999 = full-screen invisible focus button
+	(default, always): Left/Right step seek, Up/Down chapter or big step, OK opens the OSD.
+-->
+<window>
+	<defaultcontrol always="true">999</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="button" id="999">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<label></label>
+			<texturefocus />
+			<onright>StepForward</onright>
+			<onleft>StepBack</onleft>
+			<onup>ChapterOrBigStepForward</onup>
+			<ondown>ChapterOrBigStepBack</ondown>
+			<onclick>OSD</onclick>
+		</control>
+
+		<control type="group">
+			<visible>!Window.IsVisible(sliderdialog) + !Window.IsVisible(selectdialog) + !Window.IsVisible(osdsubtitlesettings) + !Window.IsVisible(osdaudiosettings) + !Window.IsVisible(osdvideosettings)</visible>
+			<!-- scrims, each with its own fades -->
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>620</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">common/scrim_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>420</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">common/scrim_bottom.png</texture>
+			</control>
+			<include>Orbit_Clock</include>
+
+			<!-- progress ring + time -->
+			<control type="group">
+				<left>64</left>
+				<top>672</top>
+				<width>260</width>
+				<height>260</height>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>260</width>
+					<height>260</height>
+					<texture>rings/dial_ticks_260.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>260</width>
+					<height>260</height>
+					<texture fallback="rings/progress_260/0.png">rings/progress_260/$INFO[Player.Progress].png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>94</top>
+					<width>260</width>
+					<height>44</height>
+					<align>center</align>
+					<font>mono_34</font>
+					<label>$VAR[OSDO_TimeLabel]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>140</top>
+					<width>260</width>
+					<height>28</height>
+					<align>center</align>
+					<font>mono_20</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$INFO[Player.Duration(h:mm:ss),of ,]</label>
+				</control>
+			</control>
+
+			<!-- poster -->
+			<control type="group">
+				<left>376</left>
+				<top>672</top>
+				<width>174</width>
+				<height>260</height>
+				<include content="Orbit_Artwork">
+					<param name="art" value="$VAR[OSDInfo_Poster]"/>
+					<param name="title" value="$VAR[OSD_Title]"/>
+				</include>
+			</control>
+
+			<!-- text block -->
+			<control type="grouplist">
+				<left>590</left>
+				<top>664</top>
+				<width>1266</width>
+				<height>280</height>
+				<orientation>vertical</orientation>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="grouplist">
+					<width>1266</width>
+					<height>26</height>
+					<orientation>horizontal</orientation>
+					<itemgap>16</itemgap>
+					<usecontrolcoords>true</usecontrolcoords>
+					<control type="image">
+						<top>3</top>
+						<width>20</width>
+						<height>20</height>
+						<texture colordiffuse="accent">$VAR[OSDO_StateIcon]</texture>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>26</height>
+						<font>label_20</font>
+						<textcolor>accent</textcolor>
+						<label>$VAR[OSDO_State]</label>
+					</control>
+					<control type="label">
+						<width>auto</width>
+						<height>26</height>
+						<font>label_20</font>
+						<textcolor>text_secondary</textcolor>
+						<label>$VAR[OSDO_Kicker]</label>
+					</control>
+				</control>
+				<control type="label">
+					<top>12</top>
+					<width>1266</width>
+					<height>62</height>
+					<font>wide_50</font>
+					<label>$VAR[OSD_Title]</label>
+				</control>
+				<control type="label">
+					<top>6</top>
+					<width>1266</width>
+					<height>26</height>
+					<font>label_20</font>
+					<textcolor>text_meta</textcolor>
+					<label>$VAR[OSDO_Year]$VAR[OSDO_Meta]</label>
+				</control>
+				<control type="textbox">
+					<top>14</top>
+					<width>1100</width>
+					<height>68</height>
+					<font>text_24</font>
+					<label>$INFO[VideoPlayer.Plot]</label>
+				</control>
+			</control>
+			<control type="grouplist">
+				<left>590</left>
+				<top>896</top>
+				<width>1266</width>
+				<height>36</height>
+				<orientation>horizontal</orientation>
+				<itemgap>10</itemgap>
+				<include content="Orbit_Chip">
+					<param name="label" value="$VAR[OSD_FlagResolution]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoResolution)"/>
+				</include>
+				<include content="Orbit_Chip">
+					<param name="label" value="$VAR[OSD_FlagHDR]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.HdrType)"/>
+				</include>
+				<include content="Orbit_Chip">
+					<param name="label" value="[UPPERCASE]$VAR[OSD_FlagVideoCodec][/UPPERCASE]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.VideoCodec)"/>
+				</include>
+				<include content="Orbit_Chip">
+					<param name="label" value="[UPPERCASE]$VAR[OSD_AudioCodec][/UPPERCASE]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.AudioCodec)"/>
+				</include>
+				<include content="Orbit_Chip">
+					<param name="label" value="$VAR[OSD_AudioChannels]"/>
+					<param name="visible" value="!String.IsEmpty(VideoPlayer.AudioChannels)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>1000</left>
+				<top>938</top>
+				<width>856</width>
+				<height>30</height>
+				<align>right</align>
+				<font>mono_22</font>
+				<label>[COLOR text_secondary]Next  [/COLOR]$VAR[OSD_NextLabel]</label>
+				<visible>$EXP[OSD_HasNext]</visible>
+			</control>
+			<control type="label">
+				<left>1000</left>
+				<top>938</top>
+				<width>856</width>
+				<height>30</height>
+				<align>right</align>
+				<font>mono_22</font>
+				<label>$INFO[Player.TimeRemaining(h:mm:ss),−,  ·  ]ends [COLOR accent]$INFO[Player.FinishTime][/COLOR]</label>
+				<visible>!$EXP[OSD_HasNext] + !String.IsEmpty(Player.FinishTime)</visible>
+			</control>
+			<include content="OSDO_ChapterTrack">
+				<param name="left" value="64"/>
+				<param name="top" value="980"/>
+				<param name="width" value="1792"/>
+			</include>
+			<control type="label">
+				<left>64</left>
+				<top>1010</top>
+				<width>1792</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_dim</textcolor>
+				<label>$LOCALIZE[31209]</label>
+			</control>
+		</control>
+	</controls>
+</window>

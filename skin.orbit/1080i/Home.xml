@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home = the dial (OrbitHome.dc.html). Kodi hard-codes no control ids on Home.
+
+	Focus map
+	  9000 section dial (hidden 5-item wraplist): Up/Down turns the dial (labels rotate on the ring).
+	       OK opens the section's library; Right enters the section's arc.
+	  9300 poster arc (Movies / TV), 9301 album arc (Music), 9310 settings arc: Up/Down turns the arc,
+	       Left or Back returns to the dial, OK opens the item, Info shows details.
+	  Search: Right / OK opens the search window (1150).
+	Home is kept in memory: the dial and arcs keep their positions when you come back.
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<!-- new stamp each time Home opens: the Next up plugin path changes, so it refreshes after playback -->
+	<onload>SetProperty(orbit.reload,$INFO[System.Time(hh:mm:ss)],home)</onload>
+	<!-- 0.9.12: with Movies hidden (HideMenu.Movies) the dial's start slot can hold Search / Settings: on the first
+	     open of the session, start on the first shown section instead (0-based index among the shown items).
+	     0.9.18: custom menu items follow Music, so with Movies, TV and Music all hidden the first custom item starts -->
+	<onload condition="String.IsEmpty(Window(Home).Property(orbit.dialinit)) + Skin.HasSetting(HideMenu.Movies) + [!Skin.HasSetting(HideMenu.TVShows) | !Skin.HasSetting(HideMenu.Music) | $EXP[CustomMenuAnyOn]] + [String.IsEqual(Container(9000).ListItem.Property(kind),settings) | String.IsEqual(Container(9000).ListItem.Property(kind),search)] + !Skin.HasSetting(HideMenu.Search)">SetFocus(9000,2,absolute)</onload>
+	<onload condition="String.IsEmpty(Window(Home).Property(orbit.dialinit)) + Skin.HasSetting(HideMenu.Movies) + [!Skin.HasSetting(HideMenu.TVShows) | !Skin.HasSetting(HideMenu.Music) | $EXP[CustomMenuAnyOn]] + [String.IsEqual(Container(9000).ListItem.Property(kind),settings) | String.IsEqual(Container(9000).ListItem.Property(kind),search)] + Skin.HasSetting(HideMenu.Search)">SetFocus(9000,1,absolute)</onload>
+	<onload>SetProperty(orbit.dialinit,1,home)</onload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<!-- fit-to-width probes for the wide titles (Includes_Titles.xml) -->
+		<include content="Fit_Home_Probes">
+			<param name="label" value="$VAR[Home_FitTitle]"/>
+		</include>
+		<include content="Fit_HomeMusic_Probes">
+			<param name="label" value="$INFO[Container(9301).ListItem.Label]"/>
+		</include>
+		<include content="Fit_HomeStation_Probes">
+			<param name="label" value="$INFO[Container(9310).ListItem.Label]"/>
+		</include>
+		<!-- 0.9.18: fit probe for the custom menu item title (Home_CustomStation) -->
+		<include content="Fit_HomeCustom_Probes">
+			<param name="label" value="$VAR[Home_CustomName]"/>
+		</include>
+		<!-- fit probe for the poster meta line (Home_MetaWraps): one line of label_20 in 560 -->
+		<control type="textbox" id="9718">
+			<left>-4000</left>
+			<top>-3200</top>
+			<width>560</width>
+			<height>30</height>
+			<font>label_20</font>
+			<textcolor>00ffffff</textcolor>
+			<label>$VAR[Home_MetaProbe]</label>
+		</control>
+		<include content="Orbit_Background">
+			<param name="ground" value="home"/>
+		</include>
+		<include>Home_Furniture</include>
+		<include>Home_DataLists</include>
+		<include>CustomRows_Probes</include>
+		<include>Home_DialReadout</include>
+		<include>Home_Arcs</include>
+		<include>Home_InfoPanels</include>
+		<include>Home_SearchStation</include>
+		<include content="Home_CustomStation"><param name="n" value="1"/></include>
+		<include content="Home_CustomStation"><param name="n" value="2"/></include>
+		<include content="Home_CustomStation"><param name="n" value="3"/></include>
+		<include>Arc_HomeDial</include>
+		<include>Home_NowPlaying</include>
+	</controls>
+</window>

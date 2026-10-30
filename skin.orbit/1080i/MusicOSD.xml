@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD: opens over Now playing (MusicVisualisation.xml, the record dial). Transport on the
+	ring's bottom arc (same stations as the video scrubber), tools row in the right panel.
+
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (Stop 603 when pause is not
+	possible), 87 seek stepper (hidden; Left/Right step), group 200 = transport (600 prev,
+	602 play/pause, 603 stop, 607 next; no rewind / forward buttons), grouplist 202 = tools
+	(70054 shuffle, 70053 repeat, 70051 queue, 70056 visualiser presets: Orbit id, only with a
+	visualisation that has presets). Kodi itself only routes actions; no ids are filled.
+	Not shipped: 608 record / 70040-70050 PVR + RDS (radio unused), 70052 rating, 70055 lyrics.
+
+	Focus map: transport Left/Right (hidden ones skipped), Right from 607 / Down -> tools 202,
+	Down from 602 -> 70056 while presets exist, Up from tools -> 602, Up from the arc -> 87 seek, Down from 87 -> 602. Back closes the OSD.
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Music_PlayerBlurOnload</include>
+	<animation type="WindowOpen">
+		<effect type="fade" start="0" end="100" time="180" tween="cubic" easing="out"/>
+	</animation>
+	<animation type="WindowClose">
+		<effect type="fade" start="100" end="0" time="120" tween="cubic" easing="in"/>
+	</animation>
+	<controls>
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>Orbit_Hidden</include>
+			<onup>noop</onup>
+			<ondown>602</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+			<visible>Player.SeekEnabled</visible>
+		</control>
+		<!-- transport on the ring's bottom arc, same stations as the video scrubber (VideoOSD.xml):
+		     Previous -30 deg, Play/Pause -10, Stop +10, Next +30 (no seek buttons; Stop beside Play) -->
+		<control type="group" id="200">
+			<left>0</left>
+			<top>0</top>
+			<control type="button" id="600">
+				<left>227</left>
+				<top>769</top>
+				<width>88</width>
+				<height>88</height>
+				<label></label>
+				<texturefocus>btn/r64/prev_f.png</texturefocus>
+				<texturenofocus>btn/r64/prev_n.png</texturenofocus>
+				<onclick>PlayerControl(Previous)</onclick>
+				<onleft>noop</onleft>
+				<onright>602</onright>
+				<onup>87</onup>
+				<ondown>202</ondown>
+			</control>
+			<control type="button" id="602">
+				<left>327</left>
+				<top>799</top>
+				<width>108</width>
+				<height>108</height>
+				<label></label>
+				<texturefocus>btn/r84/blank_f.png</texturefocus>
+				<texturenofocus>btn/r84/blank_p.png</texturenofocus>
+				<onclick>PlayerControl(Play)</onclick>
+				<onleft>600</onleft>
+				<onright>603</onright>
+				<onup>87</onup>
+				<!-- 0.9.11: Down from Play/Pause goes straight to Visualiser presets while they exist -->
+				<ondown condition="Visualisation.Enabled + Visualisation.HasPresets">70056</ondown>
+				<ondown condition="!Visualisation.Enabled | !Visualisation.HasPresets">202</ondown>
+				<visible>Player.PauseEnabled</visible>
+			</control>
+			<control type="button" id="603">
+				<left>455</left>
+				<top>809</top>
+				<width>88</width>
+				<height>88</height>
+				<label></label>
+				<texturefocus>btn/r64/stop_f.png</texturefocus>
+				<texturenofocus>btn/r64/stop_n.png</texturenofocus>
+				<onclick>PlayerControl(Stop)</onclick>
+				<onleft>602</onleft>
+				<onright>607</onright>
+				<onup>87</onup>
+				<ondown>202</ondown>
+			</control>
+			<control type="button" id="607">
+				<left>565</left>
+				<top>769</top>
+				<width>88</width>
+				<height>88</height>
+				<label></label>
+				<texturefocus>btn/r64/next_f.png</texturefocus>
+				<texturenofocus>btn/r64/next_n.png</texturenofocus>
+				<onclick>PlayerControl(Next)</onclick>
+				<onleft>603</onleft>
+				<onright>202</onright>
+				<onup>87</onup>
+				<ondown>202</ondown>
+			</control>
+		</control>
+		<control type="image">
+			<left>366</left>
+			<top>838</top>
+			<width>30</width>
+			<height>30</height>
+			<texture colordiffuse="ink">$VAR[OSD_PlayIcon]</texture>
+			<visible>Player.PauseEnabled</visible>
+		</control>
+		<control type="label">
+			<left>140</left>
+			<top>922</top>
+			<width>600</width>
+			<height>26</height>
+			<align>center</align>
+			<font>label_20</font>
+			<label>$VAR[MusicOSD_FocusLabel]</label>
+			<visible>!ControlGroup(202).HasFocus()</visible>
+		</control>
+		<include content="OSDO_ChapterTrack">
+			<param name="left" value="160"/>
+			<param name="top" value="986"/>
+			<param name="width" value="560"/>
+		</include>
+
+		<!-- tools -->
+		<control type="label">
+			<left>1000</left>
+			<top>826</top>
+			<width>400</width>
+			<height>24</height>
+			<font>label_20</font>
+			<textcolor>text_dim</textcolor>
+			<label>$LOCALIZE[31256]</label>
+		</control>
+		<control type="grouplist" id="202">
+			<left>988</left>
+			<top>858</top>
+			<width>880</width>
+			<height>80</height>
+			<orientation>horizontal</orientation>
+			<itemgap>4</itemgap>
+			<onup condition="Player.PauseEnabled">602</onup>
+			<onup>603</onup>
+			<ondown>noop</ondown>
+			<onleft>607</onleft>
+			<onright>noop</onright>
+			<include content="OSDO_Tool">
+				<param name="id" value="70054"/>
+				<param name="icon" value="shuffle"/>
+				<param name="onclick" value="PlayerControl(Random)"/>
+			</include>
+			<include content="OSDO_Tool">
+				<param name="id" value="70053"/>
+				<param name="icon" value="repeat"/>
+				<param name="onclick" value="PlayerControl(Repeat)"/>
+			</include>
+			<include content="OSDO_Tool">
+				<param name="id" value="70051"/>
+				<param name="icon" value="list"/>
+				<param name="onclick" value="ActivateWindow(musicplaylist)"/>
+			</include>
+			<!-- 0.9.11: Kodi's preset list (DialogSelect); only for a running visualisation with presets -->
+			<include content="OSDO_Tool">
+				<param name="id" value="70056"/>
+				<param name="icon" value="presets"/>
+				<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+				<param name="visible" value="Visualisation.Enabled + Visualisation.HasPresets"/>
+			</include>
+		</control>
+		<!-- shuffle / repeat on: the amber variant of the tool's icon over its unfocused face (the row
+		     is left-aligned with fixed 80 px buttons at 84 px pitch and all three always visible) -->
+		<control type="image">
+			<left>988</left>
+			<top>858</top>
+			<width>80</width>
+			<height>80</height>
+			<texture>btn/r56/shuffle_s.png</texture>
+			<visible>Playlist.IsRandom + !Control.HasFocus(70054)</visible>
+		</control>
+		<control type="image">
+			<left>1072</left>
+			<top>858</top>
+			<width>80</width>
+			<height>80</height>
+			<texture>btn/r56/repeat_s.png</texture>
+			<visible>[Playlist.IsRepeat | Playlist.IsRepeatOne] + !Control.HasFocus(70053)</visible>
+		</control>
+		<control type="label">
+			<left>1000</left>
+			<top>946</top>
+			<width>856</width>
+			<height>26</height>
+			<font>label_20</font>
+			<label>$VAR[MusicOSD_FocusLabel]</label>
+			<visible>ControlGroup(202).HasFocus()</visible>
+		</control>
+	</controls>
+</window>

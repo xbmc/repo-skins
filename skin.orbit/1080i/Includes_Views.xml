@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Shared library pieces: view 50 (the DIAL LIST: rows on a shallow circle, focused row at the lens
+	tick, item panel on the right), the library option bar, the generic list window.
+	Media-window ids (Estuary Omega): 3 = sort by, 4 = sort order (hidden buttons the bar clicks),
+	menucontrol 9000 = the option bar.
+-->
+<includes>
+	<!-- ============================================================ View 50: dial list -->
+	<include name="View_50_List">
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_VisibleFade</include>
+			<!-- engraved guide arc behind the rows + lens tick -->
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>320</width>
+				<height>1080</height>
+				<texture>rings/dial_list.png</texture>
+			</control>
+			<control type="fixedlist" id="50">
+				<left>200</left>
+				<top>535</top>
+				<include>Arc_HiddenListIcon</include>
+				<onup>50</onup>
+				<ondown>50</ondown>
+				<onleft>9000</onleft>
+				<!-- 0.9.9: Right = Library panel in the video / music library (a dead end elsewhere) -->
+				<onright condition="Window.IsActive(videos) | Window.IsActive(music)">ActivateWindow(1160)</onright>
+				<viewtype label="535">list</viewtype>
+			</control>
+			<include content="DialList_RowsNarrow">
+				<param name="id" value="50"/>
+			</include>
+			<include>Orbit_ItemPanel</include>
+		</control>
+	</include>
+
+	<!-- Focused-item panel right of a dial list (view 50): art, title, meta, plot -->
+	<include name="Orbit_ItemPanel">
+		<control type="group">
+			<left>1080</left>
+			<top>236</top>
+			<width>776</width>
+			<height>780</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>776</width>
+				<height>400</height>
+				<aspectratio align="left" aligny="top">keep</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true">$VAR[ListItemArt]</texture>
+				<visible>!ListItem.IsParentFolder</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>120</width>
+				<height>120</height>
+				<texture colordiffuse="text_secondary">icons/back.png</texture>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>428</top>
+				<width>776</width>
+				<height>92</height>
+				<font>wide_38</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[Orbit_ItemTitle]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>530</top>
+				<width>776</width>
+				<height>28</height>
+				<font>mono_22</font>
+				<textcolor>text_meta</textcolor>
+				<label>$INFO[ListItem.Year]$INFO[ListItem.Duration(mins),  ·  , min]$INFO[ListItem.Rating,  ·  , / 10]</label>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>576</top>
+				<width>776</width>
+				<height>152</height>
+				<font>text_26</font>
+				<textcolor>text_plot</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="6000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+		</control>
+	</include>
+
+	<variable name="Orbit_ItemTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+
+	<!-- ===================================================== library option bar -->
+
+	<!-- "0412" style position + dim "/ 1360" for headers -->
+	<variable name="Orbit_PosPad">
+		<value condition="Integer.IsLess(Container.CurrentItem,10)">000</value>
+		<value condition="Integer.IsLess(Container.CurrentItem,100)">00</value>
+		<value condition="Integer.IsLess(Container.CurrentItem,1000)">0</value>
+	</variable>
+	<variable name="Orbit_Position">
+		<value condition="Integer.IsGreater(Container.NumItems,0)">$VAR[Orbit_PosPad]$INFO[Container.CurrentItem][COLOR text_dim]$INFO[Container.NumItems, / ,][/COLOR]</value>
+	</variable>
+
+	<!-- ========================================== generic list window -->
+
+	<!-- Empty folder / filtered away: an engraved empty ring + caption at the lens -->
+	<include name="Orbit_EmptyFolder">
+		<control type="group">
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<control type="image">
+				<left>130</left>
+				<top>410</top>
+				<width>260</width>
+				<height>260</height>
+				<texture>rings/dial_min_260.png</texture>
+			</control>
+			<control type="label">
+				<left>440</left>
+				<top>500</top>
+				<width>1000</width>
+				<height>44</height>
+				<font>wide_34</font>
+				<textcolor>text_primary</textcolor>
+				<label>$LOCALIZE[31012]</label>
+			</control>
+			<control type="label">
+				<left>440</left>
+				<top>552</top>
+				<width>1300</width>
+				<height>34</height>
+				<font>text_24</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31250]</label>
+			</control>
+		</control>
+	</include>
+</includes>

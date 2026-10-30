@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Album / artist / song information in the Orbit language: darkened artist fanart, wide title, the
+	record dial (cover with its record peeking out), mono readouts, round buttons, tracklist /
+	discography. Kodi also loads this file for songinformation (CGUIDialogSongInfo).
+
+	Kodi id contract (Estuary Omega DialogMusicInfo.xml, GUIDialogMusicInfo.cpp / GUIDialogSongInfo.cpp):
+	  50  list Kodi fills: album -> songs, artist -> discography (click opens that album's info)
+	  6   Refresh (hidden by Kodi for songs) | 8 Play (album / song; hidden for artists)
+	  12  Artist info / Album info (hidden for artists)
+	  7 (user rating) and 10 (choose art) are deliberately not shipped.
+	Kodi toggles 8 / 12 with SET_CONTROL_HIDDEN; the buttons sit directly in grouplist 9000 so
+	hidden ones are skipped. Orbit ids: 9000 button row (default), 9011 Shuffle, 9012 Play all (artist).
+	Navigation: buttons Left/Right, Right from the last or Down from any -> list 50; Up / Left / Back from the list -> buttons.
+	Back closes (Kodi).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<include content="Music_BlurSourceOnload">
+		<param name="slot" value="orbit.blursrc.prev.musicinfo"/>
+	</include>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<!-- fit-to-width probes for the wide titles (Includes_Titles.xml) -->
+		<include content="Fit_MusicInfo_Probes">
+			<param name="label" value="$VAR[Music_InfoTitle]"/>
+		</include>
+		<include>Orbit_Background</include>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<aspectratio>scale</aspectratio>
+			<fadetime>300</fadetime>
+			<texture background="true">$VAR[Music_InfoArt]</texture>
+		</control>
+		<include content="Orbit_GroundScrim">
+			<param name="mask" value="common/scrim_info_h.png"/>
+			<param name="ground" value="page"/>
+		</include>
+		<include content="Orbit_GroundScrim">
+			<param name="mask" value="common/scrim_info_v.png"/>
+			<param name="ground" value="page"/>
+		</include>
+
+		<!-- head -->
+		<control type="label">
+			<left>64</left>
+			<top>64</top>
+			<width>1200</width>
+			<height>26</height>
+			<font>label_20</font>
+			<textcolor>text_secondary</textcolor>
+			<label>$LOCALIZE[2][COLOR text_dim]  /  [/COLOR]$VAR[Music_InfoCrumb]</label>
+		</control>
+		<include>Orbit_Clock</include>
+		<control type="grouplist">
+			<left>64</left>
+			<top>124</top>
+			<width>1500</width>
+			<height>260</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="label">
+				<width>1300</width>
+				<height>40</height>
+				<font>text_30_med</font>
+				<label>$VAR[Music_InfoSubline]</label>
+			</control>
+			<include content="Fit_MusicInfo">
+				<param name="top" value="8"/>
+				<param name="label" value="$VAR[Music_InfoTitle]"/>
+			</include>
+		</control>
+
+		<!-- record dial: cover + its record -->
+		<control type="group">
+			<left>64</left>
+			<top>360</top>
+			<width>620</width>
+			<height>380</height>
+			<control type="group">
+				<left>200</left>
+				<top>10</top>
+				<width>360</width>
+				<height>360</height>
+				<visible>!$EXP[Music_InfoIsArtist]</visible>
+				<animation effect="slide" start="-160,0" end="0,0" time="420" delay="200" tween="cubic" easing="out" condition="!Skin.HasSetting(orbit.reducemotion)">WindowOpen</animation>
+				<control type="image">
+					<left>58</left>
+					<top>58</top>
+					<width>244</width>
+					<height>244</height>
+					<texture background="true" diffuse="masks/circle.png">$VAR[Music_InfoArtThumb]</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>360</width>
+					<height>360</height>
+					<texture>music/vinyl.png</texture>
+				</control>
+				<control type="image">
+					<left>168</left>
+					<top>168</top>
+					<width>24</width>
+					<height>24</height>
+					<texture>music/spindle.png</texture>
+				</control>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>380</width>
+				<height>380</height>
+				<include content="Orbit_Artwork">
+					<param name="art" value="$VAR[Music_InfoArtThumb]"/>
+					<param name="mask" value="masks/square_r4.png"/>
+					<param name="title" value="$VAR[Music_InfoTitle]"/>
+				</include>
+				<visible>!$EXP[Music_InfoIsArtist]</visible>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>380</width>
+				<height>380</height>
+				<visible>$EXP[Music_InfoIsArtist]</visible>
+				<include content="Orbit_Artwork">
+					<param name="art" value="$VAR[Music_InfoArtThumb]"/>
+					<param name="mask" value="masks/circle.png"/>
+					<param name="scalediffuse" value="false"/>
+					<param name="title" value="$VAR[Music_InfoTitle]"/>
+				</include>
+				<control type="image">
+					<left>-12</left>
+					<top>-12</top>
+					<width>404</width>
+					<height>404</height>
+					<texture colordiffuse="line">btn/ring_120.png</texture>
+				</control>
+			</control>
+		</control>
+
+		<!-- Kodi's artist / album info button (Kodi labels it "Artist information": too long for a
+		     round button), clicked by 9013 -->
+		<control type="button" id="12">
+			<include>Orbit_Hidden</include>
+		</control>
+		<!-- buttons -->
+		<control type="grouplist" id="9000">
+			<left>37</left>
+			<top>790</top>
+			<width>640</width>
+			<height>164</height>
+			<orientation>horizontal</orientation>
+			<onup>noop</onup>
+			<!-- Down reaches the tracklist / discography beside the row from any button -->
+			<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+			<ondown>noop</ondown>
+			<onleft>noop</onleft>
+			<onright>50</onright>
+			<include content="VidInfo_Button">
+				<param name="id" value="8"/>
+				<param name="icon" value="play"/>
+				<param name="state" value="p"/>
+				<param name="label" value="$LOCALIZE[208]"/>
+				<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9012"/>
+				<param name="icon" value="play"/>
+				<param name="state" value="p"/>
+				<param name="label" value="Play all"/>
+				<param name="onclick" value="PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)"/>
+				<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9011"/>
+				<param name="icon" value="shuffle"/>
+				<param name="label" value="Shuffle"/>
+				<param name="onclick" value="$VAR[Music_InfoShuffleAction]"/>
+				<param name="onclick2" value="PlayerControl(RandomOn)"/>
+				<param name="visible" value="[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="9013"/>
+				<param name="icon" value="person"/>
+				<param name="label" value="$VAR[Music_InfoOtherLabel]"/>
+				<param name="onclick" value="SendClick(12)"/>
+				<param name="visible" value="!$EXP[Music_InfoIsArtist]"/>
+			</include>
+			<include content="VidInfo_Button">
+				<param name="id" value="6"/>
+				<param name="icon" value="refresh"/>
+				<param name="label" value="$LOCALIZE[184]"/>
+				<param name="visible" value="!$EXP[Music_InfoIsSong]"/>
+			</include>
+		</control>
+
+		<!-- right column: about, readouts, list (flows up when there is no description) -->
+		<control type="grouplist">
+			<left>760</left>
+			<top>360</top>
+			<width>1096</width>
+			<height>700</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="textbox">
+				<width>1096</width>
+				<height max="152">auto</height>
+				<label>$VAR[Music_InfoDescription]</label>
+				<visible>$EXP[Music_InfoHasDescription]</visible>
+			</control>
+			<control type="grouplist">
+				<top>24</top>
+				<width>1096</width>
+				<height>80</height>
+				<orientation>horizontal</orientation>
+				<itemgap>64</itemgap>
+				<include content="OSDO_Readout">
+					<param name="w" value="140"/>
+					<param name="label" value="Year"/>
+					<param name="value" value="$INFO[ListItem.Year]"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Year)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="140"/>
+					<param name="label" value="Tracks"/>
+					<param name="value" value="$INFO[Container(50).NumItems]"/>
+					<param name="visible" value="$EXP[Music_InfoIsAlbum] + Integer.IsGreater(Container(50).NumItems,0)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="140"/>
+					<param name="label" value="Albums"/>
+					<param name="value" value="$INFO[Container(50).NumItems]"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + Integer.IsGreater(Container(50).NumItems,0)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="180"/>
+					<param name="label" value="Length"/>
+					<param name="value" value="$INFO[ListItem.Duration]"/>
+					<param name="visible" value="$EXP[Music_InfoIsSong] + !String.IsEmpty(ListItem.Duration)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="160"/>
+					<param name="label" value="Rating"/>
+					<param name="value" value="$INFO[ListItem.Rating][COLOR text_dim] / 10[/COLOR]"/>
+					<param name="visible" value="!String.IsEmpty(ListItem.Rating) + !String.IsEqual(ListItem.Rating,0.0)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="140"/>
+					<param name="label" value="Plays"/>
+					<param name="value" value="$INFO[ListItem.PlayCount]"/>
+					<param name="visible" value="!$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.PlayCount,0)"/>
+				</include>
+				<include content="OSDO_Readout">
+					<param name="w" value="400"/>
+					<param name="label" value="Genre"/>
+					<param name="value" value="[UPPERCASE]$INFO[ListItem.Genre][/UPPERCASE]"/>
+					<param name="visible" value="$EXP[Music_InfoIsArtist] + !String.IsEmpty(ListItem.Genre)"/>
+				</include>
+			</control>
+			<control type="label">
+				<top>30</top>
+				<width>1096</width>
+				<height>24</height>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[Music_InfoListCaption]</label>
+				<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			</control>
+			<control type="image">
+				<top>8</top>
+				<width>1096</width>
+				<height>14</height>
+				<aspectratio align="left" aligny="top">center</aspectratio>
+				<texture>rings/ruler.png</texture>
+				<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			</control>
+			<control type="panel" id="50">
+				<top>10</top>
+				<width>1096</width>
+				<height>336</height>
+				<orientation>horizontal</orientation>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>9000</onleft>
+				<onright>noop</onright>
+				<onback>9000</onback>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="548" height="56">
+					<include content="Music_InfoRow">
+						<param name="focused" value="false"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="548" height="56">
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>536</width>
+						<height>56</height>
+						<texture border="8">focus/row.png</texture>
+						<visible>Control.HasFocus(50)</visible>
+					</control>
+					<control type="group">
+						<width>536</width>
+						<include content="Music_InfoRow">
+							<param name="focused" value="Control.HasFocus(50)"/>
+						</include>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Seek bar = the mini scrubber: a 200px progress ring bottom-left (rings/progress_200/<Player.Progress>)
+	with the target time in its centre, the state (skip step, speed, paused) in amber beside it, the
+	title, and the straight chapter track (exact chapter ticks via ranges, seek target in amber).
+
+	Id contract (Estuary Omega DialogSeekBar.xml / GUIDialogSeekBar.cpp): 401 = progress slider Kodi
+	selects to the seek target (drawn invisible; the chapter track shows the same value).
+	Window visibility conditions from Estuary Omega. Steps aside while the OSD, the fullscreen info or
+	a playback dialog is up (they draw their own progress): OSD_SeekBarHidden.
+-->
+<window>
+	<visible>Window.IsActive(fullscreenvideo)</visible>
+	<visible>![Window.IsActive(sliderdialog) | Window.IsActive(pvrosdchannels) | Window.IsActive(pvrchannelguide) | Window.IsActive(pvrguideinfo)]</visible>
+	<visible>Player.Seeking | Player.HasPerformedSeek(3) | [Player.Paused + !Player.Caching] | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsActive(fullscreeninfo) | Player.ShowTime | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(playerprocessinfo) | !String.IsEmpty(Player.SeekNumeric)</visible>
+	<zorder>0</zorder>
+	<include>Anim_Toast</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_SeekBarHidden]</visible>
+			<visible>!Player.HasGame</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>360</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">common/scrim_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>-136</left>
+				<top>636</top>
+				<width>600</width>
+				<height>600</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">common/radial_soft.png</texture>
+			</control>
+
+			<!-- mini scrubber ring -->
+			<control type="group">
+				<left>64</left>
+				<top>836</top>
+				<width>200</width>
+				<height>200</height>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>200</width>
+					<height>200</height>
+					<texture>rings/dial_ticks_200.png</texture>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>200</width>
+					<height>200</height>
+					<texture fallback="rings/progress_200/0.png">rings/progress_200/$INFO[Player.Progress].png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>78</top>
+					<width>200</width>
+					<height>40</height>
+					<align>center</align>
+					<font>mono_30</font>
+					<label>$VAR[OSDO_TimeLabel]</label>
+				</control>
+			</control>
+
+			<!-- state + title -->
+			<control type="grouplist">
+				<left>300</left>
+				<top>880</top>
+				<width>1556</width>
+				<height>30</height>
+				<orientation>horizontal</orientation>
+				<itemgap>18</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="image">
+					<top>4</top>
+					<width>22</width>
+					<height>22</height>
+					<texture colordiffuse="accent">$VAR[OSDO_StateIcon]</texture>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>30</height>
+					<font>label_22</font>
+					<textcolor>accent</textcolor>
+					<label>$VAR[OSDO_State]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>30</height>
+					<font>mono_22</font>
+					<textcolor>text_secondary</textcolor>
+					<label>$INFO[Player.Chapter,ch ,]$INFO[Player.ChapterCount, / ,]</label>
+					<visible>$EXP[OSD_HasChapters]</visible>
+				</control>
+			</control>
+			<control type="label">
+				<left>300</left>
+				<top>920</top>
+				<width>1100</width>
+				<height>44</height>
+				<font>text_30_semi</font>
+				<label>$VAR[OSD_ShortTitle]</label>
+			</control>
+			<control type="label">
+				<left>1356</left>
+				<top>928</top>
+				<width>500</width>
+				<height>30</height>
+				<align>right</align>
+				<font>mono_22</font>
+				<label>$INFO[Player.TimeRemaining(h:mm:ss),−,  ·  ]ends [COLOR accent]$INFO[Player.FinishTime][/COLOR]</label>
+				<visible>!String.IsEmpty(Player.FinishTime)</visible>
+			</control>
+			<include content="OSDO_ChapterTrack">
+				<param name="left" value="300"/>
+				<param name="top" value="990"/>
+				<param name="width" value="1556"/>
+			</include>
+
+			<!-- Kodi selects 401 to the seek target; drawn invisible (the track above shows the same value) -->
+			<control type="slider" id="401">
+				<left>300</left>
+				<top>986</top>
+				<width>1556</width>
+				<height>16</height>
+				<texturesliderbar colordiffuse="clear">osd/slider_bg.png</texturesliderbar>
+				<textureslidernib colordiffuse="clear">osd/slider_nib.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="clear">osd/slider_nib.png</textureslidernibfocus>
+			</control>
+		</control>
+	</controls>
+</window>

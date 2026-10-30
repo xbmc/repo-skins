@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Library panel (Custom_1160_LibraryPanel.xml) and view picker (Custom_1161_ViewPicker.xml): shared
+	variables and the picker card. docs/requests/library-panel/BRIEF.md.
+	Window(Home) properties:
+	  orbit.libmode   empty = the panel of the library underneath (Videos / Music window);
+	                  update / clean = opened from the System menu (choose Movies and TV shows or Music)
+	  orbit.libclean  video / music = the Clean library confirmation is showing
+	Both are cleared when the panel closes.
+	Inside these dialogs Container.* (Content, Viewmode, SortMethod, ViewCount, PluginName) reads the
+	media window underneath; Control.IsVisible / Container(id) would look in the dialog itself.
+-->
+<includes>
+	<!-- Sets row (Library panel): films in the library (not inside a set already, not a plug-in folder) and the library has sets -->
+	<expression name="LibPanel_ShowSets">Window.IsActive(videos) + [Container.Content(movies) | String.IsEqual(Container.FolderPath,videodb://movies/) | String.IsEqual(Container.FolderPath,library://video/movies/)] + !String.StartsWith(Container.FolderPath,videodb://movies/sets/) + String.IsEmpty(Container.PluginName) + Library.HasContent(moviesets)</expression>
+	<variable name="LibPanel_Kicker">
+		<value condition="!String.IsEmpty(Window(Home).Property(orbit.libclean))">Clean library</value>
+		<value condition="String.IsEqual(Window(Home).Property(orbit.libmode),update)">Update library</value>
+		<value condition="String.IsEqual(Window(Home).Property(orbit.libmode),clean)">Clean library</value>
+		<value>Options</value>
+	</variable>
+	<variable name="LibPanel_Where">
+		<value condition="Container.Content(movies) | Container.Content(sets)">$LOCALIZE[342]</value>
+		<value condition="Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes)">$LOCALIZE[20343]</value>
+		<value condition="Container.Content(musicvideos)">$LOCALIZE[20389]</value>
+		<value condition="Window.IsActive(music)">$LOCALIZE[2]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<variable name="LibPanel_Unwatched">
+		<value condition="System.Setting(hidewatched)">on</value>
+		<value>off</value>
+	</variable>
+	<variable name="LibPanel_Direction">
+		<value condition="Container.SortDirection(descending)">descending</value>
+		<value>ascending</value>
+	</variable>
+	<variable name="LibPanel_CleanText">
+		<value condition="String.IsEqual(Window(Home).Property(orbit.libclean),music)">Kodi removes the songs, albums and artists whose files it can no longer find from the music library. Your files stay where they are.</value>
+		<value>Kodi removes the movies, shows and episodes whose files it can no longer find from the video library. Your files stay where they are.</value>
+	</variable>
+
+	<!-- view picker: "current" under the view the library shows now (Container.Viewmode = viewtype label) -->
+	<variable name="Pick_Cur_Arc"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31312])">current</value></variable>
+	<variable name="Pick_Cur_Grid"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31313])">current</value></variable>
+	<variable name="Pick_Cur_Episodes"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31314])">current</value></variable>
+	<variable name="Pick_Cur_Horizon"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31320])">current</value></variable>
+	<variable name="Pick_Cur_Tiles"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[31321])">current</value></variable>
+	<variable name="Pick_Cur_List"><value condition="String.IsEqual(Container.Viewmode,$LOCALIZE[535])">current</value></variable>
+
+	<!-- One preview card: 320x180 schematic, name, amber dot + "current". Focus = Orbit's corner
+	     brackets around the preview (+ full brightness); unfocused previews are dimmed like the grid. -->
+	<include name="Pick_Item">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>20</left>
+				<top>20</top>
+				<width>260</width>
+				<height>146</height>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>260</width>
+					<height>146</height>
+					<texture colordiffuse="ffa0a0a0" diffuse="masks/landscape_r4.png">$INFO[ListItem.Icon]</texture>
+					<visible>!$PARAM[focused] | !Control.HasFocus(100)</visible>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>260</width>
+					<height>146</height>
+					<texture diffuse="masks/landscape_r4.png">$INFO[ListItem.Icon]</texture>
+					<visible>$PARAM[focused] + Control.HasFocus(100)</visible>
+				</control>
+				<include content="Orbit_Brackets" condition="$PARAM[focused]">
+					<param name="out" value="-12"/>
+					<param name="visible" value="Control.HasFocus(100)"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>184</top>
+				<width>260</width>
+				<height>36</height>
+				<font>text_26_med</font>
+				<textcolor>text_secondary</textcolor>
+				<selectedcolor>text_secondary</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!$PARAM[focused] | !Control.HasFocus(100)</visible>
+			</control>
+			<control type="label">
+				<left>20</left>
+				<top>184</top>
+				<width>260</width>
+				<height>36</height>
+				<font>text_26_semi</font>
+				<textcolor>text_primary</textcolor>
+				<selectedcolor>text_primary</selectedcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>$PARAM[focused] + Control.HasFocus(100)</visible>
+			</control>
+			<control type="image">
+				<left>21</left>
+				<top>232</top>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="accent">masks/circle.png</texture>
+				<visible>!String.IsEmpty(ListItem.Label2)</visible>
+			</control>
+			<control type="label">
+				<left>40</left>
+				<top>224</top>
+				<width>240</width>
+				<height>26</height>
+				<font>mono_13</font>
+				<textcolor>accent</textcolor>
+				<selectedcolor>accent</selectedcolor>
+				<label>$INFO[ListItem.Label2]</label>
+			</control>
+		</definition>
+	</include>
+</includes>

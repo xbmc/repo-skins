@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Orbit Search (Custom_1150_Search.xml): the search dial. Library only: four result lists fed by library
+	paths filtered with ?xsp= JSON (title / album / artist "contains" the query). Paths are empty until
+	something is typed, so opening the window costs nothing. The query is the text of edit control 9001:
+	$INFO[Control.GetLabel(9001).index(1)]. Result lists stay visible (1px; a hidden container is not
+	processed and would never load); their arcs (Includes_Arc.xml Arc_Search91xx) show the results.
+	Prefix Search_.
+-->
+<includes>
+	<!-- ================================================================ expressions -->
+	<expression name="Search_HasQuery">!String.IsEmpty(Control.GetLabel(9001).index(1))</expression>
+	<!-- The typed query reaches the xsp paths URL-encoded: the 1 px list 9710 (Custom_1150) runs script.skinvariables'
+	     get_encoded_string whenever the text changes, which writes Window(Home).Property(Orbit.Search.Encoded)
+	     (quote_plus; Kodi decodes + back to a space), so & | + % search fine.
+	     Custom_1150 clears the property on unload. (Groove pattern, 2026-10-21) -->
+	<expression name="Search_HasEncoded">$EXP[Search_HasQuery] + !String.IsEmpty(Window(Home).Property(Orbit.Search.Encoded))</expression>
+	<!-- Quote marks (2026-10-25, Greptile on repo-skins): the query goes to the encoder as $ESCINFO, a JSON string
+	     literal (Kodi escapes \ and " and adds the quotes), and the xsp holds the encoded value without %22 wrappers,
+	     so "Superman" or Waiting for "Superman" search fine. esc=%25 in the encoder URL keeps Kodi from turning those
+	     backslashes into slashes (CUtil::ValidatePath leaves a URL that holds a % alone). Majan pattern. -->
+	<!-- Result counts. A list capped at limit="40" ends with Kodi's own "More..." item (CDirectoryProvider, browse=auto),
+	     which opens every match in the library window, so NumItems reads one more than the shown matches:
+	     past the cap the count says "40+" (Greptile, repo-skins #505). -->
+	<variable name="Search_N9101"><value condition="Integer.IsGreater(Container(9101).NumItems,40)">40+</value><value>$INFO[Container(9101).NumItems]</value></variable>
+	<variable name="Search_N9102"><value condition="Integer.IsGreater(Container(9102).NumItems,40)">40+</value><value>$INFO[Container(9102).NumItems]</value></variable>
+	<variable name="Search_N9103"><value condition="Integer.IsGreater(Container(9103).NumItems,40)">40+</value><value>$INFO[Container(9103).NumItems]</value></variable>
+	<variable name="Search_N9104"><value condition="Integer.IsGreater(Container(9104).NumItems,40)">40+</value><value>$INFO[Container(9104).NumItems]</value></variable>
+	<variable name="Search_EncoderPath">
+		<value condition="$EXP[Search_HasQuery]">plugin://script.skinvariables/?info=get_encoded_string&amp;unencoded_paths=true&amp;esc=%25&amp;window_prop=Orbit.Search.Encoded&amp;window_id=home&amp;&amp;$ESCINFO[Control.GetLabel(9001).index(1)]</value>
+	</variable>
+	<expression name="Search_KSearch">String.IsEqual(Container(9000).ListItem.Property(kind),search)</expression>
+	<expression name="Search_KFilms">String.IsEqual(Container(9000).ListItem.Property(kind),films)</expression>
+	<expression name="Search_KShows">String.IsEqual(Container(9000).ListItem.Property(kind),shows)</expression>
+	<expression name="Search_KAlbums">String.IsEqual(Container(9000).ListItem.Property(kind),albums)</expression>
+	<expression name="Search_KArtists">String.IsEqual(Container(9000).ListItem.Property(kind),artists)</expression>
+
+	<!-- ================================================================ paths -->
+	<!-- xsp JSON, URL-encoded except the query itself ($ESCINFO quotes it and escapes " and \).
+	     Kodi has no URL-encode infolabel, so & % + in a query still break the path (known gap). -->
+	<variable name="Search_PathMovies">
+		<value condition="$EXP[Search_HasEncoded]">videodb://movies/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Orbit.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D</value>
+	</variable>
+	<variable name="Search_PathTV">
+		<value condition="$EXP[Search_HasEncoded]">videodb://tvshows/titles/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22sorttitle%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Orbit.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D</value>
+	</variable>
+	<variable name="Search_PathAlbums">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://albums/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22album%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Orbit.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D</value>
+	</variable>
+	<variable name="Search_PathArtists">
+		<value condition="$EXP[Search_HasEncoded]">musicdb://artists/?xsp=%7B%22order%22%3A%7B%22direction%22%3A%22ascending%22%2C%22ignorefolders%22%3A0%2C%22method%22%3A%22artist%22%7D%2C%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B$INFO[Window(Home).Property(Orbit.Search.Encoded)]%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D</value>
+	</variable>
+
+	<variable name="Search_Count">
+		<value condition="$EXP[Search_KFilms]">$VAR[Search_N9101]</value>
+		<value condition="$EXP[Search_KShows]">$VAR[Search_N9102]</value>
+		<value condition="$EXP[Search_KAlbums]">$VAR[Search_N9103]</value>
+		<value condition="$EXP[Search_KArtists]">$VAR[Search_N9104]</value>
+	</variable>
+	<variable name="Search_Unit">
+		<value condition="$EXP[Search_KFilms]">Films</value>
+		<value condition="$EXP[Search_KShows]">Shows</value>
+		<value condition="$EXP[Search_KAlbums]">Albums</value>
+		<value condition="$EXP[Search_KArtists]">Artists</value>
+		<value>$LOCALIZE[137]</value>
+	</variable>
+
+	<!-- ================================================================ furniture -->
+	<include name="Search_Furniture">
+		<control type="image">
+			<left>0</left>
+			<top>280</top>
+			<width>470</width>
+			<height>520</height>
+			<texture>rings/home_dial.png</texture>
+		</control>
+		<control type="image">
+			<left>760</left>
+			<top>0</top>
+			<width>1160</width>
+			<height>1080</height>
+			<texture>rings/home_arc.png</texture>
+		</control>
+		<control type="label">
+			<left>64</left>
+			<top>64</top>
+			<width>600</width>
+			<height>24</height>
+			<font>label_20</font>
+			<textcolor>text_secondary</textcolor>
+			<label>$LOCALIZE[137]</label>
+		</control>
+		<include>Orbit_Clock</include>
+	</include>
+
+	<!-- ================================================================ lists -->
+	<include name="Search_Lists">
+		<control type="button" id="9098">
+			<description>type again: focus the field and open the keyboard</description>
+			<left>-100</left>
+			<top>-100</top>
+			<width>1</width>
+			<height>1</height>
+			<texturefocus/>
+			<texturenofocus/>
+			<onfocus>SetFocus(9001)</onfocus>
+			<onfocus>Action(Select)</onfocus>
+			<visible allowhiddenfocus="true">false</visible>
+		</control>
+		<control type="wraplist" id="9000">
+			<left>200</left>
+			<top>538</top>
+			<width>1</width>
+			<height>5</height>
+			<orientation>vertical</orientation>
+			<focusposition>2</focusposition>
+			<scrolltime>0</scrolltime>
+			<onleft>noop</onleft>
+			<onright condition="$EXP[Search_KSearch]">9001</onright>
+			<onright condition="$EXP[Search_KFilms] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onright>
+			<onright condition="$EXP[Search_KShows] + Integer.IsGreater(Container(9102).NumItems,0)">9102</onright>
+			<onright condition="$EXP[Search_KAlbums] + Integer.IsGreater(Container(9103).NumItems,0)">9103</onright>
+			<onright condition="$EXP[Search_KArtists] + Integer.IsGreater(Container(9104).NumItems,0)">9104</onright>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content>
+				<item>
+					<label>$LOCALIZE[132]</label>
+					<label2>$VAR[Search_N9103]</label2>
+					<property name="kind">albums</property>
+					<onclick condition="Integer.IsGreater(Container(9103).NumItems,0)">SetFocus(9103)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[133]</label>
+					<label2>$VAR[Search_N9104]</label2>
+					<property name="kind">artists</property>
+					<onclick condition="Integer.IsGreater(Container(9104).NumItems,0)">SetFocus(9104)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[137]</label>
+					<property name="kind">search</property>
+					<onclick>SetFocus(9098)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[31242]</label>
+					<label2>$VAR[Search_N9101]</label2>
+					<property name="kind">films</property>
+					<onclick condition="Integer.IsGreater(Container(9101).NumItems,0)">SetFocus(9101)</onclick>
+				</item>
+				<item>
+					<label>$LOCALIZE[31243]</label>
+					<label2>$VAR[Search_N9102]</label2>
+					<property name="kind">shows</property>
+					<onclick condition="Integer.IsGreater(Container(9102).NumItems,0)">SetFocus(9102)</onclick>
+				</item>
+			</content>
+		</control>
+		<control type="fixedlist" id="9101">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="videos" limit="40">$VAR[Search_PathMovies]</content>
+		</control>
+		<control type="fixedlist" id="9102">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenList</include>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="videos" limit="40">$VAR[Search_PathTV]</content>
+		</control>
+		<control type="fixedlist" id="9103">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenListSquare</include>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="music" limit="40">$VAR[Search_PathAlbums]</content>
+		</control>
+		<control type="fixedlist" id="9104">
+			<left>1000</left>
+			<top>535</top>
+			<include>Arc_HiddenListSquare</include>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<content target="music" limit="40">$VAR[Search_PathArtists]</content>
+		</control>
+	</include>
+
+	<!-- ================================================================ dial centre -->
+	<include name="Search_DialReadout">
+		<control type="group">
+			<left>50</left>
+			<top>470</top>
+			<width>300</width>
+			<height>140</height>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>300</width>
+				<height>66</height>
+				<align>center</align>
+				<font>mono_58</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[Search_Count]</label>
+				<visible>!$EXP[Search_KSearch]</visible>
+			</control>
+			<control type="image">
+				<left>117</left>
+				<top>0</top>
+				<width>66</width>
+				<height>66</height>
+				<texture colordiffuse="text_primary">icons/search.png</texture>
+				<visible>$EXP[Search_KSearch]</visible>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>68</top>
+				<width>300</width>
+				<height>24</height>
+				<align>center</align>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[Search_Unit]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ arcs -->
+	<include name="Search_Arc">
+		<control type="group">
+			<visible>$PARAM[when] + Integer.IsGreater(Container($PARAM[id]).NumItems,0) + !Container($PARAM[id]).IsUpdating</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Arc_Search$PARAM[id]">
+				<param name="id" value="$PARAM[id]"/>
+			</include>
+		</control>
+	</include>
+	<include name="Search_Arcs">
+		<include content="Search_Arc"><param name="id" value="9101"/><param name="when" value="$EXP[Search_KFilms]"/></include>
+		<include content="Search_Arc"><param name="id" value="9102"/><param name="when" value="$EXP[Search_KShows]"/></include>
+		<include content="Search_Arc"><param name="id" value="9103"/><param name="when" value="$EXP[Search_KAlbums]"/></include>
+		<include content="Search_Arc"><param name="id" value="9104"/><param name="when" value="$EXP[Search_KArtists]"/></include>
+		<control type="label">
+			<left>800</left>
+			<top>520</top>
+			<width>400</width>
+			<height>40</height>
+			<align>center</align>
+			<font>label_20</font>
+			<textcolor>text_dim</textcolor>
+			<label>$VAR[Search_EmptyLabel]</label>
+			<visible>!$EXP[Search_KSearch]</visible>
+		</control>
+	</include>
+	<variable name="Search_EmptyLabel">
+		<value condition="!$EXP[Search_HasQuery]">Type a search first</value>
+		<value condition="!$EXP[Search_HasEncoded]">$LOCALIZE[31013]</value>
+		<value condition="$EXP[Search_KFilms] + Container(9101).IsUpdating">$LOCALIZE[31013]</value>
+		<value condition="$EXP[Search_KShows] + Container(9102).IsUpdating">$LOCALIZE[31013]</value>
+		<value condition="$EXP[Search_KAlbums] + Container(9103).IsUpdating">$LOCALIZE[31013]</value>
+		<value condition="$EXP[Search_KArtists] + Container(9104).IsUpdating">$LOCALIZE[31013]</value>
+		<value condition="$EXP[Search_KFilms] + Integer.IsEqual(Container(9101).NumItems,0)">No matches</value>
+		<value condition="$EXP[Search_KShows] + Integer.IsEqual(Container(9102).NumItems,0)">No matches</value>
+		<value condition="$EXP[Search_KAlbums] + Integer.IsEqual(Container(9103).NumItems,0)">No matches</value>
+		<value condition="$EXP[Search_KArtists] + Integer.IsEqual(Container(9104).NumItems,0)">No matches</value>
+	</variable>
+
+	<!-- ================================================================ panels -->
+	<!-- Result panel for a video list (films / shows): kicker + position, title, meta, rating ring,
+	     runtime clock sector. params: id, kicker, when -->
+	<include name="Search_VideoPanel">
+		<control type="grouplist">
+			<left>1290</left>
+			<top>260</top>
+			<width>566</width>
+			<height>760</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$PARAM[when] + Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="$PARAM[id]"/>
+				<param name="label" value="$PARAM[kicker]"/>
+			</include>
+			<include content="Fit_SearchVideo">
+				<param name="top" value="22"/>
+				<param name="label" value="$INFO[Container($PARAM[id]).ListItem.Title]"/>
+			</include>
+			<!-- year + genres: wraps to a second line rather than clipping a long genre list -->
+			<control type="textbox">
+				<top>12</top>
+				<width>566</width>
+				<height max="58">auto</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$INFO[Container($PARAM[id]).ListItem.Year,,  ·  ]$INFO[Container($PARAM[id]).ListItem.Genre]</label>
+			</control>
+			<control type="group">
+				<top>44</top>
+				<width>566</width>
+				<height>230</height>
+				<control type="group">
+					<left>0</left>
+					<top>0</top>
+					<width>180</width>
+					<height>220</height>
+					<include content="Orbit_GaugeRating">
+						<param name="S" value="180"/>
+						<param name="rating" value="Container($PARAM[id]).ListItem.Rating"/>
+						<param name="value_font" value="mono_40"/>
+					</include>
+				</control>
+				<control type="group">
+					<left>244</left>
+					<top>0</top>
+					<width>180</width>
+					<height>220</height>
+					<visible>Integer.IsGreater(Container($PARAM[id]).ListItem.Duration(mins),0)</visible>
+					<include content="Orbit_GaugeRuntime">
+						<param name="S" value="180"/>
+						<param name="c" value="90"/>
+						<param name="mins" value="Container($PARAM[id]).ListItem.Duration(mins)"/>
+					</include>
+					<control type="label">
+						<left>-140</left>
+						<top>192</top>
+						<width>460</width>
+						<height>28</height>
+						<align>center</align>
+						<font>mono_22</font>
+						<textcolor>text_primary</textcolor>
+						<label>ends [COLOR accent]$INFO[Container($PARAM[id]).ListItem.EndTime][/COLOR]</label>
+					</control>
+				</control>
+			</control>
+			<control type="textbox">
+				<top>26</top>
+				<width>566</width>
+				<height max="114">auto</height>
+				<font>text_26</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Container($PARAM[id]).ListItem.Plot]</label>
+			</control>
+		</control>
+	</include>
+	<include name="Search_MusicPanel">
+		<control type="grouplist">
+			<left>1340</left>
+			<top>360</top>
+			<width>516</width>
+			<height>600</height>
+			<orientation>vertical</orientation>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>$PARAM[when] + Integer.IsGreater(Container($PARAM[id]).NumItems,0)</visible>
+			<include>Home_ArcReveal</include>
+			<include content="Home_Kicker">
+				<param name="list" value="$PARAM[id]"/>
+				<param name="label" value="$PARAM[kicker]"/>
+			</include>
+			<include content="Fit_SearchMusic">
+				<param name="top" value="22"/>
+				<param name="label" value="$INFO[Container($PARAM[id]).ListItem.Label]"/>
+			</include>
+			<control type="label">
+				<top>14</top>
+				<width>516</width>
+				<height>40</height>
+				<font>text_30_med</font>
+				<textcolor>text_primary</textcolor>
+				<label>$INFO[Container($PARAM[id]).ListItem.Artist]</label>
+				<visible>String.IsEqual(Container($PARAM[id]).ListItem.DBType,album)</visible>
+			</control>
+			<control type="label">
+				<top>8</top>
+				<width>516</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$INFO[Container($PARAM[id]).ListItem.Year,,  ·  ]$INFO[Container($PARAM[id]).ListItem.Genre]</label>
+			</control>
+		</control>
+	</include>
+	<include name="Search_Panels">
+		<include content="Search_VideoPanel"><param name="id" value="9101"/><param name="kicker" value="Films"/><param name="when" value="$EXP[Search_KFilms]"/></include>
+		<include content="Search_VideoPanel"><param name="id" value="9102"/><param name="kicker" value="Shows"/><param name="when" value="$EXP[Search_KShows]"/></include>
+		<include content="Search_MusicPanel"><param name="id" value="9103"/><param name="kicker" value="$LOCALIZE[132]"/><param name="when" value="$EXP[Search_KAlbums]"/></include>
+		<include content="Search_MusicPanel"><param name="id" value="9104"/><param name="kicker" value="$LOCALIZE[133]"/><param name="when" value="$EXP[Search_KArtists]"/></include>
+		<control type="edit" id="9001">
+			<left>1290</left>
+			<top>440</top>
+			<width>566</width>
+			<height>80</height>
+			<font>wide_44</font>
+			<textcolor>text_primary</textcolor>
+			<focusedcolor>text_primary</focusedcolor>
+			<disabledcolor>text_secondary</disabledcolor>
+			<textoffsetx>0</textoffsetx>
+			<aligny>center</aligny>
+			<label></label>
+			<hinttext>$LOCALIZE[31244]</hinttext>
+			<texturefocus />
+			<texturenofocus />
+			<onup>noop</onup>
+			<onleft>9000</onleft>
+			<onright>noop</onright>
+			<ondown>9000</ondown>
+			<onback>9000</onback>
+			<!-- always visible (its label feeds the result paths); faded out away from the Search station -->
+			<animation effect="fade" start="100" end="0" time="120" condition="!$EXP[Search_KSearch] + !Control.HasFocus(9001)">Conditional</animation>
+		</control>
+		<!-- the Search station: the query field + what was found -->
+		<control type="group">
+			<visible>$EXP[Search_KSearch] | Control.HasFocus(9001)</visible>
+			<include>Home_ArcReveal</include>
+			<control type="image">
+				<left>830</left>
+				<top>370</top>
+				<width>340</width>
+				<height>340</height>
+				<texture>$VAR[RingFaceClock260]</texture>
+			</control>
+			<control type="image">
+				<left>952</left>
+				<top>492</top>
+				<width>96</width>
+				<height>96</height>
+				<texture colordiffuse="accent">icons/search.png</texture>
+			</control>
+			<control type="label">
+				<left>1290</left>
+				<top>400</top>
+				<width>566</width>
+				<height>24</height>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31245]</label>
+			</control>
+
+			<control type="image">
+				<left>1290</left>
+				<top>522</top>
+				<width>566</width>
+				<height>3</height>
+				<texture colordiffuse="accent">common/white.png</texture>
+				<visible>Control.HasFocus(9001)</visible>
+			</control>
+			<control type="image">
+				<left>1290</left>
+				<top>523</top>
+				<width>566</width>
+				<height>2</height>
+				<texture colordiffuse="line">common/white.png</texture>
+				<visible>!Control.HasFocus(9001)</visible>
+			</control>
+			<control type="label">
+				<left>1290</left>
+				<top>548</top>
+				<width>566</width>
+				<height>30</height>
+				<font>mono_22</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[Search_N9101,, films]$VAR[Search_N9102,  ·  , shows]$VAR[Search_N9103,  ·  , albums]$VAR[Search_N9104,  ·  , artists]</label>
+				<visible>$EXP[Search_HasQuery]</visible>
+			</control>
+			<control type="textbox">
+				<left>1290</left>
+				<top>596</top>
+				<width>566</width>
+				<height>114</height>
+				<font>text_24</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31246]</label>
+			</control>
+		</control>
+	</include>
+	<variable name="Search_VideoTitle">
+		<value condition="$EXP[Search_KShows]">$INFO[Container(9102).ListItem.Title]</value>
+		<value>$INFO[Container(9101).ListItem.Title]</value>
+	</variable>
+	<variable name="Search_MusicTitle">
+		<value condition="$EXP[Search_KArtists]">$INFO[Container(9104).ListItem.Label]</value>
+		<value>$INFO[Container(9103).ListItem.Label]</value>
+	</variable>
+</includes>

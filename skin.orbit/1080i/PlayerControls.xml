@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Player controls: the small panel Kodi opens with the PlayerControls builtin while something plays
+	outside fullscreen. Orbit language (0.9.5): navy dialog frame with the engraved ruler, poster /
+	cover, wide title, mono times on a straight amber track, round transport like the OSD ring.
+	No seek buttons (Left/Right seek without the OSD; Up = the hidden seek stepper here).
+
+	Id contract (Estuary Omega PlayerControls.xml, skin-side ids): 600 previous, 602 play/pause,
+	603 stop, 605 next, 607 shuffle, 704 repeat (music only), 87 hidden seek stepper.
+	Focus map: open -> 602 (603 when pause is not possible). Left/Right walk Previous, Play/Pause,
+	Stop, Next, Shuffle, Repeat (wraps; hidden ones are skipped by Kodi's navigation chain).
+	Up -> 87 (Left/Right step seek, the track thickens), Down from 87 -> Play/Pause. Back closes.
+	All buttons have fixed positions (no grouplist), so nothing shifts when Play turns into Pause.
+-->
+<window>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<visible>Player.HasMedia + Window.IsActive(PlayerControls) + !Window.IsActive(FullscreenVideo) + !Window.IsActive(FullscreenGame) + !Window.IsActive(Visualisation)</visible>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1040</width>
+			<height>440</height>
+			<include content="Orbit_GenericDialog">
+				<param name="width" value="1040"/>
+				<param name="height" value="440"/>
+				<param name="header_label" value="$LOCALIZE[31017]"/>
+				<param name="kicker" value="$VAR[OSDO_State]"/>
+			</include>
+
+			<!-- art: poster for video, cover for music; plate + person-less glyph when there is none -->
+			<control type="image">
+				<left>40</left>
+				<top>112</top>
+				<width>200</width>
+				<height>300</height>
+				<texture colordiffuse="plate" diffuse="masks/poster_r4.png">common/white.png</texture>
+				<visible>Player.HasVideo</visible>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>112</top>
+				<width>200</width>
+				<height>300</height>
+				<aspectratio>scale</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true" diffuse="masks/poster_r4.png">$VAR[OSD_PlayerArt]</texture>
+				<visible>Player.HasVideo</visible>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>112</top>
+				<width>200</width>
+				<height>200</height>
+				<texture colordiffuse="plate" diffuse="masks/square_r4.png">common/white.png</texture>
+				<visible>!Player.HasVideo</visible>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>112</top>
+				<width>200</width>
+				<height>200</height>
+				<aspectratio>scale</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true" diffuse="masks/square_r4.png">$VAR[OSD_PlayerArt]</texture>
+				<visible>!Player.HasVideo</visible>
+			</control>
+
+			<!-- text -->
+			<control type="label">
+				<left>280</left>
+				<top>108</top>
+				<width>720</width>
+				<height>44</height>
+				<font>text_30_semi</font>
+				<label>$VAR[OSD_Title]</label>
+			</control>
+			<control type="label">
+				<left>280</left>
+				<top>158</top>
+				<width>720</width>
+				<height>26</height>
+				<font>label_20</font>
+				<textcolor>text_meta</textcolor>
+				<label>$VAR[PC_Meta]</label>
+			</control>
+
+			<!-- straight track (OSD chapter-track language) + times -->
+			<control type="image">
+				<left>280</left>
+				<top>229</top>
+				<width>720</width>
+				<height>2</height>
+				<texture colordiffuse="border_button">common/white.png</texture>
+			</control>
+			<control type="progress">
+				<left>280</left>
+				<top>228</top>
+				<width>720</width>
+				<height>4</height>
+				<info>Player.SeekBar</info>
+				<texturebg colordiffuse="clear">common/white.png</texturebg>
+			</control>
+			<control type="image">
+				<left>280</left>
+				<top>226</top>
+				<width>720</width>
+				<height>8</height>
+				<texture colordiffuse="accent">common/white.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+			</control>
+			<control type="label">
+				<left>280</left>
+				<top>244</top>
+				<width>360</width>
+				<height>30</height>
+				<font>mono_22</font>
+				<label>$VAR[OSDO_TimeLabel]</label>
+			</control>
+			<control type="label">
+				<left>640</left>
+				<top>244</top>
+				<width>360</width>
+				<height>30</height>
+				<align>right</align>
+				<font>mono_22</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[Player.Duration(h:mm:ss)]</label>
+			</control>
+
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>Orbit_Hidden</include>
+				<onup>noop</onup>
+				<ondown condition="Player.PauseEnabled">602</ondown>
+				<ondown>603</ondown>
+				<onleft>StepBack</onleft>
+				<onright>StepForward</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+
+			<!-- transport: round buttons, 34 px visible gaps (ring 64 / disc 84) -->
+			<control type="group" id="201">
+				<left>0</left>
+				<top>0</top>
+				<control type="button" id="600">
+					<left>268</left>
+					<top>318</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/prev_f.png</texturefocus>
+					<texturenofocus>btn/r64/prev_n.png</texturenofocus>
+					<onclick>PlayerControl(Previous)</onclick>
+					<onleft>704</onleft>
+					<onright>602</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+				</control>
+				<control type="button" id="602">
+					<left>366</left>
+					<top>308</top>
+					<width>108</width>
+					<height>108</height>
+					<label></label>
+					<texturefocus>btn/r84/blank_f.png</texturefocus>
+					<texturenofocus>btn/r84/blank_p.png</texturenofocus>
+					<onclick>PlayerControl(Play)</onclick>
+					<onleft>600</onleft>
+					<onright>603</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+					<visible>Player.PauseEnabled</visible>
+				</control>
+				<control type="button" id="603">
+					<left>484</left>
+					<top>318</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/stop_f.png</texturefocus>
+					<texturenofocus>btn/r64/stop_n.png</texturenofocus>
+					<onclick>PlayerControl(Stop)</onclick>
+					<onleft>602</onleft>
+					<onright>605</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+				</control>
+				<control type="button" id="605">
+					<left>582</left>
+					<top>318</top>
+					<width>88</width>
+					<height>88</height>
+					<label></label>
+					<texturefocus>btn/r64/next_f.png</texturefocus>
+					<texturenofocus>btn/r64/next_n.png</texturenofocus>
+					<onclick>PlayerControl(Next)</onclick>
+					<onleft>603</onleft>
+					<onright>607</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+				</control>
+				<control type="button" id="607">
+					<left>836</left>
+					<top>322</top>
+					<width>80</width>
+					<height>80</height>
+					<label></label>
+					<texturefocus>btn/r56/shuffle_f.png</texturefocus>
+					<texturenofocus>btn/r56/shuffle_n.png</texturenofocus>
+					<onclick>PlayerControl(Random)</onclick>
+					<onleft>605</onleft>
+					<onright>704</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+					<visible>Player.HasAudio</visible>
+				</control>
+				<control type="button" id="704">
+					<left>920</left>
+					<top>322</top>
+					<width>80</width>
+					<height>80</height>
+					<label></label>
+					<texturefocus>btn/r56/repeat_f.png</texturefocus>
+					<texturenofocus>btn/r56/repeat_n.png</texturenofocus>
+					<onclick>PlayerControl(Repeat)</onclick>
+					<onleft>607</onleft>
+					<onright>600</onright>
+					<onup>87</onup>
+					<ondown>noop</ondown>
+					<visible>Player.HasAudio</visible>
+				</control>
+			</control>
+			<!-- play / pause glyph on the disc (state-dependent) -->
+			<control type="image">
+				<left>405</left>
+				<top>347</top>
+				<width>30</width>
+				<height>30</height>
+				<texture colordiffuse="ink">$VAR[OSD_PlayIcon]</texture>
+				<visible>Player.PauseEnabled</visible>
+			</control>
+			<!-- shuffle / repeat on: amber faces over the unfocused buttons -->
+			<control type="image">
+				<left>836</left>
+				<top>322</top>
+				<width>80</width>
+				<height>80</height>
+				<texture>btn/r56/shuffle_s.png</texture>
+				<visible>Player.HasAudio + Playlist.IsRandom + !Control.HasFocus(607)</visible>
+			</control>
+			<control type="image">
+				<left>920</left>
+				<top>322</top>
+				<width>80</width>
+				<height>80</height>
+				<texture>btn/r56/repeat_s.png</texture>
+				<visible>Player.HasAudio + [Playlist.IsRepeat | Playlist.IsRepeatOne] + !Control.HasFocus(704)</visible>
+			</control>
+			<!-- name of the focused control, between the transport and the music tools -->
+			<control type="label">
+				<left>680</left>
+				<top>346</top>
+				<width>150</width>
+				<height>32</height>
+				<align>center</align>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[PC_FocusLabel]</label>
+			</control>
+		</control>
+	</controls>
+</window>

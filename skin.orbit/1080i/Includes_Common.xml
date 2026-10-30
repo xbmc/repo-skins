@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Common building blocks in the Orbit language: ground + radial lift, header (section left,
+	clock right), fine lines, focus brackets, posters, watched badges, round instrument buttons,
+	pill buttons, gauges. Prefix: Orbit_. Parameterised includes document their params.
+	Design tokens: docs/skin.orbit/DESIGN.md.
+-->
+<includes>
+	<!-- ============================================================ page -->
+
+	<!-- Ground: the deep-blue field with the lens glow baked in (0.9.2, _src/make_ground.py).
+	     One opaque, pre-rendered, dithered texture per layout (no colordiffuse alpha maths = no
+	     banding, and clearly blue on a TV instead of the mockups' near-black #07090D).
+	     param ground: home | arc | list | page | osd. Use as the first control of every full-screen window. -->
+	<include name="Orbit_Background">
+		<param name="ground">page</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<aspectratio>stretch</aspectratio>
+				<texture>ground/$PARAM[ground].png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- A second ground layout over the base one for a view (opaque, so it simply replaces it).
+	     params: ground, visible -->
+	<include name="Orbit_Ground">
+		<param name="ground">page</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<aspectratio>stretch</aspectratio>
+				<texture>ground/$PARAM[ground].png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Scrim over fanart made of the ground itself: the ground drawn through an alpha ramp
+	     (diffuse = white/alpha scrim texture), so a darkened backdrop fades into blue, not black.
+	     Own fades (LESSONS 4). params: mask, ground, left, width -->
+	<include name="Orbit_GroundScrim">
+		<param name="mask">common/scrim_info_h.png</param>
+		<param name="ground">page</param>
+		<param name="width">screen_w</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>screen_h</height>
+				<aspectratio>stretch</aspectratio>
+				<texture diffuse="$PARAM[mask]">ground/$PARAM[ground].png</texture>
+				<visible>$PARAM[visible]</visible>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="140">WindowClose</animation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Ground for the library windows (glow at the arc lens) -->
+	<include name="Orbit_Page">
+		<param name="ground">arc</param>
+		<definition>
+			<include content="Orbit_Background">
+				<param name="ground" value="$PARAM[ground]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- 1.5px fine line (drawn 2px at 60% so it reads as 1.5). params: top, left, width, color -->
+	<include name="Orbit_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">line</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>2</height>
+				<texture colordiffuse="$PARAM[color]">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+	<!-- legacy name -->
+	<include name="Orbit_TopRule">
+		<control type="image">
+			<left>page_margin</left>
+			<top>topbar_rule_y</top>
+			<width>page_width</width>
+			<height>2</height>
+			<texture colordiffuse="line_soft">common/white.png</texture>
+		</control>
+	</include>
+
+	<!-- Clock (mono 44) + date / weather (label 20), top right (mockups: right 64, top 52) -->
+	<include name="Orbit_Clock">
+		<param name="weather">true</param>
+		<definition>
+			<!-- soft dark backing so arc posters passing behind never fight the clock (own fades, LESSONS 4) -->
+			<control type="image">
+				<right>-120</right>
+				<top>-170</top>
+				<width>900</width>
+				<height>460</height>
+				<texture colordiffuse="scrim">common/radial_soft.png</texture>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			</control>
+			<control type="label">
+				<right>64</right>
+				<top>52</top>
+				<width>400</width>
+				<height>52</height>
+				<align>right</align>
+				<font>mono_44</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[ClockLabel]</label>
+			</control>
+			<control type="label">
+				<right>64</right>
+				<top>108</top>
+				<width>620</width>
+				<height>26</height>
+				<align>right</align>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[DateWeatherLabel]</label>
+				<visible>$PARAM[weather]</visible>
+			</control>
+			<control type="label">
+				<right>64</right>
+				<top>108</top>
+				<width>620</width>
+				<height>26</height>
+				<align>right</align>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[DateLabel]</label>
+				<visible>!$PARAM[weather]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- 0.9.21 (docs/OPTIONS_REACH_FIX_BRIEF.md): library windows only, under the date: the Menu key opens the
+	     Library panel (View, Sort, Unwatched only) from any item; the option bar at the bottom stays as it was -->
+	<include name="Orbit_MenuHint">
+		<control type="label">
+			<right>64</right>
+			<top>142</top>
+			<width>620</width>
+			<height>22</height>
+			<align>right</align>
+			<font>mono_13</font>
+			<textcolor>text_dim</textcolor>
+			<label>[COLOR text_secondary]$LOCALIZE[31337][/COLOR]  $LOCALIZE[31336]</label>
+		</control>
+	</include>
+
+	<!-- Page header: wide title (34) + mono readout under it (mockup OrbitArc header).
+	     params: title, sub (mono readout, e.g. position "0412 / 1360"), kicker (label above, optional) -->
+	<include name="Orbit_Header">
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="label">
+				<left>64</left>
+				<top>52</top>
+				<width>1100</width>
+				<height>44</height>
+				<font>wide_34</font>
+				<textcolor>text_primary</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="label">
+				<left>64</left>
+				<top>100</top>
+				<width>1100</width>
+				<height>40</height>
+				<font>mono_34</font>
+				<textcolor>text_primary</textcolor>
+				<label>$PARAM[sub]</label>
+			</control>
+			<include>Orbit_Clock</include>
+		</definition>
+	</include>
+
+	<!-- Header for the secondary windows (PVR, games, profiles, playlists, system...): wide title with
+	     the mono sub on the same line, an engraved tick ruler under it, clock right. (index unused) -->
+	<include name="Orbit_PageHeader">
+		<param name="index">01</param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="grouplist">
+				<left>64</left>
+				<top>52</top>
+				<width>1300</width>
+				<height>44</height>
+				<orientation>horizontal</orientation>
+				<itemgap>22</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="900">auto</width>
+					<height>44</height>
+					<font>wide_34</font>
+					<textcolor>text_primary</textcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<top>10</top>
+					<width max="400">auto</width>
+					<height>30</height>
+					<font>mono_22</font>
+					<textcolor>text_dim</textcolor>
+					<label>$PARAM[sub]</label>
+				</control>
+			</control>
+			<control type="image">
+				<left>64</left>
+				<top>108</top>
+				<width>1180</width>
+				<height>14</height>
+				<aspectratio align="left" aligny="top">center</aspectratio>
+				<texture>rings/ruler.png</texture>
+			</control>
+		</definition>
+	</include>
+	<include name="Orbit_TopBar">
+		<param name="index">01</param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="Orbit_PageHeader">
+				<param name="index" value="$PARAM[index]"/>
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include content="Orbit_Clock">
+				<param name="weather" value="false"/>
+			</include>
+		</definition>
+	</include>
+	<!-- Ground for secondary windows (wide soft glow) -->
+	<include name="Orbit_PageSoft">
+		<include content="Orbit_Background">
+			<param name="ground" value="page"/>
+		</include>
+	</include>
+
+	<!-- ===================================================== focus frames -->
+	<!-- Corner brackets around a tile. Put inside a group sized to the item.
+	     param visible: condition; omit inside focusedlayouts. -->
+	<include name="Orbit_FocusFrame">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="text_primary">focus/outline_2.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Orbit_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<include content="Orbit_FocusFrame">
+				<param name="visible" value="$PARAM[visible]"/>
+			</include>
+		</definition>
+	</include>
+	<!-- Large brackets: 30px arms, 14px outside the rect (mockup lens) -->
+	<include name="Orbit_Brackets">
+		<param name="visible">true</param>
+		<param name="out">-14</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[out]</left>
+				<top>$PARAM[out]</top>
+				<right>$PARAM[out]</right>
+				<bottom>$PARAM[out]</bottom>
+				<texture border="32" colordiffuse="text_primary">focus/brackets.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== posters -->
+	<!-- Poster/cover with 4px corners + plate fallback (title). Sits inside a group of the art size.
+	     params: art, title, mask (masks/poster_r4.png | square_r4 | landscape_r4 | circle) -->
+	<include name="Orbit_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask">masks/poster_r4.png</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="aspect">scale</param>
+		<param name="scalediffuse">true</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="plate" diffuse="$PARAM[mask]">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>14</left>
+				<right>14</right>
+				<top>14</top>
+				<bottom>14</bottom>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<align>center</align>
+				<aligny>center</aligny>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio scalediffuse="$PARAM[scalediffuse]">$PARAM[aspect]</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true" diffuse="$PARAM[mask]">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ".." parent item: back chevron on the plate (inside an art group) -->
+	<include name="Orbit_ParentIcon">
+		<control type="image">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>56</width>
+			<height>56</height>
+			<texture colordiffuse="text_secondary">icons/back.png</texture>
+			<visible>ListItem.IsParentFolder</visible>
+		</control>
+	</include>
+
+
+	<!-- Watched badge (mockup .wt: 30px dark disc + check, 8px in from the top right) and
+	     resume bar along the bottom. Inside the poster group. -->
+	<include name="Orbit_WatchedMarkers">
+		<control type="image">
+			<right>8</right>
+			<top>8</top>
+			<width>30</width>
+			<height>30</height>
+			<texture>markers/watched_badge.png</texture>
+			<visible>$EXP[ShowWatchedMarkers] + $EXP[ListItemWatched] + !ListItem.IsResumable</visible>
+		</control>
+		<control type="progress">
+			<left>0</left>
+			<right>0</right>
+			<bottom>0</bottom>
+			<height>4</height>
+			<texturebg colordiffuse="scrim_track">common/white.png</texturebg>
+			<midtexture colordiffuse="accent">common/white.png</midtexture>
+			<info>ListItem.PercentPlayed</info>
+			<visible>ListItem.IsResumable</visible>
+		</control>
+	</include>
+
+	<!-- ========================================================== round buttons -->
+
+	<!-- ========================================================== pill buttons -->
+	<include name="Orbit_Tex_ButtonSecondary">
+		<texturefocus border="22" colordiffuse="text_primary">common/pill_fill.png</texturefocus>
+		<texturenofocus border="22" colordiffuse="border_button">common/pill_line.png</texturenofocus>
+	</include>
+
+	<include name="Orbit_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<label>$PARAM[label]</label>
+					<font>label_22</font>
+					<textcolor>text_primary</textcolor>
+					<focusedcolor>ink</focusedcolor>
+					<align>center</align>
+					<textoffsetx>20</textoffsetx>
+					<include>Orbit_Tex_ButtonSecondary</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+				</control>
+				<control type="image">
+					<left>-8</left>
+					<top>-8</top>
+					<right>-8</right>
+					<bottom>-8</bottom>
+					<texture border="22" colordiffuse="text_primary">common/pill_line.png</texture>
+					<visible>Control.HasFocus($PARAM[id]) | $PARAM[focus_also]</visible>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Sub-nav text button (library option bar, OSD text buttons): label font, light pill on focus.
+	     params: id, label, onclick, visible -->
+	<include name="Orbit_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<param name="width">auto</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<!-- fixed width (widest label) for pills whose label changes, so the row never shifts -->
+				<width>$PARAM[width]</width>
+				<align>center</align>
+				<height>subnav_h</height>
+				<font>label_20</font>
+				<textcolor>text_secondary</textcolor>
+				<focusedcolor>ink</focusedcolor>
+				<textoffsetx>18</textoffsetx>
+				<texturefocus border="20" colordiffuse="text_primary">common/pill_fill.png</texturefocus>
+				<texturenofocus border="20" colordiffuse="line">common/pill_line.png</texturenofocus>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Codec / format chip (mockup: mono 20, 1.5px #3A4252 outline, 4px radius). Inside a
+	     horizontal grouplist. params: label, visible -->
+	<include name="Orbit_Chip">
+		<param name="visible">true</param>
+		<definition>
+			<control type="button">
+				<width>auto</width>
+				<height>36</height>
+				<font>mono_20</font>
+				<textcolor>text_meta</textcolor>
+				<disabledcolor>text_meta</disabledcolor>
+				<textoffsetx>12</textoffsetx>
+				<texturenofocus border="8" colordiffuse="border_button">common/chip.png</texturenofocus>
+				<texturefocus border="8" colordiffuse="border_button">common/chip.png</texturefocus>
+				<enable>false</enable>
+				<label>$PARAM[label]</label>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== gauges -->
+	<!-- Rating gauge: engraved face + amber sweep frame (rings/rating_S/<ListItem.Rating>.png) +
+	     mono value. params: S (180|200|260), rating (infolabel, default ListItem.Rating),
+	     value_font, label (caption under the ring, empty = none) -->
+	<include name="Orbit_GaugeRating">
+		<param name="S">200</param>
+		<param name="rating">ListItem.Rating</param>
+		<param name="value_font">mono_44</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<texture>$VAR[RingFaceRating$PARAM[S]]</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<texture fallback="rings/rating_$PARAM[S]/0.0.png">rings/rating_$PARAM[S]/$INFO[$PARAM[rating]].png</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>$PARAM[value_font]</font>
+				<textcolor>text_primary</textcolor>
+				<label>$INFO[$PARAM[rating]]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>mono_26</font>
+				<textcolor>text_dim</textcolor>
+				<label>-</label>
+				<visible>String.IsEmpty($PARAM[rating])</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Progress gauge (ListItem.PercentPlayed or Player.Progress, integers 0-100). params: S, info -->
+	<include name="Orbit_GaugeProgress">
+		<param name="S">200</param>
+		<param name="info">ListItem.PercentPlayed</param>
+		<param name="value_font">mono_44</param>
+		<param name="value">$INFO[ListItem.PercentPlayed,,[COLOR text_dim]%[/COLOR]]</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<texture>$VAR[RingFaceProgress$PARAM[S]]</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<texture fallback="rings/progress_$PARAM[S]/0.png">rings/progress_$PARAM[S]/$INFO[$PARAM[info]].png</texture>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>$PARAM[value_font]</font>
+				<textcolor>text_primary</textcolor>
+				<label>$PARAM[value]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Runtime clock sector: 12-hour face; the sector (rings/runtime_S/<Duration(mins)>.png) and the
+	     now-hand start at the current time (Orbit_ClockRotation rotates them about the centre).
+	     params: S, cx, cy (centre inside the parent group = S/2), mins (infolabel) -->
+	<include name="Orbit_GaugeRuntime">
+		<param name="S">200</param>
+		<param name="mins">ListItem.Duration(mins)</param>
+		<param name="c">100</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<texture>$VAR[RingFaceClock$PARAM[S]]</texture>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[S]</width>
+				<height>$PARAM[S]</height>
+				<include content="Orbit_ClockRotationHour">
+					<param name="c" value="$PARAM[c]"/>
+				</include>
+				<control type="group">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[S]</width>
+					<height>$PARAM[S]</height>
+					<include content="Orbit_ClockRotationMinute">
+						<param name="c" value="$PARAM[c]"/>
+					</include>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>$PARAM[S]</width>
+						<height>$PARAM[S]</height>
+						<texture fallback="rings/runtime_$PARAM[S]/240.png">rings/runtime_$PARAM[S]/$INFO[$PARAM[mins]].png</texture>
+						<visible>Integer.IsGreater($PARAM[mins],0)</visible>
+					</control>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>$PARAM[S]</width>
+						<height>$PARAM[S]</height>
+						<texture>rings/hand_$PARAM[S].png</texture>
+					</control>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="Orbit_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>
