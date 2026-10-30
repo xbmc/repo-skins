@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video library = the corridors (docs/skin.nocturne/SPEC.md, mockup NocturneFilms.html).
+
+	Views (MyVideoNav <views>500,501,503,50</views>):
+	  500 Corridor  posters on one long hang under the picture rail; the torch stays centred, the wall slides
+	                (fixedlist, focusposition 3). Frames hang at mixed heights (item parity x year parity).
+	  501 Salon     dense grid for scanning; a small torch follows Column(n)/Row(n) by additive slides.
+	  503 Stills    episodes: a corridor of 16:9 stills.
+	  50  List      every content type (Includes_Views.xml).
+	Options row 9000 (bottom left, Kodi ids 3/4/14 behind it): ALL / UNWATCHED / IN PROGRESS / VIEW / SORT / arrow.
+	  Views Up/Down -> 9000; 9000 Up/Down/Back -> the view. Back in the view = Kodi parent folder
+	  (library roots are opened with ",return": Back from a root goes Home).
+-->
+<includes>
+	<!-- ================================================================ expressions -->
+	<expression name="VidView_IsInProgressTV">String.StartsWith(Container.FolderPath,videodb://inprogresstvshows)</expression>
+	<expression name="VidView_IsMoviesRoot">Container.Content(movies) + String.StartsWith(Container.FolderPath,videodb://movies/titles)</expression>
+	<expression name="VidView_IsTVRoot">Container.Content(tvshows) + String.StartsWith(Container.FolderPath,videodb://tvshows/titles)</expression>
+	<expression name="VidView_IsLibraryVideo">Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</expression>
+	<expression name="VidView_IsNode">Container.Content(genres) | Container.Content(years) | Container.Content(actors) | Container.Content(directors) | Container.Content(studios) | Container.Content(countries) | Container.Content(tags)</expression>
+	<!-- a node item with a real picture (actors' portraits); genres / years carry none, so their name card is the tile -->
+	<expression name="VidView_NodeHasArt">!String.IsEmpty(ListItem.Art(thumb)) + !String.StartsWith(ListItem.Art(thumb),Default)</expression>
+	<expression name="VidView_NavActiveAll">!System.Setting(hidewatched) + !String.StartsWith(Container.FolderPath,videodb://inprogresstvshows)</expression>
+	<expression name="VidView_IsFolderType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,set)</expression>
+	<expression name="VidView_IsTVType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)</expression>
+	<expression name="VidView_HasRating">!String.IsEmpty(ListItem.Rating) + !String.IsEqual(ListItem.Rating,0.0) + !String.IsEqual(ListItem.Rating,0)</expression>
+	<expression name="VidView_TVDone">Integer.IsEqual(ListItem.Property(UnWatchedEpisodes),0) + Integer.IsGreater(ListItem.Property(TotalEpisodes),0)</expression>
+	<expression name="VidView_SetDone">String.IsEqual(ListItem.DBType,set) + !String.IsEmpty(ListItem.Property(Total)) + String.IsEqual(ListItem.Property(Watched),ListItem.Property(Total))</expression>
+	<expression name="VidView_Watched">Integer.IsGreater(ListItem.PlayCount,0) | [$EXP[VidView_IsTVType] + $EXP[VidView_TVDone]] | $EXP[VidView_SetDone]</expression>
+
+	<!-- ================================================================ variables -->
+	<variable name="VidView_Section">
+		<value condition="Container.Content(movies) | Container.Content(sets)">$LOCALIZE[31200]</value>
+		<value condition="Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | $EXP[VidView_IsInProgressTV]">$LOCALIZE[31201]</value>
+		<value condition="Container.Content(musicvideos)">$LOCALIZE[20389]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<variable name="VidView_Second">
+		<value condition="$EXP[VidView_IsInProgressTV]">·   $LOCALIZE[31240]</value>
+		<value condition="[$EXP[VidView_IsMoviesRoot] | $EXP[VidView_IsTVRoot]] + System.Setting(hidewatched)">·   $LOCALIZE[16101]</value>
+		<value condition="$EXP[VidView_IsMoviesRoot] | $EXP[VidView_IsTVRoot]">·   $INFO[Container.SortMethod]</value>
+		<value condition="Container.Content(episodes) + !String.IsEmpty(ListItem.TVShowTitle)">·   $INFO[ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">·   $INFO[Container.FolderName]</value>
+	</variable>
+	<variable name="VidView_Third">
+		<value condition="Container.Content(episodes) + !String.IsEmpty(Container.FolderName) + !String.IsEqual(Container.FolderName,ListItem.TVShowTitle)">·   $INFO[Container.FolderName]</value>
+		<value condition="Container.Content(episodes)">·   $INFO[Container.NumItems]</value>
+		<value condition="Integer.IsGreater(Container.NumItems,0)">·   $INFO[Container.NumItems]</value>
+	</variable>
+	<variable name="VidView_SortArrow">
+		<value condition="Container.SortDirection(descending)">↓</value>
+		<value>↑</value>
+	</variable>
+	<variable name="VidView_ViewName">
+		<value condition="Control.IsVisible(500)">$LOCALIZE[31232]</value>
+		<value condition="Control.IsVisible(501)">$LOCALIZE[31233]</value>
+		<value condition="Control.IsVisible(503)">$LOCALIZE[31234]</value>
+		<value condition="Control.IsVisible(502)">$LOCALIZE[31390]</value>
+		<value condition="Control.IsVisible(506)">$LOCALIZE[31391]</value>
+		<value condition="Control.IsVisible(507)">$LOCALIZE[31392]</value>
+		<value>$LOCALIZE[535]</value>
+	</variable>
+	<variable name="VidView_Status">
+		<value condition="String.IsEqual(ListItem.DBType,set) + $EXP[VidView_SetDone]">$LOCALIZE[16102]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set) + Integer.IsGreater(ListItem.Property(Watched),0)">$LOCALIZE[31240]</value>
+		<value condition="$EXP[VidView_IsTVType] + $EXP[VidView_TVDone]">$LOCALIZE[16102]</value>
+		<value condition="$EXP[VidView_IsTVType] + Integer.IsGreater(ListItem.Property(WatchedEpisodes),0)">$LOCALIZE[31240]</value>
+		<value condition="ListItem.IsResumable">$INFO[ListItem.PercentPlayed,,% $LOCALIZE[31220]]</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)">$LOCALIZE[16102]</value>
+		<value>$LOCALIZE[16101]</value>
+	</variable>
+	<!-- S02E04 (zero padded) -->
+	<variable name="VidView_EpCode">
+		<value condition="String.IsEmpty(ListItem.Episode)"></value>
+		<value condition="Integer.IsLess(ListItem.Season,10) + Integer.IsLess(ListItem.Episode,10)">S0$INFO[ListItem.Season]E0$INFO[ListItem.Episode]</value>
+		<value condition="Integer.IsLess(ListItem.Season,10)">S0$INFO[ListItem.Season]E$INFO[ListItem.Episode]</value>
+		<value condition="Integer.IsLess(ListItem.Episode,10)">S$INFO[ListItem.Season]E0$INFO[ListItem.Episode]</value>
+		<value>S$INFO[ListItem.Season]E$INFO[ListItem.Episode]</value>
+	</variable>
+	<variable name="VidView_ItemTitle">
+		<value condition="ListItem.IsParentFolder">$LOCALIZE[31241]</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<!-- plaque meta: films "2006 · 130 MIN", shows "2008 · 5 SEASONS", seasons "10 EPISODES", sets "4 FILMS" -->
+	<variable name="VidView_PlaqueMeta">
+		<value condition="ListItem.IsParentFolder"></value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(TotalSeasons),1)">$INFO[ListItem.Year,,  ·  ]1 $LOCALIZE[31225]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$INFO[ListItem.Property(TotalSeasons),  ·  , $LOCALIZE[31224]]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season) + Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">1 $LOCALIZE[31243]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.Property(TotalEpisodes),, $LOCALIZE[31244]]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$VAR[VidInfo_SetFilms5]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$VAR[VidView_EpCode]$INFO[ListItem.Duration(mins),  ·  , $LOCALIZE[31221]]</value>
+		<value>$INFO[ListItem.Year]$INFO[ListItem.Duration(mins),  ·  , $LOCALIZE[31221]]</value>
+	</variable>
+	<!-- the line under the plaque: director · first three of the cast (films), studio · genre (shows) -->
+	<variable name="VidView_Credits">
+		<value condition="ListItem.IsParentFolder">$LOCALIZE[31242]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.Studio]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Genre]</value>
+		<value condition="!String.IsEmpty(ListItem.Director)">$INFO[ListItem.Director]$INFO[ListItem.Genre,  [COLOR 73eadbc4]·[/COLOR]  ,]</value>
+		<value>$INFO[ListItem.Genre]</value>
+	</variable>
+	<variable name="VidView_PosterArt">
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="VidView_StillArt">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(landscape))">$INFO[ListItem.Art(landscape)]</value>
+		<value>$INFO[ListItem.Art(fanart)]</value>
+	</variable>
+
+	<!-- Generic art pieces (DialogVideoManager): fallback block + image (scale) -->
+	<include name="VidView_ArtFallback">
+		<param name="label_visible">true</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="bg_raised">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_ArtImage">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<right>0</right>
+			<bottom>0</bottom>
+			<aspectratio>scale</aspectratio>
+			<fadetime>150</fadetime>
+			<texture background="true">$PARAM[art]</texture>
+		</control>
+	</include>
+
+	<!-- ================================================================ the room around a corridor -->
+	<include name="VidView_Rail">
+		<control type="image">
+			<left>0</left>
+			<top>165</top>
+			<width>1920</width>
+			<height>22</height>
+			<texture border="20,0,20,0">noc/picrail.png</texture>
+		</control>
+	</include>
+	<include name="VidView_Floor">
+		<control type="image">
+			<left>0</left>
+			<top>1000</top>
+			<width>1920</width>
+			<height>140</height>
+			<texture>noc/floor.png</texture>
+		</control>
+	</include>
+
+	<!-- One hanging frame inside a corridor item: two wires from the rail + hooks + the framed picture.
+	     params: left, top, w, h (item coords; the list's top is the rail at y 176), art, lit, visible -->
+	<include name="VidView_Hung">
+		<param name="lit">false</param>
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<control type="image">
+					<left>$PARAM[wl]</left>
+					<top>0</top>
+					<width>2</width>
+					<height>$PARAM[top]</height>
+					<texture>noc/wire.png</texture>
+				</control>
+				<control type="image">
+					<left>$PARAM[wr]</left>
+					<top>0</top>
+					<width>2</width>
+					<height>$PARAM[top]</height>
+					<texture>noc/wire.png</texture>
+				</control>
+				<control type="image">
+					<left>$PARAM[hl]</left>
+					<top>0</top>
+					<width>10</width>
+					<height>12</height>
+					<texture>noc/hook.png</texture>
+				</control>
+				<control type="image">
+					<left>$PARAM[hr]</left>
+					<top>0</top>
+					<width>10</width>
+					<height>12</height>
+					<texture>noc/hook.png</texture>
+				</control>
+				<control type="group">
+					<left>$PARAM[left]</left>
+					<top>$PARAM[top]</top>
+					<width>$PARAM[w]</width>
+					<height>$PARAM[h]</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$PARAM[art]"/>
+						<param name="lit" value="$PARAM[lit]"/>
+						<param name="label" value="$VAR[VidView_ItemTitle]"/>
+					</include>
+					<include content="Noc_Pin">
+						<param name="visible" value="$EXP[VidView_Watched]"/>
+					</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ 500 corridor -->
+	<include name="VidView_500_Corridor">
+		<control type="group">
+			<visible>Control.IsVisible(500)</visible>
+			<include>Anim_VisibleFade</include>
+			<include>VidView_Rail</include>
+			<include>VidView_Floor</include>
+			<control type="fixedlist" id="500">
+				<left>-300</left>
+				<top>176</top>
+				<width>2520</width>
+				<height>744</height>
+				<orientation>horizontal</orientation>
+				<focusposition>3</focusposition>
+				<movement>0</movement>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>9000</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31232">list</viewtype>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos)</visible>
+				<itemlayout width="360" height="744">
+					<include content="VidView_Hung">
+						<param name="visible" value="Integer.IsOdd(ListItem.CurrentItem) + Integer.IsOdd(ListItem.Year)"/>
+						<param name="left" value="62"/><param name="top" value="124"/><param name="w" value="236"/><param name="h" value="350"/>
+						<param name="wl" value="84"/><param name="wr" value="274"/><param name="hl" value="80"/><param name="hr" value="270"/>
+						<param name="art" value="$VAR[VidView_PosterArt]"/>
+					</include>
+					<include content="VidView_Hung">
+						<param name="visible" value="Integer.IsOdd(ListItem.CurrentItem) + !Integer.IsOdd(ListItem.Year)"/>
+						<param name="left" value="62"/><param name="top" value="142"/><param name="w" value="236"/><param name="h" value="350"/>
+						<param name="wl" value="84"/><param name="wr" value="274"/><param name="hl" value="80"/><param name="hr" value="270"/>
+						<param name="art" value="$VAR[VidView_PosterArt]"/>
+					</include>
+					<include content="VidView_Hung">
+						<param name="visible" value="!Integer.IsOdd(ListItem.CurrentItem) + Integer.IsOdd(ListItem.Year)"/>
+						<param name="left" value="80"/><param name="top" value="196"/><param name="w" value="200"/><param name="h" value="296"/>
+						<param name="wl" value="102"/><param name="wr" value="256"/><param name="hl" value="98"/><param name="hr" value="252"/>
+						<param name="art" value="$VAR[VidView_PosterArt]"/>
+					</include>
+					<include content="VidView_Hung">
+						<param name="visible" value="!Integer.IsOdd(ListItem.CurrentItem) + !Integer.IsOdd(ListItem.Year)"/>
+						<param name="left" value="70"/><param name="top" value="168"/><param name="w" value="220"/><param name="h" value="326"/>
+						<param name="wl" value="92"/><param name="wr" value="266"/><param name="hl" value="88"/><param name="hr" value="262"/>
+						<param name="art" value="$VAR[VidView_PosterArt]"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="360" height="744">
+					<include content="VidView_Hung">
+						<param name="visible" value="true"/>
+						<param name="left" value="-10"/><param name="top" value="92"/><param name="w" value="380"/><param name="h" value="541"/>
+						<param name="wl" value="26"/><param name="wr" value="352"/><param name="hl" value="22"/><param name="hr" value="348"/>
+						<param name="art" value="$VAR[VidView_PosterArt]"/>
+						<param name="lit" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+			<!-- the light (static: the torch stays centred, the wall slides) -->
+			<include content="Noc_Dust">
+				<param name="left" value="560"/>
+				<param name="top" value="140"/>
+				<param name="size" value="800"/>
+			</include>
+			<include content="Noc_ShroudStatic">
+				<param name="texture" value="noc/shroud_corridor.png"/>
+			</include>
+			<include content="Noc_Halo">
+				<param name="left" value="320"/>
+				<param name="top" value="-80"/>
+				<param name="size" value="1280"/>
+			</include>
+			<include content="Noc_Glint">
+				<param name="left" value="780"/>
+				<param name="top" value="249"/>
+				<param name="width" value="360"/>
+			</include>
+			<include content="Noc_Plaque">
+				<param name="left" value="360"/>
+				<param name="top" value="850"/>
+				<param name="title" value="$VAR[VidView_ItemTitle]"/>
+				<param name="meta" value="$VAR[VidView_PlaqueMeta]"/>
+				<param name="visible" value="Integer.IsGreater(Container.NumItems,0)"/>
+			</include>
+			<control type="label">
+				<left>260</left>
+				<top>930</top>
+				<width>1400</width>
+				<height>40</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>body_24</font>
+				<textcolor>d1eadbc4</textcolor>
+				<label>$VAR[VidView_Credits]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ 501 salon -->
+	<!-- 8 x 2.5 grid of small frames with their titles (unlit 30 %, lit under the torch).
+	     The torch: one shroud moved by Column(0..7) and Row(1) conditional slides. -->
+	<include name="VidView_SalonTorch">
+		<param name="id">501</param>
+		<definition>
+			<control type="group">
+				<animation effect="slide" start="0,0" end="216,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(1)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="216,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(1)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="432,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(2)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="432,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(2)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="648,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(3)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="648,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(3)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="864,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(4)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="864,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(4)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1080,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(5)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1080,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(5)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1296,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(6)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1296,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(6)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1512,0" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(7)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="1512,0" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Column(7)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,340" time="180" tween="sine" easing="inout" condition="[Container($PARAM[id]).Row(1)] + !Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="0,340" time="0" tween="sine" easing="inout" condition="[Container($PARAM[id]).Row(1)] + Skin.HasSetting(nocturne.reducemotion)">Conditional</animation>
+				<include content="Noc_Dust">
+					<param name="left" value="-292"/>
+					<param name="top" value="-235"/>
+					<param name="size" value="800"/>
+				</include>
+				<control type="image">
+					<left>-1812</left>
+					<top>-1755</top>
+					<width>3840</width>
+					<height>3840</height>
+					<texture colordiffuse="$VAR[Noc_ShroudAlpha]">noc/shroud_small.png</texture>
+				</control>
+				<include content="Noc_Halo">
+					<param name="left" value="-342"/>
+					<param name="top" value="-285"/>
+					<param name="size" value="900"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_501_Salon">
+		<control type="group">
+			<visible>Control.IsVisible(501)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="panel" id="501">
+				<left>96</left>
+				<top>170</top>
+				<width>1728</width>
+				<height>820</height>
+				<orientation>vertical</orientation>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>9000</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31233">icon</viewtype>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(musicvideos) | $EXP[VidView_IsNode]</visible>
+				<itemlayout width="216" height="340">
+					<control type="group">
+						<left>24</left>
+						<top>18</top>
+						<width>168</width>
+						<height>252</height>
+						<include content="Noc_FrameParts">
+							<param name="art" value="$VAR[VidView_PosterArt]"/>
+							<param name="label" value="$VAR[VidView_ItemTitle]"/>
+						</include>
+						<include content="Noc_Pin">
+							<param name="visible" value="$EXP[VidView_Watched]"/>
+						</include>
+					</control>
+					<control type="label">
+						<left>8</left>
+						<top>290</top>
+						<width>200</width>
+						<height>36</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>title_30</font>
+						<textcolor>66e3cfae</textcolor>
+						<label>$VAR[VidView_ItemTitle]</label>
+						<visible>[!$EXP[VidView_IsNode] | $EXP[VidView_NodeHasArt] | ListItem.IsParentFolder]</visible>
+					</control>
+				</itemlayout>
+				<focusedlayout width="216" height="340">
+					<control type="group">
+						<left>24</left>
+						<top>18</top>
+						<width>168</width>
+						<height>252</height>
+						<include content="Noc_FrameParts">
+							<param name="art" value="$VAR[VidView_PosterArt]"/>
+							<param name="label" value="$VAR[VidView_ItemTitle]"/>
+							<param name="lit" value="Control.HasFocus(501)"/>
+						</include>
+						<include content="Noc_Pin">
+							<param name="visible" value="$EXP[VidView_Watched]"/>
+						</include>
+					</control>
+					<control type="label">
+						<left>8</left>
+						<top>290</top>
+						<width>200</width>
+						<height>36</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>title_30</font>
+						<textcolor>66e3cfae</textcolor>
+						<label>$VAR[VidView_ItemTitle]</label>
+						<visible>!Control.HasFocus(501) + [!$EXP[VidView_IsNode] | $EXP[VidView_NodeHasArt] | ListItem.IsParentFolder]</visible>
+					</control>
+					<control type="label">
+						<left>8</left>
+						<top>290</top>
+						<width>200</width>
+						<height>36</height>
+						<align>center</align>
+						<aligny>center</aligny>
+						<font>title_30</font>
+						<textcolor>text_lit</textcolor>
+						<scroll>true</scroll>
+						<scrollsuffix>     ·     </scrollsuffix>
+						<label>$VAR[VidView_ItemTitle]</label>
+						<visible>Control.HasFocus(501) + [!$EXP[VidView_IsNode] | $EXP[VidView_NodeHasArt] | ListItem.IsParentFolder]</visible>
+					</control>
+				</focusedlayout>
+			</control>
+			<control type="group">
+				<left>96</left>
+				<top>170</top>
+				<include content="VidView_SalonTorch">
+					<param name="id" value="501"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ 503 stills (episodes) -->
+	<include name="VidView_503_Stills">
+		<control type="group">
+			<visible>Control.IsVisible(503)</visible>
+			<include>Anim_VisibleFade</include>
+			<include>VidView_Rail</include>
+			<include>VidView_Floor</include>
+			<control type="fixedlist" id="503">
+				<left>-490</left>
+				<top>176</top>
+				<width>2900</width>
+				<height>700</height>
+				<orientation>horizontal</orientation>
+				<focusposition>2</focusposition>
+				<movement>0</movement>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>9000</onup>
+				<ondown>9000</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31234">list</viewtype>
+				<visible>Container.Content(episodes)</visible>
+				<itemlayout width="500" height="700">
+					<include content="VidView_Hung">
+						<param name="visible" value="Integer.IsOdd(ListItem.CurrentItem)"/>
+						<param name="left" value="60"/><param name="top" value="190"/><param name="w" value="380"/><param name="h" value="214"/>
+						<param name="wl" value="92"/><param name="wr" value="406"/><param name="hl" value="88"/><param name="hr" value="402"/>
+						<param name="art" value="$VAR[VidView_StillArt]"/>
+					</include>
+					<include content="VidView_Hung">
+						<param name="visible" value="!Integer.IsOdd(ListItem.CurrentItem)"/>
+						<param name="left" value="60"/><param name="top" value="222"/><param name="w" value="380"/><param name="h" value="214"/>
+						<param name="wl" value="92"/><param name="wr" value="406"/><param name="hl" value="88"/><param name="hr" value="402"/>
+						<param name="art" value="$VAR[VidView_StillArt]"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="500" height="700">
+					<include content="VidView_Hung">
+						<param name="visible" value="true"/>
+						<param name="left" value="-30"/><param name="top" value="132"/><param name="w" value="560"/><param name="h" value="315"/>
+						<param name="wl" value="10"/><param name="wr" value="488"/><param name="hl" value="6"/><param name="hr" value="484"/>
+						<param name="art" value="$VAR[VidView_StillArt]"/>
+						<param name="lit" value="true"/>
+					</include>
+					<control type="progress">
+						<left>-30</left>
+						<top>467</top>
+						<width>560</width>
+						<height>2</height>
+						<texturebg colordiffuse="brass_dim">common/white.png</texturebg>
+						<midtexture colordiffuse="brass_light">common/white.png</midtexture>
+						<info>ListItem.PercentPlayed</info>
+						<visible>ListItem.IsResumable</visible>
+					</control>
+				</focusedlayout>
+			</control>
+			<include content="Noc_Dust">
+				<param name="left" value="560"/>
+				<param name="top" value="120"/>
+				<param name="size" value="800"/>
+			</include>
+			<include content="Noc_ShroudStatic">
+				<param name="texture" value="noc/shroud_wide.png"/>
+			</include>
+			<include content="Noc_Halo">
+				<param name="left" value="320"/>
+				<param name="top" value="-120"/>
+				<param name="size" value="1280"/>
+			</include>
+			<include content="Noc_Glint">
+				<param name="left" value="690"/>
+				<param name="top" value="289"/>
+				<param name="width" value="540"/>
+			</include>
+			<include content="Noc_Plaque">
+				<param name="left" value="360"/>
+				<param name="top" value="680"/>
+				<param name="title" value="$VAR[VidView_ItemTitle]"/>
+				<param name="meta" value="$VAR[VidView_PlaqueMeta]"/>
+				<param name="visible" value="Integer.IsGreater(Container.NumItems,0)"/>
+			</include>
+			<control type="textbox">
+				<left>460</left>
+				<top>770</top>
+				<width>1000</width>
+				<height>132</height>
+				<align>center</align>
+				<font>body_24</font>
+				<textcolor>d1eadbc4</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="8000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ options row -->
+	<include name="VidView_OptionLook">
+		<height>48</height>
+		<font>caps_20</font>
+		<textoffsetx>14</textoffsetx>
+		<aligny>center</aligny>
+		<focusedcolor>text_primary</focusedcolor>
+		<texturefocus colordiffuse="light">noc/glow_word.png</texturefocus>
+		<texturenofocus />
+	</include>
+	<include name="VidView_Options">
+		<control type="grouplist" id="9000">
+			<left>82</left>
+			<top>1006</top>
+			<width>940</width>
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<itemgap>26</itemgap>
+			<onup>50</onup>
+			<ondown>50</ondown>
+			<onright>9830</onright>
+			<onback>50</onback>
+			<control type="button" id="9321">
+				<include>VidView_OptionLook</include>
+				<width>auto</width>
+				<label>$LOCALIZE[593]</label>
+				<textcolor>$VAR[VidView_ColAll]</textcolor>
+				<onclick condition="$EXP[VidView_IsInProgressTV]">Action(ParentDir)</onclick>
+				<onclick condition="!$EXP[VidView_IsInProgressTV] + System.Setting(hidewatched)">SendClick(14)</onclick>
+				<visible>$EXP[VidView_IsLibraryVideo] | $EXP[VidView_IsInProgressTV]</visible>
+			</control>
+			<control type="button" id="9322">
+				<include>VidView_OptionLook</include>
+				<width>auto</width>
+				<label>$LOCALIZE[16101]</label>
+				<textcolor>$VAR[VidView_ColUnwatched]</textcolor>
+				<onclick condition="!System.Setting(hidewatched)">SendClick(14)</onclick>
+				<visible>Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</visible>
+			</control>
+			<control type="button" id="9323">
+				<include>VidView_OptionLook</include>
+				<width>auto</width>
+				<label>$LOCALIZE[31240]</label>
+				<textcolor>$VAR[VidView_ColInProgress]</textcolor>
+				<onclick condition="!$EXP[VidView_IsInProgressTV]">Container.Update(videodb://inprogresstvshows/)</onclick>
+				<visible>$EXP[VidView_IsTVRoot] | $EXP[VidView_IsInProgressTV]</visible>
+			</control>
+			<control type="button" id="9324">
+				<include>VidView_OptionLook</include>
+				<width>auto</width>
+				<label>$LOCALIZE[31010]  $INFO[Container.SortMethod]</label>
+				<textcolor>73c8b8a0</textcolor>
+				<onclick>SendClick(3)</onclick>
+				<visible>Control.IsEnabled(3)</visible>
+			</control>
+			<control type="button" id="9325">
+				<include>VidView_OptionLook</include>
+				<width>auto</width>
+				<label>$VAR[VidView_SortArrow]</label>
+				<textcolor>73c8b8a0</textcolor>
+				<onclick>SendClick(4)</onclick>
+				<visible>Control.IsEnabled(4)</visible>
+			</control>
+		</control>
+		<include content="Lib_BrassWords">
+			<param name="top" value="998"/>
+			<param name="pick_focus" value="Lib_PickFocusVideo"/>
+			<param name="view_w" value="290"/>
+			<param name="view_label" value="$VAR[VidView_ViewName]"/>
+			<param name="onleft" value="9000"/>
+			<param name="onup" value="50"/>
+			<param name="ondown" value="50"/>
+		</include>
+		<control type="label">
+			<right>640</right>
+			<top>1006</top>
+			<width>280</width>
+			<height>48</height>
+			<align>right</align>
+			<aligny>center</aligny>
+			<font>caps_20</font>
+			<textcolor>73c8b8a0</textcolor>
+			<label>$INFO[Container.CurrentItem,$LOCALIZE[31246] ,]$INFO[Container.NumItems,   $LOCALIZE[31247] ,]</label>
+			<visible>Integer.IsGreater(Container.NumItems,0)</visible>
+		</control>
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>Noc_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>Noc_Hidden</include>
+		</control>
+	</include>
+	<variable name="VidView_ColAll">
+		<value condition="$EXP[VidView_NavActiveAll]">cce2d0b4</value>
+		<value>73c8b8a0</value>
+	</variable>
+	<variable name="VidView_ColUnwatched">
+		<value condition="System.Setting(hidewatched)">cce2d0b4</value>
+		<value>73c8b8a0</value>
+	</variable>
+	<variable name="VidView_ColInProgress">
+		<value condition="$EXP[VidView_IsInProgressTV]">cce2d0b4</value>
+		<value>73c8b8a0</value>
+	</variable>
+
+	<!-- ================================================================ empty -->
+	<include name="VidView_Empty">
+		<control type="group">
+			<left>0</left>
+			<top>420</top>
+			<width>1920</width>
+			<height>200</height>
+			<!-- not inside the Corridor's ".." frame (its caption already says how to go back) -->
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating + [!Container.HasParent | !Control.IsVisible(500)]</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1920</width>
+				<height>60</height>
+				<align>center</align>
+				<font>title_48</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31248]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>80</top>
+				<width>1920</width>
+				<height>40</height>
+				<align>center</align>
+				<font>body_24</font>
+				<textcolor>text_tertiary</textcolor>
+				<label>$LOCALIZE[31249]</label>
+				<visible>System.Setting(hidewatched)</visible>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ window -->
+	<include name="VidView_Window">
+		<include>Noc_Wall</include>
+		<include>VidView_500_Corridor</include>
+		<include>VidView_501_Salon</include>
+		<include>VidView_503_Stills</include>
+		<include>VidView_502_Vitrine</include>
+		<include>VidView_506_Panorama</include>
+		<include>VidView_507_Catalogue</include>
+		<control type="group">
+			<visible>Control.IsVisible(50) | Integer.IsEqual(Container.NumItems,0)</visible>
+			<include content="Noc_ShroudStatic">
+				<param name="texture" value="noc/shroud_page.png"/>
+			</include>
+		</control>
+		<include>View_50_List</include>
+		<include>VidView_Empty</include>
+		<include>Noc_CorniceImage</include>
+		<include content="Noc_Crumbs">
+			<param name="first" value="$VAR[VidView_Section]"/>
+			<param name="second" value="$VAR[VidView_Second]"/>
+			<param name="third" value="$VAR[VidView_Third]"/>
+		</include>
+		<include>Noc_Clock</include>
+		<include>VidView_Options</include>
+		<include content="Lib_Panel">
+			<param name="is_video" value="true"/>
+			<param name="kind" value="video"/>
+			<param name="section" value="$VAR[VidView_Section]"/>
+			<param name="view_name" value="$VAR[VidView_ViewName]"/>
+			<param name="order_click" value="SendClick(4)"/>
+			<param name="pick_focus" value="Lib_PickFocusVideo"/>
+		</include>
+		<include content="Lib_Picker">
+			<param name="items" value="Lib_PickerVideo"/>
+			<param name="section" value="$VAR[VidView_Section]"/>
+		</include>
+	</include>
+</includes>

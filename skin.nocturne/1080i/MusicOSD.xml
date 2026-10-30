@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD: over Now playing, the bottom of the room takes the brass rails (Includes_Rail.xml).
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (Stop 603 when pause is not possible),
+	87 seek stepper (hidden; Left/Right step), group 200: 602 play/pause, 603 stop, 600 previous, 607 next |
+	70054 shuffle, 70053 repeat, 70051 queue. Omar's rule 6 order; fixed widths (no judder).
+	Navigation: Left/Right walk both rails (wraps Queue <-> Play/Pause); Up -> 87 (seek), Down from 87 -> the rails.
+	Top rail 203 (right, y 650; only while a visualisation add-on is set in Kodi): 70060 Visualiser / The record
+	(skin bool nocturne.np.viz), 70061 Presets (Visualiser mode + Visualisation.HasPresets: Kodi's preset list in
+	DialogSelect). Up from 87 -> 70060, Down from the top rail -> 87. The OSD opens on Presets when it is shown.
+	Back closes the OSD (Kodi).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<onload condition="Skin.HasSetting(nocturne.np.viz) + Visualisation.Enabled + Visualisation.HasPresets">SetFocus(70061)</onload>
+	<onload condition="$EXP[HasTMDbHelper] + Skin.HasSetting(nocturne.halocolour) + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(nocturne.np.colorsrc),Player.Art(thumb))">RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(thumb)]",prefix=NocturnePlayer)</onload>
+	<onload>SetProperty(nocturne.np.colorsrc,$INFO[Player.Art(thumb)],home)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<include content="Rail_Dark">
+			<param name="floor" value="420"/>
+		</include>
+		<include content="Rail_TitleAndFilament">
+			<param name="top" value="752"/>
+		</include>
+		<control type="button" id="87">
+			<description>seek stepper</description>
+			<include>Noc_Hidden</include>
+			<onup condition="Visualisation.Enabled">70060</onup>
+			<onup condition="!Visualisation.Enabled">200</onup>
+			<ondown>200</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+		</control>
+		<control type="image">
+			<left>-20</left>
+			<top>820</top>
+			<width>1960</width>
+			<height>120</height>
+			<texture border="64,0,64,0" colordiffuse="light">noc/glow_bar.png</texture>
+			<visible>Control.HasFocus(87)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+		<!-- top rail: Visualiser / The record + Presets (VIS_PRESETS_BRIEF) -->
+		<control type="grouplist" id="203">
+			<left>96</left>
+			<top>650</top>
+			<width>1728</width>
+			<height>64</height>
+			<orientation>horizontal</orientation>
+			<align>right</align>
+			<visible>Visualisation.Enabled</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="Rail_CapL"><param name="id" value="9460"/></include>
+			<include content="Rail_Word">
+				<param name="id" value="70060"/>
+				<param name="width" value="232"/>
+				<param name="label" value="$VAR[Music_VizWord]"/>
+				<param name="onclick" value="Skin.ToggleSetting(nocturne.np.viz)"/>
+				<param name="onleft" value="70061"/>
+				<param name="onright" value="70061"/>
+				<param name="onup" value="noop"/>
+				<param name="ondown" value="87"/>
+				<param name="visible" value="Visualisation.Enabled"/>
+			</include>
+			<include content="Rail_Sep"><param name="id" value="9461"/><param name="visible" value="$EXP[Music_VizPresets]"/></include>
+			<include content="Rail_Word">
+				<param name="id" value="70061"/>
+				<param name="width" value="176"/>
+				<param name="label" value="$LOCALIZE[31379]"/>
+				<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+				<param name="onleft" value="70060"/>
+				<param name="onright" value="70060"/>
+				<param name="onup" value="noop"/>
+				<param name="ondown" value="87"/>
+				<param name="visible" value="$EXP[Music_VizPresets]"/>
+			</include>
+			<include content="Rail_CapR"><param name="id" value="9462"/></include>
+		</control>
+		<control type="group" id="200">
+			<left>0</left>
+			<top>916</top>
+			<width>1920</width>
+			<height>64</height>
+			<control type="grouplist" id="201">
+				<left>96</left>
+				<top>0</top>
+				<width>900</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<onleft>70051</onleft>
+				<onright>70054</onright>
+				<include content="Rail_CapL"><param name="id" value="9451"/></include>
+				<control type="button" id="602">
+					<width>140</width>
+					<height>64</height>
+					<font>btn_22</font>
+					<align>center</align>
+					<textoffsetx>0</textoffsetx>
+					<textcolor>brass_word</textcolor>
+					<focusedcolor>ink</focusedcolor>
+					<texturenofocus>noc/rail_mid.png</texturenofocus>
+					<texturefocus border="30,0,30,0">noc/rail_on.png</texturefocus>
+					<label>$VAR[Rail_PlayLabel]</label>
+					<onclick>PlayerControl(Play)</onclick>
+					<onleft>70051</onleft>
+					<onright>603</onright>
+					<onup>87</onup>
+				</control>
+				<include content="Rail_Sep"><param name="id" value="9455"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="603"/>
+					<param name="width" value="124"/>
+					<param name="label" value="$LOCALIZE[31277]"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="600"/>
+				</include>
+				<include content="Rail_Sep"><param name="id" value="9456"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="600"/>
+					<param name="width" value="190"/>
+					<param name="label" value="$LOCALIZE[31278]"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="607"/>
+				</include>
+				<include content="Rail_Sep"><param name="id" value="9457"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="607"/>
+					<param name="width" value="122"/>
+					<param name="label" value="$LOCALIZE[31279]"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onleft" value="600"/>
+					<param name="onright" value="70054"/>
+				</include>
+				<include content="Rail_CapR"><param name="id" value="9452"/></include>
+			</control>
+			<control type="grouplist" id="202">
+				<left>96</left>
+				<top>0</top>
+				<width>1728</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<onleft>607</onleft>
+				<onright>602</onright>
+				<include content="Rail_CapL"><param name="id" value="9453"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="70054"/>
+					<param name="width" value="230"/>
+					<param name="label" value="$VAR[Rail_ShuffleLabel]"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+					<param name="onleft" value="607"/>
+					<param name="onright" value="70053"/>
+				</include>
+				<include content="Rail_Sep"><param name="id" value="9458"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="70053"/>
+					<param name="width" value="240"/>
+					<param name="label" value="$VAR[Rail_RepeatLabel]"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+					<param name="onleft" value="70054"/>
+					<param name="onright" value="70051"/>
+				</include>
+				<include content="Rail_Sep"><param name="id" value="9459"/></include>
+				<include content="Rail_Word">
+					<param name="id" value="70051"/>
+					<param name="width" value="230"/>
+					<param name="label" value="$VAR[Rail_QueueLabel]"/>
+					<param name="onclick" value="Dialog.Close(all,true)"/>
+					<param name="onclick2" value="ActivateWindow(musicplaylist)"/>
+					<param name="onleft" value="70053"/>
+					<param name="onright" value="602"/>
+				</include>
+				<include content="Rail_CapR"><param name="id" value="9454"/></include>
+			</control>
+		</control>
+		<control type="label">
+			<left>96</left>
+			<top>1004</top>
+			<width>1728</width>
+			<height>30</height>
+			<font>caps_20</font>
+			<textcolor>73c8b8a0</textcolor>
+			<label>$VAR[OSD_Hint]</label>
+		</control>
+	</controls>
+</window>

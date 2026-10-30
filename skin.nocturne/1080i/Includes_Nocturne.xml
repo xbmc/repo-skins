@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Nocturne look: the wall, the cornice, frames, brass plaques, the torch (shroud + halo + dust).
+	Textures: media/noc/ (_src/make_textures.py). Design: docs/skin.nocturne/DESIGN.md.
+
+	The torch = a dark "shroud" texture with a soft clear hole, drawn ABOVE the wall and the art. Where it is
+	opaque the room is dark; through the hole the wall and the art show at full light. Moving the shroud moves
+	the light. On walls with fixed slots (Home) the shroud group carries one reversible Conditional slide per
+	slot (same time, sine in-out): when focus moves A -> B, A's slide reverses while B's plays, and because
+	f(t) + f(1 - t) = 1 for a symmetric in-out tween the sum is an exact eased glide from A to B.
+-->
+<includes>
+	<!-- ============================================================ the wall -->
+	<include name="Noc_Wall">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture background="true">noc/plaster.jpg</texture>
+		</control>
+	</include>
+
+	<!-- the cornice is baked into plaster.jpg (one opaque full-screen layer); kept as a no-op for the includes -->
+	<include name="Noc_CorniceImage">
+		<description>baked into noc/plaster.jpg</description>
+	</include>
+
+	<!-- A page room: wall + cornice + the soft page light (shroud_page) for lists, settings, generic windows -->
+	<include name="Noc_Background">
+		<include>Noc_Wall</include>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture>noc/shroud_page.png</texture>
+		</control>
+	</include>
+
+	<!-- Clock (right of the cornice): time + short date, dim -->
+	<include name="Noc_Clock">
+		<control type="group">
+			<visible>!Window.IsVisible(fullscreenvideo) | Window.IsVisible(videoosd)</visible>
+			<control type="label">
+				<right>96</right>
+				<top>50</top>
+				<width>400</width>
+				<height>40</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>clock_30</font>
+				<textcolor>8cc8b8a0</textcolor>
+				<shadowcolor>b3000000</shadowcolor>
+				<label>$VAR[ClockLabel]</label>
+			</control>
+			<control type="label">
+				<right>90</right>
+				<top>92</top>
+				<width>400</width>
+				<height>28</height>
+				<align>right</align>
+				<aligny>center</aligny>
+				<font>caps_20</font>
+				<textcolor>73c8b8a0</textcolor>
+				<label>$VAR[DateLabel]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- Breadcrumb in the cornice for library / info / settings windows:
+	     WORD (lit) · second (55 %) · third (40 %). params: first, second, third -->
+	<include name="Noc_Crumbs">
+		<param name="first"></param>
+		<param name="second"></param>
+		<param name="third"></param>
+		<param name="glow">55</param>
+		<definition>
+			<control type="image">
+				<left>-24</left>
+				<top>-58</top>
+				<width>520</width>
+				<height>260</height>
+				<texture>noc/glow_warm.png</texture>
+				<animation effect="fade" start="100" end="$PARAM[glow]" time="0" condition="true">Conditional</animation>
+			</control>
+			<control type="grouplist">
+				<left>96</left>
+				<top>48</top>
+				<width>1300</width>
+				<height>48</height>
+				<orientation>horizontal</orientation>
+				<itemgap>40</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="520">auto</width>
+					<height>48</height>
+					<aligny>center</aligny>
+					<font>nav_24</font>
+					<textcolor>text_primary</textcolor>
+					<shadowcolor>e6281806</shadowcolor>
+					<label>$PARAM[first]</label>
+				</control>
+				<control type="label">
+					<width max="680">auto</width>
+					<height>48</height>
+					<aligny>center</aligny>
+					<font>nav_24</font>
+					<textcolor>8cdcc8aa</textcolor>
+					<shadowcolor>b3000000</shadowcolor>
+					<label>$PARAM[second]</label>
+				</control>
+				<control type="label">
+					<width max="420">auto</width>
+					<height>48</height>
+					<aligny>center</aligny>
+					<font>nav_24</font>
+					<textcolor>66dcc8aa</textcolor>
+					<shadowcolor>b3000000</shadowcolor>
+					<label>$PARAM[third]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ frames -->
+	<!-- A framed picture on the wall: baked shadow (9-slice 64), the art, the black-and-gilt frame (9-slice 16).
+	     Use inside a group positioned at the art rect. params: art, w, h, lit (warm colordiffuse), fallback label -->
+	<include name="Noc_FrameParts">
+		<param name="lit">false</param>
+		<param name="label"></param>
+		<param name="aspect">scale</param>
+		<definition>
+			<control type="image">
+				<left>-64</left>
+				<top>-64</top>
+				<right>-64</right>
+				<bottom>-64</bottom>
+				<texture border="64">noc/shadow.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="bg_raised">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<right>12</right>
+				<top>12</top>
+				<bottom>12</bottom>
+				<align>center</align>
+				<aligny>center</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<font>title_30</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>$PARAM[aspect]</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+				<visible>!$PARAM[lit]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>$PARAM[aspect]</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true" colordiffuse="warm_art">$PARAM[art]</texture>
+				<visible>$PARAM[lit]</visible>
+			</control>
+			<control type="image">
+				<left>-16</left>
+				<top>-16</top>
+				<right>-16</right>
+				<bottom>-16</bottom>
+				<texture border="16">noc/frame.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Album cover on the shelf: no frame, a thin bevel line -->
+	<include name="Noc_CoverParts">
+		<param name="lit">false</param>
+		<param name="label"></param>
+		<definition>
+			<control type="image">
+				<left>-64</left>
+				<top>-64</top>
+				<right>-64</right>
+				<bottom>-64</bottom>
+				<texture border="64">noc/shadow.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="bg_raised">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>16</left>
+				<right>16</right>
+				<top>16</top>
+				<bottom>16</bottom>
+				<align>center</align>
+				<aligny>center</aligny>
+				<wrapmultiline>true</wrapmultiline>
+				<font>title_30</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+				<visible>!$PARAM[lit]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true" colordiffuse="warm_art">$PARAM[art]</texture>
+				<visible>$PARAM[lit]</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<height>1</height>
+				<texture colordiffuse="40ffe7c2">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Specular glint on the lit frame's top edge. params: left, top, width -->
+	<include name="Noc_Glint">
+		<param name="alpha">95</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>9</height>
+				<texture>noc/glint.png</texture>
+				<animation effect="fade" start="100" end="$PARAM[alpha]" time="0" condition="true">Conditional</animation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Watched pin (top-right corner of a frame). Inside the art group. param visible -->
+	<include name="Noc_Pin">
+		<control type="image">
+			<right>-7</right>
+			<top>-7</top>
+			<width>28</width>
+			<height>28</height>
+			<texture>noc/pin.png</texture>
+			<visible>$PARAM[visible] + !Skin.HasSetting(nocturne.nopins)</visible>
+		</control>
+	</include>
+
+	<!-- ============================================================ plaques -->
+	<!-- One-line brass plaque, auto width, centred on cx: [cap][title][gap][meta][cap].
+	     params: cx (centre x), top, title, meta, visible -->
+	<include name="Noc_Plaque">
+		<param name="visible">true</param>
+		<param name="width">1200</param>
+		<definition>
+			<control type="grouplist">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>64</height>
+				<orientation>horizontal</orientation>
+				<align>center</align>
+				<itemgap>0</itemgap>
+				<visible>$PARAM[visible]</visible>
+				<include>Anim_PlaqueVisible</include>
+				<control type="image">
+					<width>26</width>
+					<height>64</height>
+					<texture>noc/plaque_capl.png</texture>
+				</control>
+				<!-- 2026-10-30: breathing room so the text never touches the screws -->
+				<control type="image">
+					<width>12</width>
+					<height>64</height>
+					<texture>noc/plaque_mid.png</texture>
+				</control>
+				<control type="button">
+					<width>auto</width>
+					<height>64</height>
+					<font>title_34</font>
+					<textoffsetx>0</textoffsetx>
+					<!-- aligny top + measured offsets put title and caps on one baseline (Kodi ignores textoffsety while centred) -->
+					<textoffsety>6</textoffsety>
+					<aligny>top</aligny>
+					<textcolor>ink</textcolor>
+					<disabledcolor>ink</disabledcolor>
+					<shadowcolor>8cffeec8</shadowcolor>
+					<texturenofocus>noc/plaque_mid.png</texturenofocus>
+					<texturefocus>noc/plaque_mid.png</texturefocus>
+					<label>$PARAM[title]</label>
+					<enable>false</enable>
+				</control>
+				<control type="image">
+					<width>16</width>
+					<height>64</height>
+					<texture>noc/plaque_mid.png</texture>
+				</control>
+				<control type="button">
+					<width>auto</width>
+					<height>64</height>
+					<font>capss_20</font>
+					<textoffsetx>0</textoffsetx>
+					<textoffsety>21</textoffsety>
+					<aligny>top</aligny>
+					<textcolor>ink</textcolor>
+					<disabledcolor>ink</disabledcolor>
+					<shadowcolor>8cffeec8</shadowcolor>
+					<texturenofocus>noc/plaque_mid.png</texturenofocus>
+					<texturefocus>noc/plaque_mid.png</texturefocus>
+					<label>$PARAM[meta]</label>
+					<enable>false</enable>
+				</control>
+				<control type="image">
+					<width>14</width>
+					<height>64</height>
+					<texture>noc/plaque_mid.png</texture>
+				</control>
+				<control type="image">
+					<width>26</width>
+					<height>64</height>
+					<texture>noc/plaque_capr.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Two-line museum label for small frames: fixed width, title (scrolls) over meta. params: left, top, width, title, meta, visible -->
+	<include name="Noc_Plaque2">
+		<param name="visible">true</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>84</height>
+				<visible>$PARAM[visible]</visible>
+				<include>Anim_PlaqueVisible</include>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>$PARAM[width]</width>
+					<height>84</height>
+					<texture border="26,0,26,0">noc/plaque2.png</texture>
+				</control>
+				<control type="label">
+					<left>30</left>
+					<right>30</right>
+					<top>6</top>
+					<height>42</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<scroll>true</scroll>
+					<scrollsuffix>     ·     </scrollsuffix>
+					<scrollspeed>36</scrollspeed>
+					<font>title_30</font>
+					<textcolor>ink</textcolor>
+					<shadowcolor>8cffeec8</shadowcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<left>26</left>
+					<right>26</right>
+					<top>46</top>
+					<height>28</height>
+					<align>center</align>
+					<aligny>center</aligny>
+					<font>capss_20</font>
+					<textcolor>ink</textcolor>
+					<shadowcolor>8cffeec8</shadowcolor>
+					<label>$PARAM[meta]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ the torch -->
+	<!-- Dust in the beam: two fields drifting in slow opposite loops (off with Reduce motion).
+	     Drawn UNDER the shroud so the darkness masks it outside the pool. params: left, top, size -->
+	<include name="Noc_Dust">
+		<param name="size">760</param>
+		<definition>
+			<control type="group">
+				<visible>!Skin.HasSetting(nocturne.reducemotion) + Skin.HasSetting(nocturne.dust)</visible>
+				<control type="image">
+					<left>$PARAM[left]</left>
+					<top>$PARAM[top]</top>
+					<width>$PARAM[size]</width>
+					<height>$PARAM[size]</height>
+					<texture>noc/dust.png</texture>
+					<animation type="Conditional" condition="[true] + !Skin.HasSetting(nocturne.reducemotion)" loop="true" reversible="false">
+						<effect type="slide" start="0,0" end="28,-54" time="9000" tween="sine" easing="inout"/>
+						<effect type="slide" start="0,0" end="-28,54" time="9000" delay="9000" tween="sine" easing="inout"/>
+					</animation>
+				</control>
+				<control type="image">
+					<left>$PARAM[left]</left>
+					<top>$PARAM[top]</top>
+					<width>$PARAM[size]</width>
+					<height>$PARAM[size]</height>
+					<texture flipx="true" colordiffuse="b3ffffff">noc/dust.png</texture>
+					<animation type="Conditional" condition="[true] + !Skin.HasSetting(nocturne.reducemotion)" loop="true" reversible="false">
+						<effect type="slide" start="0,0" end="-36,30" time="12000" tween="sine" easing="inout"/>
+						<effect type="slide" start="0,0" end="36,-30" time="12000" delay="12000" tween="sine" easing="inout"/>
+					</animation>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Halo: outer light tinted by the art (TMDb Helper Colors.Main) or warm white. params: left, top, size, color -->
+	<include name="Noc_Halo">
+		<param name="size">1240</param>
+		<param name="color">$VAR[Noc_HaloColor]</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[size]</width>
+				<height>$PARAM[size]</height>
+				<texture colordiffuse="$PARAM[color]">noc/halo_white.png</texture>
+				<visible>Skin.HasSetting(nocturne.halocolour)</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Static shroud for a fixed light (info, music room, corridor). param texture -->
+	<include name="Noc_ShroudStatic">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="$VAR[Noc_ShroudAlpha]">$PARAM[texture]</texture>
+		</control>
+	</include>
+</includes>

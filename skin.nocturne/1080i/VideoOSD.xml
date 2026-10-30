@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD: the dark room, a strip of light, the filament and two brass rails of engraved words (Includes_Rail.xml).
+	Id contract (Estuary Omega VideoOSD.xml): 602 play/pause (default), 603 stop, 600 previous / 607 next,
+	87 hidden seek stepper (Left/Right = StepBack/StepForward, frame advance when paused), 200 transport group,
+	70043 info, 70044 bookmarks/chapters, 70046 subtitles, 70048 video settings, 70049 audio; 70051 process info.
+	Omar's rule 6: Play/Pause, Stop, Previous, Next (gated), Chapters | Subtitles, Audio, Video, Info, Player.
+	No seek buttons (Left/Right seek without the OSD). Fixed widths: nothing moves when Pause becomes Play.
+	Focus: open -> 602; Left/Right walk both rails (wraps); Up -> 87 (seek); Down from 87 -> the rails. Back closes.
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+			<include>Rail_Dark</include>
+			<include>Noc_Clock</include>
+			<include content="Rail_TitleAndFilament">
+				<param name="top" value="752"/>
+			</include>
+			<!-- seek stepper (invisible): the filament brightens while it has focus -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>Noc_Hidden</include>
+				<ondown>200</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<control type="image">
+				<left>-20</left>
+				<top>820</top>
+				<width>1960</width>
+				<height>120</height>
+				<texture border="64,0,64,0" colordiffuse="light">noc/glow_bar.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+
+			<control type="group" id="200">
+				<left>0</left>
+				<top>916</top>
+				<width>1920</width>
+				<height>64</height>
+				<control type="grouplist">
+					<left>96</left>
+					<top>0</top>
+					<width>900</width>
+					<height>64</height>
+					<orientation>horizontal</orientation>
+					<onleft>70051</onleft>
+					<onright>70046</onright>
+					<include content="Rail_CapL"><param name="id" value="9401"/></include>
+					<control type="button" id="602">
+						<width>140</width>
+						<height>64</height>
+						<font>btn_22</font>
+						<align>center</align>
+						<textoffsetx>0</textoffsetx>
+						<textcolor>brass_word</textcolor>
+						<focusedcolor>ink</focusedcolor>
+						<texturenofocus>noc/rail_mid.png</texturenofocus>
+						<texturefocus border="30,0,30,0">noc/rail_on.png</texturefocus>
+						<label>$VAR[Rail_PlayLabel]</label>
+						<onclick>PlayerControl(Play)</onclick>
+						<onleft>70051</onleft>
+						<onright>603</onright>
+						<onup>87</onup>
+					</control>
+					<include content="Rail_Sep"><param name="id" value="9405"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="603"/>
+						<param name="width" value="124"/>
+						<param name="label" value="$LOCALIZE[31277]"/>
+						<param name="onclick" value="PlayerControl(Stop)"/>
+						<param name="onleft" value="602"/>
+						<param name="onright" value="600"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9408"/><param name="visible" value="$EXP[OSD_HasPrevNext]"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="600"/>
+						<param name="width" value="190"/>
+						<param name="label" value="$LOCALIZE[31278]"/>
+						<param name="onclick" value="PlayerControl(Previous)"/>
+						<param name="onleft" value="603"/>
+						<param name="onright" value="607"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9409"/><param name="visible" value="$EXP[OSD_HasPrevNext]"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="607"/>
+						<param name="width" value="122"/>
+						<param name="label" value="$LOCALIZE[31279]"/>
+						<param name="onclick" value="PlayerControl(Next)"/>
+						<param name="onleft" value="600"/>
+						<param name="onright" value="70044"/>
+						<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9410"/><param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70044"/>
+						<param name="width" value="198"/>
+						<param name="label" value="$LOCALIZE[31280]"/>
+						<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+						<param name="onleft" value="607"/>
+						<param name="onright" value="70046"/>
+						<param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/>
+					</include>
+					<include content="Rail_CapR"><param name="id" value="9402"/></include>
+				</control>
+				<control type="grouplist">
+					<left>96</left>
+					<top>0</top>
+					<width>1728</width>
+					<height>64</height>
+					<orientation>horizontal</orientation>
+					<align>right</align>
+					<onleft>70044</onleft>
+					<onright>602</onright>
+					<include content="Rail_CapL"><param name="id" value="9403"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70046"/>
+						<param name="width" value="206"/>
+						<param name="label" value="$LOCALIZE[31281]"/>
+						<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+						<param name="onleft" value="70044"/>
+						<param name="onright" value="70049"/>
+						<param name="visible" value="Player.HasVideo"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9411"/><param name="visible" value="Player.HasVideo"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70049"/>
+						<param name="width" value="136"/>
+						<param name="label" value="$LOCALIZE[31282]"/>
+						<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+						<param name="onleft" value="70046"/>
+						<param name="onright" value="70048"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9412"/><param name="visible" value="Player.HasVideo"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70048"/>
+						<param name="width" value="134"/>
+						<param name="label" value="$LOCALIZE[31283]"/>
+						<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+						<param name="onleft" value="70049"/>
+						<param name="onright" value="70043"/>
+						<param name="visible" value="Player.HasVideo"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9406"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70043"/>
+						<param name="width" value="114"/>
+						<param name="label" value="$LOCALIZE[31284]"/>
+						<param name="onclick" value="Action(Info,fullscreenvideo)"/>
+						<param name="onleft" value="70048"/>
+						<param name="onright" value="70051"/>
+					</include>
+					<include content="Rail_Sep"><param name="id" value="9407"/></include>
+					<include content="Rail_Word">
+						<param name="id" value="70051"/>
+						<param name="width" value="156"/>
+						<param name="label" value="$LOCALIZE[31285]"/>
+						<param name="onclick" value="Action(PlayerProcessInfo)"/>
+						<param name="onleft" value="70043"/>
+						<param name="onright" value="602"/>
+					</include>
+					<include content="Rail_CapR"><param name="id" value="9404"/></include>
+				</control>
+			</control>
+			<control type="label">
+				<left>96</left>
+				<top>1004</top>
+				<width>1728</width>
+				<height>30</height>
+				<font>caps_20</font>
+				<textcolor>73c8b8a0</textcolor>
+				<label>$VAR[OSD_Hint]</label>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Expressions: every boolean used in more than one place. Use as $EXP[Name].
+	Skin setting names are documented in docs/skin.nocturne/SETTINGS.md.
+	Rule (SPEC section 7): an empty string / unset bool always means the default.
+-->
+<includes>
+	<!-- Helpers -->
+	<expression name="HasTMDbHelper">System.AddonIsEnabled(plugin.video.themoviedb.helper)</expression>
+
+	<!-- Setting 2: corners -->
+	<expression name="IsRounded">false</expression>
+
+	<!-- Setting 3: focus outline (empty or thin = thin) -->
+	<expression name="FocusOutlineOff">String.IsEqual(Skin.String(nocturne.focusoutline),off)</expression>
+	<expression name="FocusOutlineMedium">String.IsEqual(Skin.String(nocturne.focusoutline),medium)</expression>
+
+	<!-- Setting 4: artwork background (empty = faint). Forced off without TMDb Helper. Wired in M2 (T15). -->
+	<expression name="ArtBackgroundOn">false</expression>
+
+	<!-- Setting 5: trailer button -->
+	<expression name="ShowTrailerButton">!Skin.HasSetting(nocturne.hidetrailer)</expression>
+
+	<!-- Setting 6: watched indicators (empty or both = both) -->
+	<expression name="ShowUnwatchedMarkers">false</expression>
+	<expression name="ShowWatchedMarkers">!Skin.HasSetting(nocturne.nopins)</expression>
+
+	<!-- Setting 7: spotlight rotation (empty = 15 s). Wired in M2 (T12). -->
+	<expression name="SpotlightRotateOff">String.IsEqual(Skin.String(nocturne.spotlightrotate),off)</expression>
+
+	<!-- Setting 8: reduce motion -->
+	<expression name="ReduceMotion">Skin.HasSetting(nocturne.reducemotion)</expression>
+
+	<!-- Setting 9 (Omar, 2026-10-18): Home newest row. empty or added = date added, release, both -->
+	<expression name="HomeNewestDateAdded">!String.IsEqual(Skin.String(nocturne.home.newest),release)</expression>
+	<expression name="HomeNewestRelease">String.IsEqual(Skin.String(nocturne.home.newest),release) | String.IsEqual(Skin.String(nocturne.home.newest),both)</expression>
+	<expression name="HomeNewestBoth">String.IsEqual(Skin.String(nocturne.home.newest),both)</expression>
+
+	<!-- Items -->
+	<expression name="ListItemIsVideoFile">!ListItem.IsFolder + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,episode) | String.IsEqual(ListItem.DBType,musicvideo)]</expression>
+	<expression name="ListItemUnwatched">Integer.IsEqual(ListItem.PlayCount,0) + !ListItem.IsResumable</expression>
+	<expression name="ListItemWatched">Integer.IsGreater(ListItem.PlayCount,0)</expression>
+
+	<!-- Windows -->
+	<expression name="InfoDialogActive">Window.IsVisible(movieinformation) | Window.IsVisible(musicinformation) | Window.IsVisible(addoninformation)</expression>
+	<expression name="OSDPanelOpen">Window.IsVisible(SliderDialog) | Window.IsVisible(osdaudiosettings) | Window.IsVisible(osdvideosettings) | Window.IsVisible(osdsubtitlesettings) | Window.IsVisible(VideoBookmarks) | Window.IsVisible(playerprocessinfo) | Window.IsVisible(osdcmssettings)</expression>
+	<!-- Nocturne: the wandering torch (ambient). Keep in sync with Home_WanderTimer's autoscroll (make_home.py WANDERING) -->
+	<expression name="Home_Wandering">System.IdleTime(20) + !Skin.HasSetting(nocturne.reducemotion) + !Skin.HasSetting(nocturne.noambient) + [ControlGroup(9220).HasFocus() | ControlGroup(9240).HasFocus()] + !System.HasActiveModalDialog + !Window.IsVisible(1151) + !System.ScreenSaverActive</expression>
+	<!-- 0.9.14: Home can refocus the remembered section (a hidden word or a cleared custom item can't) -->
+	<expression name="Home_RefocusValid">[[String.IsEmpty(Window(Home).Property(nocturne.section)) | String.IsEqual(Window(Home).Property(nocturne.section),films)] + !Skin.HasSetting(HideMenu.Movies)] | [String.IsEqual(Window(Home).Property(nocturne.section),series) + !Skin.HasSetting(HideMenu.TVShows)] | [String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music)] | [String.IsEqual(Window(Home).Property(nocturne.section),custom1) + $EXP[CustomMenu1On]] | [String.IsEqual(Window(Home).Property(nocturne.section),custom2) + $EXP[CustomMenu2On]] | [String.IsEqual(Window(Home).Property(nocturne.section),custom3) + $EXP[CustomMenu3On]]</expression>
+</includes>

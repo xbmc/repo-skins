@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing = the listening room with one record under the lamp: the playing cover on the ledge in the cone of
+	light, the album on its brass plaque, up next, and the now-playing rail (title, time, filament).
+	Kodi id contract (Estuary Omega MusicVisualisation.xml): 2 = visualisation control, shown only in Visualiser mode
+	($EXP[Music_VizMode]: the music OSD's top rail word + a visualisation add-on set in Kodi); then it replaces the record
+	under the lamp, the now-playing rail stays, and "OK · presets" sits over its time when the visualisation has presets
+	(OK opens the OSD on its Presets word).
+	9900 = clear full-screen button so OK opens the music OSD from any remote / JSON-RPC (LESSONS, Passe-partout):
+	OK / Up / Down = music OSD, Left / Right = step back / forward. Back = Kodi (previous window).
+-->
+<window>
+	<defaultcontrol always="true">9900</defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<onload condition="$EXP[HasTMDbHelper] + Skin.HasSetting(nocturne.halocolour) + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(nocturne.np.colorsrc),Player.Art(thumb))">RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(thumb)]",prefix=NocturnePlayer)</onload>
+	<onload>SetProperty(nocturne.np.colorsrc,$INFO[Player.Art(thumb)],home)</onload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<control type="button" id="9900">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<label></label>
+			<texturefocus />
+			<onclick>ActivateWindow(musicosd)</onclick>
+			<onup>ActivateWindow(musicosd)</onup>
+			<ondown>ActivateWindow(musicosd)</ondown>
+			<onleft>StepBack</onleft>
+			<onright>StepForward</onright>
+		</control>
+		<include>Noc_Wall</include>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<visible>$EXP[Music_VizMode]</visible>
+		</control>
+		<control type="group">
+			<visible>true</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="group">
+				<visible>!$EXP[Music_VizMode]</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="group">
+					<left>710</left>
+					<top>266</top>
+					<width>500</width>
+					<height>500</height>
+					<include content="Noc_CoverParts">
+						<param name="art" value="$INFO[Player.Art(thumb)]"/>
+						<param name="lit" value="true"/>
+						<param name="label" value="$INFO[MusicPlayer.Album]"/>
+					</include>
+				</control>
+				<control type="image">
+					<left>-40</left>
+					<top>766</top>
+					<width>2000</width>
+					<height>56</height>
+					<texture border="24,0,24,0">noc/ledge.png</texture>
+				</control>
+				<include content="Noc_Dust">
+					<param name="left" value="600"/>
+					<param name="top" value="200"/>
+					<param name="size" value="720"/>
+				</include>
+				<include content="Noc_ShroudStatic">
+					<param name="texture" value="noc/shroud_music.png"/>
+				</include>
+				<include content="Noc_Glint">
+					<param name="left" value="722"/>
+					<param name="top" value="247"/>
+					<param name="width" value="476"/>
+				</include>
+				<control type="image">
+					<left>260</left>
+					<top>190</top>
+					<width>1400</width>
+					<height>840</height>
+					<texture>noc/cone.png</texture>
+				</control>
+				<include content="Noc_Halo">
+					<param name="left" value="360"/>
+					<param name="top" value="-40"/>
+					<param name="size" value="1200"/>
+					<param name="color" value="$VAR[Noc_PlayerHaloColor]"/>
+				</include>
+				<control type="image">
+					<left>750</left>
+					<top>-40</top>
+					<width>420</width>
+					<height>300</height>
+					<texture>noc/lamp.png</texture>
+				</control>
+			</control>
+			<include content="Noc_Plaque">
+				<param name="left" value="360"/>
+				<param name="top" value="834"/>
+				<param name="title" value="$INFO[MusicPlayer.Album]"/>
+				<param name="meta" value="$INFO[MusicPlayer.Year]$INFO[MusicPlayer.Genre,  ·  ,]"/>
+				<param name="visible" value="!String.IsEmpty(MusicPlayer.Album) + !Window.IsVisible(musicosd) + !$EXP[Music_VizMode]"/>
+			</include>
+			<!-- up next, top left (under the cornice line) -->
+			<control type="grouplist">
+				<left>96</left>
+				<top>184</top>
+				<width>620</width>
+				<height>120</height>
+				<orientation>vertical</orientation>
+				<itemgap>2</itemgap>
+				<visible>MusicPlayer.HasNext + !$EXP[Music_VizMode]</visible>
+				<control type="label">
+					<width>620</width>
+					<height>32</height>
+					<font>caps_20</font>
+					<textcolor>8cc8b8a0</textcolor>
+					<label>$LOCALIZE[31294]</label>
+				</control>
+				<control type="label">
+					<width>620</width>
+					<height>44</height>
+					<font>serif_32</font>
+					<textcolor>b3e3cfae</textcolor>
+					<label>$INFO[MusicPlayer.offset(1).Title]</label>
+				</control>
+				<control type="label">
+					<width>620</width>
+					<height>30</height>
+					<font>caps_20</font>
+					<textcolor>73c8b8a0</textcolor>
+					<label>$INFO[MusicPlayer.offset(1).Artist]</label>
+				</control>
+			</control>
+			<include content="Noc_NowPlayingRail">
+				<param name="visible" value="!Window.IsVisible(musicosd)"/>
+			</include>
+			<!-- Visualiser mode with presets: the quiet hint over the rail's time -->
+			<control type="label">
+				<right>96</right>
+				<top>896</top>
+				<width>600</width>
+				<height>30</height>
+				<align>right</align>
+				<font>caps_20</font>
+				<textcolor>8cc8b8a0</textcolor>
+				<label>[UPPERCASE]$LOCALIZE[31380][/UPPERCASE]</label>
+				<visible>$EXP[Music_VizPresets] + !Window.IsVisible(musicosd)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+		</control>
+		<include>Noc_CorniceImage</include>
+		<include content="Noc_Crumbs">
+			<param name="first" value="$LOCALIZE[31228]"/>
+			<param name="second" value="$INFO[MusicPlayer.Artist,·   ,]"/>
+		</include>
+		<include>Noc_Clock</include>
+	</controls>
+</window>

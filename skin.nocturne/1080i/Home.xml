@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home = the Grand Gallery (docs/skin.nocturne/SPEC.md, mockup NocturneHome.html / NocturneMusic.html).
+	Wall + slots + data lists are generated (_src/make_home.py -> Includes_Home.xml); the listening room and
+	the now-playing rail are in Includes_Gallery.xml.
+
+	Focus map
+	  cornice 9001-9005 (Left/Right wrap); 0.9.14 custom menu items 9006-9008 (9026-9028 while all three show) after Music (grouplist 9010,
+	  gaps 9016-9018), each with a quiet room; Down does nothing there. Films/Series/Music words switch the room (onfocus).
+	  Down from Films/Series -> the big frame (b3, where the light rests); Music -> the shelf 9260;
+	  Search/Settings -> the current room.
+	  On the wall: Left/Right/Up/Down walk the frames (make_home.py NAV); Up from a top frame -> the word.
+	  Back from anywhere on the wall/shelf -> the section word. Back on the cornice: nothing (Home).
+	  0.9.9 custom rows: Down from a frame with nothing below it / from the shelf -> the back rooms 9881-9883
+	  (Includes_Gallery.xml, one at a time); Up returns, Back -> the cornice.
+	Draw order = Kodi's: wall -> frames + plaques -> torch (dust, shroud, halo) -> lit labels -> cornice words.
+-->
+<window>
+	<!-- Hiding menu items can no longer leave Home without focus: Kodi falls back to the default control whenever
+	     nothing has focus, so it is Settings (9005), which never hides (it was 9001, hidden with the films item).
+	     The first onload focuses 9001 while it is shown, exactly as the old default did; the onloads below override it. -->
+	<defaultcontrol always="true">9005</defaultcontrol>
+	<onload condition="!Skin.HasSetting(HideMenu.Movies)">SetFocus(9001)</onload>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),series) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9002)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music)">SetFocus(9003)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom1) + $EXP[CustomMenu1On] + ![$EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]]">SetFocus(9006)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom1) + $EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9026)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom2) + $EXP[CustomMenu2On] + ![$EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]]">SetFocus(9007)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom2) + $EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9027)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom3) + $EXP[CustomMenu3On] + ![$EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]]">SetFocus(9008)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(nocturne.section),custom3) + $EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9028)</onload>
+	<!-- 0.9.9 / 0.9.14: the remembered room (or Films, the default) is hidden in Skin settings (HideMenu.*), or a
+	     custom menu item that was cleared: focus the first word shown (Films, Series, Music, the custom items,
+	     Search, Settings); its onfocus sets the room. Settings (9005) never hides. -->
+	<onload condition="!$EXP[Home_RefocusValid] + !Skin.HasSetting(HideMenu.Movies)">SetFocus(9001)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9002)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music)">SetFocus(9003)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + $EXP[CustomMenu1On] + ![$EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]]">SetFocus(9006)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + $EXP[CustomMenu1On] + $EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9026)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + $EXP[CustomMenu2On]">SetFocus(9007)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9008)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + !$EXP[CustomMenu3On] + !Skin.HasSetting(HideMenu.Search)">SetFocus(9004)</onload>
+	<onload condition="!$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + !$EXP[CustomMenu3On] + Skin.HasSetting(HideMenu.Search)">SetFocus(9005)</onload>
+	<!-- TMDb Helper colour service: the halo takes the lit picture's colour (optional add-on) -->
+	<onload condition="$EXP[HasTMDbHelper] + !Skin.HasSetting(TMDbHelper.EnableColors) + Skin.HasSetting(nocturne.halocolour)">Skin.SetBool(TMDbHelper.EnableColors)</onload>
+	<onload condition="Skin.HasSetting(TMDbHelper.EnableColors) + !Skin.HasSetting(nocturne.halocolour)">Skin.Reset(TMDbHelper.EnableColors)</onload>
+	<onunload>ClearProperty(TMDbHelper.WidgetContainer,home)</onunload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Home_DataLists</include>
+		<include>Home_WanderTimer</include>
+		<include>Noc_Wall</include>
+		<include>Noc_CorniceImage</include>
+		<include>Home_Wall_films</include>
+		<include>Home_Wall_series</include>
+		<!-- 0.9.5: chosen at run time, not at load (Restore defaults resets reduce motion without a reload) -->
+		<control type="group">
+			<visible>!Skin.HasSetting(nocturne.reducemotion)</visible>
+			<include>Home_TorchNormal</include>
+		</control>
+		<control type="group">
+			<visible>Skin.HasSetting(nocturne.reducemotion)</visible>
+			<include>Home_TorchReduced</include>
+		</control>
+		<include>Home_WallLabels_films</include>
+		<include>Home_WallLabels_series</include>
+		<include>Home_MusicRoom</include>
+		<!-- 0.9.14: a custom menu item's quiet room (one lit frame + plaque; Includes_Home.xml) -->
+		<include>Home_CustomMenuRooms</include>
+		<!-- 0.9.9: the back rooms (custom rows) -->
+		<include>Home_CustomRooms</include>
+		<include>CustomRows_Probes</include>
+		<control type="group">
+			<visible>String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music) + !$EXP[CustomRowsFocus]</visible>
+			<include>Anim_SectionSwap</include>
+			<include content="Noc_NowPlayingRail">
+				<param name="visible" value="Player.HasMedia"/>
+			</include>
+		</control>
+		<include>Home_Cornice</include>
+		<include>Noc_Clock</include>
+	</controls>
+</window>

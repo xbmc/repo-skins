@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Play queue: musicplaylist and videoplaylist both load this file (SPEC 5 Minimal, M4; Builder C).
+	Reached from the music OSD (QUEUE). Nocturne generic list language: top bar, mono sub-nav, list 50
+	+ focused-item art panel, now-playing bar while audio plays.
+
+	Kodi id contract (Estuary Omega MyPlaylist.xml / GUIWindowMusicPlaylist.cpp):
+	  menucontrol 9000, 20 shuffle (Kodi toggles on click), 26 repeat (Kodi writes the label
+	  "Repeat: Off/One/All"), 21 save, 22 clear. 23/24/25 (play/next/prev) not shipped.
+	  Estuary's views 55/503 are replaced by Nocturne view 50 (any id listed in <views> works).
+	Navigation: list Up -> sub-nav; sub-nav Down / Back -> list; Back on the list -> previous window.
+-->
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<views>50</views>
+	<!-- empty folder: Kodi can't focus an empty view, so land on the sub-nav instead (as MyVideoNav/MyMusicNav) -->
+	<onload condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating">SetFocus(9000)</onload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Noc_Background</include>
+		<include content="Noc_TopBar">
+			<param name="index" value="$VAR[Music_QueueIndex]"/>
+			<param name="title" value="$VAR[Music_QueueTitle]"/>
+			<param name="sub" value="$VAR[Music_PlaylistSub]"/>
+		</include>
+
+		<control type="grouplist" id="9000">
+			<left>subnav_left</left>
+			<top>below_bar_top</top>
+			<width>1300</width>
+			<height>subnav_h</height>
+			<orientation>horizontal</orientation>
+			<itemgap>28</itemgap>
+			<onup>noop</onup>
+			<ondown>50</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>50</onback>
+			<include content="Noc_SubNavButton">
+				<param name="id" value="20"/>
+				<param name="label" value="$VAR[Music_QueueShuffleLabel]"/>
+			</include>
+			<include content="Noc_SubNavButton">
+				<param name="id" value="26"/>
+				<param name="label" value="$LOCALIZE[595]"/>
+			</include>
+			<include content="Noc_SubNavButton">
+				<param name="id" value="21"/>
+				<param name="label" value="$LOCALIZE[190]"/>
+				<param name="visible" value="Integer.IsGreater(Container.NumItems,0)"/>
+			</include>
+			<include content="Noc_SubNavButton">
+				<param name="id" value="22"/>
+				<param name="label" value="$LOCALIZE[192]"/>
+				<param name="visible" value="Integer.IsGreater(Container.NumItems,0)"/>
+			</include>
+		</control>
+
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<control type="list" id="50">
+				<left>page_margin</left>
+				<top>list_top</top>
+				<width>list_w</width>
+				<height>726</height>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<viewtype label="535">list</viewtype>
+				<include content="Music_SongLayout">
+					<param name="number" value="$INFO[ListItem.CurrentItem]"/>
+				</include>
+			</control>
+			<include content="Noc_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1196"/>
+				<param name="top" value="200"/>
+				<param name="height" value="726"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="50"/>
+			</include>
+			<include content="Music_ListPanel">
+				<param name="top" value="list_top"/>
+			</include>
+		</control>
+
+		<control type="label">
+			<left>page_margin</left>
+			<top>list_top</top>
+			<width>list_w</width>
+			<height>66</height>
+			<font>caps_20</font>
+			<textcolor>text_tertiary</textcolor>
+			<label>$LOCALIZE[31346]</label>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<!-- under the ".." row (Back), not over it -->
+			<animation effect="slide" end="0,66" condition="Container.HasParent">Conditional</animation>
+		</control>
+
+		<include>Music_NowPlayingBar</include>
+	</controls>
+</window>

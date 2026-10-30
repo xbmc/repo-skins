@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Hand-written Home pieces (the generated wall lives in Includes_Home.xml, _src/make_home.py):
+	the listening room (Home's Music section and the music library's albums view) and the now-playing rail.
+	Mockup: docs/concepts/round4/mockups/NocturneMusic.html.
+-->
+<includes>
+	<!-- ============================================================ the listening room -->
+	<!-- Square covers on a long shelf under one pendant lamp. The focused record sits in the cone of light.
+	     params: id, content (path; empty in library windows), sortby, onup, ondown, onback, visible, caption -->
+	<include name="Noc_ListeningRoomShelf">
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="viewtype">list</param>
+		<param name="has_content">false</param>
+		<param name="content"></param>
+		<param name="sortby">label</param>
+		<definition>
+			<control type="wraplist" id="$PARAM[id]">
+				<left>-260</left>
+				<top>300</top>
+				<width>2440</width>
+				<height>540</height>
+				<orientation>horizontal</orientation>
+				<focusposition>3</focusposition>
+				<preloaditems>2</preloaditems>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<onup>$PARAM[onup]</onup>
+				<onback condition="Window.IsActive(home)">9003</onback>
+				<ondown>$PARAM[ondown]</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<viewtype label="31230">$PARAM[viewtype]</viewtype>
+				<include condition="!$PARAM[has_content]">Music_ShelfVisible</include>
+				<itemlayout width="340" height="540">
+					<control type="group">
+						<left>0</left>
+						<top>174</top>
+						<width>300</width>
+						<height>300</height>
+						<include content="Noc_CoverParts">
+							<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+							<param name="label" value="$INFO[ListItem.Label]"/>
+						</include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="440" height="540">
+					<control type="group">
+						<left>0</left>
+						<top>74</top>
+						<width>400</width>
+						<height>400</height>
+						<include content="Noc_CoverParts">
+							<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+							<param name="label" value="$INFO[ListItem.Label]"/>
+							<param name="lit" value="true"/>
+						</include>
+					</control>
+				</focusedlayout>
+				<include condition="$PARAM[has_content]" content="Noc_ContentSorted">
+					<param name="target" value="music"/>
+					<param name="path" value="$PARAM[content]"/>
+					<param name="sortby" value="$PARAM[sortby]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_ShelfVisible">
+		<visible>Container.Content(albums) | Container.Content(artists)</visible>
+	</include>
+	<include name="Noc_ContentSorted">
+		<content target="$PARAM[target]" sortby="$PARAM[sortby]">$PARAM[path]</content>
+	</include>
+
+	<!-- The room around the shelf: ledge, darkness, glimmers, lamp + cone, plaque. params: list (container id) -->
+	<include name="Noc_ListeningRoomLight">
+		<param name="lamp_top">-40</param>
+		<definition>
+		<control type="image">
+			<left>-40</left>
+			<top>766</top>
+			<width>2000</width>
+			<height>56</height>
+			<texture border="24,0,24,0">noc/ledge.png</texture>
+		</control>
+		<include content="Noc_Dust">
+			<param name="left" value="600"/>
+			<param name="top" value="230"/>
+			<param name="size">720</param>
+		</include>
+		<include content="Noc_ShroudStatic">
+			<param name="texture" value="noc/shroud_music.png"/>
+		</include>
+		<include content="Noc_Glint"><param name="left" value="100"/><param name="top" value="458"/><param name="width" value="260"/><param name="alpha" value="20"/></include>
+		<include content="Noc_Glint"><param name="left" value="440"/><param name="top" value="458"/><param name="width" value="260"/><param name="alpha" value="50"/></include>
+		<include content="Noc_Glint"><param name="left" value="1220"/><param name="top" value="458"/><param name="width" value="260"/><param name="alpha" value="50"/></include>
+		<include content="Noc_Glint"><param name="left" value="1560"/><param name="top" value="458"/><param name="width" value="260"/><param name="alpha" value="20"/></include>
+		<include content="Noc_Glint"><param name="left" value="770"/><param name="top" value="355"/><param name="width" value="380"/></include>
+		<control type="image">
+			<left>260</left>
+			<top>190</top>
+			<width>1400</width>
+			<height>840</height>
+			<texture>noc/cone.png</texture>
+		</control>
+		<include content="Noc_Halo">
+			<param name="left" value="360"/>
+			<param name="top" value="-40"/>
+			<param name="size" value="1200"/>
+		</include>
+		<control type="image">
+			<left>750</left>
+			<top>$PARAM[lamp_top]</top>
+			<width>420</width>
+			<height>300</height>
+			<texture>noc/lamp.png</texture>
+		</control>
+		<include content="Noc_Plaque">
+			<param name="left" value="360"/>
+			<param name="top" value="834"/>
+			<param name="title" value="$INFO[Container($PARAM[list]).ListItem.Label]"/>
+			<param name="meta" value="$INFO[Container($PARAM[list]).ListItem.Artist]$INFO[Container($PARAM[list]).ListItem.Year,  ·  ,]"/>
+			<param name="visible" value="!String.IsEmpty(Container($PARAM[list]).ListItem.Label)"/>
+		</include>
+		</definition>
+	</include>
+
+	<!-- Home > Music -->
+	<include name="Home_MusicRoom">
+		<control type="group">
+			<visible>String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music) + !$EXP[CustomRowsFocus]</visible>
+			<include>Anim_SectionSwap</include>
+			<include content="Noc_ListeningRoomShelf">
+				<param name="id" value="9260"/>
+				<param name="content" value="musicdb://albums/"/>
+				<param name="sortby" value="artist"/>
+				<param name="has_content" value="true"/>
+				<param name="onup" value="9003"/>
+				<param name="ondown" value="$VAR[Home_DownToCustom]"/>
+			</include>
+			<include content="Noc_ListeningRoomLight">
+				<param name="list" value="9260"/>
+			</include>
+			<control type="label">
+				<left>96</left>
+				<top>190</top>
+				<width>1000</width>
+				<height>32</height>
+				<aligny>center</aligny>
+				<font>caps_20</font>
+				<textcolor>6bc8b8a0</textcolor>
+				<label>$LOCALIZE[31229]  $INFO[Container(9260).NumItems]  ·  $LOCALIZE[31231]</label>
+			</control>
+		</control>
+		<!-- Back on the shelf: up to the cornice (the list remembers its place) -->
+	</include>
+
+	<!-- ============================================================ now playing rail -->
+	<!-- A strip of light across a low brass rail: title (serif italic), artist · album, time, the glowing filament. -->
+	<include name="Noc_NowPlayingRail">
+		<param name="visible">Player.HasAudio</param>
+		<definition>
+			<control type="group">
+				<visible>$PARAM[visible]</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="image">
+					<left>0</left>
+					<top>860</top>
+					<width>1920</width>
+					<height>220</height>
+					<texture>noc/strip.png</texture>
+				</control>
+				<control type="grouplist">
+					<left>96</left>
+					<top>936</top>
+					<width>1500</width>
+					<height>50</height>
+					<orientation>horizontal</orientation>
+					<itemgap>46</itemgap>
+					<control type="label">
+						<width max="720">auto</width>
+						<height>50</height>
+						<aligny>center</aligny>
+						<font>title_34</font>
+						<textcolor>fff2e2c6</textcolor>
+						<shadowcolor>b3000000</shadowcolor>
+						<label>$VAR[Noc_PlayerTitle]</label>
+					</control>
+					<control type="label">
+						<width max="720">auto</width>
+						<height>50</height>
+						<aligny>center</aligny>
+						<font>caps_20</font>
+						<textcolor>a8e2ceae</textcolor>
+						<label>$VAR[Noc_PlayerSub]</label>
+					</control>
+				</control>
+				<control type="label">
+					<right>96</right>
+					<top>936</top>
+					<width>360</width>
+					<height>50</height>
+					<align>right</align>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>cce2ceae</textcolor>
+					<label>$INFO[Player.Time]$INFO[Player.Duration,  [COLOR 8ce2ceae]/  ,[/COLOR]]</label>
+				</control>
+				<control type="image">
+					<left>96</left>
+					<top>996</top>
+					<width>1728</width>
+					<height>1</height>
+					<texture colordiffuse="38dcbe8c">common/white.png</texture>
+				</control>
+				<control type="progress">
+					<left>84</left>
+					<top>984</top>
+					<width>1752</width>
+					<height>24</height>
+					<texturebg />
+					<midtexture border="12,0,12,0">noc/filament.png</midtexture>
+					<info>Player.Progress</info>
+				</control>
+				<control type="image">
+					<left>64</left>
+					<top>1012</top>
+					<width>1792</width>
+					<height>40</height>
+					<texture border="34,0,34,0">noc/rail.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<!-- ============================================================ the back rooms (0.9.9 custom rows) -->
+	<!-- Opt-in rows from Skin settings > Custom rows (Includes_CustomRows.xml). Down from a frame with nothing below it
+	     (or from the listening room's shelf) walks into them: the room steps aside and a back room takes its place, a
+	     shelf of framed pictures under one pendant lamp (the listening room's light), the focused picture in the
+	     cone with its brass plaque. One room at a time; Up / Down move between them (Up from the first returns to the
+	     room you came from), Back to the cornice. Nothing changes until a row has items. -->
+	<variable name="Home_DownToCustom">
+		<value condition="$EXP[CustomRow1On]">SetFocus(9881)</value>
+		<value condition="$EXP[CustomRow2On]">SetFocus(9882)</value>
+		<value condition="$EXP[CustomRow3On]">SetFocus(9883)</value>
+		<value>noop</value>
+	</variable>
+	<include name="Home_CustomRooms">
+		<!-- back room 1: a shelf of framed pictures, the focused one in the lamp's cone -->
+		<control type="wraplist" id="9881">
+			<left>20</left>
+			<top>300</top>
+			<width>2440</width>
+			<height>540</height>
+			<orientation>horizontal</orientation>
+			<focusposition>3</focusposition>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<onup condition="String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music)">9260</onup>
+			<onup condition="String.IsEqual(Window(Home).Property(nocturne.section),series) + !Skin.HasSetting(HideMenu.TVShows)">9246</onup>
+			<onup condition="[String.IsEqual(Window(Home).Property(nocturne.section),films) | String.IsEmpty(Window(Home).Property(nocturne.section))] + !Skin.HasSetting(HideMenu.Movies)">9226</onup>
+			<onup>9000</onup>
+			<ondown condition="$EXP[CustomRow2On]">9882</ondown>
+			<ondown condition="!$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+			<ondown>noop</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<!-- never hidden (a hidden container never loads): in the room only while it has focus -->
+			<animation effect="fade" start="0" end="100" time="300" delay="100" condition="Control.HasFocus(9881)">Conditional</animation>
+			<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9881)">Conditional</animation>
+			<itemlayout width="240" height="540">
+				<control type="group">
+					<left>20</left>
+					<top>174</top>
+					<width>200</width>
+					<height>300</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="440" height="540">
+				<control type="group">
+					<left>80</left>
+					<top>54</top>
+					<width>280</width>
+					<height>420</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+						<param name="lit" value="true"/>
+					</include>
+				</control>
+			</focusedlayout>
+			<include content="CustomRow_Content"><param name="row" value="1"/></include>
+		</control>
+		<control type="group">
+			<visible>Control.HasFocus(9881)</visible>
+			<include>Anim_SectionSwap</include>
+			<include content="Noc_ListeningRoomLight">
+				<param name="list" value="9881"/>
+			</include>
+			<!-- the row name stops before the lamp (x 750): a long name ends in "..." and the count stays beside it -->
+			<control type="grouplist">
+				<left>96</left>
+				<top>190</top>
+				<width>650</width>
+				<height>32</height>
+				<orientation>horizontal</orientation>
+				<itemgap>0</itemgap>
+				<control type="label">
+					<width max="470">auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>$VAR[CustomRow_Title1]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>  $VAR[CustomRow_Count1]</label>
+				</control>
+			</control>
+		</control>
+		<!-- back room 2: a shelf of framed pictures, the focused one in the lamp's cone -->
+		<control type="wraplist" id="9882">
+			<left>20</left>
+			<top>300</top>
+			<width>2440</width>
+			<height>540</height>
+			<orientation>horizontal</orientation>
+			<focusposition>3</focusposition>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<onup condition="$EXP[CustomRow1On]">9881</onup>
+			<onup condition="!$EXP[CustomRow1On] + String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music)">9260</onup>
+			<onup condition="!$EXP[CustomRow1On] + String.IsEqual(Window(Home).Property(nocturne.section),series) + !Skin.HasSetting(HideMenu.TVShows)">9246</onup>
+			<onup condition="!$EXP[CustomRow1On] + [String.IsEqual(Window(Home).Property(nocturne.section),films) | String.IsEmpty(Window(Home).Property(nocturne.section))] + !Skin.HasSetting(HideMenu.Movies)">9226</onup>
+			<onup>9000</onup>
+			<ondown condition="$EXP[CustomRow3On]">9883</ondown>
+			<ondown>noop</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<!-- never hidden (a hidden container never loads): in the room only while it has focus -->
+			<animation effect="fade" start="0" end="100" time="300" delay="100" condition="Control.HasFocus(9882)">Conditional</animation>
+			<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9882)">Conditional</animation>
+			<itemlayout width="240" height="540">
+				<control type="group">
+					<left>20</left>
+					<top>174</top>
+					<width>200</width>
+					<height>300</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="440" height="540">
+				<control type="group">
+					<left>80</left>
+					<top>54</top>
+					<width>280</width>
+					<height>420</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+						<param name="lit" value="true"/>
+					</include>
+				</control>
+			</focusedlayout>
+			<include content="CustomRow_Content"><param name="row" value="2"/></include>
+		</control>
+		<control type="group">
+			<visible>Control.HasFocus(9882)</visible>
+			<include>Anim_SectionSwap</include>
+			<include content="Noc_ListeningRoomLight">
+				<param name="list" value="9882"/>
+			</include>
+			<!-- the row name stops before the lamp (x 750): a long name ends in "..." and the count stays beside it -->
+			<control type="grouplist">
+				<left>96</left>
+				<top>190</top>
+				<width>650</width>
+				<height>32</height>
+				<orientation>horizontal</orientation>
+				<itemgap>0</itemgap>
+				<control type="label">
+					<width max="470">auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>$VAR[CustomRow_Title2]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>  $VAR[CustomRow_Count2]</label>
+				</control>
+			</control>
+		</control>
+		<!-- back room 3: a shelf of framed pictures, the focused one in the lamp's cone -->
+		<control type="wraplist" id="9883">
+			<left>20</left>
+			<top>300</top>
+			<width>2440</width>
+			<height>540</height>
+			<orientation>horizontal</orientation>
+			<focusposition>3</focusposition>
+			<preloaditems>2</preloaditems>
+			<scrolltime tween="cubic" easing="out">200</scrolltime>
+			<onup condition="$EXP[CustomRow2On]">9882</onup>
+			<onup condition="!$EXP[CustomRow2On] + $EXP[CustomRow1On]">9881</onup>
+			<onup condition="!$EXP[CustomRow2On] + !$EXP[CustomRow1On] + String.IsEqual(Window(Home).Property(nocturne.section),music) + !Skin.HasSetting(HideMenu.Music)">9260</onup>
+			<onup condition="!$EXP[CustomRow2On] + !$EXP[CustomRow1On] + String.IsEqual(Window(Home).Property(nocturne.section),series) + !Skin.HasSetting(HideMenu.TVShows)">9246</onup>
+			<onup condition="!$EXP[CustomRow2On] + !$EXP[CustomRow1On] + [String.IsEqual(Window(Home).Property(nocturne.section),films) | String.IsEmpty(Window(Home).Property(nocturne.section))] + !Skin.HasSetting(HideMenu.Movies)">9226</onup>
+			<onup>9000</onup>
+			<ondown>noop</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>9000</onback>
+			<!-- never hidden (a hidden container never loads): in the room only while it has focus -->
+			<animation effect="fade" start="0" end="100" time="300" delay="100" condition="Control.HasFocus(9883)">Conditional</animation>
+			<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9883)">Conditional</animation>
+			<itemlayout width="240" height="540">
+				<control type="group">
+					<left>20</left>
+					<top>174</top>
+					<width>200</width>
+					<height>300</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</itemlayout>
+			<focusedlayout width="440" height="540">
+				<control type="group">
+					<left>80</left>
+					<top>54</top>
+					<width>280</width>
+					<height>420</height>
+					<include content="Noc_FrameParts">
+						<param name="art" value="$VAR[CustomRow_PosterArt]"/>
+						<param name="label" value="$INFO[ListItem.Label]"/>
+						<param name="lit" value="true"/>
+					</include>
+				</control>
+			</focusedlayout>
+			<include content="CustomRow_Content"><param name="row" value="3"/></include>
+		</control>
+		<control type="group">
+			<visible>Control.HasFocus(9883)</visible>
+			<include>Anim_SectionSwap</include>
+			<include content="Noc_ListeningRoomLight">
+				<param name="list" value="9883"/>
+			</include>
+			<!-- the row name stops before the lamp (x 750): a long name ends in "..." and the count stays beside it -->
+			<control type="grouplist">
+				<left>96</left>
+				<top>190</top>
+				<width>650</width>
+				<height>32</height>
+				<orientation>horizontal</orientation>
+				<itemgap>0</itemgap>
+				<control type="label">
+					<width max="470">auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>$VAR[CustomRow_Title3]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>32</height>
+					<aligny>center</aligny>
+					<font>caps_20</font>
+					<textcolor>6bc8b8a0</textcolor>
+					<label>  $VAR[CustomRow_Count3]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+</includes>
