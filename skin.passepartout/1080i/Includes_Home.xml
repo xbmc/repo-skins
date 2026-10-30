@@ -1,0 +1,1255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home (mockups PassepartoutHome + PassepartoutHomeRoom).
+
+	ids
+	  9000 nav group: 9001 Films · 9002 Series · 9003 Music · 9004 Search · 9005 Settings
+	  9101 the exhibition (focusable wraplist, 1x1; Left/Right turns the prints)
+	  9120 Continue watching / Next up / Recently played   9121 The rest of the room
+	  9130 / 9131 music room rows (square covers)
+	  9881-9883 custom rows (0.9.14, Includes_CustomRows.xml): the other rooms, one at a time on the room's line
+	Window(Home).Property(passepartout.section) = films | series | music (set when a word takes focus).
+	0.9.14: Films / Series / Music / Search can be hidden in Skin settings (HideMenu.*): the words close up,
+	Left / Right fall through hidden ids, Home opens on the first word shown. Settings never hides.
+
+	Focus map
+	  nav words (Left/Right wrap) -Down-> exhibition 9101 -Down-> room row (9120 or 9121, music 9130/9131)
+	  room: Left/Right along the row, 9120 <-> 9121 across the divider; Down from any 9120 item -> 9121 and Up
+	        from 9121 -> 9120 (Omar: no walking the whole first row); Up from 9120 -> exhibition; Back -> exhibition
+	  exhibition: Up/Back -> nav word of the section
+
+	Paper: TMDb Helper reads Container(TMDbHelper.WidgetContainer).ListItem on Home; every focusable
+	list sets the property to itself on focus, the nav words point it at the exhibition.
+-->
+<includes>
+	<!-- ================================================================ state -->
+	<!-- 0.9.14: a section hidden in Skin settings (HideMenu.*) is never on show -->
+	<expression name="Home_Films">[String.IsEmpty(Window(Home).Property(passepartout.section)) | String.IsEqual(Window(Home).Property(passepartout.section),films)] + !Skin.HasSetting(HideMenu.Movies)</expression>
+	<expression name="Home_Series">String.IsEqual(Window(Home).Property(passepartout.section),series) + !Skin.HasSetting(HideMenu.TVShows)</expression>
+	<expression name="Home_Music">String.IsEqual(Window(Home).Property(passepartout.section),music) + !Skin.HasSetting(HideMenu.Music)</expression>
+	<expression name="Home_AnySection">$EXP[Home_Films] | $EXP[Home_Series] | $EXP[Home_Music]</expression>
+	<expression name="Home_InRoom">Control.HasFocus(9120) | Control.HasFocus(9121) | Control.HasFocus(9130) | Control.HasFocus(9131)</expression>
+	<expression name="Home_MusicPlaying">Player.HasAudio + !Player.HasVideo</expression>
+
+	<!-- ================================================================ content -->
+	<variable name="Home_ExhibitionPath">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),series)">special://skin/playlists/pp_exhibition_series.xsp</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),music)">musicdb://recentlyaddedalbums/</value>
+		<value condition="String.IsEqual(Skin.String(passepartout.exhibition),recent)">special://skin/playlists/pp_exhibition_recent.xsp</value>
+		<value condition="String.IsEqual(Skin.String(passepartout.exhibition),random)">special://skin/playlists/pp_exhibition_random.xsp</value>
+		<value>special://skin/playlists/pp_exhibition_best.xsp</value>
+	</variable>
+	<variable name="Home_ExhibitionName">
+		<value condition="$EXP[Home_Series]">Recently visited</value>
+		<value condition="$EXP[Home_Music]">Recently acquired</value>
+		<value condition="String.IsEqual(Skin.String(passepartout.exhibition),recent)">Unwatched, recently acquired</value>
+		<value condition="String.IsEqual(Skin.String(passepartout.exhibition),random)">Unwatched, drawn at random</value>
+		<value>Unwatched, best rated</value>
+	</variable>
+	<variable name="Home_ContinuePath">
+		<value condition="$EXP[Home_Series] + System.AddonIsEnabled(script.embuary.helper)">plugin://script.embuary.helper/?info=getnextup&amp;reload=$INFO[Window(Home).Property(passepartout.reload)]</value>
+		<value condition="$EXP[Home_Series]">special://skin/playlists/pp_inprogress_tvshows.xsp</value>
+		<value condition="$EXP[Home_Films]">special://skin/playlists/pp_inprogress_movies.xsp</value>
+	</variable>
+	<variable name="Home_RoomPath">
+		<value condition="$EXP[Home_Series]">special://skin/playlists/pp_room_shows.xsp</value>
+		<value condition="$EXP[Home_Films]">special://skin/playlists/pp_room_movies.xsp</value>
+	</variable>
+	<variable name="Home_ContinueName">
+		<value condition="$EXP[Home_Series]">Next up</value>
+		<value>Continue watching</value>
+	</variable>
+	<!-- Continue watching prints are posters: an episode shows its show's poster -->
+	<variable name="Home_ContinuePoster">
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="Home_RoomName">
+		<value condition="$EXP[Home_Series]">Recently acquired</value>
+		<value>The rest of the room</value>
+	</variable>
+
+	<!-- ================================================================ exhibition labels (Container 9101) -->
+	<variable name="Home_PrintArt">
+		<value condition="$EXP[Home_Music]">$INFO[Container(9101).ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Art(fanart))">$INFO[Container(9101).ListItem.Art(fanart)]</value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Art(landscape))">$INFO[Container(9101).ListItem.Art(landscape)]</value>
+		<value>$INFO[Container(9101).ListItem.Art(poster)]</value>
+	</variable>
+	<variable name="Home_CaptionMeta">
+		<value condition="$EXP[Home_Music]">$INFO[Container(9101).ListItem.Artist]$INFO[Container(9101).ListItem.Year, · ,]$INFO[Container(9101).ListItem.Genre, · ,]</value>
+		<value condition="$EXP[Home_Series]">$INFO[Container(9101).ListItem.Year]$INFO[Container(9101).ListItem.Genre, · ,]</value>
+		<value>$INFO[Container(9101).ListItem.Director,, · ]$INFO[Container(9101).ListItem.Year]$INFO[Container(9101).ListItem.Genre, · ,]$INFO[Container(9101).ListItem.Duration(mins),$COMMA , min]</value>
+	</variable>
+<!-- "1 season" / "3 seasons" (0.9.5: it said "1 seasons") -->
+	<variable name="PP_SeasonsN_H">
+		<value condition="Integer.IsEqual(Container(9101).ListItem.Property(TotalSeasons),1)">1 season</value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Property(TotalSeasons))">$INFO[Container(9101).ListItem.Property(TotalSeasons)] seasons</value>
+	</variable>
+	<variable name="PP_EpisodesN_H">
+		<value condition="Integer.IsEqual(Container(9101).ListItem.Property(TotalEpisodes),1)">1 episode</value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.Property(TotalEpisodes))">$INFO[Container(9101).ListItem.Property(TotalEpisodes)] episodes</value>
+	</variable>
+	<!-- the third line is three pieces (Geist / Geist Mono / Geist) in a centred grouplist -->
+	<variable name="Home_LineA">
+		<value condition="$EXP[Home_Series] + !String.IsEmpty(Container(9101).ListItem.Property(TotalSeasons))">$VAR[PP_SeasonsN_H] · $VAR[PP_EpisodesN_H] · </value>
+		<value condition="$EXP[Home_Music]">$INFO[Container(9101).ListItem.Property(Album_Type)]</value>
+		<value condition="Container(9101).ListItem.IsResumable">In progress · ends </value>
+		<value condition="Integer.IsGreater(Container(9101).ListItem.PlayCount,0)">Watched · ends </value>
+		<value condition="!String.IsEmpty(Container(9101).ListItem.EndTime)">Unwatched · ends </value>
+	</variable>
+	<variable name="Home_LineMono">
+		<value condition="$EXP[Home_Series]">$INFO[Container(9101).ListItem.Property(UnWatchedEpisodes)]</value>
+		<value condition="$EXP[Home_Music]"></value>
+		<value condition="Container(9101).ListItem.IsResumable">$INFO[Container(9101).ListItem.EndTime(Resume)]</value>
+		<value>$INFO[Container(9101).ListItem.EndTime]</value>
+	</variable>
+	<variable name="Home_LineB">
+		<value condition="$EXP[Home_Series] + !String.IsEmpty(Container(9101).ListItem.Property(UnWatchedEpisodes))"> unwatched</value>
+		<value condition="!$EXP[Home_Series] + !$EXP[Home_Music] + !String.IsEmpty(Container(9101).ListItem.EndTime)"> if you start now</value>
+	</variable>
+
+	<!-- ================================================================ room labels (focused room list) -->
+	<variable name="Home_RoomTitle">
+		<value condition="Control.HasFocus(9120) + String.IsEqual(Container(9120).ListItem.DBType,episode)">$INFO[Container(9120).ListItem.Title]</value>
+		<value condition="Control.HasFocus(9120)">$INFO[Container(9120).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9121)">$INFO[Container(9121).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9130)">$INFO[Container(9130).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9131)">$INFO[Container(9131).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9881) + String.IsEqual(Container(9881).ListItem.DBType,episode)">$INFO[Container(9881).ListItem.Title]</value>
+		<value condition="Control.HasFocus(9881)">$INFO[Container(9881).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9882) + String.IsEqual(Container(9882).ListItem.DBType,episode)">$INFO[Container(9882).ListItem.Title]</value>
+		<value condition="Control.HasFocus(9882)">$INFO[Container(9882).ListItem.Label]</value>
+		<value condition="Control.HasFocus(9883) + String.IsEqual(Container(9883).ListItem.DBType,episode)">$INFO[Container(9883).ListItem.Title]</value>
+		<value condition="Control.HasFocus(9883)">$INFO[Container(9883).ListItem.Label]</value>
+	</variable>
+	<variable name="Home_RoomMeta">
+		<value condition="Control.HasFocus(9120) + String.IsEqual(Container(9120).ListItem.DBType,episode)">[COLOR ink]$INFO[Container(9120).ListItem.TVShowTitle][/COLOR]$INFO[Container(9120).ListItem.Season, · Season ,]$INFO[Container(9120).ListItem.Episode, · Episode ,]$VAR[Home_RoomAired]</value>
+		<value condition="Control.HasFocus(9120) + String.IsEqual(Container(9120).ListItem.DBType,tvshow)">[COLOR ink]$INFO[Container(9120).ListItem.Property(WatchedEpisodes)] of $INFO[Container(9120).ListItem.Property(TotalEpisodes)] watched[/COLOR]$INFO[Container(9120).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9120)">[COLOR ink]$INFO[Container(9120).ListItem.Director][/COLOR]$INFO[Container(9120).ListItem.Year, · ,]$INFO[Container(9120).ListItem.PercentPlayed, · ,% seen]</value>
+		<value condition="Control.HasFocus(9121) + String.IsEqual(Container(9121).ListItem.DBType,tvshow)">[COLOR ink]$INFO[Container(9121).ListItem.Year][/COLOR]$INFO[Container(9121).ListItem.Property(UnWatchedEpisodes), · , unwatched]</value>
+		<value condition="Control.HasFocus(9121)">[COLOR ink]$INFO[Container(9121).ListItem.Director][/COLOR]$INFO[Container(9121).ListItem.Year, · ,]$INFO[Container(9121).ListItem.Duration(mins), · , min]</value>
+		<value condition="Control.HasFocus(9130)">[COLOR ink]$INFO[Container(9130).ListItem.Artist][/COLOR]$INFO[Container(9130).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9131)">[COLOR ink]$INFO[Container(9131).ListItem.Artist][/COLOR]$INFO[Container(9131).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9881) + String.IsEqual(Container(9881).ListItem.DBType,episode)">[COLOR ink]$INFO[Container(9881).ListItem.TVShowTitle][/COLOR]$INFO[Container(9881).ListItem.Season, · Season ,]$INFO[Container(9881).ListItem.Episode, · Episode ,]</value>
+		<value condition="Control.HasFocus(9881) + String.IsEqual(Container(9881).ListItem.DBType,tvshow)">[COLOR ink]$INFO[Container(9881).ListItem.Year][/COLOR]$INFO[Container(9881).ListItem.Property(UnWatchedEpisodes), · , unwatched]</value>
+		<value condition="Control.HasFocus(9881) + !String.IsEmpty(Container(9881).ListItem.Artist)">[COLOR ink]$INFO[Container(9881).ListItem.Artist][/COLOR]$INFO[Container(9881).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9881) + !String.IsEmpty(Container(9881).ListItem.Year)">[COLOR ink]$INFO[Container(9881).ListItem.Director][/COLOR]$INFO[Container(9881).ListItem.Year, · ,]$INFO[Container(9881).ListItem.Duration(mins), · , min]</value>
+		<value condition="Control.HasFocus(9881)">$INFO[Container(9881).ListItem.Label2]</value>
+		<value condition="Control.HasFocus(9882) + String.IsEqual(Container(9882).ListItem.DBType,episode)">[COLOR ink]$INFO[Container(9882).ListItem.TVShowTitle][/COLOR]$INFO[Container(9882).ListItem.Season, · Season ,]$INFO[Container(9882).ListItem.Episode, · Episode ,]</value>
+		<value condition="Control.HasFocus(9882) + String.IsEqual(Container(9882).ListItem.DBType,tvshow)">[COLOR ink]$INFO[Container(9882).ListItem.Year][/COLOR]$INFO[Container(9882).ListItem.Property(UnWatchedEpisodes), · , unwatched]</value>
+		<value condition="Control.HasFocus(9882) + !String.IsEmpty(Container(9882).ListItem.Artist)">[COLOR ink]$INFO[Container(9882).ListItem.Artist][/COLOR]$INFO[Container(9882).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9882) + !String.IsEmpty(Container(9882).ListItem.Year)">[COLOR ink]$INFO[Container(9882).ListItem.Director][/COLOR]$INFO[Container(9882).ListItem.Year, · ,]$INFO[Container(9882).ListItem.Duration(mins), · , min]</value>
+		<value condition="Control.HasFocus(9882)">$INFO[Container(9882).ListItem.Label2]</value>
+		<value condition="Control.HasFocus(9883) + String.IsEqual(Container(9883).ListItem.DBType,episode)">[COLOR ink]$INFO[Container(9883).ListItem.TVShowTitle][/COLOR]$INFO[Container(9883).ListItem.Season, · Season ,]$INFO[Container(9883).ListItem.Episode, · Episode ,]</value>
+		<value condition="Control.HasFocus(9883) + String.IsEqual(Container(9883).ListItem.DBType,tvshow)">[COLOR ink]$INFO[Container(9883).ListItem.Year][/COLOR]$INFO[Container(9883).ListItem.Property(UnWatchedEpisodes), · , unwatched]</value>
+		<value condition="Control.HasFocus(9883) + !String.IsEmpty(Container(9883).ListItem.Artist)">[COLOR ink]$INFO[Container(9883).ListItem.Artist][/COLOR]$INFO[Container(9883).ListItem.Year, · ,]</value>
+		<value condition="Control.HasFocus(9883) + !String.IsEmpty(Container(9883).ListItem.Year)">[COLOR ink]$INFO[Container(9883).ListItem.Director][/COLOR]$INFO[Container(9883).ListItem.Year, · ,]$INFO[Container(9883).ListItem.Duration(mins), · , min]</value>
+		<value condition="Control.HasFocus(9883)">$INFO[Container(9883).ListItem.Label2]</value>
+	</variable>
+
+	<variable name="Home_RoomAired">
+		<value condition="!String.IsEmpty(Container(9120).ListItem.Premiered)"> · aired $VAR[Date_RPR]</value>
+	</variable>
+
+	<!-- nav word colours: the section on show is ink, the rest secondary -->
+	<variable name="Home_NavFilms"><value condition="$EXP[Home_Films]">ink</value><value>ink2</value></variable>
+	<variable name="Home_NavSeries"><value condition="$EXP[Home_Series]">ink</value><value>ink2</value></variable>
+	<variable name="Home_NavMusic"><value condition="$EXP[Home_Music]">ink</value><value>ink2</value></variable>
+
+	<!-- ================================================================ nav -->
+	<!-- One word. x = text start, w = measured text width (_src/measure.py, PPCaps 20) -->
+	<include name="Home_NavWord">
+		<param name="color">ink2</param>
+		<param name="focus_a">noop</param>
+		<param name="focus_b">noop</param>
+		<param name="active">false</param>
+		<param name="onclick">noop</param>
+		<!-- shown: false when hidden in Skin settings (HideMenu.*). 0.9.17: the words are children of the grouplist 9000
+		     (Home_Nav), which closes up hidden ones; gid = the word's group id (a grouplist rewrites its children's
+		     Left / Right with the neighbours' ids, so every child needs one, LESSONS Custom menu items Majan).
+		     A hidden word keeps its numeric onleft / onright, so Left / Right fall through it. -->
+		<param name="shown">true</param>
+		<definition>
+			<control type="group" id="$PARAM[gid]">
+			<width>$PARAM[width]</width>
+			<height>50</height>
+			<visible>$PARAM[shown]</visible>
+			<control type="button" id="$PARAM[id]">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>50</height>
+				<font>cap_20</font>
+				<align>center</align>
+				<aligny>center</aligny>
+				<textoffsetx>0</textoffsetx>
+				<textcolor>$PARAM[color]</textcolor>
+				<focusedcolor>$VAR[PaperColor]</focusedcolor>
+				<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onfocus>$PARAM[focus_a]</onfocus>
+				<onfocus>$PARAM[focus_b]</onfocus>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9101,home)</onfocus>
+				<onclick>$PARAM[onclick]</onclick>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<onup>noop</onup>
+				<ondown condition="!$EXP[Home_AnySection] + $EXP[CustomRow1On]">9881</ondown>
+				<ondown condition="!$EXP[Home_AnySection] + !$EXP[CustomRow1On] + $EXP[CustomRow2On]">9882</ondown>
+				<ondown condition="!$EXP[Home_AnySection] + !$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+				<ondown condition="Integer.IsGreater(Container(9101).NumItems,0)">9101</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9101).NumItems,0) + [Integer.IsGreater(Container(9120).NumItems,0) | Integer.IsGreater(Container(9121).NumItems,0) | Integer.IsGreater(Container(9130).NumItems,0) | Integer.IsGreater(Container(9131).NumItems,0)]">SetFocus(9190)</ondown>
+			</control>
+			<!-- hairline under the section on show -->
+			<control type="image">
+				<left>16</left>
+				<top>47</top>
+				<width>$PARAM[uwidth]</width>
+				<height>1</height>
+				<texture colordiffuse="ink">common/white.png</texture>
+				<visible>$PARAM[active] + !Control.HasFocus($PARAM[id])</visible>
+			</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- 0.9.17 custom main-menu item n (Includes_CustomMenu.xml; params n, id): a word like the others, as wide as
+	     its name (auto width, the same 16 px either side as the measured words, cut at 300). A direct child of the
+	     grouplist, so its Left / Right are the neighbours (Search's group 9014 / the next item / Settings' 9015);
+	     hidden ones are walked past. It has no exhibition: the page shows Home_CustomMenuPanel instead. -->
+	<include name="Home_NavCustom">
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width max="300">auto</width>
+				<height>50</height>
+				<font>cap_20</font>
+				<aligny>center</aligny>
+				<textoffsetx>16</textoffsetx>
+				<textcolor>ink2</textcolor>
+				<focusedcolor>$VAR[PaperColor]</focusedcolor>
+				<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+				<texturenofocus />
+				<label>$VAR[CustomMenu_Label$PARAM[n]]</label>
+				<visible>$EXP[CustomMenu$PARAM[n]On]</visible>
+				<onfocus>SetProperty(passepartout.section,custom$PARAM[n],home)</onfocus>
+				<include content="CustomMenu_OnClick"><param name="item" value="$PARAM[n]"/></include>
+				<onup>noop</onup>
+				<ondown>noop</ondown>
+			</control>
+		</definition>
+	</include>
+	<variable name="Home_CustomMenuKind">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom1)">$VAR[CustomMenu_Kind1]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom2)">$VAR[CustomMenu_Kind2]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom3)">$VAR[CustomMenu_Kind3]</value>
+	</variable>
+	<variable name="Home_CustomMenuOpens">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom1)">$VAR[CustomMenu_Opens1]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom2)">$VAR[CustomMenu_Opens2]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom3)">$VAR[CustomMenu_Opens3]</value>
+	</variable>
+	<variable name="Home_CustomMenuLabel">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom1)">$VAR[CustomMenu_Label1]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom2)">$VAR[CustomMenu_Label2]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom3)">$VAR[CustomMenu_Label3]</value>
+	</variable>
+	<variable name="Home_CustomMenuIcon">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom1)">$VAR[CustomMenu_Icon1]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom2)">$VAR[CustomMenu_Icon2]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom3)">$VAR[CustomMenu_Icon3]</value>
+	</variable>
+	<variable name="Home_CustomMenuSlot">
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom1)">$LOCALIZE[31981]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom2)">$LOCALIZE[31982]</value>
+		<value condition="String.IsEqual(Window(Home).Property(passepartout.section),custom3)">$LOCALIZE[31983]</value>
+	</variable>
+	<expression name="Home_CustomMenuOn">[String.IsEqual(Window(Home).Property(passepartout.section),custom1) + $EXP[CustomMenu1On]] | [String.IsEqual(Window(Home).Property(passepartout.section),custom2) + $EXP[CustomMenu2On]] | [String.IsEqual(Window(Home).Property(passepartout.section),custom3) + $EXP[CustomMenu3On]]</expression>
+	<!-- A custom item on show: one small print in its mat, the add-on's icon as the picture (no icon: the mat shows
+	     the name, as for any print without art), with the museum caption under it: the name, what it is and what it
+	     opens, "OK to open". The exhibition's name corner says which menu item it is. -->
+	<include name="Home_CustomMenuPanel">
+		<control type="group">
+			<visible>$EXP[Home_CustomMenuOn] + !$EXP[CustomRowsFocus]</visible>
+			<animation effect="fade" start="0" end="100" time="320" delay="80">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="160">Hidden</animation>
+			<include content="PP_Print">
+				<param name="left" value="730"/><param name="top" value="236"/>
+				<param name="width" value="460"/><param name="height" value="460"/>
+				<param name="art" value="$VAR[Home_CustomMenuIcon]"/>
+				<param name="aspect" value="keep"/>
+				<param name="title" value="$VAR[Home_CustomMenuLabel]"/>
+				<param name="lift" value="true"/>
+				<param name="fade" value="240"/>
+			</include>
+			<control type="label">
+				<left>260</left>
+				<top>812</top>
+				<width>1400</width>
+				<height>88</height>
+				<font>ttl_72</font>
+				<textcolor>ink</textcolor>
+				<align>center</align>
+				<label>$VAR[Home_CustomMenuLabel]</label>
+			</control>
+			<control type="label">
+				<left>260</left>
+				<top>914</top>
+				<width>1400</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<align>center</align>
+				<label>$VAR[Home_CustomMenuKind] · $VAR[Home_CustomMenuOpens]</label>
+			</control>
+			<control type="label">
+				<left>260</left>
+				<top>952</top>
+				<width>1400</width>
+				<height>34</height>
+				<font>body_24</font>
+				<textcolor>ink2</textcolor>
+				<align>center</align>
+				<label>$LOCALIZE[31995]</label>
+			</control>
+			<control type="group">
+				<visible>!$EXP[Home_MusicPlaying]</visible>
+				<control type="label">
+					<left>120</left>
+					<top>964</top>
+					<width>520</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31980]</label>
+				</control>
+				<control type="label">
+					<left>120</left>
+					<top>992</top>
+					<width>520</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[Home_CustomMenuSlot]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+
+	<include name="Home_Nav">
+		<!-- 0.9.17: a horizontal grouplist from x 104 with 20 px gaps puts the words where they always were
+		     (104 / 232 / 372 / 505 / 658) and makes room for the custom main-menu items 9006-9008 between Search and
+		     Settings (auto-width words, Home_NavCustom). Word groups 9011-9015. -->
+		<control type="grouplist" id="9000">
+			<left>104</left>
+			<top>53</top>
+			<width>1360</width>
+			<height>50</height>
+			<orientation>horizontal</orientation>
+			<itemgap>20</itemgap>
+			<defaultcontrol>9001</defaultcontrol>
+			<include content="Home_NavWord">
+				<param name="id" value="9001"/><param name="gid" value="9011"/><param name="shown" value="!Skin.HasSetting(HideMenu.Movies)"/><param name="width" value="108"/>
+				<param name="uleft" value="120"/><param name="uwidth" value="76"/>
+				<param name="label" value="Films"/><param name="color" value="$VAR[Home_NavFilms]"/><param name="focus_a" value="SetProperty(passepartout.section,films,home)"/><param name="focus_b" value="SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(landscape)|Art(poster)|Art(thumb),home)"/>
+				<param name="active" value="$EXP[Home_Films]"/>
+				<param name="onclick" value="ActivateWindow(Videos,videodb://movies/titles/,return)"/>
+				<param name="onleft" value="9005"/><param name="onright" value="9002"/>
+			</include>
+			<include content="Home_NavWord">
+				<param name="id" value="9002"/><param name="gid" value="9012"/><param name="shown" value="!Skin.HasSetting(HideMenu.TVShows)"/><param name="width" value="120"/>
+				<param name="uleft" value="248"/><param name="uwidth" value="88"/>
+				<param name="label" value="Series"/><param name="color" value="$VAR[Home_NavSeries]"/><param name="focus_a" value="SetProperty(passepartout.section,series,home)"/><param name="focus_b" value="SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(landscape)|Art(poster)|Art(thumb),home)"/>
+				<param name="active" value="$EXP[Home_Series]"/>
+				<param name="onclick" value="ActivateWindow(Videos,videodb://tvshows/titles/,return)"/>
+				<param name="onleft" value="9001"/><param name="onright" value="9003"/>
+			</include>
+			<include content="Home_NavWord">
+				<param name="id" value="9003"/><param name="gid" value="9013"/><param name="shown" value="!Skin.HasSetting(HideMenu.Music)"/><param name="width" value="113"/>
+				<param name="uleft" value="388"/><param name="uwidth" value="81"/>
+				<param name="label" value="Music"/><param name="color" value="$VAR[Home_NavMusic]"/><param name="focus_a" value="SetProperty(passepartout.section,music,home)"/><param name="focus_b" value="SetProperty(TMDbHelper.Colors.SourceImage,Art(thumb)|Art(fanart),home)"/>
+				<param name="active" value="$EXP[Home_Music]"/>
+				<param name="onclick" value="ActivateWindow(Music,musicdb://albums/,return)"/>
+				<param name="onleft" value="9002"/><param name="onright" value="9004"/>
+			</include>
+			<include content="Home_NavWord">
+				<param name="id" value="9004"/><param name="gid" value="9014"/><param name="shown" value="!Skin.HasSetting(HideMenu.Search)"/><param name="width" value="133"/>
+				<param name="uleft" value="521"/><param name="uwidth" value="101"/>
+				<param name="label" value="Search"/>
+				<param name="onclick" value="ActivateWindow(1150)"/>
+				<param name="onleft" value="9003"/><param name="onright" value="9006"/>
+			</include>
+			<include content="Home_NavCustom"><param name="n" value="1"/><param name="id" value="9006"/></include>
+			<include content="Home_NavCustom"><param name="n" value="2"/><param name="id" value="9007"/></include>
+			<include content="Home_NavCustom"><param name="n" value="3"/><param name="id" value="9008"/></include>
+			<include content="Home_NavWord">
+				<param name="id" value="9005"/><param name="gid" value="9015"/><param name="width" value="154"/>
+				<param name="uleft" value="674"/><param name="uwidth" value="122"/>
+				<param name="label" value="Settings"/>
+				<param name="onclick" value="ActivateWindow(1151)"/>
+				<param name="onleft" value="9008"/><param name="onright" value="9001"/>
+			</include>
+		</control>
+		<include>PP_Clock</include>
+	</include>
+
+	<!-- ================================================================ data -->
+	<include name="Home_Data">
+		<!-- the exhibition: 1x1 wraplist that owns focus while you turn the prints -->
+		<control type="wraplist" id="9101">
+			<left>0</left>
+			<top>0</top>
+			<width>1</width>
+			<height>1</height>
+			<orientation>horizontal</orientation>
+			<focusposition>0</focusposition>
+			<scrolltime>0</scrolltime>
+			<onup>9000</onup>
+			<onback>9000</onback>
+			<ondown condition="$EXP[Home_Music] + Integer.IsGreater(Container(9130).NumItems,0)">9130</ondown>
+			<ondown condition="$EXP[Home_Music] + !Integer.IsGreater(Container(9130).NumItems,0)">9131</ondown>
+			<ondown condition="!$EXP[Home_Music] + Integer.IsGreater(Container(9120).NumItems,0)">9120</ondown>
+			<ondown condition="!$EXP[Home_Music] + !Integer.IsGreater(Container(9120).NumItems,0)">9121</ondown>
+			<onfocus>SetProperty(TMDbHelper.WidgetContainer,9101,home)</onfocus>
+			<onfocus condition="$EXP[Home_Music]">SetProperty(TMDbHelper.Colors.SourceImage,Art(thumb)|Art(fanart),home)</onfocus>
+			<onfocus condition="!$EXP[Home_Music]">SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(landscape)|Art(poster)|Art(thumb),home)</onfocus>
+			<onclick condition="$EXP[Home_Films]">Action(Info)</onclick>
+			<onclick condition="$EXP[Home_Series]">ActivateWindow(Videos,$INFO[ListItem.FolderPath],return)</onclick>
+			<onclick condition="$EXP[Home_Music]">ActivateWindow(Music,$INFO[ListItem.FolderPath],return)</onclick>
+			<itemlayout width="1" height="1"/>
+			<focusedlayout width="1" height="1"/>
+			<content limit="12">$VAR[Home_ExhibitionPath]</content>
+		</control>
+		<!-- empty-library fallback focus target for the nav (never visible) -->
+		<control type="button" id="9190">
+			<include>PP_Hidden</include>
+			<onfocus condition="$EXP[Home_Music] + Integer.IsGreater(Container(9130).NumItems,0)">SetFocus(9130)</onfocus>
+			<onfocus condition="$EXP[Home_Music] + !Integer.IsGreater(Container(9130).NumItems,0)">SetFocus(9131)</onfocus>
+			<onfocus condition="!$EXP[Home_Music] + Integer.IsGreater(Container(9120).NumItems,0)">SetFocus(9120)</onfocus>
+			<onfocus condition="!$EXP[Home_Music] + !Integer.IsGreater(Container(9120).NumItems,0)">SetFocus(9121)</onfocus>
+		</control>
+	</include>
+
+	<!-- ================================================================ the exhibition, hung -->
+	<include name="Home_PrintSlides">
+		<animation type="Conditional" condition="[!Container(9101).OnNext] + !Skin.HasSetting(passepartout.reducemotion)" reversible="false">
+			<effect type="slide" start="72,0" end="0,0" time="480" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="320"/>
+		</animation>
+		<animation type="Conditional" condition="[!Container(9101).OnNext] + Skin.HasSetting(passepartout.reducemotion)" reversible="false">
+			<effect type="slide" start="72,0" end="0,0" time="0" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="320"/>
+		</animation>
+		<animation type="Conditional" condition="[!Container(9101).OnPrevious] + !Skin.HasSetting(passepartout.reducemotion)" reversible="false">
+			<effect type="slide" start="-72,0" end="0,0" time="480" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="320"/>
+		</animation>
+		<animation type="Conditional" condition="[!Container(9101).OnPrevious] + Skin.HasSetting(passepartout.reducemotion)" reversible="false">
+			<effect type="slide" start="-72,0" end="0,0" time="0" tween="cubic" easing="out"/>
+			<effect type="fade" start="0" end="100" time="320"/>
+		</animation>
+	</include>
+
+	<include name="Home_Exhibition">
+		<control type="group">
+			<visible>$EXP[Home_AnySection] + [!$EXP[Home_InRoom] + Integer.IsGreater(Container(9101).NumItems,0)] + !$EXP[CustomRowsFocus]</visible>
+			<animation effect="fade" start="0" end="100" time="320" delay="80">Visible</animation>
+			<animation type="Hidden" condition="!Skin.HasSetting(passepartout.reducemotion)">
+				<effect type="fade" start="100" end="0" time="240"/>
+				<effect type="zoom" start="100" end="60" center="414,160" time="320" tween="cubic" easing="inout"/>
+			</animation>
+			<!-- one Hidden animation only: Kodi resets just the first Hidden when the control shows again, so a reduce-motion
+			     twin would stay applied at fade 0 (LESSONS, Groove device pass 2). Reduce motion: instant hide. -->
+			<animation effect="fade" start="0" end="100" time="400">WindowOpen</animation>
+			<!-- landscape print (films, series): picture 1092 x 612 at 414,160 -->
+			<control type="group">
+				<visible>!$EXP[Home_Music]</visible>
+				<include>Home_PrintSlides</include>
+				<include content="PP_Print">
+					<param name="left" value="414"/><param name="top" value="160"/>
+					<param name="width" value="1092"/><param name="height" value="612"/>
+					<param name="art" value="$VAR[Home_PrintArt]"/>
+					<param name="title" value="$INFO[Container(9101).ListItem.Label]"/>
+					<param name="lift" value="true"/>
+					<param name="fade" value="240"/>
+				</include>
+			</control>
+			<!-- square print (music): 612 x 612 centred -->
+			<control type="group">
+				<visible>$EXP[Home_Music]</visible>
+				<include>Home_PrintSlides</include>
+				<include content="PP_Print">
+					<param name="left" value="654"/><param name="top" value="160"/>
+					<param name="width" value="612"/><param name="height" value="612"/>
+					<param name="art" value="$VAR[Home_PrintArt]"/>
+					<param name="title" value="$INFO[Container(9101).ListItem.Label]"/>
+					<param name="lift" value="true"/>
+					<param name="fade" value="240"/>
+				</include>
+			</control>
+			<!-- museum caption, centred under the print -->
+			<include content="Title_Home"><param name="left" value="260"/><param name="top" value="812"/></include>
+			<control type="label">
+				<left>260</left>
+				<top>914</top>
+				<width>1400</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<align>center</align>
+				<label>$VAR[Home_CaptionMeta]</label>
+			</control>
+			<control type="label">
+				<left>260</left>
+				<top>952</top>
+				<width>1400</width>
+				<height>34</height>
+				<font>body_24</font>
+				<textcolor>ink2</textcolor>
+				<align>center</align>
+				<label>$VAR[Home_LineA][COLOR ink]$VAR[Home_LineMono][/COLOR]$VAR[Home_LineB]</label>
+			</control>
+			<!-- the exhibition's name, bottom left; counter bottom right -->
+			<control type="group">
+				<visible>!$EXP[Home_MusicPlaying]</visible>
+				<control type="label">
+					<left>120</left>
+					<top>964</top>
+					<width>520</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31177]</label>
+				</control>
+				<control type="label">
+					<left>120</left>
+					<top>992</top>
+					<width>520</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[Home_ExhibitionName]</label>
+				</control>
+				<control type="label">
+					<left>1300</left>
+					<top>992</top>
+					<width>500</width>
+					<height>28</height>
+					<font>mono_22</font>
+					<textcolor>ink3</textcolor>
+					<align>right</align>
+					<label>$INFO[Container(9101).CurrentItem]$INFO[Container(9101).NumItems, / ,]</label>
+				</control>
+			</control>
+		</control>
+		<!-- empty exhibition (nothing matches yet) -->
+		<control type="group">
+			<visible>!$EXP[Home_InRoom] + Integer.IsEqual(Container(9101).NumItems,0) + !Container(9101).IsUpdating</visible>
+			<control type="label">
+				<left>120</left>
+				<top>420</top>
+				<width>1680</width>
+				<height>84</height>
+				<font>ttl_72</font>
+				<textcolor>ink</textcolor>
+				<align>center</align>
+				<label>$LOCALIZE[31178]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>520</top>
+				<width>1680</width>
+				<height>34</height>
+				<font>body_24</font>
+				<textcolor>ink2</textcolor>
+				<align>center</align>
+				<label>$LOCALIZE[31179]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ the rest of the room -->
+	<!-- the exhibition stepped back: 544 x 306 at 120,140, flat; its caption to the right, bottom-aligned -->
+	<include name="Home_ExhibitionSmall">
+		<control type="group">
+			<visible>$EXP[Home_AnySection] + [$EXP[Home_InRoom]]</visible>
+			<animation effect="fade" start="0" end="100" time="320" delay="120">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="160">Hidden</animation>
+			<control type="group">
+				<visible>!$EXP[Home_Music]</visible>
+				<include content="PP_Print">
+					<param name="left" value="120"/><param name="top" value="140"/>
+					<param name="width" value="544"/><param name="height" value="306"/>
+					<param name="art" value="$VAR[Home_PrintArt]"/>
+					<param name="title" value="$INFO[Container(9101).ListItem.Label]"/>
+				</include>
+			</control>
+			<control type="group">
+				<visible>$EXP[Home_Music]</visible>
+				<include content="PP_Print">
+					<param name="left" value="358"/><param name="top" value="140"/>
+					<param name="width" value="306"/><param name="height" value="306"/>
+					<param name="art" value="$VAR[Home_PrintArt]"/>
+					<param name="title" value="$INFO[Container(9101).ListItem.Label]"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>712</left>
+				<top>300</top>
+				<width>1000</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<align>left</align>
+				<label>The exhibition · $INFO[Container(9101).CurrentItem]$INFO[Container(9101).NumItems, / ,]</label>
+			</control>
+			<control type="label">
+				<left>712</left>
+				<top>336</top>
+				<width>1088</width>
+				<height>76</height>
+				<font>ttl_64</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[Container(9101).ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>712</left>
+				<top>418</top>
+				<width>1088</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Home_CaptionMeta]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- one print in a room row. Item = [gap 64][print]. params: w, h, top, art, lift -->
+	<include name="Home_RoomPrint">
+		<param name="lift">false</param>
+		<param name="left">64</param>
+		<param name="art">$VAR[ListItemLandscape]</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[w]</width>
+				<height>$PARAM[h]</height>
+				<include condition="$PARAM[lift]">PP_LiftSmall</include>
+				<include content="PP_Picture">
+					<param name="art" value="$PARAM[art]"/>
+					<param name="title" value="$INFO[ListItem.Label]"/>
+				</include>
+				<include>PP_Bevel</include>
+				<include>PP_WatchedMarkers</include>
+			</control>
+		</definition>
+	</include>
+	<include name="Home_GrowIn">
+		<param name="cx">0</param>
+		<param name="cy">0</param>
+		<param name="from">71</param>
+		<definition>
+			<animation type="Focus" condition="!Skin.HasSetting(passepartout.reducemotion)">
+				<effect type="zoom" start="$PARAM[from]" end="100" center="$PARAM[cx],$PARAM[cy]" time="360" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Focus" condition="Skin.HasSetting(passepartout.reducemotion)">
+				<effect type="zoom" start="$PARAM[from]" end="100" center="$PARAM[cx],$PARAM[cy]" time="0" tween="cubic" easing="out"/>
+			</animation>
+		</definition>
+	</include>
+
+	<include name="Home_RoomRows">
+		<control type="group">
+			<visible>$EXP[Home_AnySection] + [!$EXP[Home_Music]]</visible>
+			<!-- row labels -->
+			<control type="label">
+				<left>120</left>
+				<top>516</top>
+				<width>800</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[Home_ContinueName]</label>
+				<visible>Integer.IsGreater(Container(9120).NumItems,0)</visible>
+				<include>Home_RoomFade</include>
+			</control>
+			<!-- 9120: posters, the same prints as 9121: unfocused 120x180 (top 600), focused 168x252 (top 564),
+			     gap 64. Width = 1 focused + 3 items (232 + 3 x 184 = 784) + 48 so the last focused print keeps its
+			     bevel and lift. Once the row scrolls, the previous print's edge shows at x 56..61: Home_RoomEdge
+			     covers it with the paper. -->
+			<control type="list" id="9120">
+				<left>56</left>
+				<top>0</top>
+				<width>832</width>
+				<height>1080</height>
+				<orientation>horizontal</orientation>
+				<scrolltime tween="cubic" easing="out">320</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup>9101</onup>
+				<onback>9101</onback>
+				<onleft>noop</onleft>
+				<onright condition="Integer.IsGreater(Container(9121).NumItems,0)">9121</onright>
+				<ondown condition="Integer.IsGreater(Container(9121).NumItems,0)">9121</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9121).NumItems,0) + $EXP[CustomRow1On]">9881</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9121).NumItems,0) + !$EXP[CustomRow1On] + $EXP[CustomRow2On]">9882</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9121).NumItems,0) + !$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9120,home)</onfocus>
+				<!-- leaving the row returns it to item 1 (Control.Move -n then +1 lands on 1, lists wrap); unfocused,
+				     the selected 232 slot holds its small print at the slot's right (left 112) and the row moves 48
+				     left, so every gap stays 64 wherever you left from -->
+				<onunfocus>Control.Move(9120,-$INFO[Container(9120).CurrentItem])</onunfocus>
+				<onunfocus>Control.Move(9120,1)</onunfocus>
+				<animation effect="slide" start="0,0" end="-48,0" time="0" condition="!Control.HasFocus(9120)">Conditional</animation>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(tvshow.poster)|Art(poster)|Art(thumb),home)</onfocus>
+				<!-- never hidden: a hidden container is not processed and would never load -->
+				<include>Home_RoomFade</include>
+				<itemlayout width="184" height="1080">
+					<include content="Home_RoomPrint"><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[Home_ContinuePoster]"/></include>
+				</itemlayout>
+				<focusedlayout width="232" height="1080">
+					<control type="group">
+						<visible>Control.HasFocus(9120)</visible>
+						<control type="group">
+							<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+							<include content="Home_RoomPrint"><param name="w" value="168"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$VAR[Home_ContinuePoster]"/></include>
+						</control>
+					</control>
+					<control type="group">
+						<visible>!Control.HasFocus(9120)</visible>
+						<include content="Home_RoomPrint"><param name="left" value="112"/><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[Home_ContinuePoster]"/></include>
+					</control>
+				</focusedlayout>
+				<content limit="15">$VAR[Home_ContinuePath]</content>
+			</control>
+			<!-- unfocused 9120 sits 48 left, so the 5th print's bevel peeks out at x ~840: cover it with paper.
+			     Only while you are in the room: on the exhibition it cut a paper bar through the print (0.9.5). -->
+			<include content="Home_RoomEdge"><param name="left" value="800"/><param name="width" value="47"/><param name="visible" value="!Control.HasFocus(9120) + Integer.IsGreater(Container(9120).NumItems,4) + $EXP[Home_InRoom]"/></include>
+
+			<!-- divider + 9121, placed after however many continue prints there are (0 / 1 / 2 / 3 / 4+).
+			     4+: prints end at 840, divider 896, 9121 at 888 (first print 952); each missing print = -184. -->
+			<control type="group">
+				<animation effect="slide" start="0,0" end="-832,0" time="0" condition="Integer.IsEqual(Container(9120).NumItems,0)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-552,0" time="0" condition="Integer.IsEqual(Container(9120).NumItems,1)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-368,0" time="0" condition="Integer.IsEqual(Container(9120).NumItems,2)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-184,0" time="0" condition="Integer.IsEqual(Container(9120).NumItems,3)">Conditional</animation>
+				<!-- in 9121, 9120's selected (last) print is small in a 232 slot: close the 48 up to the divider -->
+				<animation effect="slide" start="0,0" end="-48,0" time="0" condition="!Control.HasFocus(9120) + Integer.IsGreater(Container(9120).NumItems,0)">Conditional</animation>
+				<include>Home_RoomFade</include>
+				<control type="image">
+					<left>896</left>
+					<top>600</top>
+					<width>1</width>
+					<height>180</height>
+					<texture colordiffuse="rule">common/white.png</texture>
+					<visible>Integer.IsGreater(Container(9120).NumItems,0)</visible>
+				</control>
+				<control type="label">
+					<left>952</left>
+					<top>516</top>
+					<width>800</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[Home_RoomName]</label>
+					<visible>Integer.IsGreater(Container(9121).NumItems,0)</visible>
+				</control>
+				<!-- posters: unfocused 120x180 (top 600), focused 168x252 (top 564) -->
+				<control type="fixedlist" id="9121">
+					<left>888</left>
+					<top>0</top>
+					<width>1864</width>
+					<height>1080</height>
+					<orientation>horizontal</orientation>
+					<!-- fixedlist, focus held at slot 0: the row scrolls under the first slot from the first press
+					     (a list this wide only scrolled once focus had left the screen) -->
+					<focusposition>0</focusposition>
+					<scrolltime tween="cubic" easing="out">320</scrolltime>
+					<preloaditems>2</preloaditems>
+					<onup condition="Integer.IsGreater(Container(9120).NumItems,0)">9120</onup>
+					<onup condition="!Integer.IsGreater(Container(9120).NumItems,0)">9101</onup>
+					<onback>9101</onback>
+					<onleft condition="Integer.IsGreater(Container(9120).NumItems,0)">9120</onleft>
+					<onleft condition="!Integer.IsGreater(Container(9120).NumItems,0)">noop</onleft>
+					<onright>noop</onright>
+					<ondown condition="$EXP[CustomRow1On]">9881</ondown>
+					<ondown condition="!$EXP[CustomRow1On] + $EXP[CustomRow2On]">9882</ondown>
+					<ondown condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+					<ondown>noop</ondown>
+					<onfocus>SetProperty(TMDbHelper.WidgetContainer,9121,home)</onfocus>
+					<onunfocus>Control.Move(9121,-$INFO[Container(9121).CurrentItem])</onunfocus>
+					<onunfocus>Control.Move(9121,1)</onunfocus>
+					<!-- unfocused, the selected slot is still 232 wide: its small print sits at the slot's right
+					     (left 112) and the row moves 48 left, so every gap stays 64 (leaving resets the row to item 1) -->
+					<animation effect="slide" start="0,0" end="-48,0" time="0" condition="!Control.HasFocus(9121)">Conditional</animation>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(poster)|Art(thumb),home)</onfocus>
+					<itemlayout width="184" height="1080">
+						<include content="Home_RoomPrint"><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[ListItemArt]"/></include>
+					</itemlayout>
+					<focusedlayout width="232" height="1080">
+						<control type="group">
+							<visible>Control.HasFocus(9121)</visible>
+						<control type="group">
+							<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+							<include content="Home_RoomPrint"><param name="w" value="168"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$VAR[ListItemArt]"/></include>
+						</control>
+											</control>
+						<control type="group">
+							<visible>!Control.HasFocus(9121)</visible>
+						<include content="Home_RoomPrint"><param name="left" value="112"/><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[ListItemArt]"/></include>
+											</control>
+					</focusedlayout>
+					<content limit="15">$VAR[Home_RoomPath]</content>
+				</control>
+			</control>
+			<include>Home_RoomEdge</include>
+		</control>
+
+		<!-- music: two rows of square covers in one line (recently played | the rest of the room) -->
+		<control type="group">
+			<visible>$EXP[Home_Music]</visible>
+			<control type="label">
+				<left>120</left>
+				<top>516</top>
+				<width>800</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$LOCALIZE[31180]</label>
+				<visible>Integer.IsGreater(Container(9130).NumItems,0)</visible>
+				<include>Home_RoomFade</include>
+			</control>
+			<!-- covers: unfocused 180 (top 600), focused 252 (top 564). Width = exactly 3 slots (316 + 2 x 244) -->
+			<control type="list" id="9130">
+				<left>56</left>
+				<top>0</top>
+				<width>804</width>
+				<height>1080</height>
+				<orientation>horizontal</orientation>
+				<scrolltime tween="cubic" easing="out">320</scrolltime>
+				<preloaditems>1</preloaditems>
+				<onup>9101</onup>
+				<onback>9101</onback>
+				<onleft>noop</onleft>
+				<onright>9131</onright>
+				<ondown condition="Integer.IsGreater(Container(9131).NumItems,0)">9131</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9131).NumItems,0) + $EXP[CustomRow1On]">9881</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9131).NumItems,0) + !$EXP[CustomRow1On] + $EXP[CustomRow2On]">9882</ondown>
+				<ondown condition="!Integer.IsGreater(Container(9131).NumItems,0) + !$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9130,home)</onfocus>
+				<!-- same as 9120: reset to item 1 on leaving, small print at the slot's right, row 72 left -->
+				<onunfocus>Control.Move(9130,-$INFO[Container(9130).CurrentItem])</onunfocus>
+				<onunfocus>Control.Move(9130,1)</onunfocus>
+				<animation effect="slide" start="0,0" end="-72,0" time="0" condition="!Control.HasFocus(9130)">Conditional</animation>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(thumb),home)</onfocus>
+				<!-- never hidden: a hidden container is not processed and would never load -->
+				<include>Home_RoomFade</include>
+				<itemlayout width="244" height="1080">
+					<include content="Home_RoomPrint"><param name="w" value="180"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+				</itemlayout>
+				<focusedlayout width="316" height="1080">
+					<control type="group">
+						<visible>Control.HasFocus(9130)</visible>
+					<control type="group">
+						<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+						<include content="Home_RoomPrint"><param name="w" value="252"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+					</control>
+									</control>
+					<control type="group">
+						<visible>!Control.HasFocus(9130)</visible>
+					<include content="Home_RoomPrint"><param name="left" value="136"/><param name="w" value="180"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+									</control>
+				</focusedlayout>
+				<content limit="12">musicdb://recentlyplayedalbums/</content>
+			</control>
+			<control type="group">
+				<!-- 3+: list 56..860, divider 916, 9131 at 908 (first cover 972); each missing cover = -244 -->
+				<animation effect="slide" start="0,0" end="-852,0" time="0" condition="Integer.IsEqual(Container(9130).NumItems,0)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-488,0" time="0" condition="Integer.IsEqual(Container(9130).NumItems,1)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-244,0" time="0" condition="Integer.IsEqual(Container(9130).NumItems,2)">Conditional</animation>
+				<animation effect="slide" start="0,0" end="-72,0" time="0" condition="!Control.HasFocus(9130) + Integer.IsGreater(Container(9130).NumItems,0)">Conditional</animation>
+				<include>Home_RoomFade</include>
+				<control type="image">
+					<left>916</left>
+					<top>600</top>
+					<width>1</width>
+					<height>180</height>
+					<texture colordiffuse="rule">common/white.png</texture>
+					<visible>Integer.IsGreater(Container(9130).NumItems,0)</visible>
+				</control>
+				<control type="label">
+					<left>972</left>
+					<top>516</top>
+					<width>700</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink</textcolor>
+					<label>$LOCALIZE[31181]</label>
+				</control>
+				<control type="fixedlist" id="9131">
+					<left>908</left>
+					<top>0</top>
+					<width>2000</width>
+					<height>1080</height>
+					<orientation>horizontal</orientation>
+					<!-- fixedlist, focus held at slot 0: the row scrolls under the first slot from the first press
+					     (a list this wide only scrolled once focus had left the screen) -->
+					<focusposition>0</focusposition>
+					<scrolltime tween="cubic" easing="out">320</scrolltime>
+					<preloaditems>1</preloaditems>
+					<onup condition="Integer.IsGreater(Container(9130).NumItems,0)">9130</onup>
+					<onup condition="!Integer.IsGreater(Container(9130).NumItems,0)">9101</onup>
+					<onback>9101</onback>
+					<onleft condition="Integer.IsGreater(Container(9130).NumItems,0)">9130</onleft>
+					<onleft condition="!Integer.IsGreater(Container(9130).NumItems,0)">noop</onleft>
+					<onright>noop</onright>
+					<ondown condition="$EXP[CustomRow1On]">9881</ondown>
+					<ondown condition="!$EXP[CustomRow1On] + $EXP[CustomRow2On]">9882</ondown>
+					<ondown condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+					<ondown>noop</ondown>
+					<onfocus>SetProperty(TMDbHelper.WidgetContainer,9131,home)</onfocus>
+					<onunfocus>Control.Move(9131,-$INFO[Container(9131).CurrentItem])</onunfocus>
+					<onunfocus>Control.Move(9131,1)</onunfocus>
+					<animation effect="slide" start="0,0" end="-72,0" time="0" condition="!Control.HasFocus(9131)">Conditional</animation>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(thumb),home)</onfocus>
+					<itemlayout width="244" height="1080">
+						<include content="Home_RoomPrint"><param name="w" value="180"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+					</itemlayout>
+					<focusedlayout width="316" height="1080">
+						<control type="group">
+							<visible>Control.HasFocus(9131)</visible>
+						<control type="group">
+							<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+							<include content="Home_RoomPrint"><param name="w" value="252"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+						</control>
+											</control>
+						<control type="group">
+							<visible>!Control.HasFocus(9131)</visible>
+						<include content="Home_RoomPrint"><param name="left" value="136"/><param name="w" value="180"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$INFO[ListItem.Art(thumb)]"/></include>
+											</control>
+					</focusedlayout>
+					<content limit="15">special://skin/playlists/pp_random_albums.xsp</content>
+				</control>
+			</control>
+			<include>Home_RoomEdge</include>
+		</control>
+
+		<!-- caption of the print in focus (0.9.14: also in the custom rooms) -->
+		<control type="group">
+			<visible>$EXP[Home_InRoom] | $EXP[CustomRowsFocus]</visible>
+			<animation effect="fade" start="0" end="100" time="240">Visible</animation>
+			<include content="Title_Room"><param name="left" value="120"/><param name="top" value="858"/></include>
+			<control type="label">
+				<left>120</left>
+				<top>942</top>
+				<width>1680</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Home_RoomMeta]</label>
+			</control>
+		</control>
+	</include>
+	<!-- the page's own paper (both layers of PP_Background, same fades) over x 0..62 of the room rows: hides the
+	     edge of the print before the first visible one once a row scrolls. The first print's lift starts at x 72. -->
+	<include name="Home_RoomEdge">
+		<param name="left">0</param>
+		<param name="width">62</param>
+		<param name="visible">true</param>
+		<definition>
+		<control type="group">
+			<left>$PARAM[left]</left>
+			<visible>$PARAM[visible]</visible>
+			<top>560</top>
+			<width>$PARAM[width]</width>
+			<height>320</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>320</height>
+				<texture colordiffuse="paper">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>320</height>
+				<texture colordiffuse="$VAR[PaperColor]">common/white.png</texture>
+				<visible>$EXP[PP_HasArtPaper]</visible>
+				<animation effect="fade" start="0" end="100" time="600" tween="sine" easing="inout">Visible</animation>
+				<animation effect="fade" start="100" end="0" time="600" tween="sine" easing="inout">Hidden</animation>
+			</control>
+		</control>
+		</definition>
+	</include>
+	<!-- the room is on the wall only while you're in it (keeps Home quiet and cheap) -->
+	<include name="Home_RoomFade">
+		<animation effect="fade" start="0" end="100" time="320" delay="80" condition="$EXP[Home_InRoom]">Conditional</animation>
+		<animation effect="fade" start="100" end="0" time="0" condition="!$EXP[Home_InRoom]">Conditional</animation>
+	</include>
+
+	<!-- ================================================================ now playing (music) -->
+	<!-- One slim line on a hairline (Music board): 120..1800, line at y 960, text at 980 -->
+	<!-- footer=true (music library): the view words own the right of the row, so the time moves
+	     into the left line and the line stops at x 1280 -->
+	<include name="PP_NowPlayingLine">
+		<param name="footer">false</param>
+		<param name="line_w">1340</param>
+		<param name="artist_max">700</param>
+		<param name="title_max">600</param>
+		<definition>
+		<control type="group">
+			<visible>Player.HasAudio + !Player.HasVideo</visible>
+			<animation effect="fade" start="0" end="100" time="300">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="200">Hidden</animation>
+			<control type="progress">
+				<left>120</left>
+				<top>960</top>
+				<width>1680</width>
+				<height>1</height>
+				<texturebg colordiffuse="rule">common/white.png</texturebg>
+				<midtexture colordiffuse="ink">common/white.png</midtexture>
+				<info>Player.Progress</info>
+			</control>
+			<control type="grouplist">
+				<left>120</left>
+				<top>980</top>
+				<width>$PARAM[line_w]</width>
+				<height>34</height>
+				<orientation>horizontal</orientation>
+				<itemgap>24</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<top>4</top>
+					<width>auto</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31017]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[Player.Time]$INFO[Player.Duration, / ,]</label>
+					<visible>$PARAM[footer]</visible>
+				</control>
+				<control type="label">
+					<width max="$PARAM[artist_max]">auto</width>
+					<height>34</height>
+					<font>body_24</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[MusicPlayer.Artist]</label>
+				</control>
+				<control type="label">
+					<left>-14</left>
+					<width max="$PARAM[title_max]">auto</width>
+					<height>34</height>
+					<font>body_24</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[MusicPlayer.Title,— ,]</label>
+				</control>
+			</control>
+			<control type="grouplist">
+				<left>1300</left>
+				<top>980</top>
+				<width>500</width>
+				<height>34</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>0</itemgap>
+				<visible>!$PARAM[footer]</visible>
+				<control type="label">
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[Player.Time]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[Player.Duration, / ,]</label>
+				</control>
+			</control>
+		</control>
+		</definition>
+	</include>
+	<!-- ================================================================ custom rows (0.9.14) -->
+	<!-- Opt-in rows from Skin settings > Custom rows (Includes_CustomRows.xml): the other rooms. Down from the room's
+	     last row (or the exhibition / the words when there is no room) walks into them, one room at a time on the
+	     room's line: the exhibition steps aside, a sign at the top names the room ("Your rooms", the row's name and
+	     count), the prints hang as in the room (120 x 180, the focused one lifted to 168 x 252) and the caption under
+	     them names the print in focus. Up / Down move between rooms (Up from the first one returns to the room),
+	     Back to the exhibition. Nothing shows until a row has items. -->
+	<variable name="Home_CustomSignTitle">
+		<value condition="Control.HasFocus(9881)">$VAR[CustomRow_Title1]</value>
+		<value condition="Control.HasFocus(9882)">$VAR[CustomRow_Title2]</value>
+		<value condition="Control.HasFocus(9883)">$VAR[CustomRow_Title3]</value>
+	</variable>
+	<variable name="Home_CustomSignCount">
+		<value condition="Control.HasFocus(9881)">$VAR[CustomRow_Count1]</value>
+		<value condition="Control.HasFocus(9882)">$VAR[CustomRow_Count2]</value>
+		<value condition="Control.HasFocus(9883)">$VAR[CustomRow_Count3]</value>
+	</variable>
+	<include name="Home_CustomRows">
+		<!-- the sign, where the small exhibition sits in the room -->
+		<control type="group">
+			<visible>$EXP[CustomRowsFocus]</visible>
+			<animation effect="fade" start="0" end="100" time="320" delay="120">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="160">Hidden</animation>
+			<control type="label">
+				<left>120</left>
+				<top>300</top>
+				<width>1680</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$LOCALIZE[31960]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>336</top>
+				<width>1680</width>
+				<height>76</height>
+				<font>ttl_64</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[Home_CustomSignTitle]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>418</top>
+				<width>1680</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Home_CustomSignCount]</label>
+			</control>
+		</control>
+			<!-- custom row 1 -->
+			<control type="fixedlist" id="9881">
+				<left>56</left>
+				<top>0</top>
+				<width>1864</width>
+				<height>1080</height>
+				<orientation>horizontal</orientation>
+				<focusposition>0</focusposition>
+				<scrolltime tween="cubic" easing="out">320</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup condition="$EXP[Home_Music] + Integer.IsGreater(Container(9131).NumItems,0)">9131</onup>
+				<onup condition="$EXP[Home_Music] + Integer.IsGreater(Container(9130).NumItems,0)">9130</onup>
+				<onup condition="$EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9121).NumItems,0)">9121</onup>
+				<onup condition="$EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9120).NumItems,0)">9120</onup>
+				<onup condition="$EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onup>
+				<onup>9000</onup>
+				<ondown condition="$EXP[CustomRow2On]">9882</ondown>
+				<ondown condition="!$EXP[CustomRow2On] + $EXP[CustomRow3On]">9883</ondown>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback condition="$EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onback>
+				<onback>9000</onback>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9881,home)</onfocus>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(poster)|Art(thumb),home)</onfocus>
+				<!-- never hidden (a hidden container never loads): on the wall only while it has focus -->
+				<animation effect="fade" start="0" end="100" time="320" delay="80" condition="Control.HasFocus(9881)">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9881)">Conditional</animation>
+				<itemlayout width="184" height="1080">
+					<include content="Home_RoomPrint"><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+				</itemlayout>
+				<focusedlayout width="232" height="1080">
+					<control type="group">
+						<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+						<include content="Home_RoomPrint"><param name="w" value="168"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+					</control>
+				</focusedlayout>
+				<include content="CustomRow_Content"><param name="row" value="1"/></include>
+			</control>
+			<!-- custom row 2 -->
+			<control type="fixedlist" id="9882">
+				<left>56</left>
+				<top>0</top>
+				<width>1864</width>
+				<height>1080</height>
+				<orientation>horizontal</orientation>
+				<focusposition>0</focusposition>
+				<scrolltime tween="cubic" easing="out">320</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup condition="$EXP[CustomRow1On]">9881</onup>
+				<onup condition="!$EXP[CustomRow1On] + $EXP[Home_Music] + Integer.IsGreater(Container(9131).NumItems,0)">9131</onup>
+				<onup condition="!$EXP[CustomRow1On] + $EXP[Home_Music] + Integer.IsGreater(Container(9130).NumItems,0)">9130</onup>
+				<onup condition="!$EXP[CustomRow1On] + $EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9121).NumItems,0)">9121</onup>
+				<onup condition="!$EXP[CustomRow1On] + $EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9120).NumItems,0)">9120</onup>
+				<onup condition="!$EXP[CustomRow1On] + $EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onup>
+				<onup>9000</onup>
+				<ondown condition="$EXP[CustomRow3On]">9883</ondown>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback condition="$EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onback>
+				<onback>9000</onback>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9882,home)</onfocus>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(poster)|Art(thumb),home)</onfocus>
+				<!-- never hidden (a hidden container never loads): on the wall only while it has focus -->
+				<animation effect="fade" start="0" end="100" time="320" delay="80" condition="Control.HasFocus(9882)">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9882)">Conditional</animation>
+				<itemlayout width="184" height="1080">
+					<include content="Home_RoomPrint"><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+				</itemlayout>
+				<focusedlayout width="232" height="1080">
+					<control type="group">
+						<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+						<include content="Home_RoomPrint"><param name="w" value="168"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+					</control>
+				</focusedlayout>
+				<include content="CustomRow_Content"><param name="row" value="2"/></include>
+			</control>
+			<!-- custom row 3 -->
+			<control type="fixedlist" id="9883">
+				<left>56</left>
+				<top>0</top>
+				<width>1864</width>
+				<height>1080</height>
+				<orientation>horizontal</orientation>
+				<focusposition>0</focusposition>
+				<scrolltime tween="cubic" easing="out">320</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup condition="$EXP[CustomRow2On]">9882</onup>
+				<onup condition="!$EXP[CustomRow2On] + $EXP[CustomRow1On]">9881</onup>
+				<onup condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[Home_Music] + Integer.IsGreater(Container(9131).NumItems,0)">9131</onup>
+				<onup condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[Home_Music] + Integer.IsGreater(Container(9130).NumItems,0)">9130</onup>
+				<onup condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9121).NumItems,0)">9121</onup>
+				<onup condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[Home_AnySection] + !$EXP[Home_Music] + Integer.IsGreater(Container(9120).NumItems,0)">9120</onup>
+				<onup condition="!$EXP[CustomRow1On] + !$EXP[CustomRow2On] + $EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onup>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<onback condition="$EXP[Home_AnySection] + Integer.IsGreater(Container(9101).NumItems,0)">9101</onback>
+				<onback>9000</onback>
+				<onfocus>SetProperty(TMDbHelper.WidgetContainer,9883,home)</onfocus>
+				<onfocus>SetProperty(TMDbHelper.Colors.SourceImage,Art(fanart)|Art(poster)|Art(thumb),home)</onfocus>
+				<!-- never hidden (a hidden container never loads): on the wall only while it has focus -->
+				<animation effect="fade" start="0" end="100" time="320" delay="80" condition="Control.HasFocus(9883)">Conditional</animation>
+				<animation effect="fade" start="100" end="0" time="0" condition="!Control.HasFocus(9883)">Conditional</animation>
+				<itemlayout width="184" height="1080">
+					<include content="Home_RoomPrint"><param name="w" value="120"/><param name="h" value="180"/><param name="top" value="600"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+				</itemlayout>
+				<focusedlayout width="232" height="1080">
+					<control type="group">
+						<include content="Home_GrowIn"><param name="cx" value="64"/><param name="cy" value="690"/></include>
+						<include content="Home_RoomPrint"><param name="w" value="168"/><param name="h" value="252"/><param name="top" value="564"/><param name="lift" value="true"/><param name="art" value="$VAR[CustomRow_PosterArt]"/></include>
+					</control>
+				</focusedlayout>
+				<include content="CustomRow_Content"><param name="row" value="3"/></include>
+			</control>
+		<!-- paper over the scrolled-off print's edge, as in the room -->
+		<include content="Home_RoomEdge"><param name="visible" value="$EXP[CustomRowsFocus]"/></include>
+	</include>
+</includes>

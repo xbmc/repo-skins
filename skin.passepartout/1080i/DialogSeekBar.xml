@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Seek bar: the OSD's paper caption bar without the transport words (shown while seeking, skipping,
+	ff/rw or paused with the OSD closed) + the paper tag top right.
+	Id contract (Estuary Omega DialogSeekBar.xml / GUIDialogSeekBar.cpp): 401 = progress slider Kodi
+	selects to the seek target (drawn invisible; OSD_PPBar reads Player.SeekBar). 402/403 PVR only.
+	Window visibility conditions from Estuary Omega. Steps aside while the OSD or a playback dialog is up.
+-->
+<window>
+	<visible>Window.IsActive(fullscreenvideo)</visible>
+	<visible>![Window.IsActive(sliderdialog) | Window.IsActive(pvrosdchannels) | Window.IsActive(pvrchannelguide) | Window.IsActive(pvrguideinfo)]</visible>
+	<visible>Player.Seeking | Player.HasPerformedSeek(3) | [Player.Paused + !Player.Caching] | Player.Forwarding | Player.Rewinding | Player.ShowInfo | Window.IsActive(fullscreeninfo) | Player.ShowTime | Window.IsActive(videoosd) | Window.IsActive(musicosd) | Window.IsActive(playerprocessinfo) | !String.IsEmpty(Player.SeekNumeric)</visible>
+	<zorder>0</zorder>
+	<include>Anim_Toast</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_SeekBarHidden]</visible>
+			<visible>!Player.HasGame</visible>
+			<include>Anim_FadeVisible</include>
+			<include>OSD_PPTag</include>
+			<control type="group">
+				<animation effect="slide" start="0,96" end="0,0" time="260" tween="cubic" easing="out" condition="!Skin.HasSetting(passepartout.reducemotion)">WindowOpen</animation>
+				<animation effect="slide" start="0,0" end="0,96" time="200" tween="cubic" easing="in" condition="!Skin.HasSetting(passepartout.reducemotion)">WindowClose</animation>
+				<include content="OSD_PPBar">
+					<param name="top" value="824"/>
+					<param name="titlew" value="1680"/>
+					<param name="wide" value="true"/>
+				</include>
+				<!-- state while not paused: skip / forward / buffering, right of the title line -->
+				<control type="label">
+					<left>1100</left>
+					<top>978</top>
+					<width>700</width>
+					<height>28</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<label>$VAR[OSD_PPState]</label>
+				</control>
+			</control>
+			<control type="slider" id="401">
+				<left>300</left>
+				<top>862</top>
+				<width>1320</width>
+				<height>21</height>
+				<texturesliderbar>pp/playhead_bar.png</texturesliderbar>
+				<textureslidernib colordiffuse="clear">pp/playhead.png</textureslidernib>
+				<textureslidernibfocus colordiffuse="clear">pp/playhead.png</textureslidernibfocus>
+			</control>
+		</control>
+	</controls>
+</window>

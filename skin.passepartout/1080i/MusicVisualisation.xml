@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing (music): the album hangs as one large square print on paper coloured from its cover
+	(TMDb Helper image_colors run for the playing cover -> TMDbHelper.PPPlayer.Colors.Main), the museum
+	caption under it, a hairline progress line at the foot. MusicOSD adds the transport words.
+	Kodi id contract (Estuary Omega MusicVisualisation.xml): 2 = visualisation. Shown only in Visualiser mode
+	($EXP[Music_VizMode]: the music OSD's "Visualiser" word + a visualisation add-on set in Kodi); then it replaces
+	the hung album and a small paper tag at the foot names the song and, when the visualisation has presets,
+	says "OK · presets" (OK opens the OSD on its Presets word). 9900 is the only focusable control.
+-->
+<window>
+	<defaultcontrol always="true">9900</defaultcontrol>
+	<backgroundcolor>paper</backgroundcolor>
+	<include>PP_PlayerPaperOnload</include>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<!-- OK opens the music OSD (the remote's Select reaches this button first), Left / Right skip -->
+		<control type="button" id="9900">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<label></label>
+			<texturefocus />
+			<onclick>ActivateWindow(musicosd)</onclick>
+			<onleft>PlayerControl(Previous)</onleft>
+			<onright>PlayerControl(Next)</onright>
+			<onup>ActivateWindow(musicosd)</onup>
+			<ondown>ActivateWindow(musicosd)</ondown>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="$VAR[PlayerPaper]">common/white.png</texture>
+		</control>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<!-- Passe-partout hangs the album; Visualiser mode (0.9.13) draws the visualisation instead -->
+			<visible>$EXP[Music_VizMode]</visible>
+		</control>
+		<control type="group">
+			<visible>!$EXP[Music_VizMode]</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<left>120</left>
+				<top>64</top>
+				<width>1000</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<label>$VAR[Music_NPKicker]</label>
+			</control>
+			<include>PP_Clock</include>
+			<include content="PP_Print">
+				<param name="left" value="720"/>
+				<param name="top" value="150"/>
+				<param name="width" value="480"/>
+				<param name="height" value="480"/>
+				<param name="art" value="$INFO[Player.Art(thumb)]"/>
+				<param name="title" value="$INFO[MusicPlayer.Album]"/>
+				<param name="lift" value="true"/>
+				<param name="fade" value="300"/>
+			</include>
+			<include content="Title_NowPlaying"><param name="left" value="160"/><param name="top" value="680"/></include>
+			<control type="label">
+				<left>160</left>
+				<top>776</top>
+				<width>1600</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<align>center</align>
+				<label>$INFO[MusicPlayer.Artist]$INFO[MusicPlayer.Album, · ,]$INFO[MusicPlayer.Year, · ,]</label>
+			</control>
+			<control type="label">
+				<left>160</left>
+				<top>812</top>
+				<width>1600</width>
+				<height>34</height>
+				<font>body_24</font>
+				<textcolor>ink2</textcolor>
+				<align>center</align>
+				<label>$INFO[MusicPlayer.offset(1).Title,Next · ,]$INFO[MusicPlayer.offset(1).Artist, — ,]</label>
+			</control>
+		</control>
+		<!-- Visualiser mode: a paper tag at the foot (the OSD tag's look): song · artist, then OK · presets -->
+		<control type="grouplist">
+			<left>120</left>
+			<top>960</top>
+			<width>1680</width>
+			<height>56</height>
+			<orientation>horizontal</orientation>
+			<visible>$EXP[Music_VizMode] + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="button">
+				<width max="1300">auto</width>
+				<height>56</height>
+				<font>cap_20</font>
+				<disabledcolor>ink</disabledcolor>
+				<textoffsetx>26</textoffsetx>
+				<texturefocus colordiffuse="$VAR[PlayerPaper]">common/white.png</texturefocus>
+				<texturenofocus colordiffuse="$VAR[PlayerPaper]">common/white.png</texturenofocus>
+				<label>$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Artist, · ,]</label>
+				<enable>false</enable>
+			</control>
+			<control type="button">
+				<width>auto</width>
+				<height>56</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<disabledcolor>ink2</disabledcolor>
+				<textoffsetx>26</textoffsetx>
+				<texturefocus colordiffuse="$VAR[PlayerPaper]">common/white.png</texturefocus>
+				<texturenofocus colordiffuse="$VAR[PlayerPaper]">common/white.png</texturenofocus>
+				<label>$LOCALIZE[31262]</label>
+				<enable>false</enable>
+				<visible>Visualisation.HasPresets</visible>
+			</control>
+		</control>
+		<!-- foot: hairline progress, times, play modes (hidden while the OSD shows its own, and in Visualiser mode) -->
+		<control type="group">
+			<visible>!Window.IsVisible(musicosd) + !$EXP[Music_VizMode]</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="progress">
+				<left>120</left>
+				<top>960</top>
+				<width>1680</width>
+				<height>1</height>
+				<texturebg colordiffuse="rule">common/white.png</texturebg>
+				<info>Player.Progress</info>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>980</top>
+				<width>800</width>
+				<height>34</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[MusicPlayer.TrackNumber,Track ,]$INFO[Playlist.Length(music), of ,]$VAR[Music_PlayModesSep]</label>
+			</control>
+			<control type="grouplist">
+				<left>1300</left>
+				<top>980</top>
+				<width>500</width>
+				<height>34</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<control type="label">
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<label>$INFO[Player.Time]</label>
+				</control>
+				<control type="label">
+					<width>auto</width>
+					<height>34</height>
+					<font>mono_22</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[Player.Duration, / ,]</label>
+				</control>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Add-on information (also the update pop-ups - must always be closable) - M4, Builder E.
+	Full-screen Index page: icon + definition list on the left, summary / description (or the
+	changelog, toggled by 9202) on the right, screenshots strip, button row along the bottom.
+	Id contract (Estuary Omega): button row grouplist 9000 with 12 open, 9 configure,
+	13 auto-update (radio), 10 dependencies, 7 enable/disable, 8 install-from-versions, 14 update,
+	6 install/uninstall (Kodi labels / enables them); screenshots panel 50 (Kodi fills it).
+	Passe-partout ids: 9202 "What's new" toggle (Window(Home).Property(passepartout.addonnews)).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<onload condition="!ListItem.Property(addon.isinstalled) + Window.IsActive(addonbrowser)">SetFocus(6)</onload>
+	<onload>ClearProperty(passepartout.addonnews,home)</onload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>PP_Background</include>
+		<include content="PP_TopBar">
+			<param name="index" value="Add-on"/>
+			<param name="title" value="$INFO[ListItem.AddonName]"/>
+			<param name="sub" value="$INFO[ListItem.AddonVersion]"/>
+		</include>
+
+		<!-- ====== left: icon + facts -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>content_top</top>
+			<width>400</width>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>400</width>
+				<height>400</height>
+				<texture colordiffuse="wash">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>40</top>
+				<width>320</width>
+				<height>320</height>
+				<aspectratio>keep</aspectratio>
+				<fadetime>150</fadetime>
+				<texture background="true">$INFO[ListItem.Art(thumb)]</texture>
+			</control>
+			<!-- deprecated / broken -->
+			<control type="group">
+				<visible>String.IsEqual(ListItem.AddonLifecycleType,$LOCALIZE[24170]) | String.IsEqual(ListItem.AddonLifecycleType,$LOCALIZE[24171])</visible>
+				<control type="image">
+					<left>0</left>
+					<top>300</top>
+					<width>400</width>
+					<height>100</height>
+					<texture colordiffuse="paper">common/white.png</texture>
+				</control>
+				<control type="label">
+					<left>20</left>
+					<top>312</top>
+					<width>360</width>
+					<height>22</height>
+					<font>cap_20</font>
+					<label>$INFO[ListItem.AddonLifecycleType]</label>
+				</control>
+				<control type="textbox">
+					<left>20</left>
+					<top>338</top>
+					<width>360</width>
+					<height>43</height>  <!-- 2 lines exactly: no half-clipped line at the bottom -->
+					<font>body_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.AddonLifecycleDesc]</label>
+				</control>
+			</control>
+			<control type="group">
+				<top>432</top>
+				<include content="Dlg_FactRow"><param name="top" value="0"/><param name="label" value="Version"/><param name="value" value="$INFO[ListItem.AddonVersion]"/><param name="valuew" value="240"/></include>
+				<include content="Dlg_FactRow"><param name="top" value="40"/><param name="label" value="Author"/><param name="value" value="$INFO[ListItem.AddonCreator]"/><param name="valuew" value="240"/></include>
+				<include content="Dlg_FactRow"><param name="top" value="80"/><param name="label" value="Type"/><param name="value" value="$INFO[ListItem.AddonType]"/><param name="valuew" value="240"/></include>
+				<include content="Dlg_FactRow"><param name="top" value="120"/><param name="label" value="Origin"/><param name="value" value="$INFO[ListItem.AddonOrigin]"/><param name="valuew" value="240"/></include>
+				<include content="Dlg_FactRow"><param name="top" value="160"/><param name="label" value="Size"/><param name="value" value="$INFO[ListItem.AddonSize]"/><param name="valuew" value="240"/></include>
+				<include content="Dlg_FactRow"><param name="top" value="200"/><param name="label" value="Status"/><param name="value" value="$INFO[ListItem.Property(Addon.Status)]"/><param name="valuew" value="240"/></include>
+			</control>
+		</control>
+
+		<!-- ====== right: summary, description / changelog, screenshots -->
+		<control type="group">
+			<left>560</left>
+			<top>content_top</top>
+			<width>1264</width>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>1000</width>
+				<height>40</height>
+				<font>sans_26_med</font>
+				<label>$INFO[ListItem.AddonSummary]</label>
+			</control>
+			<control type="group">
+				<left>1032</left>
+				<top>0</top>
+				<width>232</width>
+				<height>subnav_h</height>
+				<visible>!String.IsEmpty(ListItem.AddonNews)</visible>
+				<control type="button" id="9202">
+					<right>0</right>
+					<top>0</top>
+					<width>232</width>
+					<height>subnav_h</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<focusedcolor>on_ink</focusedcolor>
+					<textoffsetx>12</textoffsetx>
+					<label>$VAR[Dlg_AddonNewsLabel]</label>
+					<onclick condition="String.IsEmpty(Window(Home).Property(passepartout.addonnews))">SetProperty(passepartout.addonnews,1,home)</onclick>
+					<onclick condition="!String.IsEmpty(Window(Home).Property(passepartout.addonnews))">ClearProperty(passepartout.addonnews,home)</onclick>
+					<onup>noop</onup>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+					<ondown condition="!Integer.IsGreater(Container(50).NumItems,0)">9000</ondown>
+				</control>
+			</control>
+			<include content="PP_Rule">
+				<param name="top" value="56"/>
+				<param name="left" value="0"/>
+				<param name="width" value="1264"/>
+			</include>
+			<control type="textbox">
+				<left>0</left>
+				<top>76</top>
+				<width>1264</width>
+				<height>330</height>  <!-- 10 lines exactly: no half-clipped line at the bottom -->
+				<font>body_24</font>
+				<label>$INFO[ListItem.AddonDescription]</label>
+				<autoscroll time="3000" delay="6000" repeat="6000">true</autoscroll>
+				<visible>String.IsEmpty(Window(Home).Property(passepartout.addonnews))</visible>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>76</top>
+				<width>1264</width>
+				<height>330</height>  <!-- 10 lines exactly: no half-clipped line at the bottom -->
+				<font>body_24</font>
+				<label>$INFO[ListItem.AddonNews]</label>
+				<autoscroll time="3000" delay="6000" repeat="6000">true</autoscroll>
+				<visible>!String.IsEmpty(Window(Home).Property(passepartout.addonnews))</visible>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>424</top>
+				<width>1264</width>
+				<height>24</height>
+				<font>cap_20</font>
+				<textcolor>ink3</textcolor>
+				<label>$INFO[ListItem.AddonDisclaimer]</label>
+			</control>
+			<!-- screenshots (Kodi fills panel 50) -->
+			<control type="panel" id="50">
+				<left>-8</left>  <!-- 8px frame room left/top (panels clip); items drawn at left/top 8 -->
+				<top>464</top>
+				<width>1272</width>
+				<height>248</height>
+				<orientation>horizontal</orientation>
+				<onup condition="!String.IsEmpty(ListItem.AddonNews)">9202</onup>
+				<onup condition="String.IsEmpty(ListItem.AddonNews)">noop</onup>
+				<ondown>9000</ondown>
+				<onleft>50</onleft>
+				<onright>50</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<preloaditems>1</preloaditems>
+				<itemlayout width="424" height="240">
+					<control type="image">
+						<left>8</left>
+						<top>8</top>
+						<width>400</width>
+						<height>225</height>
+						<texture colordiffuse="wash">common/white.png</texture>
+					</control>
+					<control type="image">
+						<left>8</left>
+						<top>8</top>
+						<width>400</width>
+						<height>225</height>
+						<aspectratio>scale</aspectratio>
+						<texture background="true">$INFO[ListItem.Icon]</texture>
+					</control>
+				</itemlayout>
+				<focusedlayout width="424" height="240">
+					<control type="image">
+						<left>8</left>
+						<top>8</top>
+						<width>400</width>
+						<height>225</height>
+						<texture colordiffuse="wash">common/white.png</texture>
+					</control>
+					<control type="image">
+						<left>8</left>
+						<top>8</top>
+						<width>400</width>
+						<height>225</height>
+						<aspectratio>scale</aspectratio>
+						<texture background="true">$INFO[ListItem.Icon]</texture>
+					</control>
+					<control type="group">
+						<left>8</left>
+						<top>8</top>
+						<width>400</width>
+						<height>225</height>
+						<visible>Control.HasFocus(50)</visible>
+						<include>PP_FocusFrameAlways</include>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+
+		<!-- ====== buttons -->
+		<control type="grouplist" id="9000">
+			<left>page_margin</left>
+			<top>936</top>
+			<width>page_width</width>
+			<height>dialog_row_h</height>
+			<orientation>horizontal</orientation>
+			<itemgap>10</itemgap>  <!-- all 8 buttons (installed add-on) = 1728 exactly; at 12 + radio 240 the last was cut 16px -->
+			<onleft>9000</onleft>
+			<onright>9000</onright>
+			<onup condition="Integer.IsGreater(Container(50).NumItems,0)">50</onup>
+			<onup condition="!Integer.IsGreater(Container(50).NumItems,0) + !String.IsEmpty(ListItem.AddonNews)">9202</onup>
+			<ondown>noop</ondown>
+			<include content="PP_DialogButton">
+				<param name="id" value="12"/>
+				<param name="label" value="$LOCALIZE[518]"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(12)"/>
+			</include>
+			<include content="PP_DialogButton">
+				<param name="id" value="9"/>
+				<param name="label" value="$LOCALIZE[24020]"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(9)"/>
+			</include>
+			<control type="radiobutton" id="13">
+				<description>auto-update (Kodi labels it)</description>
+				<width>238</width>
+				<height>dialog_row_h</height>
+				<font>sans_22_med</font>
+				<focusedcolor>on_ink</focusedcolor>
+				<textoffsetx>16</textoffsetx>
+				<radiowidth>18</radiowidth>
+				<radioheight>18</radioheight>
+				<include>Dlg_Tex_DialogButton</include>
+				<textureradioonfocus colordiffuse="on_ink">markers/check.png</textureradioonfocus>
+				<textureradioonnofocus colordiffuse="ink">markers/check.png</textureradioonnofocus>
+				<textureradioofffocus border="2" colordiffuse="on_ink">pp/frame_1.png</textureradioofffocus>
+				<textureradiooffnofocus border="2" colordiffuse="rule_strong">pp/frame_1.png</textureradiooffnofocus>
+				<visible>Control.IsEnabled(13)</visible>
+			</control>
+			<include content="PP_DialogButton">
+				<param name="id" value="10"/>
+				<param name="label" value="$LOCALIZE[39024]"/>
+				<param name="width" value="220"/>
+				<param name="visible" value="Control.IsEnabled(10)"/>
+			</include>
+			<include content="PP_DialogButton">
+				<param name="id" value="7"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(7)"/>
+			</include>
+			<include content="PP_DialogButton">
+				<param name="id" value="8"/>
+				<param name="label" value="$LOCALIZE[24138]"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(8)"/>
+			</include>
+			<include content="PP_DialogButton">
+				<param name="id" value="14"/>
+				<param name="label" value="$LOCALIZE[24069]"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(14)"/>
+			</include>
+			<include content="PP_DialogButton">
+				<param name="id" value="6"/>
+				<param name="width" value="200"/>
+				<param name="visible" value="Control.IsEnabled(6)"/>
+			</include>
+		</control>
+	</controls>
+</window>

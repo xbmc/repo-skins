@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	The wall label (DialogVideoInfo, mockup PassepartoutLabel).
+	Print 480x720 at 200,150, lifted. Wall label column from x 820: title (Geist Light 112 / 132,
+	-0.035em), "Christopher Nolan, 2006" (ink caps), medium line (caps), a 64px ink rule, the curator
+	text (plot, 26 / 40, four lines), "With ..." (24 / 36). "Acquired ... · Unwatched · ends 23:57" at
+	y 738, the actions at y 806 (tracked capitals; focus = the ink placard, lifted).
+	Prefix VidInfo_.
+-->
+<includes>
+	<!-- ================================================================== state -->
+	<expression name="VidInfo_IsFolderType">String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,set)</expression>
+	<expression name="VidInfo_ShowResume">Control.IsEnabled(9) + !$EXP[VidInfo_IsFolderType]</expression>
+	<expression name="VidInfo_ShowPlay">!Control.IsEnabled(9) + !$EXP[VidInfo_IsFolderType]</expression>
+	<expression name="VidInfo_ShowTrailer">$EXP[ShowTrailerButton] + !String.IsEmpty(ListItem.Trailer)</expression>
+
+	<!-- ================================================================== labels -->
+	<variable name="VidInfo_Section">
+		<value condition="String.IsEqual(ListItem.DBType,episode) | String.IsEqual(ListItem.DBType,season) | String.IsEqual(ListItem.DBType,tvshow)">Series</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Collections</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">Music videos</value>
+		<value>Films</value>
+	</variable>
+	<variable name="VidInfo_Title">
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<variable name="VidInfo_Poster">
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(season.poster))">$INFO[ListItem.Art(season.poster)]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(poster))">$INFO[ListItem.Art(poster)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(tvshow.poster))">$INFO[ListItem.Art(tvshow.poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<!-- "the artist, the date" -->
+	<variable name="VidInfo_Artist">
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.TVShowTitle]$INFO[ListItem.Season, · Season ,]$INFO[ListItem.Episode, · Episode ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.TVShowTitle]$INFO[ListItem.Year, · ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Studio,,$COMMA ]$INFO[ListItem.Year]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">Collection$VAR[PL_Total_Film]</value>
+		<value condition="String.IsEqual(ListItem.DBType,musicvideo)">$INFO[ListItem.Artist,,$COMMA ]$INFO[ListItem.Year]</value>
+		<value condition="!String.IsEmpty(ListItem.Director)">$INFO[ListItem.Director]$INFO[ListItem.Year,$COMMA ,]</value>
+		<value>$INFO[ListItem.Year]</value>
+	</variable>
+	<!-- the medium: genre · runtime · resolution -->
+	<variable name="VidInfo_Medium">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Genre,, · ]$VAR[PP_SeasonsN_L]$INFO[ListItem.Property(TotalEpisodes), · ,]$VAR[PP_EpisodesWord_L]</value>
+		<value condition="String.IsEqual(ListItem.DBType,season)">$VAR[PP_EpisodesN_L]$INFO[ListItem.Property(UnWatchedEpisodes), · , unwatched]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Genre]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode) + !String.IsEmpty(ListItem.Premiered)">Aired $VAR[Date_PR] · $INFO[ListItem.Duration(mins),, min]$VAR[VidInfo_Res]</value>
+		<value condition="String.IsEqual(ListItem.DBType,episode)">$INFO[ListItem.Duration(mins),, min]$VAR[VidInfo_Res]</value>
+		<value>$INFO[ListItem.Genre,, · ]$INFO[ListItem.Duration(mins),, min]$VAR[VidInfo_Res]</value>
+	</variable>
+	<variable name="PP_SeasonsN_L">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalSeasons),1)">1 season</value>
+		<value condition="!String.IsEmpty(ListItem.Property(TotalSeasons))">$INFO[ListItem.Property(TotalSeasons)] seasons</value>
+	</variable>
+	<variable name="PP_EpisodesN_L">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">1 episode</value>
+		<value condition="!String.IsEmpty(ListItem.Property(TotalEpisodes))">$INFO[ListItem.Property(TotalEpisodes)] episodes</value>
+	</variable>
+	<variable name="PP_EpisodesWord_L">
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1)"> episode</value>
+		<value condition="!String.IsEmpty(ListItem.Property(TotalEpisodes))"> episodes</value>
+	</variable>
+	<variable name="VidInfo_Res">
+		<value condition="String.IsEqual(ListItem.VideoResolution,4K) | String.IsEqual(ListItem.VideoResolution,2160)"> · 4K$VAR[VidInfo_HDR]</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,1080)"> · 1080p$VAR[VidInfo_HDR]</value>
+		<value condition="String.IsEqual(ListItem.VideoResolution,720)"> · 720p</value>
+		<value condition="!String.IsEmpty(ListItem.VideoResolution)"> · SD</value>
+	</variable>
+	<variable name="VidInfo_HDR">
+		<value condition="String.IsEqual(ListItem.HdrType,dolbyvision)"> Dolby Vision</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hdr10)"> HDR10</value>
+		<value condition="String.IsEqual(ListItem.HdrType,hlg)"> HLG</value>
+	</variable>
+	<!-- "With A, B, C and D." from Kodi's cast container 50 -->
+	<variable name="VidInfo_With">
+		<value condition="String.IsEqual(ListItem.DBType,set)"></value>
+		<value condition="Integer.IsGreater(Container(50).NumItems,3)">With $INFO[Container(50).ListItemAbsolute(0).Label]$INFO[Container(50).ListItemAbsolute(1).Label,$COMMA ,]$INFO[Container(50).ListItemAbsolute(2).Label,$COMMA ,]$INFO[Container(50).ListItemAbsolute(3).Label, and ,.]</value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,3)">With $INFO[Container(50).ListItemAbsolute(0).Label]$INFO[Container(50).ListItemAbsolute(1).Label,$COMMA ,]$INFO[Container(50).ListItemAbsolute(2).Label, and ,.]</value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,2)">With $INFO[Container(50).ListItemAbsolute(0).Label]$INFO[Container(50).ListItemAbsolute(1).Label, and ,.]</value>
+		<value condition="Integer.IsEqual(Container(50).NumItems,1)">With $INFO[Container(50).ListItemAbsolute(0).Label].</value>
+	</variable>
+	<!-- museum line pieces: "Acquired DATE · " [state, ink] " · ends " [time, mono ink] -->
+	<!-- a watched film with a last-viewed date drops "Acquired DATE": both dates and the end time ran to 1060 px in
+	     the 980 px line and cut the time ("ends 12:4...") -->
+	<variable name="VidInfo_Acquired">
+		<value condition="$EXP[VidInfo_IsFolderType]"></value>
+		<value condition="!ListItem.IsResumable + Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)"></value>
+		<value condition="!String.IsEmpty(ListItem.DateAdded)">Acquired $VAR[Date_DA] · </value>
+	</variable>
+	<variable name="VidInfo_State">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) | String.IsEqual(ListItem.DBType,season)">$INFO[ListItem.Property(WatchedEpisodes)] of $INFO[ListItem.Property(TotalEpisodes)] watched</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Property(Watched)] of $INFO[ListItem.Property(Total)] seen</value>
+		<value condition="ListItem.IsResumable">In progress, $INFO[ListItem.PercentPlayed]%</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)">Last viewed $VAR[Date_LP]</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)">Watched</value>
+		<value>Unwatched</value>
+	</variable>
+	<variable name="VidInfo_EndsWord">
+		<value condition="!$EXP[VidInfo_IsFolderType] + !String.IsEmpty(ListItem.EndTime)"> · ends </value>
+	</variable>
+	<variable name="VidInfo_EndsTime">
+		<value condition="$EXP[VidInfo_IsFolderType]"></value>
+		<value condition="ListItem.IsResumable">$INFO[ListItem.EndTime(Resume)]</value>
+		<value>$INFO[ListItem.EndTime]</value>
+	</variable>
+	<variable name="VidInfo_CastHeader">
+		<value condition="String.IsEqual(ListItem.DBType,set)">In this collection</value>
+		<value>With</value>
+	</variable>
+	<variable name="VidInfo_CastArt">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Art(poster)]</value>
+		<value>$INFO[ListItem.Art(thumb)]</value>
+	</variable>
+	<variable name="VidInfo_CastLine2">
+		<value condition="String.IsEqual(ListItem.DBType,movie)">$INFO[ListItem.Year]</value>
+		<value>$INFO[ListItem.Label2]</value>
+	</variable>
+
+	<!-- ================================================================== header + print -->
+	<include name="VidInfo_Header">
+		<control type="grouplist">
+			<left>120</left>
+			<top>64</top>
+			<width>1200</width>
+			<height>28</height>
+			<orientation>horizontal</orientation>
+			<itemgap>22</itemgap>
+			<control type="label">
+				<width>auto</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[VidInfo_Section]</label>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>/</label>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$LOCALIZE[31193]</label>
+			</control>
+		</control>
+		<include>PP_Clock</include>
+	</include>
+
+	<include name="VidInfo_Print">
+		<include content="PP_Print">
+			<param name="left" value="200"/>
+			<param name="top" value="150"/>
+			<param name="width" value="480"/>
+			<param name="height" value="720"/>
+			<param name="art" value="$VAR[VidInfo_Poster]"/>
+			<param name="title" value="$VAR[VidInfo_Title]"/>
+			<param name="lift" value="true"/>
+			<param name="fade" value="200"/>
+		</include>
+	</include>
+
+	<!-- ================================================================== the label -->
+	<include name="VidInfo_Label">
+		<include>Title_WallProbes</include>
+		<!-- grouplists only draw children that fit completely: with a two-line title the "With" line
+		     drops out instead of being cut -->
+		<control type="grouplist">
+			<left>820</left>
+			<top>128</top>
+			<width>900</width>
+			<height>596</height>
+			<orientation>vertical</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<include>Title_WallText</include>
+			<control type="label">
+				<top>14</top>
+				<width>900</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[VidInfo_Artist]</label>
+			</control>
+			<control type="label">
+				<top>6</top>
+				<width>900</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[VidInfo_Medium]</label>
+			</control>
+			<control type="image">
+				<top>40</top>
+				<width>64</width>
+				<height>1</height>
+				<texture colordiffuse="ink">common/white.png</texture>
+			</control>
+			<!-- curator text: OK opens it in full (9200) -->
+			<control type="group" id="9002">
+				<top>38</top>
+				<width>820</width>
+				<height>160</height>
+				<control type="button" id="9001">
+					<left>-24</left>
+					<top>0</top>
+					<width>4</width>
+					<height>160</height>
+					<label></label>
+					<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+					<texturenofocus />
+					<onclick>SetFocus(61)</onclick>
+					<ondown>9000</ondown>
+					<onup>noop</onup>
+					<onleft>noop</onleft>
+					<onright>noop</onright>
+					<visible>!String.IsEmpty(ListItem.Plot)</visible>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>0</top>
+					<width>820</width>
+					<height>160</height>
+					<font>body_26</font>
+					<textcolor>body</textcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<!-- four whole lines; after a ten-second rest the curator text rolls on slowly, then returns -->
+					<autoscroll delay="10000" time="4000" repeat="12000">true</autoscroll>
+				</control>
+			</control>
+			<control type="textbox">
+				<top>22</top>
+				<width>820</width>
+				<height max="72">auto</height>
+				<font>body_24_loose</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[VidInfo_With]</label>
+			</control>
+		</control>
+
+		<!-- Acquired DATE · STATE · ends TIME -->
+		<control type="label">
+			<left>820</left>
+			<top>738</top>
+			<width>980</width>
+			<height>28</height>
+			<font>cap_20</font>
+			<textcolor>ink2</textcolor>
+			<align>left</align>
+			<label>$VAR[VidInfo_Acquired][COLOR ink]$VAR[VidInfo_State][/COLOR]$VAR[VidInfo_EndsWord][COLOR ink]$VAR[VidInfo_EndsTime][/COLOR]</label>
+		</control>
+	</include>
+
+	<!-- ================================================================== actions -->
+	<!-- Buttons are the visible block grown by 24 / 4 / 24 / 56 (placard texture with its shadow):
+	     grouplist at 796, 802; itemgap 12 - 48 = -36. Kodi ids: 9 resume, 8 play, 11 trailer. -->
+	<include name="VidInfo_Buttons">
+		<control type="grouplist" id="9000">
+			<left>796</left>
+			<top>802</top>
+			<width>1100</width>
+			<height>124</height>
+			<orientation>horizontal</orientation>
+			<itemgap>-36</itemgap>
+			<onup condition="Control.IsVisible(9001)">9001</onup>
+			<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<include content="PP_ButtonPrimary">
+				<param name="id" value="9"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="Resume"/>
+				<param name="onclick" value="noop"/>
+				<param name="visible" value="$EXP[VidInfo_ShowResume]"/>
+			</include>
+			<include content="PP_ButtonPrimary">
+				<param name="id" value="8"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="Play"/>
+				<param name="onclick" value="noop"/>
+				<param name="visible" value="$EXP[VidInfo_ShowPlay]"/>
+			</include>
+			<include content="PP_ButtonSecondary">
+				<param name="id" value="9013"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="From the start"/>
+				<param name="onclick" value="SendClick(8)"/>
+				<param name="visible" value="$EXP[VidInfo_ShowResume]"/>
+			</include>
+			<include content="PP_ButtonPrimary">
+				<param name="id" value="9012"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="Browse"/>
+				<param name="onclick" value="SendClick(8)"/>
+				<param name="visible" value="$EXP[VidInfo_IsFolderType]"/>
+			</include>
+			<include content="PP_ButtonSecondary">
+				<param name="id" value="11"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="Trailer"/>
+				<param name="onclick" value="noop"/>
+				<param name="visible" value="$EXP[VidInfo_ShowTrailer]"/>
+			</include>
+			<include content="PP_ButtonSecondary">
+				<param name="id" value="9010"/>
+				<param name="onup" value="SetFocus(9001)"/>
+				<param name="ondown" value="SetFocus(50)"/>
+				<param name="label" value="More"/>
+				<param name="onclick" value="SetFocus(9100)"/>
+			</include>
+		</control>
+	</include>
+	<!-- the Play button is Kodi's: it must not run an extra action -->
+
+	<!-- More: Kodi's own info-dialog actions, as caps words under the buttons (y 892) -->
+	<include name="VidInfo_MoreWord">
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>44</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<focusedcolor>$VAR[PaperColor]</focusedcolor>
+				<textoffsetx>16</textoffsetx>
+				<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="VidInfo_MoreRow">
+		<control type="grouplist" id="9100">
+			<left>804</left>
+			<top>900</top>
+			<width>1100</width>
+			<height>44</height>
+			<orientation>horizontal</orientation>
+			<itemgap>4</itemgap>
+			<onup>9010</onup>
+			<ondown condition="Integer.IsGreater(Container(50).NumItems,0)">50</ondown>
+			<ondown condition="!Integer.IsGreater(Container(50).NumItems,0)">9010</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>9010</onback>
+			<visible allowhiddenfocus="true">ControlGroup(9100).HasFocus()</visible>
+			<animation effect="fade" start="0" end="100" time="200">Visible</animation>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="443"/>
+				<param name="label" value="The collection"/>
+				<param name="onclick" value="Dialog.Close(all,true)"/>
+				<param name="onclick2" value="ActivateWindow(Videos,videodb://movies/sets/$INFO[ListItem.SetId]/?setid=$INFO[ListItem.SetId],return)"/>
+				<param name="visible" value="!String.IsEmpty(ListItem.SetID)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="13"/>
+				<param name="label" value="More by the director"/>
+				<param name="visible" value="!String.IsEmpty(ListItem.Director)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="7"/>
+				<param name="label" value="My rating$INFO[ListItem.UserRating, ,]"/>
+				<param name="visible" value="Control.IsEnabled(7)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="14"/>
+				<param name="label" value="Versions"/>
+				<param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="15"/>
+				<param name="label" value="Extras"/>
+				<param name="visible" value="String.IsEqual(ListItem.DBType,movie)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="10"/>
+				<param name="label" value="Choose art"/>
+				<param name="visible" value="Control.IsEnabled(10)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="12"/>
+				<param name="label" value="Choose fanart"/>
+				<param name="visible" value="Control.IsEnabled(12)"/>
+			</include>
+			<include content="VidInfo_MoreWord">
+				<param name="id" value="6"/>
+				<param name="label" value="Refresh"/>
+				<param name="visible" value="Control.IsEnabled(6)"/>
+			</include>
+		</control>
+	</include>
+
+	<!-- ================================================================== the cast (page 2) -->
+	<!-- Kodi fills container 50 (actors, or the films of a collection). The page slides up 460 while it
+	     has focus; portraits are small matted prints 160x240, the focused one lifted. -->
+	<include name="VidInfo_CastRow">
+		<control type="group">
+			<left>0</left>
+			<top>1110</top>
+			<width>1920</width>
+			<height>480</height>
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<control type="label">
+				<left>120</left>
+				<top>0</top>
+				<width>900</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[VidInfo_CastHeader]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>0</top>
+				<width>1680</width>
+				<height>28</height>
+				<align>right</align>
+				<font>num_22</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[Container(50).CurrentItem]$INFO[Container(50).NumItems, / ,]</label>
+			</control>
+			<control type="list" id="50">
+				<left>40</left>
+				<top>20</top>
+				<width>1880</width>
+				<height>460</height>
+				<orientation>horizontal</orientation>
+				<preloaditems>1</preloaditems>
+				<scrolltime tween="cubic" easing="out">260</scrolltime>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<itemlayout width="216" height="460">
+					<include>VidInfo_CastItem</include>
+				</itemlayout>
+				<focusedlayout width="216" height="460">
+					<include content="VidInfo_CastItem"><param name="focused" value="true"/></include>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+	<include name="VidInfo_CastItem">
+		<param name="focused">false</param>
+		<definition>
+			<control type="group">
+				<left>80</left>
+				<top>36</top>
+				<width>160</width>
+				<height>240</height>
+				<animation type="Focus" condition="[$PARAM[focused]] + !Skin.HasSetting(passepartout.reducemotion)">
+					<effect type="zoom" start="100" end="110" center="80,120" time="240" tween="cubic" easing="out"/>
+				</animation>
+				<animation type="Conditional" condition="[$PARAM[focused]] + Skin.HasSetting(passepartout.reducemotion) + Control.HasFocus(50)">
+					<effect type="zoom" start="100" end="110" center="80,120" time="0" tween="cubic" easing="out"/>
+				</animation>
+				<control type="group">
+					<visible>$PARAM[focused] + Control.HasFocus(50)</visible>
+					<include>PP_LiftSmall</include>
+				</control>
+				<include content="PP_Picture">
+					<param name="art" value="$VAR[VidInfo_CastArt]"/>
+					<param name="title" value="$INFO[ListItem.Label]"/>
+					<param name="font" value="body_20"/>
+				</include>
+				<include>PP_Bevel</include>
+			</control>
+			<control type="label">
+				<left>80</left>
+				<top>300</top>
+				<width>196</width>
+				<height>34</height>
+				<font>body_22</font>
+				<textcolor>ink</textcolor>
+				<!-- long names and roles roll on the portrait in focus ("Warden Cl..." was cut) -->
+				<scroll>$PARAM[focused]</scroll>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>80</left>
+				<top>334</top>
+				<width>196</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<scroll>$PARAM[focused]</scroll>
+				<label>$VAR[VidInfo_CastLine2]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================== full curator text -->
+	<!-- shown while scrollbar 61 (group 9200) has focus: a paper card over the dimmed page -->
+	<include name="VidInfo_FullPlot">
+		<control type="group" id="9200">
+			<visible allowhiddenfocus="true">ControlGroup(9200).HasFocus()</visible>
+			<animation effect="fade" start="0" end="100" time="200">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="160">Hidden</animation>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="veil">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>360</left>
+				<top>120</top>
+				<width>1200</width>
+				<height>840</height>
+				<include>PP_Card</include>
+				<control type="label">
+					<left>64</left>
+					<top>48</top>
+					<width>1072</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31194]</label>
+				</control>
+				<control type="label">
+					<left>64</left>
+					<top>82</top>
+					<width>1072</width>
+					<height>76</height>
+					<font>ttl_64</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[VidInfo_Title]</label>
+				</control>
+				<control type="image">
+					<left>64</left>
+					<top>188</top>
+					<width>64</width>
+					<height>1</height>
+					<texture colordiffuse="ink">common/white.png</texture>
+				</control>
+				<control type="textbox">
+					<left>64</left>
+					<top>222</top>
+					<width>1040</width>
+					<height>520</height>
+					<font>body_26</font>
+					<textcolor>body</textcolor>
+					<pagecontrol>61</pagecontrol>
+					<label>$INFO[ListItem.Plot]</label>
+				</control>
+				<control type="scrollbar" id="61">
+					<left>1128</left>
+					<top>222</top>
+					<width>2</width>
+					<height>520</height>
+					<orientation>vertical</orientation>
+					<showonepage>false</showonepage>
+					<onleft>9001</onleft>
+					<onright>9001</onright>
+					<onback>9001</onback>
+				</control>
+				<control type="label">
+					<left>64</left>
+					<top>772</top>
+					<width>1072</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31195]</label>
+				</control>
+			</control>
+		</control>
+	</include>
+</includes>

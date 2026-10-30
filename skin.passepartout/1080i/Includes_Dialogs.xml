@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Dialog building blocks (mockup PassepartoutDialog).
+	A dialog is a small paper card (the page's paper lightened ~40% toward white, 1px edge at 10% ink,
+	lifted by a soft shadow) over the page dimmed with flat ink at 62%. Rows are Geist 28 on 68px with
+	12% hairlines; the focused row is the ink placard with the text in the paper colour. Buttons are
+	tracked capitals in a 1px frame at rest, the ink placard on focus.
+
+	Shared names (params unchanged from the forked engine, look redone):
+	  PP_GenericDialog, PP_DialogButton, PP_ListLayout, PP_Scrollbar, PP_ToastFrame,
+	  PP_KeyboardKey, PP_KeyboardFunc, Dlg_* helpers.
+-->
+<includes>
+	<!-- ============================================================ constants -->
+	<constant name="dlg_panel_x">1200</constant>
+	<constant name="dlg_panel_w">720</constant>
+	<constant name="dlg_panel_pad">72</constant>
+	<constant name="dlg_panel_in_w">576</constant>
+	<constant name="dlg_panel_top">64</constant>
+	<constant name="dlg_track_row_h">64</constant>
+	<constant name="dlg_osd_row_h">76</constant>
+	<constant name="dlg_row_pad">24</constant>
+	<constant name="dlg_check">10</constant>
+	<constant name="dlg_check_gutter">48</constant>
+	<constant name="dlg_btn_h">60</constant>
+
+	<!-- ============================================================ expressions -->
+	<expression name="Dlg_IsTrackPanel">Player.HasVideo + Window.IsActive(fullscreenvideo)</expression>
+	<expression name="Dlg_FromSubtitleSettings">Window.IsVisible(osdsubtitlesettings)</expression>
+	<expression name="Dlg_IsOSDSettings">Window.IsActive(osdaudiosettings) | Window.IsActive(osdsubtitlesettings) | Window.IsActive(osdvideosettings) | Window.IsActive(osdcmssettings)</expression>
+
+	<!-- ============================================================ variables -->
+	<variable name="Dlg_SelectKicker">
+		<value condition="Window.IsVisible(osdsubtitlesettings)">Subtitles$VAR[PL_Container_3_NumItems_Track]</value>
+		<value condition="Window.IsVisible(osdaudiosettings)">Audio$VAR[PL_Container_3_NumItems_Track]</value>
+		<value condition="Window.IsVisible(osdvideosettings)">Video$VAR[PL_Container_3_NumItems_Option]</value>
+		<value condition="Control.IsVisible(6)">Choose$VAR[PL_Container_6_NumItems_Item]</value>
+		<value>Choose$VAR[PL_Container_3_NumItems_Item]</value>
+	</variable>
+	<variable name="Dlg_SelectPosition">
+		<value condition="Control.IsVisible(6)">$INFO[Container(6).CurrentItem]$INFO[Container(6).NumItems, / ,]</value>
+		<value>$INFO[Container(3).CurrentItem]$INFO[Container(3).NumItems, / ,]</value>
+	</variable>
+	<variable name="Dlg_AddonNewsLabel">
+		<value condition="!String.IsEmpty(Window(Home).Property(passepartout.addonnews))">Description</value>
+		<value>What's new</value>
+	</variable>
+
+	<!-- ============================================================ texture switches -->
+	<include name="Dlg_Tex_DialogButton">
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+		<texturenofocus border="2" colordiffuse="rule">pp/frame_1.png</texturenofocus>
+	</include>
+	<!-- focused Kodi-cloned rows (settings controls): the ink placard -->
+	<include name="Dlg_Tex_RowFocus">
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+	</include>
+	<!-- hairline under a row (texturenofocus of Kodi-cloned rows). flip = true gives a top rule. -->
+	<include name="Dlg_Tex_RowRule">
+		<param name="color">rule_row</param>
+		<param name="flip">false</param>
+		<definition>
+			<texturenofocus border="0,0,0,2" flipy="$PARAM[flip]" colordiffuse="$PARAM[color]">pp/underline.png</texturenofocus>
+		</definition>
+	</include>
+
+	<!-- ============================================================ generic dialog -->
+	<!-- The card. Put inside a group positioned/sized like the dialog.
+	     params: width, height, header_id (Kodi heading id, "" if none), header_label, kicker -->
+	<include name="PP_GenericDialog">
+		<param name="header_id"></param>
+		<param name="header_label"></param>
+		<param name="kicker"></param>
+		<definition>
+			<control type="image">
+				<description>dim (flat ink 62%, own fades: LESSONS 4)</description>
+				<left>-2000</left>
+				<top>-2000</top>
+				<width>6000</width>
+				<height>6000</height>
+				<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="160">WindowClose</animation>
+				<texture colordiffuse="veil">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<include>PP_Card</include>
+				<control type="label" id="$PARAM[header_id]">
+					<description>heading</description>
+					<left>48</left>
+					<top>24</top>
+					<right>300</right>
+					<height>50</height>
+					<font>ttl_40</font>
+					<textcolor>ink</textcolor>
+					<label>$PARAM[header_label]</label>
+				</control>
+				<control type="label">
+					<description>kicker</description>
+					<right>48</right>
+					<top>35</top>
+					<width>250</width>
+					<height>28</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[kicker]</label>
+				</control>
+				<control type="image">
+					<left>48</left>
+					<top>dialog_header_h</top>
+					<right>48</right>
+					<height>1</height>
+					<texture colordiffuse="rule">common/white.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Dialog button: tracked capitals in a 1px frame at rest, ink placard on focus.
+	     params: id, label, width, height, onclick, onclick2, visible, enable -->
+	<include name="PP_DialogButton">
+		<param name="width">300</param>
+		<param name="height">64</param>
+		<param name="label"></param>
+		<param name="onclick">noop</param>
+		<param name="onclick2">noop</param>
+		<param name="visible">true</param>
+		<param name="enable">true</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<label>$PARAM[label]</label>
+				<font>capw_22</font>
+				<textcolor>ink</textcolor>
+				<focusedcolor>$VAR[PaperColor]</focusedcolor>
+				<disabledcolor>disabled</disabledcolor>
+				<align>center</align>
+				<textoffsetx>16</textoffsetx>
+				<include>Dlg_Tex_DialogButton</include>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Definition-list fact (caps field label + value), 40px pitch. params: top, label, value, valuew -->
+	<include name="Dlg_FactRow">
+		<param name="valuew">620</param>
+		<definition>
+			<control type="label">
+				<left>0</left>
+				<top>$PARAM[top]</top>
+				<width>200</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$PARAM[label]</label>
+			</control>
+			<control type="label">
+				<left>200</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[valuew]</width>
+				<height>28</height>
+				<font>body_22</font>
+				<textcolor>ink</textcolor>
+				<label>$PARAM[value]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ list rows -->
+	<!-- Focused row inside a <focusedlayout>: the ink placard (only while the list has focus).
+	     params: list_id, width, height -->
+	<include name="Dlg_RowFocus">
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<texture colordiffuse="ink">common/white.png</texture>
+				<visible>Control.HasFocus($PARAM[list_id])</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- a row label that turns paper-coloured on the placard. params: list_id, left, right, height, font, label, color, align -->
+	<include name="Dlg_RowLabel">
+		<param name="left">24</param>
+		<param name="right">24</param>
+		<param name="width"></param>
+		<param name="font">body_28</param>
+		<param name="color">ink</param>
+		<param name="align">left</param>
+		<param name="scroll">false</param>
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<right>$PARAM[right]</right>
+				<height>$PARAM[height]</height>
+				<font>$PARAM[font]</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<align>$PARAM[align]</align>
+				<label>$PARAM[label]</label>
+				<visible>!Control.HasFocus($PARAM[list_id])</visible>
+			</control>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<right>$PARAM[right]</right>
+				<height>$PARAM[height]</height>
+				<font>$PARAM[font]</font>
+				<textcolor>$VAR[PaperColor]</textcolor>
+				<selectedcolor>$VAR[PaperColor]</selectedcolor>
+				<align>$PARAM[align]</align>
+				<scroll>$PARAM[scroll]</scroll>
+				<label>$PARAM[label]</label>
+				<visible>Control.HasFocus($PARAM[list_id])</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- current / selected item: a small ink dot (paper-coloured on the placard) -->
+	<include name="Dlg_RowDot">
+		<param name="left">24</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<centertop>50%</centertop>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="ink">pp/dot.png</texture>
+				<visible>ListItem.IsSelected + !Control.HasFocus($PARAM[list_id])</visible>
+			</control>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<centertop>50%</centertop>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="$VAR[PaperColor]">pp/dot.png</texture>
+				<visible>ListItem.IsSelected + Control.HasFocus($PARAM[list_id])</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Dlg_RowRule">
+		<param name="width">800</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>$PARAM[width]</width>
+				<height>1</height>
+				<texture colordiffuse="rule_row">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Text list: dot for the current item, label (Geist 28), label2 on the right, 12% hairline.
+	     params: width, height, label, label2, list_id -->
+	<include name="PP_ListLayout">
+		<param name="width">800</param>
+		<param name="height">68</param>
+		<param name="label">$INFO[ListItem.Label]</param>
+		<param name="label2">$INFO[ListItem.Label2]</param>
+		<param name="list_id">50</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowRule"><param name="width" value="$PARAM[width]"/></include>
+				<control type="image">
+					<left>24</left>
+					<centertop>50%</centertop>
+					<width>10</width>
+					<height>10</height>
+					<texture colordiffuse="ink">pp/dot.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>260</right>
+					<height>$PARAM[height]</height>
+					<font>body_28</font>
+					<textcolor>ink</textcolor>
+					<label>$PARAM[label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>230</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowRule"><param name="width" value="$PARAM[width]"/></include>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<include content="Dlg_RowDot"><param name="list_id" value="$PARAM[list_id]"/></include>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="dlg_check_gutter"/>
+					<param name="right" value="260"/>
+					<param name="height" value="$PARAM[height]"/>
+					<param name="label" value="$PARAM[label]"/>
+					<param name="scroll" value="false"/>
+				</include>
+				<!-- label2 in the same 230 box as the unfocused row (right 24): the group sits at the row's right
+				     edge, the labels at -254 (0.9.5: it was right-aligned to the edge, 24 px off the other rows) -->
+				<control type="group">
+					<left>$PARAM[width]</left>
+					<top>0</top>
+					<control type="label">
+						<left>-254</left>
+						<top>0</top>
+						<width>230</width>
+						<height>$PARAM[height]</height>
+						<align>right</align>
+						<font>cap_20</font>
+						<textcolor>ink2</textcolor>
+						<label>$PARAM[label2]</label>
+						<visible>!Control.HasFocus($PARAM[list_id])</visible>
+					</control>
+					<control type="label">
+						<left>-254</left>
+						<top>0</top>
+						<width>230</width>
+						<height>$PARAM[height]</height>
+						<align>right</align>
+						<font>cap_20</font>
+						<textcolor>$VAR[PaperColor]</textcolor>
+						<selectedcolor>$VAR[PaperColor]</selectedcolor>
+						<label>$PARAM[label2]</label>
+						<visible>Control.HasFocus($PARAM[list_id])</visible>
+					</control>
+				</control>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Menu list (Settings hub, System menu, power menu): label + caps hint (label2). params: width, height, list_id -->
+	<include name="Dlg_IndexListLayout">
+		<param name="width">860</param>
+		<param name="height">68</param>
+		<param name="list_id">9000</param>
+		<param name="hint_w">320</param>
+		<param name="label_r">340</param>
+		<param name="hint_l">516</param>
+		<definition>
+			<itemlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowRule"><param name="width" value="$PARAM[width]"/></include>
+				<control type="label">
+					<left>24</left>
+					<top>0</top>
+					<right>$PARAM[label_r]</right>
+					<height>$PARAM[height]</height>
+					<font>body_28</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+				<control type="label">
+					<right>24</right>
+					<top>0</top>
+					<width>$PARAM[hint_w]</width>
+					<height>$PARAM[height]</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="$PARAM[width]" height="$PARAM[height]">
+				<include content="Dlg_RowRule"><param name="width" value="$PARAM[width]"/></include>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="$PARAM[width]"/>
+					<param name="height" value="$PARAM[height]"/>
+				</include>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="right" value="$PARAM[label_r]"/>
+					<param name="height" value="$PARAM[height]"/>
+					<param name="label" value="$INFO[ListItem.Label]"/>
+				</include>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="$PARAM[hint_l]"/>
+					<param name="right" value="24"/>
+					<param name="height" value="$PARAM[height]"/>
+					<param name="font" value="cap_20"/>
+					<param name="color" value="ink2"/>
+					<param name="align" value="right"/>
+					<param name="label" value="$INFO[ListItem.Label2]"/>
+				</include>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Track rows (right-hand panel over video): dot for the current track, name, caps meta. params: list_id -->
+	<include name="Dlg_TrackListLayout">
+		<param name="list_id">3</param>
+		<definition>
+			<itemlayout width="dlg_panel_in_w" height="dlg_track_row_h">
+				<include content="Dlg_RowRule"><param name="width" value="dlg_panel_in_w"/></include>
+				<control type="image">
+					<left>20</left>
+					<centertop>50%</centertop>
+					<width>10</width>
+					<height>10</height>
+					<texture colordiffuse="ink">pp/dot.png</texture>
+					<visible>ListItem.IsSelected</visible>
+				</control>
+				<control type="label">
+					<left>dlg_check_gutter</left>
+					<top>0</top>
+					<right>150</right>
+					<height>dlg_track_row_h</height>
+					<font>body_26</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+				<control type="label">
+					<right>20</right>
+					<top>0</top>
+					<width>130</width>
+					<height>dlg_track_row_h</height>
+					<align>right</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+			</itemlayout>
+			<focusedlayout width="dlg_panel_in_w" height="dlg_track_row_h">
+				<include content="Dlg_RowRule"><param name="width" value="dlg_panel_in_w"/></include>
+				<include content="Dlg_RowFocus">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="width" value="dlg_panel_in_w"/>
+					<param name="height" value="dlg_track_row_h"/>
+				</include>
+				<include content="Dlg_RowDot"><param name="list_id" value="$PARAM[list_id]"/><param name="left" value="20"/></include>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="dlg_check_gutter"/>
+					<param name="right" value="150"/>
+					<param name="height" value="dlg_track_row_h"/>
+					<param name="font" value="body_26"/>
+					<param name="label" value="$INFO[ListItem.Label]"/>
+					<param name="scroll" value="false"/>
+				</include>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="400"/>
+					<param name="right" value="20"/>
+					<param name="height" value="dlg_track_row_h"/>
+					<param name="font" value="cap_20"/>
+					<param name="color" value="ink2"/>
+					<param name="align" value="right"/>
+					<param name="label" value="$INFO[ListItem.Label2]"/>
+				</include>
+			</focusedlayout>
+		</definition>
+	</include>
+
+	<!-- Thin scroll-position line paired with a list. params: id, left, top, height, onleft, onright -->
+	<include name="PP_Scrollbar">
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="scrollbar" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>2</width>
+				<height>$PARAM[height]</height>
+				<texturesliderbackground colordiffuse="wash">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="rule_strong">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="ink">common/white.png</texturesliderbarfocus>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<orientation>vertical</orientation>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ right-hand playback panel -->
+	<!-- The paused frame dimmed + a full-height paper panel (720px) on the right, lifted by a shadow. -->
+	<include name="Dlg_SidePanelFrame">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+			<texture colordiffuse="veil_video">common/white.png</texture>
+		</control>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<top>0</top>
+			<width>dlg_panel_w</width>
+			<height>screen_h</height>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="image">
+				<left>-40</left>
+				<top>0</top>
+				<width>40</width>
+				<height>screen_h</height>
+				<texture>pp/panel_shadow.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>dlg_panel_w</width>
+				<height>screen_h</height>
+				<texture colordiffuse="$VAR[PaperColor]">common/white.png</texture>
+			</control>
+		</control>
+	</include>
+
+	<!-- ============================================================ DialogSelect -->
+	<!-- Centred select (id contract from Estuary Omega Includes_DialogSelect.xml: heading 1,
+	     list 3 simple / 6 detailed, scrollbar 61, buttons 5 / 8 / 7 (cancel) in grouplist 9001). -->
+	<include name="Dlg_SelectCentred">
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1120</width>
+			<height>820</height>
+			<include content="PP_GenericDialog">
+				<param name="width" value="1120"/>
+				<param name="height" value="820"/>
+				<param name="header_id" value="1"/>
+				<param name="kicker" value="$VAR[Dlg_SelectPosition]"/>
+			</include>
+			<control type="list" id="3">
+				<left>24</left>
+				<top>148</top>
+				<width>776</width>
+				<height>612</height>
+				<onup>3</onup>
+				<ondown>3</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="PP_ListLayout">
+					<param name="width" value="776"/>
+					<param name="height" value="68"/>
+					<param name="list_id" value="3"/>
+				</include>
+			</control>
+			<control type="list" id="6">
+				<left>24</left>
+				<top>148</top>
+				<width>776</width>
+				<height>636</height>
+				<onup>6</onup>
+				<ondown>6</ondown>
+				<onleft>9001</onleft>
+				<onright>9001</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<itemlayout width="776" height="106">
+					<include content="Dlg_RowRule"><param name="width" value="776"/></include>
+					<include content="Dlg_SelectDetailRow"><param name="list_id" value="none"/></include>
+				</itemlayout>
+				<focusedlayout width="776" height="106">
+					<include content="Dlg_RowRule"><param name="width" value="776"/></include>
+					<include content="Dlg_RowFocus">
+						<param name="list_id" value="6"/>
+						<param name="width" value="776"/>
+						<param name="height" value="106"/>
+					</include>
+					<include content="Dlg_SelectDetailRow"><param name="list_id" value="6"/></include>
+				</focusedlayout>
+			</control>
+			<control type="label">
+				<left>72</left>
+				<top>148</top>
+				<width>700</width>
+				<height>68</height>
+				<font>body_26</font>
+				<textcolor>ink2</textcolor>
+				<label>$LOCALIZE[31176]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<include content="PP_Scrollbar">
+				<param name="id" value="61"/>
+				<param name="left" value="812"/>
+				<param name="top" value="148"/>
+				<param name="height" value="612"/>
+			</include>
+			<control type="grouplist" id="9001">
+				<left>836</left>
+				<top>148</top>
+				<width>236</width>
+				<height>400</height>
+				<orientation>vertical</orientation>
+				<itemgap>12</itemgap>
+				<onleft condition="Control.IsVisible(3)">3</onleft>
+				<onleft condition="Control.IsVisible(6)">6</onleft>
+				<onright condition="Control.IsVisible(3)">3</onright>
+				<onright condition="Control.IsVisible(6)">6</onright>
+				<onup>9001</onup>
+				<ondown>9001</ondown>
+				<include content="PP_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="236"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="236"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="236"/>
+				</include>
+			</control>
+		</control>
+	</include>
+	<include name="Dlg_SelectDetailRow">
+		<param name="list_id">none</param>
+		<definition>
+			<control type="group">
+				<left>24</left>
+				<top>15</top>
+				<width>76</width>
+				<height>76</height>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<width>76</width>
+					<height>76</height>
+					<aspectratio>keep</aspectratio>
+					<texture background="true">$VAR[ListItemArt]</texture>
+				</control>
+			</control>
+			<include content="Dlg_RowDot"><param name="list_id" value="$PARAM[list_id]"/><param name="left" value="742"/></include>
+			<control type="group">
+				<top>16</top>
+				<height>40</height>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="124"/>
+					<param name="right" value="56"/>
+					<param name="height" value="40"/>
+					<param name="font" value="body_28"/>
+					<param name="label" value="$INFO[ListItem.Label]"/>
+				</include>
+			</control>
+			<control type="group">
+				<top>58</top>
+				<height>32</height>
+				<include content="Dlg_RowLabel">
+					<param name="list_id" value="$PARAM[list_id]"/>
+					<param name="left" value="124"/>
+					<param name="right" value="56"/>
+					<param name="height" value="32"/>
+					<param name="font" value="body_22"/>
+					<param name="color" value="ink2"/>
+					<param name="label" value="$INFO[ListItem.Label2]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Right-hand track picker for selects over fullscreen video. Same id contract; adds 9101
+	     (download subtitles) / 9102 (subtitle settings) in grouplist 9100 from the OSD subtitle settings. -->
+	<include name="Dlg_SelectPanel">
+		<include>Dlg_SidePanelFrame</include>
+		<control type="group">
+			<left>dlg_panel_x</left>
+			<include content="Anim_SidePanel"><param name="offset" value="80"/></include>
+			<control type="label">
+				<description>kicker</description>
+				<left>dlg_panel_pad</left>
+				<top>dlg_panel_top</top>
+				<width>dlg_panel_in_w</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Dlg_SelectKicker]</label>
+			</control>
+			<control type="label" id="1">
+				<description>heading (Kodi)</description>
+				<left>dlg_panel_pad</left>
+				<top>98</top>
+				<width>dlg_panel_in_w</width>
+				<height>76</height>
+				<font>ttl_64</font>
+				<textcolor>ink</textcolor>
+			</control>
+			<control type="image">
+				<left>dlg_panel_pad</left>
+				<top>196</top>
+				<width>dlg_panel_in_w</width>
+				<height>1</height>
+				<texture colordiffuse="rule">common/white.png</texture>
+			</control>
+			<control type="list" id="3">
+				<left>dlg_panel_pad</left>
+				<top>197</top>
+				<width>dlg_panel_in_w</width>
+				<height>704</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="3"/></include>
+			</control>
+			<control type="list" id="6">
+				<left>dlg_panel_pad</left>
+				<top>197</top>
+				<width>dlg_panel_in_w</width>
+				<height>704</height>
+				<onup>9100</onup>
+				<ondown>9100</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<pagecontrol>61</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="Dlg_TrackListLayout"><param name="list_id" value="6"/></include>
+			</control>
+			<control type="label">
+				<left>dlg_panel_pad</left>
+				<top>197</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_track_row_h</height>
+				<font>body_26</font>
+				<textcolor>ink2</textcolor>
+				<label>$LOCALIZE[31176]</label>
+				<visible>[Control.IsVisible(3) + Integer.IsEqual(Container(3).NumItems,0)] | [Control.IsVisible(6) + Integer.IsEqual(Container(6).NumItems,0)]</visible>
+			</control>
+			<control type="scrollbar" id="61">
+				<left>656</left>
+				<top>197</top>
+				<width>2</width>
+				<height>704</height>
+				<texturesliderbackground colordiffuse="wash">common/white.png</texturesliderbackground>
+				<texturesliderbar colordiffuse="rule_strong">common/white.png</texturesliderbar>
+				<texturesliderbarfocus colordiffuse="rule_strong">common/white.png</texturesliderbarfocus>
+				<orientation>vertical</orientation>
+			</control>
+			<control type="grouplist" id="9100">
+				<left>dlg_panel_pad</left>
+				<top>940</top>
+				<width>dlg_panel_in_w</width>
+				<height>dlg_btn_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>12</itemgap>
+				<onleft>9100</onleft>
+				<onright>9100</onright>
+				<onup condition="Control.IsVisible(3)">3</onup>
+				<onup condition="Control.IsVisible(6)">6</onup>
+				<ondown condition="Control.IsVisible(3)">3</ondown>
+				<ondown condition="Control.IsVisible(6)">6</ondown>
+				<include content="PP_DialogButton">
+					<param name="id" value="9101"/>
+					<param name="label" value="Download"/>
+					<param name="width" value="282"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="onclick2" value="ActivateWindow(SubtitleSearch)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="9102"/>
+					<param name="label" value="Settings"/>
+					<param name="width" value="282"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="onclick" value="Dialog.Close(selectdialog)"/>
+					<param name="visible" value="$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="5"/>
+					<param name="width" value="184"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="8"/>
+					<param name="width" value="184"/>
+					<param name="height" value="dlg_btn_h"/>
+				</include>
+				<include content="PP_DialogButton">
+					<param name="id" value="7"/>
+					<param name="label" value="$LOCALIZE[222]"/>
+					<param name="width" value="184"/>
+					<param name="height" value="dlg_btn_h"/>
+					<param name="visible" value="!$EXP[Dlg_FromSubtitleSettings]"/>
+				</include>
+			</control>
+		</control>
+	</include>
+
+	<!-- Caps radio row (add-on browser filters): placard on focus, switch on the right. -->
+	<include name="Dlg_SubNavRadio">
+		<width>380</width>
+		<height>44</height>
+		<font>cap_20</font>
+		<textcolor>ink2</textcolor>
+		<focusedcolor>$VAR[PaperColor]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<textoffsetx>16</textoffsetx>
+		<aligny>center</aligny>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+		<texturenofocus />
+		<radiowidth>40</radiowidth>
+		<radioheight>22</radioheight>
+		<radioposx>324</radioposx>
+		<textureradioonfocus colordiffuse="$VAR[PaperColor]">pp/switch_on.png</textureradioonfocus>
+		<textureradioonnofocus colordiffuse="ink">pp/switch_on.png</textureradioonnofocus>
+		<textureradioofffocus colordiffuse="$VAR[PaperColor]">pp/switch_off.png</textureradioofffocus>
+		<textureradiooffnofocus colordiffuse="ink2">pp/switch_off.png</textureradiooffnofocus>
+	</include>
+
+	<!-- ============================================================ toasts -->
+	<!-- Toast: a small paper card with its shadow. params: height -->
+	<include name="PP_ToastFrame">
+		<param name="height">104</param>
+		<definition>
+			<control type="group">
+				<left>0</left>
+				<top>0</top>
+				<width>toast_w</width>
+				<height>$PARAM[height]</height>
+				<include>PP_Card</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ============================================================ keyboard keys -->
+	<!-- Keys (Search board): lowercase Geist 34, 1px 12% frame at rest, ink placard with paper text on focus. -->
+	<include name="PP_KeyboardKey">
+		<font>key_34</font>
+		<textcolor>ink</textcolor>
+		<focusedcolor>$VAR[PaperColor]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+		<texturenofocus border="2" colordiffuse="rule_row">pp/frame_1.png</texturenofocus>
+	</include>
+	<include name="PP_KeyboardFunc">
+		<font>cap_20</font>
+		<textcolor>ink</textcolor>
+		<focusedcolor>$VAR[PaperColor]</focusedcolor>
+		<disabledcolor>disabled</disabledcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>0</textoffsetx>
+		<pulseonselect>false</pulseonselect>
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+		<texturenofocus border="2" colordiffuse="rule">pp/frame_1.png</texturenofocus>
+	</include>
+</includes>

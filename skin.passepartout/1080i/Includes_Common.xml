@@ -1,0 +1,508 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Passe-partout common building blocks (docs/skin.passepartout/DESIGN.md).
+	  PP_Background      the paper: flat neutral paper + the art-coloured paper fading over it
+	  PP_Veil / PP_Card  dialog dim (ink 62%) and the small paper card with its lift shadow
+	  PP_TopBar          header words top-left (cap 20, 120/64) + weather and clock top-right
+	  PP_Print           a matted print: lift shadow (focused only), picture, bevel-cut window
+	  PP_ButtonPrimary / PP_ButtonSecondary / PP_SubNavButton   tracked-caps words, ink placard on focus
+	Focus language: prints = size + shadow (no outlines anywhere); words and rows = the ink placard
+	with the text in the paper colour.
+-->
+<includes>
+	<!-- ============================================================ paper service -->
+	<!-- TMDb Helper colour service (images.py: Colors.Main = the image's mean colour with its HLS
+	     lightness/saturation REPLACED by Skin.String(TMDbHelper.Colors.Luminance/Saturation), re-read on
+	     every compute; fades in 20 steps). Window onloads include this. Neutral paper turns the service off. -->
+	<include name="PP_PaperInit">
+		<onload condition="$EXP[PP_ArtPaperOn] + !Skin.HasSetting(TMDbHelper.EnableColors)">Skin.SetBool(TMDbHelper.EnableColors)</onload>
+		<onload condition="!$EXP[PP_ArtPaperOn] + Skin.HasSetting(TMDbHelper.EnableColors)">Skin.Reset(TMDbHelper.EnableColors)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.lum),0.80) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Luminance),0.80)">Skin.SetString(TMDbHelper.Colors.Luminance,0.80)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.lum),0.83) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Luminance),0.83)">Skin.SetString(TMDbHelper.Colors.Luminance,0.83)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.lum),0.89) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Luminance),0.89)">Skin.SetString(TMDbHelper.Colors.Luminance,0.89)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.lum),0.92) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Luminance),0.92)">Skin.SetString(TMDbHelper.Colors.Luminance,0.92)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + !String.IsEqual(Skin.String(passepartout.lum),0.80) + !String.IsEqual(Skin.String(passepartout.lum),0.83) + !String.IsEqual(Skin.String(passepartout.lum),0.89) + !String.IsEqual(Skin.String(passepartout.lum),0.92) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Luminance),0.86)">Skin.SetString(TMDbHelper.Colors.Luminance,0.86)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.sat),0.12) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Saturation),0.12)">Skin.SetString(TMDbHelper.Colors.Saturation,0.12)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.sat),0.17) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Saturation),0.17)">Skin.SetString(TMDbHelper.Colors.Saturation,0.17)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.sat),0.28) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Saturation),0.28)">Skin.SetString(TMDbHelper.Colors.Saturation,0.28)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + String.IsEqual(Skin.String(passepartout.sat),0.34) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Saturation),0.34)">Skin.SetString(TMDbHelper.Colors.Saturation,0.34)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + !String.IsEqual(Skin.String(passepartout.sat),0.12) + !String.IsEqual(Skin.String(passepartout.sat),0.17) + !String.IsEqual(Skin.String(passepartout.sat),0.28) + !String.IsEqual(Skin.String(passepartout.sat),0.34) + !String.IsEqual(Skin.String(TMDbHelper.Colors.Saturation),0.22)">Skin.SetString(TMDbHelper.Colors.Saturation,0.22)</onload>
+	</include>
+
+	<!-- The playing item's paper: TMDb Helper's image_colors for the playing art (same normalisation),
+	     written to Window(Home).Property(TMDbHelper.PPPlayer.Colors.Main). Run once per item. -->
+	<include name="PP_PlayerPaperOnload">
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasAudio + !Player.HasVideo + !String.IsEmpty(Player.Art(thumb)) + !String.IsEqual(Window(Home).Property(passepartout.np.colorsrc),Player.Art(thumb))">RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(thumb)]",prefix=PPPlayer)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasAudio + !Player.HasVideo + !String.IsEmpty(Player.Art(thumb))">SetProperty(passepartout.np.colorsrc,$ESCINFO[Player.Art(thumb)],home)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasVideo + !String.IsEmpty(Player.Art(poster)) + !String.IsEqual(Window(Home).Property(passepartout.np.colorsrc),Player.Art(poster))">RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(poster)]",prefix=PPPlayer)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasVideo + !String.IsEmpty(Player.Art(poster))">SetProperty(passepartout.np.colorsrc,$ESCINFO[Player.Art(poster)],home)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasVideo + String.IsEmpty(Player.Art(poster)) + !String.IsEmpty(Player.Art(tvshow.poster)) + !String.IsEqual(Window(Home).Property(passepartout.np.colorsrc),Player.Art(tvshow.poster))">RunScript(plugin.video.themoviedb.helper,"image_colors=$INFO[Player.Art(tvshow.poster)]",prefix=PPPlayer)</onload>
+		<onload condition="$EXP[PP_ArtPaperOn] + Player.HasVideo + String.IsEmpty(Player.Art(poster)) + !String.IsEmpty(Player.Art(tvshow.poster))">SetProperty(passepartout.np.colorsrc,$ESCINFO[Player.Art(tvshow.poster)],home)</onload>
+	</include>
+
+	<!-- ============================================================ paper -->
+	<include name="PP_Background">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="paper">common/white.png</texture>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="$VAR[PaperColor]">common/white.png</texture>
+			<visible>$EXP[PP_HasArtPaper]</visible>
+			<animation effect="fade" start="0" end="100" time="600" tween="sine" easing="inout">Visible</animation>
+			<animation effect="fade" start="100" end="0" time="600" tween="sine" easing="inout">Hidden</animation>
+		</control>
+	</include>
+
+	<!-- Dialog dim: flat ink at 62% (tokens: 9E1C1B19), with its own fades (LESSONS 4) -->
+	<include name="PP_Veil">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture colordiffuse="veil">common/white.png</texture>
+			<animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+			<animation effect="fade" start="100" end="0" time="160">WindowClose</animation>
+		</control>
+	</include>
+
+	<!-- A small paper card: lift shadow + paper lightened ~40% toward white + 1px edge at 10% ink.
+	     Put it first inside a group that has the card's width and height. -->
+	<include name="PP_Card">
+		<control type="image">
+			<left>-48</left>
+			<top>-16</top>
+			<right>-48</right>
+			<bottom>-104</bottom>
+			<texture border="148,146,148,224" colordiffuse="$VAR[ShadowColor]">pp/card.png</texture>
+		</control>
+		<control type="image">
+			<left>-1</left>
+			<top>-1</top>
+			<right>-1</right>
+			<bottom>-1</bottom>
+			<texture colordiffuse="rule_card">common/white.png</texture>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<right>0</right>
+			<bottom>0</bottom>
+			<texture colordiffuse="$VAR[PaperColor]">common/white.png</texture>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<right>0</right>
+			<bottom>0</bottom>
+			<texture colordiffuse="card_lift">common/white.png</texture>
+		</control>
+	</include>
+
+	<!-- 1px rule. params: top, left, width, color -->
+	<include name="PP_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">rule</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>1</height>
+				<texture colordiffuse="$PARAM[color]">common/white.png</texture>
+			</control>
+		</definition>
+	</include>
+	<!-- Passe-partout has no header rule: the page is the mat -->
+	<include name="PP_TopRule">
+		<control type="group"><visible>false</visible></control>
+	</include>
+
+	<!-- ============================================================ header -->
+	<!-- Weather + clock, top right: "14° · LIGHT RAIN   21:47" (cap 20 + Geist Mono 24, baselines aligned) -->
+	<include name="PP_Clock">
+		<control type="grouplist">
+			<left>120</left>
+			<top>63</top>
+			<width>1680</width>
+			<height>30</height>
+			<orientation>horizontal</orientation>
+			<align>right</align>
+			<itemgap>28</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="label">
+				<top>1</top>
+				<width max="600">auto</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[PP_WeatherLabel]</label>
+				<visible>!String.IsEmpty(Weather.Conditions)</visible>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>28</height>
+				<font>clock_24</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[ClockLabel]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- Where-you-are words, top left at 120/64: title (ink, hairline underline) · sub (secondary).
+	     params: title, sub, index (unused, kept for forked windows) -->
+	<include name="PP_PageHeader">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="grouplist">
+				<left>120</left>
+				<top>64</top>
+				<width>1200</width>
+				<height>38</height>
+				<orientation>horizontal</orientation>
+				<itemgap>52</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<width max="700">auto</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink</textcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<width max="500">auto</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$PARAM[sub]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<include name="PP_TopBar">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="PP_PageHeader">
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include>PP_Clock</include>
+		</definition>
+	</include>
+
+	<!-- ===================================================== focus frames -->
+	<!-- Generic "this is focused" mark for the few forked controls that draw their own focus over a
+	     label: a 2px ink bar along the bottom edge (never covers text). -->
+	<include name="PP_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<right>0</right>
+				<bottom>-6</bottom>
+				<height>2</height>
+				<texture colordiffuse="ink">common/white.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== prints -->
+	<!-- A matted print. Coordinates are the PICTURE (the bevel adds 4px around it, the cut edge 1px more).
+	     params: left, top, width, height, art, title (fallback caption), lift (condition for the shadow),
+	             aspect (scale|keep), fade (ms) -->
+	<include name="PP_Print">
+		<param name="lift">false</param>
+		<param name="aspect">scale</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="fade">160</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>$PARAM[height]</height>
+				<!-- lift shadow: print grown by 84 / 28 / 84 / 184 (4px bevel + texture margins 80/24/80/180) -->
+				<control type="image">
+					<left>-84</left>
+					<top>-28</top>
+					<right>-84</right>
+					<bottom>-184</bottom>
+					<texture border="230,254,230,350" colordiffuse="$VAR[ShadowColor]">pp/lift.png</texture>
+					<visible>$PARAM[lift] + !Skin.HasSetting(passepartout.noshadow)</visible>
+				</control>
+				<!-- missing art: the mat shows the title in a quiet window -->
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture colordiffuse="wash_strong">common/white.png</texture>
+				</control>
+				<control type="textbox">
+					<left>16</left>
+					<top>16</top>
+					<right>16</right>
+					<bottom>16</bottom>
+					<font>body_22</font>
+					<textcolor>ink2</textcolor>
+					<align>center</align>
+					<aligny>center</aligny>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<aspectratio>$PARAM[aspect]</aspectratio>
+					<fadetime>$PARAM[fade]</fadetime>
+					<texture background="true">$PARAM[art]</texture>
+				</control>
+				<!-- the bevel-cut window: ring, 3px white core, hairline, inner shadow (pp/bevel.png) -->
+				<control type="image">
+					<left>-5</left>
+					<top>-5</top>
+					<right>-5</right>
+					<bottom>-5</bottom>
+					<texture border="16">pp/bevel.png</texture>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Bevel + shadow pieces for list layouts (inside a group of the picture size) -->
+	<include name="PP_Bevel">
+		<control type="image">
+			<left>-5</left>
+			<top>-5</top>
+			<right>-5</right>
+			<bottom>-5</bottom>
+			<texture border="16">pp/bevel.png</texture>
+		</control>
+	</include>
+	<include name="PP_Lift">
+		<param name="anim"></param>
+		<definition>
+			<control type="image">
+				<left>-84</left>
+				<top>-28</top>
+				<right>-84</right>
+				<bottom>-184</bottom>
+				<texture border="230,254,230,350" colordiffuse="$VAR[ShadowColor]">pp/lift.png</texture>
+				<visible>!Skin.HasSetting(passepartout.noshadow)</visible>
+				<animation type="Focus" reversible="false">
+					<effect type="fade" start="0" end="100" time="420" delay="120"/>
+				</animation>
+			</control>
+		</definition>
+	</include>
+	<include name="PP_LiftSmall">
+		<param name="anim"></param>
+		<definition>
+			<control type="image">
+				<left>-48</left>
+				<top>-18</top>
+				<right>-48</right>
+				<bottom>-100</bottom>
+				<texture border="124,134,124,196" colordiffuse="$VAR[ShadowColor]">pp/lift_s.png</texture>
+				<visible>!Skin.HasSetting(passepartout.noshadow)</visible>
+				<animation type="Focus" reversible="false">
+					<effect type="fade" start="0" end="100" time="420" delay="120"/>
+				</animation>
+			</control>
+		</definition>
+	</include>
+	<!-- Picture with fallback, no frame (inside a group of the picture size). params: art, title, aspect -->
+	<include name="PP_Picture">
+		<param name="aspect">scale</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<param name="font">body_22</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="wash_strong">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>12</left>
+				<top>12</top>
+				<right>12</right>
+				<bottom>12</bottom>
+				<font>$PARAM[font]</font>
+				<textcolor>ink2</textcolor>
+				<align>center</align>
+				<aligny>center</aligny>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>$PARAM[aspect]</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Watched: the museum's small ink dot, right-aligned under the print (10px) -->
+	<include name="PP_WatchedMarkers">
+		<control type="image">
+			<right>-4</right>
+			<bottom>-32</bottom>
+			<width>10</width>
+			<height>10</height>
+			<texture colordiffuse="ink">pp/dot.png</texture>
+			<visible>$EXP[ShowWatchedMarkers] + $EXP[ListItemWatched]</visible>
+		</control>
+		<!-- in progress: a hairline under the print, ink up to the resume point -->
+		<control type="progress">
+			<left>-4</left>
+			<right>-4</right>
+			<bottom>-28</bottom>
+			<height>2</height>
+			<texturebg colordiffuse="rule">common/white.png</texturebg>
+			<midtexture colordiffuse="ink">common/white.png</midtexture>
+			<info>ListItem.PercentPlayed</info>
+			<visible>$EXP[ShowWatchedMarkers] + ListItem.IsResumable</visible>
+		</control>
+	</include>
+
+	<!-- ========================================================== buttons -->
+	<!-- Words with the ink placard. The control is the visible block grown by 24 / 4 / 24 / 56 (the
+	     placard texture carries its own shadow), so put these in grouplists with itemgap = gap - 48 and
+	     place them 24px left / 4px up of where the block should start. Label is vertically centred in
+	     the 64px block (textoffsety 23 with aligny top). -->
+	<include name="PP_PlacardLook">
+		<param name="pad">32</param>
+		<param name="color">ink</param>
+		<definition>
+			<height>124</height>
+			<font>capw_22</font>
+			<textcolor>$PARAM[color]</textcolor>
+			<focusedcolor>$VAR[PaperColor]</focusedcolor>
+			<disabledcolor>disabled</disabledcolor>
+			<align>center</align>
+			<aligny>top</aligny>
+			<textoffsety>23</textoffsety>
+			<textoffsetx>$PARAM[pad]</textoffsetx>
+			<texturefocus border="74,0,74,0">pp/placard_btn.png</texturefocus>
+			<texturenofocus />
+			<pulseonselect>false</pulseonselect>
+		</definition>
+	</include>
+
+	<!-- params: id, left, top, width (auto ok), label, onclick, visible, onleft/onright/onup/ondown (no onback: Back must reach the window) -->
+	<include name="PP_ButtonPrimary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="left">0</param>
+		<param name="width">auto</param>
+		<param name="icon"></param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<include content="PP_PlacardLook"><param name="pad" value="68"/></include>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="PP_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="left">0</param>
+		<param name="width">auto</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onright">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<include content="PP_PlacardLook"><param name="pad" value="56"/></include>
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright>$PARAM[onright]</onright>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Small caps word (header filters, OSD text buttons): flat ink placard on focus, 44px tall.
+	     params: id, label, onclick, visible -->
+	<include name="PP_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>44</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<focusedcolor>$VAR[PaperColor]</focusedcolor>
+				<textoffsetx>16</textoffsetx>
+				<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- forked controls that pick a button look by include -->
+	<include name="PP_Tex_ButtonPrimary">
+		<texturefocus colordiffuse="ink">common/white.png</texturefocus>
+		<texturenofocus />
+	</include>
+	<include name="PP_Tex_ButtonPrimary_Round"><include>PP_Tex_ButtonPrimary</include></include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="PP_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>

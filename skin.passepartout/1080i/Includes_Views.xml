@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Library views and the generic list window (SPEC 6).
+	View ids: 50 List (M1, generic fallback) | 500 Poster Showcase | 501 Big Poster | 502 Wall |
+	503 Episodes | 504 Albums | 505 Big Album (M2). Every view gates itself with Container.Content.
+	Header bar (grouplist 9000) replaces Estuary's side blade; uses Kodi's media-window ids
+	(3 = sort by, 4 = sort order, 10 = watched filter in video windows).
+-->
+<includes>
+	<expression name="PP_ListHasPoster">!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(tvshow.poster))</expression>
+	<expression name="PP_ListHasArt">!String.IsEmpty(ListItem.Art(poster)) | !String.IsEmpty(ListItem.Art(thumb)) | [!String.IsEmpty(ListItem.Icon) + !String.StartsWith(ListItem.Icon,Default)]</expression>
+	<!-- ============================================================ View 50 -->
+	<!-- param edge: what Left / Right past the list's edges do (media windows: the Library card) -->
+	<include name="View_50_List">
+		<param name="edge">noop</param>
+		<definition>
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="list" id="50">
+				<left>page_margin</left>
+				<top>list_top</top>
+				<width>list_w</width>
+				<height>858</height>
+				<onup>9000</onup>
+				<!-- the views are in the header's view word (9327) and the Library card now (0.9.11) -->
+				<ondown>noop</ondown>
+				<onleft>$PARAM[edge]</onleft>
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<viewtype label="535">list</viewtype>
+				<include content="PP_ListLayout">
+					<param name="width" value="1080"/>
+					<param name="height" value="66"/>
+					<param name="list_id" value="50"/>
+				</include>
+			</control>
+			<include content="PP_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1196"/>
+				<param name="top" value="200"/>
+				<param name="height" value="858"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="$PARAM[edge]"/>
+			</include>
+			<!-- the item in focus as a small wall label: a square matted print (only when there is art), the
+			     title in Geist Light, caps meta, curator text -->
+			<control type="group">
+				<left>1300</left>
+				<top>210</top>
+				<width>500</width>
+				<animation effect="slide" start="0,0" end="0,-440" time="0" condition="!$EXP[PP_ListHasArt]">Conditional</animation>
+				<!-- posters hang as 2:3 prints (268x400); other art as the square print (0.9.5: posters were cropped square) -->
+				<control type="group">
+					<left>4</left>
+					<top>0</top>
+					<width>268</width>
+					<height>400</height>
+					<visible>$EXP[PP_ListHasPoster]</visible>
+					<include>PP_LiftSmall</include>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>268</width>
+						<height>400</height>
+						<aspectratio>scale</aspectratio>
+						<fadetime>120</fadetime>
+						<texture background="true">$VAR[ListItemArt]</texture>
+					</control>
+					<include>PP_Bevel</include>
+				</control>
+				<control type="group">
+					<left>4</left>
+					<top>0</top>
+					<width>400</width>
+					<height>400</height>
+					<visible>$EXP[PP_ListHasArt] + !$EXP[PP_ListHasPoster]</visible>
+					<include>PP_LiftSmall</include>
+					<control type="image">
+						<left>0</left>
+						<top>0</top>
+						<width>400</width>
+						<height>400</height>
+						<aspectratio>scale</aspectratio>
+						<fadetime>120</fadetime>
+						<texture background="true">$VAR[ListItemArt]</texture>
+					</control>
+					<include>PP_Bevel</include>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>440</top>
+					<width>500</width>
+					<height>58</height>
+					<font>ttl_48</font>
+					<textcolor>ink</textcolor>
+					<label>$INFO[ListItem.Label]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>506</top>
+					<width>500</width>
+					<height>28</height>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$INFO[ListItem.Label2]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>552</top>
+					<width>500</width>
+					<!-- five whole lines (pitch 34): a sixth ran into the View words -->
+					<height>170</height>
+					<font>body_24</font>
+					<textcolor>body</textcolor>
+					<label>$INFO[ListItem.Plot]</label>
+					<autoscroll delay="8000" time="3000" repeat="10000">true</autoscroll>
+				</control>
+			</control>
+		</control>
+		</definition>
+	</include>
+
+	<!-- ===================================================== library header bar -->
+
+	<!-- ========================================== generic list window (Minimal treatment) -->
+</includes>

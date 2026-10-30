@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library views (mockup PassepartoutMusic). MyMusicNav <views>504,50,505,508</views> (0.9.18: 50 before 505, so songs still open in the list).
+	  504 the hang   albums / artists: square prints in square mats on the line at y 470, focus third
+	                 (480 vs 280, gap 88); caption under the focused print
+	  505 the salon  albums / artists: an 8-column grid of small square prints (172), zoom + small lift
+	  50  list       songs, genres, years, roots, playlists, files (always valid)
+	Chrome: header words 9000 (tabs 9320-9323, sort 9324, view 9327 = the view picker 1156, count 9329,
+	Options 9328 = the Library card 1155). The now-playing line (PP_NowPlayingLine footer=true) sits bottom left
+	while music plays. Left / Right past the edges of a view open the Library card; 0.9.11 removed the footer
+	view words (they moved into the header).
+-->
+<includes>
+	<variable name="Music_PrintArt">
+		<value condition="!String.IsEmpty(ListItem.Art(thumb))">$INFO[ListItem.Art(thumb)]</value>
+		<value condition="!String.IsEmpty(ListItem.Art(album.thumb))">$INFO[ListItem.Art(album.thumb)]</value>
+		<value>$INFO[ListItem.Icon]</value>
+	</variable>
+	<variable name="Music_Title">
+		<value condition="Container.ListItem.IsParentFolder">Back</value>
+		<value condition="String.IsEqual(Container.ListItem.DBType,song) + !String.IsEmpty(Container.ListItem.Title)">$INFO[Container.ListItem.Title]</value>
+		<value>$INFO[Container.ListItem.Label]</value>
+	</variable>
+	<variable name="Music_Cap">
+		<value condition="Container.ListItem.IsParentFolder">Up one level</value>
+		<value condition="String.IsEqual(Container.ListItem.DBType,artist)">$INFO[Container.ListItem.Genre]</value>
+		<value condition="String.IsEqual(Container.ListItem.DBType,song)">$INFO[Container.ListItem.Artist]$INFO[Container.ListItem.Album, · ,]$INFO[Container.ListItem.Duration, · ,]</value>
+		<value>$INFO[Container.ListItem.Artist]$INFO[Container.ListItem.Year, · ,]$INFO[Container.ListItem.Genre, · ,]</value>
+	</variable>
+
+	<!-- picture + bevel inside a group of the picture size; ".." is a quiet Back card -->
+	<include name="Music_PrintBody">
+		<param name="font">body_22</param>
+		<definition>
+			<control type="group">
+				<visible>!ListItem.IsParentFolder</visible>
+				<include content="PP_Picture">
+					<param name="art" value="$VAR[Music_PrintArt]"/>
+					<param name="title" value="$VAR[Music_SongTitle]"/>
+					<param name="font" value="$PARAM[font]"/>
+				</include>
+				<include>PP_Bevel</include>
+			</control>
+			<control type="group">
+				<visible>ListItem.IsParentFolder</visible>
+				<control type="image">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<texture colordiffuse="rule_strong" border="2">pp/frame_1.png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<right>0</right>
+					<bottom>0</bottom>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<align>center</align>
+					<label>$LOCALIZE[31196]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ================================================================ 504 the hang -->
+	<!-- item origin = frame left; focused picture at 540 (list left -200), y: 280 at 330, 480 at 230 -->
+	<include name="Music_View_504">
+		<control type="group">
+			<visible>Control.IsVisible(504)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="fixedlist" id="504">
+				<left>-200</left>
+				<top>100</top>
+				<width>2300</width>
+				<height>940</height>
+				<orientation>horizontal</orientation>
+				<focusposition>2</focusposition>
+				<scrolltime tween="cubic" easing="out">380</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>
+				<onright>ActivateWindow(1155)</onright>
+				<viewtype label="31147">list</viewtype>
+				<visible>Container.Content(albums) | Container.Content(artists)</visible>
+				<itemlayout width="368" height="940">
+					<control type="group">
+						<left>4</left>
+						<top>230</top>
+						<width>280</width>
+						<height>280</height>
+						<include content="Music_PrintBody"><param name="font" value="body_20"/></include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="568" height="940">
+					<control type="group">
+						<left>4</left>
+						<top>130</top>
+						<width>480</width>
+						<height>480</height>
+						<include content="VidView_GrowIn"><param name="cx" value="244"/><param name="cy" value="370"/><param name="from" value="58"/></include>
+						<include content="PP_Lift"><param name="anim" value="VidView_LiftIn"/></include>
+						<include content="Music_PrintBody"><param name="font" value="body_26"/></include>
+					</control>
+				</focusedlayout>
+			</control>
+			<include content="Title_Music"><param name="left" value="540"/><param name="top" value="770"/></include>
+			<control type="label">
+				<left>540</left>
+				<top>866</top>
+				<width>1260</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[Music_Cap]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ 505 the salon -->
+	<!-- 8 columns: picture 172, pitch 216 x 256; panel 98..1826 x 118..886 -->
+	<include name="Music_View_505">
+		<control type="group">
+			<visible>Control.IsVisible(505)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="panel" id="505">
+				<left>98</left>
+				<top>118</top>
+				<width>1728</width>
+				<height>768</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">300</scrolltime>
+				<preloaditems>1</preloaditems>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<!-- Left past the first column / Right past the last one: the Library card -->
+				<onleft>ActivateWindow(1155)</onleft>
+				<onright>ActivateWindow(1155)</onright>
+				<viewtype label="31149">panel</viewtype>
+				<onfocus condition="!Skin.HasSetting(passepartout.vi.music) + !Container.Content(songs)">Container.SetViewMode(504)</onfocus>
+				<onfocus>Skin.SetBool(passepartout.vi.music)</onfocus>
+				<!-- 0.9.18: songs too (each song's cover; the caption reads the title, not Kodi's "01. Artist - Title") -->
+				<visible>Container.Content(albums) | Container.Content(artists) | Container.Content(songs)</visible>
+				<itemlayout width="216" height="256">
+					<control type="group">
+						<left>22</left>
+						<top>22</top>
+						<width>172</width>
+						<height>172</height>
+						<include content="Music_PrintBody"><param name="font" value="body_20"/></include>
+					</control>
+				</itemlayout>
+				<focusedlayout width="216" height="256">
+					<control type="group">
+						<left>22</left>
+						<top>22</top>
+						<width>172</width>
+						<height>172</height>
+						<animation type="Focus" reversible="false" condition="!Skin.HasSetting(passepartout.reducemotion)">
+							<effect type="zoom" start="100" end="112" center="108,108" time="260" tween="cubic" easing="out"/>
+						</animation>
+						<animation type="Conditional" condition="Skin.HasSetting(passepartout.reducemotion) + Control.HasFocus(505)">
+							<effect type="zoom" start="100" end="112" center="108,108" time="0" tween="cubic" easing="out"/>
+						</animation>
+						<animation type="Unfocus" condition="!Skin.HasSetting(passepartout.reducemotion)">
+							<effect type="zoom" start="112" end="100" center="108,108" time="160"/>
+						</animation>
+						<control type="image">
+							<left>-24</left>
+							<top>-12</top>
+							<right>-24</right>
+							<bottom>-40</bottom>
+							<texture border="64,48,64,76" colordiffuse="$VAR[ShadowColor]">pp/lift_xs.png</texture>
+							<visible>Control.HasFocus(505) + !Skin.HasSetting(passepartout.noshadow)</visible>
+						</control>
+						<include content="Music_PrintBody"><param name="font" value="body_20"/></include>
+					</control>
+				</focusedlayout>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>900</top>
+				<width>1100</width>
+				<height>50</height>
+				<font>ttl_40</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[Music_Title]</label>
+			</control>
+			<control type="label">
+				<left>120</left>
+				<top>952</top>
+				<width>1100</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[Music_Cap]</label>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ 508 track list -->
+	<!-- 0.9.18: songs as a printed programme: a caps column head (No. / Title / Artist / Album / Year / Time) over
+	     a rule, rows of 66 across the page (120..1800), the focused row the ink placard (as the list). The number
+	     is the song's own track number (a row index would count ".."). -->
+	<variable name="Music_SongTitle">
+		<value condition="ListItem.IsParentFolder">Back</value>
+		<value condition="!String.IsEmpty(ListItem.Title)">$INFO[ListItem.Title]</value>
+		<value>$INFO[ListItem.Label]</value>
+	</variable>
+	<include name="Music_TrackCells">
+		<param name="ink">ink</param>
+		<param name="ink2">ink2</param>
+		<param name="scroll">false</param>
+		<definition>
+			<control type="label">
+				<left>24</left>
+				<top>0</top>
+				<width>60</width>
+				<height>66</height>
+				<font>mono_22</font>
+				<textcolor>$PARAM[ink2]</textcolor>
+				<label>[UPPERCASE]$INFO[ListItem.TrackNumber][/UPPERCASE]</label>
+				<visible>!ListItem.IsPlaying</visible>
+			</control>
+			<control type="image">
+				<left>28</left>
+				<centertop>50%</centertop>
+				<width>10</width>
+				<height>10</height>
+				<texture colordiffuse="$PARAM[ink]">pp/dot.png</texture>
+				<visible>ListItem.IsPlaying</visible>
+			</control>
+			<control type="label">
+				<left>100</left>
+				<top>0</top>
+				<width>600</width>
+				<height>66</height>
+				<font>body_28</font>
+				<textcolor>$PARAM[ink]</textcolor>
+				<selectedcolor>$PARAM[ink]</selectedcolor>
+				<scroll>$PARAM[scroll]</scroll>
+				<label>$VAR[Music_SongTitle]</label>
+			</control>
+			<control type="label">
+				<left>724</left>
+				<top>0</top>
+				<width>380</width>
+				<height>66</height>
+				<font>body_24</font>
+				<textcolor>$PARAM[ink2]</textcolor>
+				<label>$INFO[ListItem.Artist]</label>
+			</control>
+			<control type="label">
+				<left>1128</left>
+				<top>0</top>
+				<width>340</width>
+				<height>66</height>
+				<font>body_24</font>
+				<textcolor>$PARAM[ink2]</textcolor>
+				<label>$INFO[ListItem.Album]</label>
+			</control>
+			<control type="label">
+				<left>1492</left>
+				<top>0</top>
+				<width>70</width>
+				<height>66</height>
+				<font>num_22</font>
+				<textcolor>$PARAM[ink2]</textcolor>
+				<label>$INFO[ListItem.Year]</label>
+			</control>
+			<control type="label">
+				<right>24</right>
+				<top>0</top>
+				<width>100</width>
+				<height>66</height>
+				<align>right</align>
+				<font>num_22</font>
+				<textcolor>$PARAM[ink2]</textcolor>
+				<label>$INFO[ListItem.Duration]</label>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_TrackHead">
+		<param name="left">0</param>
+		<param name="width">60</param>
+		<param name="align">left</param>
+		<definition>
+			<control type="label">
+				<left>$PARAM[left]</left>
+				<top>0</top>
+				<width>$PARAM[width]</width>
+				<height>28</height>
+				<font>cap_20</font>
+				<textcolor>ink2</textcolor>
+				<align>$PARAM[align]</align>
+				<label>$PARAM[label]</label>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_View_508">
+		<control type="group">
+			<visible>Control.IsVisible(508)</visible>
+			<include>Anim_VisibleFade</include>
+			<control type="group">
+				<left>120</left>
+				<top>132</top>
+				<width>1680</width>
+				<include content="Music_TrackHead"><param name="left" value="24"/><param name="label" value="$LOCALIZE[31268]"/></include>
+				<include content="Music_TrackHead"><param name="left" value="100"/><param name="width" value="600"/><param name="label" value="$LOCALIZE[369]"/></include>
+				<include content="Music_TrackHead"><param name="left" value="724"/><param name="width" value="380"/><param name="label" value="$LOCALIZE[557]"/></include>
+				<include content="Music_TrackHead"><param name="left" value="1128"/><param name="width" value="340"/><param name="label" value="$LOCALIZE[558]"/></include>
+				<include content="Music_TrackHead"><param name="left" value="1492"/><param name="width" value="70"/><param name="label" value="$LOCALIZE[562]"/></include>
+				<include content="Music_TrackHead"><param name="left" value="1456"/><param name="width" value="200"/><param name="align" value="right"/><param name="label" value="$LOCALIZE[31269]"/></include>
+				<control type="image">
+					<left>0</left>
+					<top>40</top>
+					<width>1680</width>
+					<height>1</height>
+					<texture colordiffuse="rule">common/white.png</texture>
+				</control>
+			</control>
+			<control type="list" id="508">
+				<left>120</left>
+				<top>174</top>
+				<width>1680</width>
+				<height>726</height>  <!-- 11 rows of 66: ends at 900, above the now-playing line -->
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>
+				<onright>ActivateWindow(1155)</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<preloaditems>1</preloaditems>
+				<viewtype label="31267">list</viewtype>
+				<visible>Container.Content(songs)</visible>
+				<itemlayout width="1680" height="66">
+					<include content="Dlg_RowRule"><param name="width" value="1680"/></include>
+					<include content="Music_TrackCells"/>
+				</itemlayout>
+				<focusedlayout width="1680" height="66">
+					<include content="Dlg_RowRule"><param name="width" value="1680"/></include>
+					<control type="group">
+						<visible>!Control.HasFocus(508)</visible>
+						<include content="Music_TrackCells"/>
+					</control>
+					<control type="group">
+						<visible>Control.HasFocus(508)</visible>
+						<control type="image">
+							<left>0</left>
+							<top>0</top>
+							<width>1680</width>
+							<height>66</height>
+							<texture colordiffuse="ink">common/white.png</texture>
+						</control>
+						<include content="Music_TrackCells">
+							<param name="ink" value="$VAR[PaperColor]"/>
+							<param name="ink2" value="$VAR[PaperColor]"/>
+							<param name="scroll" value="true"/>
+						</include>
+					</control>
+				</focusedlayout>
+			</control>
+		</control>
+	</include>
+
+	<!-- ================================================================ header + footer -->
+	<variable name="Music_SortWord">
+		<value condition="String.IsEqual(Container.SortMethod,Date added) + Container.SortDirection(descending)">Recently acquired</value>
+		<value condition="String.IsEqual(Container.SortMethod,Date added)">First acquired</value>
+		<value condition="Container.SortDirection(descending) + [String.IsEqual(Container.SortMethod,Title) | String.IsEqual(Container.SortMethod,Name) | String.IsEqual(Container.SortMethod,Album) | String.IsEqual(Container.SortMethod,Artist)]">Z to A</value>
+		<value condition="String.IsEqual(Container.SortMethod,Title) | String.IsEqual(Container.SortMethod,Name) | String.IsEqual(Container.SortMethod,Album) | String.IsEqual(Container.SortMethod,Artist)">A to Z</value>
+		<value condition="String.IsEqual(Container.SortMethod,Year) + Container.SortDirection(descending)">Newest first</value>
+		<value condition="String.IsEqual(Container.SortMethod,Year)">Oldest first</value>
+		<value condition="!String.IsEmpty(Container.SortMethod)">By $INFO[Container.SortMethod]</value>
+	</variable>
+	<variable name="Music_SectionWord">
+		<value condition="!$EXP[Music_AtTabRoot] + !String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>Music</value>
+	</variable>
+
+	<include name="Music_PPHeader">
+		<!-- tabs swap the node with ReplaceWindow(Music,<node>,return): the tab becomes the start folder, so one Back
+		     leaves for Home from any tab (Container.Update made Back walk every tab you had visited; 0.9.5) -->
+		<control type="grouplist" id="9000">
+			<left>120</left>
+			<top>56</top>
+			<width>1400</width>
+			<height>44</height>
+			<orientation>horizontal</orientation>
+			<itemgap>20</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup>noop</onup>
+			<ondown>SetFocus(50)</ondown>
+			<onleft>noop</onleft>
+			<onright>noop</onright>
+			<onback>SetFocus(50)</onback>
+			<control type="button" id="9319">
+				<top>10</top>
+				<width max="520">auto</width>
+				<height>34</height>
+				<font>cap_20</font>
+				<textcolor>ink</textcolor>
+				<disabledcolor>ink</disabledcolor>
+				<textoffsetx>0</textoffsetx>
+				<aligny>top</aligny>
+				<texturefocus border="0,0,0,2" colordiffuse="ink">pp/underline.png</texturefocus>
+				<texturenofocus border="0,0,0,2" colordiffuse="ink">pp/underline.png</texturenofocus>
+				<label>$VAR[Music_SectionWord]</label>
+				<enable>false</enable>
+			</control>
+			<control type="image" id="9318">
+				<width>16</width>
+				<height>44</height>
+				<texture />
+			</control>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9320"/>
+				<param name="color" value="$VAR[Music_TabText_Albums]"/>
+				<param name="label" value="Albums"/>
+				<param name="onclick" value="ReplaceWindow(Music,musicdb://albums/,return)"/>
+				<param name="onclick2" value="noop"/>
+			</include>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9321"/>
+				<param name="color" value="$VAR[Music_TabText_Artists]"/>
+				<param name="label" value="Artists"/>
+				<param name="onclick" value="ReplaceWindow(Music,musicdb://artists/,return)"/>
+				<param name="onclick2" value="noop"/>
+			</include>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9322"/>
+				<param name="color" value="$VAR[Music_TabText_Songs]"/>
+				<param name="label" value="Songs"/>
+				<param name="onclick" value="ReplaceWindow(Music,musicdb://songs/,return)"/>
+				<param name="onclick2" value="noop"/>
+			</include>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9323"/>
+				<param name="color" value="$VAR[Music_TabText_Genres]"/>
+				<param name="label" value="Genres"/>
+				<param name="onclick" value="ReplaceWindow(Music,musicdb://genres/,return)"/>
+				<param name="onclick2" value="noop"/>
+			</include>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9324"/>
+				<param name="color" value="ink2"/>
+				<param name="label" value="$VAR[Music_SortWord]"/>
+				<param name="onclick" value="SendClick(3)"/>
+				<param name="onclick2" value="noop"/>
+				<param name="visible" value="Control.IsEnabled(3) + !String.IsEmpty(Container.SortMethod)"/>
+			</include>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9327"/>
+				<param name="color" value="ink2"/>
+				<param name="label" value="$VAR[PP_ViewName]"/>
+				<param name="onclick" value="ActivateWindow(1156)"/>
+				<param name="onclick2" value="noop"/>
+				<param name="visible" value="Integer.IsGreater(Container.ViewCount,1)"/>
+			</include>
+			<control type="label" id="9329">
+				<left>16</left>
+				<width>auto</width>
+				<height>44</height>
+				<font>num_22</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[Container.NumItems]</label>
+			</control>
+			<include content="VidView_HeaderWord">
+				<param name="id" value="9328"/>
+				<param name="color" value="ink2"/>
+				<param name="label" value="Options"/>
+				<param name="onclick" value="ActivateWindow(1155)"/>
+				<param name="onclick2" value="noop"/>
+			</include>
+		</control>
+		<include>PP_Clock</include>
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>PP_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>PP_Hidden</include>
+		</control>
+	</include>
+
+	<!-- ================================================================== 50 List -->
+	<include name="Music_View_50">
+		<control type="group">
+			<visible>Control.IsVisible(50)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="list" id="50">
+				<left>page_margin</left>
+				<top>music_list_top</top>
+				<width>list_w</width>
+				<height>music_list_h</height>
+				<onup>9000</onup>
+				<!-- the views are in the header's view word and the Library card (0.9.11) -->
+				<ondown>noop</ondown>
+				<onleft>ActivateWindow(1155)</onleft>
+				<onright>60</onright>
+				<pagecontrol>60</pagecontrol>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<viewtype label="535">list</viewtype>
+				<include content="Music_SongLayout">
+					<param name="condition" value="Container.Content(songs)"/>
+				</include>
+				<include content="Music_RowLayout">
+					<param name="condition" value="!Container.Content(songs)"/>
+				</include>
+			</control>
+			<include content="PP_Scrollbar">
+				<param name="id" value="60"/>
+				<param name="left" value="1196"/>
+				<param name="top" value="160"/>
+				<param name="height" value="792"/>
+				<param name="onleft" value="50"/>
+				<param name="onright" value="ActivateWindow(1155)"/>
+			</include>
+			<include>Music_ListPanel</include>
+		</control>
+	</include>
+</includes>

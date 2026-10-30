@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music OSD: opens over Now playing (MusicVisualisation.xml). The hairline progress between the times,
+	and the transport words on the right (the ink placard on focus), on the paper of the playing cover.
+	Kodi id contract (Estuary Omega MusicOSD.xml): defaultcontrol 602 (Stop 603 when pause is not
+	possible), 87 seek stepper (hidden), 200 = the row: 600 previous, 602 play/pause, 607 next,
+	70054 shuffle, 70053 repeat, 70051 queue, 603 stop.
+	Passe-partout ids: 70060 Visualiser / The print (while a visualisation add-on is set in Kodi), 70061 Presets
+	(Visualiser mode + Visualisation.HasPresets: Kodi's preset list in DialogSelect; it has focus when the OSD opens
+	over a visualiser with presets, so OK, OK opens the list).
+	Focus map: Left/Right along the row, Up -> 87 (Left/Right seek), Down -> back. Back closes (Kodi).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<onload condition="Skin.HasSetting(passepartout.np.viz) + Visualisation.Enabled + Visualisation.HasPresets">SetFocus(70061)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>PP_PlayerPaperOnload</include>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!Window.IsVisible(musicplaylist)</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="OSD_PPBar">
+				<param name="top" value="824"/>
+				<param name="titlew" value="560"/>
+				<param name="title" value="false"/>
+			</include>
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>PP_Hidden</include>
+				<onup>noop</onup>
+				<ondown>200</ondown>
+				<onleft>StepBack</onleft>
+				<onright>StepForward</onright>
+			</control>
+			<control type="group">
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+				<control type="progress">
+					<left>300</left>
+					<top>870</top>
+					<width>1320</width>
+					<height>3</height>
+					<info>Player.Progress</info>
+				</control>
+				<control type="label">
+					<left>300</left>
+					<top>826</top>
+					<width>1320</width>
+					<height>28</height>
+					<align>center</align>
+					<font>cap_20</font>
+					<textcolor>ink2</textcolor>
+					<label>$LOCALIZE[31202]</label>
+				</control>
+			</control>
+			<control type="grouplist" id="200">
+				<left>0</left>
+				<top>908</top>
+				<width>1840</width>
+				<height>124</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>-44</itemgap>
+				<onup>87</onup>
+				<ondown>noop</ondown>
+				<include content="OSD_PPWord">
+					<param name="id" value="600"/>
+					<param name="label" value="Previous"/>
+					<param name="width" value="221"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="602"/>
+					<param name="label" value="$VAR[OSD_PPPlayLabel]"/>
+					<param name="width" value="170"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="visible" value="Player.PauseEnabled"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="607"/>
+					<param name="label" value="Next"/>
+					<param name="width" value="149"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="603"/>
+					<param name="label" value="Stop"/>
+					<param name="width" value="151"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="70054"/>
+					<param name="label" value="$VAR[Music_ShuffleWord]"/>
+					<param name="width" value="267"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="70053"/>
+					<param name="label" value="$VAR[Music_RepeatWord]"/>
+					<param name="width" value="256"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="70051"/>
+					<param name="label" value="Queue"/>
+					<param name="width" value="171"/>
+					<param name="onclick" value="ActivateWindow(musicplaylist)"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="70060"/>
+					<param name="label" value="$VAR[Music_VizWord]"/>
+					<param name="width" value="248"/>
+					<param name="onclick" value="Skin.ToggleSetting(passepartout.np.viz)"/>
+					<param name="visible" value="Visualisation.Enabled"/>
+				</include>
+				<include content="OSD_PPWord">
+					<param name="id" value="70061"/>
+					<param name="label" value="$LOCALIZE[31261]"/>
+					<param name="width" value="204"/>
+					<param name="onclick" value="ActivateWindow(visualisationpresetlist)"/>
+					<param name="visible" value="$EXP[Music_VizPresets]"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>
