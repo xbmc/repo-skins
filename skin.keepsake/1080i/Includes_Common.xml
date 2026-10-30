@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Keepsake common pieces (names kept from the Majan engine so every window keeps working; looks are the album's):
+	  KS_Background      the open album (paper spread)          KS_Rule / KS_TopRule   dotted pen rule / none
+	  KS_Clock           orange LCD clock top right + a label    KS_PageHeader/KS_TopBar handwritten page title + label line
+	  KS_FocusFrame*     a hand-drawn pen frame                 KS_Artwork             photo + blank-print fallback
+	  KS_WatchedMarkers  date stamp (watched) / pen progress (in progress) on a poster
+	  KS_ButtonPrimary/Secondary  handwritten words, pen underline on focus
+	  KS_SubNavButton    DM Mono small caps word, tape on focus  KS_Hidden              off-screen template controls
+	Album pieces (prints, stamps, LCD, tilts) are generated: Includes_Album.xml (_src/make_album.py).
+-->
+<includes>
+	<!-- ============================================================ page -->
+	<include name="KS_Background">
+		<include>KS_Page</include>
+	</include>
+
+	<!-- dotted pen rule. params: top, left, width, color -->
+	<include name="KS_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">rule</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>4</height>
+				<aspectratio>center</aspectratio>
+				<texture colordiffuse="$PARAM[color]">ks/dots_h.png</texture>
+			</control>
+		</definition>
+	</include>
+	<!-- the album has no header rule -->
+	<include name="KS_TopRule">
+		<control type="group">
+			<visible>false</visible>
+		</control>
+	</include>
+
+	<!-- LCD clock, top right (mockups: right 112, top 64, DSEG 34) + DM Mono label under it.
+	     param label: "now" on Home and info pages, the date on library pages -->
+	<include name="KS_Clock">
+		<param name="label">$INFO[System.Date(DDD)] $INFO[System.Date(d)] $INFO[System.Date(mmmm)]</param>
+		<definition>
+			<include content="KS_LCD34">
+				<param name="label" value="$INFO[System.Time(hh:mm)]"/>
+				<param name="left" value="1308"/>
+				<param name="top" value="59"/>
+				<param name="width" value="500"/>
+				<param name="align" value="right"/>
+			</include>
+			<control type="label">
+				<left>1208</left>
+				<top>110</top>
+				<width>600</width>
+				<height>27</height>
+				<align>right</align>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$INFO[System.Time(xx),,  ·  ]$PARAM[label]</label>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Page header: handwritten title (Caveat 92) + DM Mono label line (mockups: title top 44, line top 160).
+	     params: title, sub (label line), index (unused, kept for engine calls) -->
+	<include name="KS_PageHeader">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="label">
+				<left>112</left>
+				<top>33</top>
+				<width>1180</width>
+				<height>118</height>
+				<font>hand_92</font>
+				<textcolor>ink</textcolor>
+				<label>[LOWERCASE]$PARAM[title][/LOWERCASE]</label>
+			</control>
+			<control type="label">
+				<left>118</left>
+				<top>161</top>
+				<width>1180</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$PARAM[sub]</label>
+			</control>
+		</definition>
+	</include>
+
+	<include name="KS_TopBar">
+		<param name="index"></param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="KS_PageHeader">
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include>KS_Clock</include>
+		</definition>
+	</include>
+
+	<!-- ===================================================== focus frames -->
+	<!-- a hand-drawn pen frame around a focused thing; put inside a group sized to the item -->
+	<include name="KS_FocusFrame">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>-14</left>
+				<top>-12</top>
+				<right>-14</right>
+				<bottom>-14</bottom>
+				<texture border="34" colordiffuse="ink">ks/pen_box.png</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="KS_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<include content="KS_FocusFrame">
+				<param name="visible" value="$PARAM[visible]"/>
+			</include>
+		</definition>
+	</include>
+
+	<!-- ========================================================== posters -->
+	<!-- photo with a blank-print fallback. params: art, title -->
+	<include name="KS_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask_round"></param>
+		<param name="mask_square"></param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<definition>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="paper_raised">common/white.png</texture>
+			</control>
+			<control type="textbox">
+				<left>12</left>
+				<right>12</right>
+				<top>10</top>
+				<height>120</height>
+				<font>hand_30</font>
+				<textcolor>ink2</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<fadetime>200</fadetime>
+				<texture background="true">$PARAM[art]</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== buttons -->
+	<!-- handwritten action words (mockup "play it again" / "trailer"): params id, left, top, width, label,
+	     onclick, visible, onup/ondown/onleft/onright (+ _if/_then), icon (ignored) -->
+	<include name="KS_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onleft_if">false</param>
+		<param name="onleft_then"></param>
+		<param name="onright"></param>
+		<param name="onright_if">false</param>
+		<param name="onright_then"></param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<label>$PARAM[label]</label>
+				<font>hand_46</font>
+				<include>KS_PenWordLook</include>
+				<visible>$PARAM[visible]</visible>
+				<onclick>$PARAM[onclick]</onclick>
+				<onclick>$PARAM[onclick2]</onclick>
+				<onup>$PARAM[onup]</onup>
+				<ondown>$PARAM[ondown]</ondown>
+				<onleft condition="$PARAM[onleft_if]">$PARAM[onleft_then]</onleft>
+				<onleft>$PARAM[onleft]</onleft>
+				<onright condition="$PARAM[onright_if]">$PARAM[onright_then]</onright>
+				<onright>$PARAM[onright]</onright>
+			</control>
+		</definition>
+	</include>
+
+	<!-- DM Mono small caps word (library / OSD option words): tape strip + dark ink on focus. -->
+	<include name="KS_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>subnav_h</height>
+				<font>lbl_20</font>
+				<textcolor>label_hi</textcolor>
+				<focusedcolor>on_tape</focusedcolor>
+				<textoffsetx>16</textoffsetx>
+				<include>KS_TapeRowTexture</include>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="KS_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>

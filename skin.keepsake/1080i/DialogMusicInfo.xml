@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Album / artist / song information as an album spread: the cover as a big instant photo on the left page with
+	your history with it in pen; the title in Fraunces, the artist in pen, the story, the words and the tracklist
+	(or discography) on the right page. Kodi also loads this file for songinformation (CGUIDialogSongInfo).
+	Kodi id contract (Estuary Omega DialogMusicInfo.xml, GUIDialogMusicInfo.cpp / GUIDialogSongInfo.cpp):
+	  50 list Kodi fills (album -> songs, artist -> discography; OK on an album opens its info)
+	  6 refresh, 8 play (hidden for artists), 12 artist info / album info (hidden for artists).
+	  7 (user rating) and 10 (choose art) are not shipped. Kodi hides 8 / 12 itself.
+	Keepsake ids: 9000 words (default), 9011 shuffle, 9012 play all (artist). Down = list 50; Up from its top = words.
+	Back closes (Kodi).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<include>KS_Page</include>
+		<!-- left page -->
+		<control type="label">
+			<left>118</left>
+			<top>85</top>
+			<width>820</width>
+			<height>27</height>
+			<font>lbl_20</font>
+			<textcolor>label</textcolor>
+			<label>music  ›  [COLOR label_hi]$INFO[ListItem.Artist]$INFO[ListItem.Year,  ·  ,][/COLOR]</label>
+		</control>
+		<control type="group">
+			<left>200</left>
+			<top>170</top>
+			<width>504</width>
+			<height>586</height>
+			<visible>!$EXP[Music_InfoIsArtist]</visible>
+			<include content="KS_TiltFixed"><param name="angle" value="1.4"/></include>
+			<include content="KS_Print_InstantL">
+				<param name="art" value="$VAR[Music_InfoArt]"/>
+				<param name="title" value="$VAR[Music_InfoTitle]"/>
+				<param name="caption" value="$INFO[ListItem.Album]"/>
+				<param name="corners" value="false"/>
+				<param name="lift" value="true"/>
+				<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+				<param name="stamped" value="!String.IsEmpty(ListItem.LastPlayed)"/>
+			</include>
+		</control>
+		<control type="group">
+			<left>200</left>
+			<top>200</top>
+			<width>492</width>
+			<height>492</height>
+			<visible>$EXP[Music_InfoIsArtist]</visible>
+			<include content="KS_TiltFixed"><param name="angle" value="-1.2"/></include>
+			<include content="KS_Print_SquareL">
+				<param name="art" value="$INFO[ListItem.Art(thumb)]"/>
+				<param name="title" value="$VAR[Music_InfoTitle]"/>
+				<param name="lift" value="true"/>
+			</include>
+		</control>
+		<control type="textbox">
+			<left>196</left>
+			<top>800</top>
+			<width>700</width>
+			<height>110</height>
+			<font>hand_44</font>
+			<textcolor>ink</textcolor>
+			<label>$VAR[Music_InfoHistory]</label>
+		</control>
+		<control type="label">
+			<left>200</left>
+			<top>918</top>
+			<width>700</width>
+			<height>27</height>
+			<font>lbln_20</font>
+			<textcolor>label</textcolor>
+			<label>$INFO[ListItem.Genre]$INFO[ListItem.Year,  ·  ,]$INFO[ListItem.Property(Album_Label),  ·  ,]</label>
+		</control>
+
+		<!-- right page -->
+		<include content="KS_Clock"><param name="label" value="now"/></include>
+		<control type="button" id="8"><include>KS_Hidden</include></control>
+		<control type="button" id="12"><include>KS_Hidden</include></control>
+		<control type="button" id="6"><include>KS_Hidden</include></control>
+		<control type="textbox">
+			<left>1060</left>
+			<top>150</top>
+			<width>760</width>
+			<height>154</height>  <!-- two lines + descenders; 166 let the tops of a third line show (long album titles) -->
+			<font>ttl_72</font>
+			<textcolor>cream</textcolor>
+			<label>$VAR[Music_InfoTitle]</label>
+		</control>
+		<control type="label">
+			<left>1064</left>
+			<top>318</top>
+			<width>760</width>
+			<height>70</height>
+			<font>hand_52</font>
+			<textcolor>ink</textcolor>
+			<label>$VAR[Music_InfoBy]</label>
+		</control>
+		<control type="textbox">
+			<left>1066</left>
+			<top>402</top>
+			<width>745</width>
+			<height>124</height>
+			<font>body_26</font>
+			<label>$VAR[Music_InfoDescription]</label>
+			<autoscroll delay="9000" time="3000" repeat="10000">true</autoscroll>
+		</control>
+		<control type="grouplist" id="9000">
+			<left>1060</left>
+			<top>540</top>
+			<width>800</width>
+			<height>92</height>
+			<orientation>horizontal</orientation>
+			<itemgap>40</itemgap>
+			<onup>noop</onup>
+			<ondown>50</ondown>
+			<control type="button" id="9008">
+				<include>VidInfo_PrimaryLook</include>
+				<label>$LOCALIZE[31316]</label>
+				<onclick>SendClick(8)</onclick>
+				<visible>Control.IsVisible(8)</visible>
+			</control>
+			<control type="button" id="9012">
+				<include>VidInfo_PrimaryLook</include>
+				<label>$LOCALIZE[31317]</label>
+				<onclick>PlayMedia(musicdb://artists/$INFO[ListItem.DBID]/,isdir)</onclick>
+				<visible>$EXP[Music_InfoIsArtist] + Integer.IsGreater(ListItem.DBID,0)</visible>
+			</control>
+			<control type="button" id="9011">
+				<include>VidInfo_SecondaryLook</include>
+				<label>$LOCALIZE[31318]</label>
+				<onclick>$VAR[Music_InfoShuffleAction]</onclick>
+				<onclick>PlayerControl(RandomOn)</onclick>
+				<visible>[$EXP[Music_InfoIsAlbum] | $EXP[Music_InfoIsArtist]] + Integer.IsGreater(ListItem.DBID,0)</visible>
+			</control>
+			<control type="button" id="9013">
+				<include>VidInfo_SecondaryLook</include>
+				<label>$VAR[Music_InfoOtherWord]</label>
+				<onclick>SendClick(12)</onclick>
+				<visible>Control.IsVisible(12)</visible>
+			</control>
+			<control type="button" id="9006">
+				<include>VidInfo_SecondaryLook</include>
+				<label>$LOCALIZE[31319]</label>
+				<onclick>SendClick(6)</onclick>
+				<visible>Control.IsVisible(6)</visible>
+			</control>
+		</control>
+		<control type="group">
+			<left>1064</left>
+			<top>654</top>
+			<visible>Integer.IsGreater(Container(50).NumItems,0)</visible>
+			<control type="label">
+				<left>4</left>
+				<top>0</top>
+				<width>740</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$VAR[Music_InfoListCaption]</label>
+			</control>
+			<control type="list" id="50">
+				<left>12</left>
+				<top>36</top>
+				<width>732</width>
+				<height>360</height>
+				<onup>9000</onup>
+				<ondown>noop</ondown>
+				<onleft>noop</onleft>
+				<onright>noop</onright>
+				<scrolltime tween="cubic" easing="out">200</scrolltime>
+				<include content="KS_ListLayout">
+					<param name="width" value="732"/>
+					<param name="height" value="60"/>
+					<param name="list_id" value="50"/>
+					<param name="label" value="$VAR[Music_InfoRowLabel]"/>
+					<param name="label2" value="$VAR[Music_InfoRowLabel2]"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,1150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video library views (MyVideoNav). Mockups: KeepsakeDiary.html (520), KeepsakeUnwatched.html (the print walls).
+	  520 the diary     films you watched, newest first (custom window 1161, its own content list): a vertical
+	                    album timeline, prints alternating left / right of the gutter, date stamps, gutter dates,
+	                    handwritten notes, month dividers written in the gutter (static overlay, see below)
+	  521 prints        any other film / set / music video list: a wall of poster prints, 6 across
+	  522 series        tv shows: poster prints with "4 of 10 watched"
+	  523 seasons       a row of season prints under the show's title
+	  524 episodes      a strip of small prints stamped with when you watched each, the focused episode below
+	                    (0.9.15: films, sets, series, music videos too, as poster prints six to the strip)
+	  50  list          everything else (genres, years, files): rows on the left page, the print on the right
+	Header (VidView_Header): handwritten page title, DM Mono label line, option words (grouplist 9000),
+	LCD clock. Diary / films: the other page's word ("the unwatched" / "the diary").
+	Hidden Kodi buttons 3 (sort by) and 4 (sort order) are clicked by the option words.
+	Diary month dividers: the fixedlist keeps focus on slot 1 (slot 0 for the first item), so the screen slot of
+	ListItemNoWrap(k) is known; hidden labels 5210-5219 hold each slot's "Month Year" and a divider is shown where
+	two neighbours differ (String.IsEqual(Control.GetLabel(a),Control.GetLabel(b))), hidden while scrolling.
+-->
+<includes>
+	<!-- ================================================================== expressions -->
+	<expression name="VidView_IsDiary">Window.IsActive(1161)</expression>
+	<expression name="VidView_IsFilms">Container.Content(movies) | Container.Content(sets) | Container.Content(musicvideos)</expression>
+	<expression name="VidView_DiarySV">!Skin.HasSetting(keepsake.notime) + String.IsEqual(Container(9174).ListItem.DBID,Container(520).ListItem.DBID) + !String.IsEmpty(Container(9174).ListItem.Property(lastplayed))</expression>
+	<expression name="VidView_DiaryLongTitle">Integer.IsGreater(Container(5291).NumPages,1)</expression>
+	<expression name="VidView_EpLongTitle">Integer.IsGreater(Container(5292).NumPages,1)</expression>
+	<expression name="VidView_IsLibraryVideo">Container.Content(movies) | Container.Content(sets) | Container.Content(tvshows) | Container.Content(seasons) | Container.Content(episodes) | Container.Content(musicvideos)</expression>
+
+	<!-- ================================================================== header -->
+	<variable name="VidView_Title">
+		<value condition="$EXP[VidView_IsDiary]">the diary</value>
+		<value condition="String.StartsWith(Container.FolderPath,videodb://movies/titles)">films</value>
+		<value condition="String.StartsWith(Container.FolderPath,videodb://tvshows/titles/) + Container.Content(tvshows)">series</value>
+		<value condition="Container.Content(seasons) | Container.Content(episodes)">$INFO[ListItem.TVShowTitle]</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>$LOCALIZE[3]</value>
+	</variable>
+	<variable name="VidView_LabelLine">
+		<value condition="$EXP[VidView_IsDiary]">films  ·  $INFO[Container.NumItems] watched  ·  [COLOR label_hi]newest first[/COLOR]</value>
+		<value condition="Container.Content(episodes)">$INFO[Container.FolderName,,  ·  ]$VAR[VidView_EpisodesN]</value>
+		<value condition="Container.Content(seasons)">$VAR[VidView_SeasonsN]</value>
+		<value condition="Container.Content(tvshows)">$INFO[Container.NumItems] series</value>
+		<value condition="Container.Content(movies)">$VAR[VidView_FilmsN]</value>
+		<value condition="Integer.IsEqual(Container.NumItems,1)">$INFO[Container.NumItems] item</value>
+		<value>$INFO[Container.NumItems] items</value>
+	</variable>
+	<variable name="VidView_FilmsN">
+		<value condition="Integer.IsEqual(Container.NumItems,1)">1 film</value>
+		<value>$INFO[Container.NumItems] films</value>
+	</variable>
+	<variable name="VidView_SeasonsN">
+		<value condition="Integer.IsEqual(Container.NumItems,1)">1 season</value>
+		<value>$INFO[Container.NumItems] seasons</value>
+	</variable>
+	<variable name="VidView_EpisodesN">
+		<value condition="Integer.IsEqual(Container.NumItems,1)">1 episode</value>
+		<value>$INFO[Container.NumItems] episodes</value>
+	</variable>
+	<variable name="VidView_SortOrderWord">
+		<value condition="Container.SortDirection(descending)">descending</value>
+		<value>ascending</value>
+	</variable>
+
+	<include name="VidView_Header">
+		<!-- title + the other page's word on one baseline -->
+		<control type="grouplist">
+			<left>112</left>
+			<top>33</top>
+			<width>1180</width>
+			<height>130</height>
+			<orientation>horizontal</orientation>
+			<itemgap>90</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="label" id="9390">
+				<width max="1180">auto</width>
+				<height>118</height>
+				<font>hand_92</font>
+				<textcolor>ink</textcolor>
+				<label>[LOWERCASE]$VAR[VidView_Title][/LOWERCASE]</label>
+			</control>
+		</control>
+		<control type="label">
+			<left>118</left>
+			<top>161</top>
+			<width>500</width>
+			<height>27</height>
+			<font>lbl_20</font>
+			<textcolor>label</textcolor>
+			<label>$VAR[VidView_LabelLine]</label>
+		</control>
+		<include>KS_Clock</include>
+		<include content="Lib_PenWords">
+			<param name="onup" value="9000"/>
+			<param name="ondown" value="50"/>
+			<param name="onright" value="9310"/>
+			<param name="onback" value="50"/>
+			<param name="pick_focus" value="Lib_PickFocusVideo"/>
+		</include>
+
+		<!-- focusable header words: the other page (diary / films) and the options (sort, order, view, watched) -->
+		<control type="grouplist" id="9000">
+			<left>508</left>
+			<top>72</top>
+			<width>760</width>
+			<height>80</height>
+			<orientation>horizontal</orientation>
+			<itemgap>0</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<onup>noop</onup>
+			<ondown>9310</ondown>
+			<onback>50</onback>
+			<control type="button" id="9301">
+				<top>0</top>
+				<width>auto</width>
+				<height>74</height>
+				<textoffsetx>4</textoffsetx>
+				<font>hand_52</font>
+				<textcolor>ink_ghost</textcolor>
+				<include>KS_PenWordLook</include>
+				<label>$LOCALIZE[31385]</label>
+				<onclick>ActivateWindow(1160)</onclick>
+				<visible>$EXP[VidView_IsDiary]</visible>
+			</control>
+			<control type="button" id="9302">
+				<top>0</top>
+				<width>auto</width>
+				<height>74</height>
+				<textoffsetx>4</textoffsetx>
+				<font>hand_52</font>
+				<textcolor>ink_ghost</textcolor>
+				<include>KS_PenWordLook</include>
+				<label>$LOCALIZE[31386]</label>
+				<onclick>ActivateWindow(1161)</onclick>
+				<visible>String.StartsWith(Container.FolderPath,videodb://movies/titles)</visible>
+			</control>
+		</control>
+		<control type="grouplist" id="9310">
+			<left>1068</left>
+			<top>150</top>
+			<width>760</width>
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<itemgap>6</itemgap>
+			<onup>9830</onup>
+			<onleft>9830</onleft>
+			<onright>noop</onright>
+			<ondown>50</ondown>
+			<onback>50</onback>
+			<!-- fixed widths first (nothing judders), the sort word last (auto). The view word is a pen word now
+			     (Lib_PenWords, under the title). -->
+			<control type="button" id="9322">
+				<width>270</width>
+				<include>VidView_OptionLook</include>
+				<label>$VAR[VidView_WatchedWord]</label>
+				<onclick>SendClick(14)</onclick>
+				<visible>$EXP[VidView_IsLibraryVideo]</visible>
+			</control>
+			<control type="button" id="9323">
+				<width>190</width>
+				<include>VidView_OptionLook</include>
+				<label>$VAR[VidView_SortOrderWord]</label>
+				<onclick>SendClick(4)</onclick>
+				<visible>Control.IsEnabled(4)</visible>
+			</control>
+			<control type="button" id="9324">
+				<width>auto</width>
+				<include>VidView_OptionLook</include>
+				<label>sort: $INFO[Container.SortMethod]</label>
+				<onclick>SendClick(3)</onclick>
+				<visible>Control.IsEnabled(3)</visible>
+			</control>
+		</control>
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>KS_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>KS_Hidden</include>
+		</control>
+	</include>
+	<variable name="VidView_WatchedWord">
+		<value condition="System.Setting(hidewatched)">unwatched only</value>
+		<value>all</value>
+	</variable>
+	<include name="VidView_OptionLook">
+		<height>48</height>
+		<font>lbl_20</font>
+		<textcolor>label_hi</textcolor>
+		<focusedcolor>on_tape</focusedcolor>
+		<align>center</align>
+		<aligny>center</aligny>
+		<textoffsetx>18</textoffsetx>
+		<include>KS_TapeRowTexture</include>
+		<texturenofocus />
+	</include>
+
+	<!-- ================================================================== the diary (520) -->
+	<!-- one side of the timeline. params: x (print left), note_x, note_align, tick_x, focused (true/false) -->
+	<include name="VidView_DiarySide">
+		<definition>
+			<!-- dotted gutter above this item's date -->
+			<control type="image">
+				<left>958</left>
+				<top>90</top>
+				<width>4</width>
+				<height>86</height>
+				<aspectratio>center</aspectratio>
+				<texture colordiffuse="dotted">ks/dots_v.png</texture>
+			</control>
+			<control type="label">
+				<left>900</left>
+				<top>182</top>
+				<width>120</width>
+				<height>27</height>
+				<align>center</align>
+				<font>lbl_20</font>
+				<textcolor>$PARAM[date_color]</textcolor>
+				<label>$VAR[KS_LP_Gutter]</label>
+			</control>
+			<control type="image">
+				<left>$PARAM[tick_x]</left>
+				<top>195</top>
+				<width>30</width>
+				<height>2</height>
+				<texture colordiffuse="$PARAM[tick_color]">common/white.png</texture>
+			</control>
+			<control type="group">
+				<left>$PARAM[x]</left>
+				<top>80</top>
+				<width>388</width>
+				<height>231</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>388</width>
+					<height>231</height>
+					<include condition="$PARAM[focused]">KS_TiltFocus</include>
+					<include content="KS_Print_Diary">
+						<param name="art" value="$VAR[KS_LandscapeArt]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="!String.IsEmpty(ListItem.LastPlayed)"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+			<!-- the note (the focused print's note moves to the detail block while the diary has focus) -->
+			<control type="group">
+				<visible>$PARAM[note_visible]</visible>
+				<control type="label">
+					<left>$PARAM[note_x]</left>
+					<top>131</top>
+					<width>360</width>
+					<height>27</height>
+					<align>$PARAM[note_align]</align>
+					<font>lbln_20</font>
+					<textcolor>label</textcolor>
+					<label>$INFO[ListItem.Title]</label>
+				</control>
+				<control type="textbox">
+					<left>$PARAM[note_x]</left>
+					<top>158</top>
+					<width>360</width>
+					<height>96</height>
+					<align>$PARAM[note_align]</align>
+					<font>hand_40</font>
+					<textcolor>ink2</textcolor>
+					<label>$VAR[KS_DiaryNote]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_DiaryItem">
+		<param name="focused">false</param>
+		<definition>
+			<!-- odd items on the left page, even items on the right -->
+			<control type="group">
+				<visible>Integer.IsOdd(ListItem.CurrentItem)</visible>
+				<include content="VidView_DiarySide">
+					<param name="x" value="472"/>
+					<param name="note_x" value="92"/>
+					<param name="note_align" value="right"/>
+					<param name="tick_x" value="868"/>
+					<param name="focused" value="$PARAM[focused]"/>
+					<param name="lift" value="$PARAM[lift]"/>
+					<param name="date_color" value="$PARAM[date_color]"/>
+					<param name="tick_color" value="$PARAM[tick_color]"/>
+					<param name="note_visible" value="$PARAM[note_visible]"/>
+				</include>
+			</control>
+			<control type="group">
+				<visible>!Integer.IsOdd(ListItem.CurrentItem)</visible>
+				<include content="VidView_DiarySide">
+					<param name="x" value="1060"/>
+					<param name="note_x" value="1490"/>
+					<param name="note_align" value="left"/>
+					<param name="tick_x" value="1022"/>
+					<param name="focused" value="$PARAM[focused]"/>
+					<param name="lift" value="$PARAM[lift]"/>
+					<param name="date_color" value="$PARAM[date_color]"/>
+					<param name="tick_color" value="$PARAM[tick_color]"/>
+					<param name="note_visible" value="$PARAM[note_visible]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<!-- the item above the top slot hangs into the header (prints are 231 tall on a 128 pitch): a patch of the
+	     same paper covers its side. Its index = CurrentItem - Position - 1. (Inside the list's own layout
+	     Container(520).ListItemNoWrap(k) / CurrentItem resolve to the drawn item, so it can't hide itself.) -->
+	<expression name="Diary_TopLeft">Integer.IsGreater(Container(520).CurrentItem,Container(520).Position) + !Integer.IsEqual(Container(520).CurrentItem,1) + [[Integer.IsEqual(Container(520).Position,1) + Integer.IsOdd(Container(520).CurrentItem)] | [!Integer.IsEqual(Container(520).Position,1) + !Integer.IsOdd(Container(520).CurrentItem)]]</expression>
+	<expression name="Diary_TopRight">Integer.IsGreater(Container(520).CurrentItem,Container(520).Position) + !Integer.IsEqual(Container(520).CurrentItem,1) + [[Integer.IsEqual(Container(520).Position,1) + !Integer.IsOdd(Container(520).CurrentItem)] | [!Integer.IsEqual(Container(520).Position,1) + Integer.IsOdd(Container(520).CurrentItem)]]</expression>
+	<include name="Diary_TopPatch">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture diffuse="ks/mask_top_left.png">ks/paper_spread.jpg</texture>
+			<visible>$EXP[Diary_TopLeft]</visible>
+		</control>
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>1920</width>
+			<height>1080</height>
+			<texture diffuse="ks/mask_top_right.png">ks/paper_spread.jpg</texture>
+			<visible>$EXP[Diary_TopRight]</visible>
+		</control>
+	</include>
+
+	<include name="VidView_520_Diary">
+		<control type="fixedlist" id="520">
+			<left>0</left>
+			<top>176</top>
+			<width>1920</width>
+			<height>904</height>
+			<orientation>vertical</orientation>
+			<focusposition>1</focusposition>
+			<movement>1</movement>
+			<scrolltime tween="cubic" easing="out">240</scrolltime>
+			<preloaditems>2</preloaditems>
+			<onup>9301</onup>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<itemlayout width="1920" height="128">
+				<include content="VidView_DiaryItem">
+					<param name="lift" value="false"/>
+					<param name="date_color" value="ink_dim"/>
+					<param name="tick_color" value="rule_strong"/>
+					<param name="note_visible" value="true"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="1920" height="128">
+				<include content="VidView_DiaryItem">
+					<param name="focused" value="true"/>
+					<param name="lift" value="Control.HasFocus(520)"/>
+					<param name="date_color" value="ink_bold"/>
+					<param name="tick_color" value="ink"/>
+					<param name="note_visible" value="!Control.HasFocus(520)"/>
+				</include>
+			</focusedlayout>
+			<content target="videos" sortby="lastplayed" sortorder="descending" browse="never">$VAR[KS_Path_Watched]</content>
+		</control>
+	</include>
+
+	<!-- the sticky month above the timeline + month dividers in the gutter + the focused print's details -->
+	<include name="VidView_DiaryOverlay">
+		<control type="group">
+			<visible>Control.IsVisible(520)</visible>
+			<!-- Skin Variables: the exact time of the focused film's last play -->
+			<control type="group">
+				<control type="list" id="9174">
+					<left>-40</left>
+					<top>-40</top>
+					<width>1</width>
+					<height>1</height>
+					<itemlayout width="1" height="1"/>
+					<focusedlayout width="1" height="1"/>
+					<content target="videos">plugin://script.skinvariables/?info=get_dbitem_movie_details&amp;dbid=$INFO[Container(520).ListItem.DBID]</content>
+				</control>
+			</control>
+			<control type="textbox" id="5291">
+				<left>1500</left>
+				<top>427</top>
+				<width>340</width>
+				<height>82</height>
+				<font>ttl_64</font>
+				<textcolor>clear</textcolor>
+				<label>$INFO[Container(520).ListItem.Title]</label>
+			</control>
+		</control>
+		<!-- month dividers, sticky month, the focused print's details (generated: _src/make_diary.py) -->
+		<include>Diary_Overlay</include>
+	</include>
+	<include name="VidView_DiaryDetail">
+		<definition>
+			<control type="label">
+				<left>0</left>
+				<top>1</top>
+				<width>340</width>
+				<height>27</height>
+				<align>$PARAM[align]</align>
+				<font>lbl_20</font>
+				<textcolor>label_hi</textcolor>
+				<label>$VAR[KS_CLP_Long]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>31</top>
+				<width>340</width>
+				<height>82</height>
+				<align>$PARAM[align]</align>
+				<font>ttl_64</font>
+				<textcolor>cream</textcolor>
+				<label>$INFO[Container(520).ListItem.Title]</label>
+				<visible>!$EXP[VidView_DiaryLongTitle]</visible>
+			</control>
+			<control type="textbox">
+				<left>0</left>
+				<top>34</top>
+				<width>340</width>
+				<height>100</height>
+				<align>$PARAM[align]</align>
+				<font>ttt_40</font>
+				<textcolor>cream</textcolor>
+				<label>$INFO[Container(520).ListItem.Title]</label>
+				<visible>$EXP[VidView_DiaryLongTitle]</visible>
+			</control>
+			<control type="group">
+				<animation effect="slide" end="0,30" time="0" condition="$EXP[VidView_DiaryLongTitle]">Conditional</animation>
+				<control type="image">
+					<left>$PARAM[x]</left>
+					<top>104</top>
+					<width>200</width>
+					<height>22</height>
+					<texture colordiffuse="ink">ks/pen_line.png</texture>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>135</top>
+					<width>340</width>
+					<height>27</height>
+					<align>$PARAM[align]</align>
+					<font>lbl_20</font>
+					<textcolor>label</textcolor>
+					<label>$INFO[Container(520).ListItem.Year]$INFO[Container(520).ListItem.Duration(mins),  ·  , min]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>162</top>
+					<width>340</width>
+					<height>27</height>
+					<align>$PARAM[align]</align>
+					<font>lbl_20</font>
+					<textcolor>label</textcolor>
+					<label>$INFO[Container(520).ListItem.Director]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>193</top>
+					<width>340</width>
+					<height>96</height>
+					<align>$PARAM[align]</align>
+					<font>hand_40</font>
+					<textcolor>ink</textcolor>
+					<label>$VAR[VidView_DiaryFocusNote]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="VidView_DiaryFocusNote">
+		<value condition="$EXP[VidView_DiarySV] + Integer.IsGreater(Container(520).ListItem.PlayCount,1)">$VAR[KS_CTimeWord], at $VAR[KS_T_DIA_Clock]</value>
+		<value condition="$EXP[VidView_DiarySV]">$VAR[KS_T_DIA_That], $VAR[KS_T_DIA_Clock]</value>
+		<value>$VAR[KS_CDiaryNote]</value>
+	</variable>
+
+	<!-- the diary's own header (custom window 1161) -->
+	<include name="VidView_DiaryHeader">
+		<control type="label">
+			<left>112</left>
+			<top>33</top>
+			<width>400</width>
+			<height>118</height>
+			<font>hand_92</font>
+			<textcolor>ink</textcolor>
+			<label>$LOCALIZE[31386]</label>
+		</control>
+		<control type="grouplist" id="9300">
+			<left>508</left>
+			<top>72</top>
+			<width>760</width>
+			<height>80</height>
+			<orientation>horizontal</orientation>
+			<itemgap>34</itemgap>
+			<onup>noop</onup>
+			<ondown>520</ondown>
+			<onright>9830</onright>
+			<onback>520</onback>
+			<control type="button" id="9301">
+				<width>auto</width>
+				<height>74</height>
+				<textoffsetx>4</textoffsetx>
+				<font>hand_52</font>
+				<textcolor>ink_ghost</textcolor>
+				<include>KS_PenWordLook</include>
+				<label>$LOCALIZE[31385]</label>
+				<onclick>ReplaceWindow(1160)</onclick>
+			</control>
+			<control type="button" id="9303">
+				<width>auto</width>
+				<height>74</height>
+				<textoffsetx>4</textoffsetx>
+				<font>hand_52</font>
+				<textcolor>ink_ghost</textcolor>
+				<include>KS_PenWordLook</include>
+				<label>$LOCALIZE[31387]</label>
+				<onclick>ActivateWindow(Videos,videodb://movies/titles/,return)</onclick>
+			</control>
+		</control>
+		<control type="label">
+			<left>118</left>
+			<top>161</top>
+			<width>700</width>
+			<height>27</height>
+			<font>lbl_20</font>
+			<textcolor>label</textcolor>
+			<label>films  ·  $INFO[Container(520).NumItems] watched  ·  [COLOR label_hi]newest first[/COLOR]</label>
+		</control>
+		<include content="Lib_PenWords">
+			<param name="view_visible" value="false"/>
+			<param name="onup" value="9300"/>
+			<param name="ondown" value="520"/>
+			<param name="onback" value="520"/>
+		</include>
+		<include>KS_Clock</include>
+		<control type="textbox">
+			<left>112</left>
+			<top>262</top>
+			<width>1200</width>
+			<height>110</height>
+			<font>hand_46</font>
+			<textcolor>ink_faint</textcolor>
+			<label>$LOCALIZE[31388]</label>
+			<visible>!Integer.IsGreater(Container(520).NumItems,0) + !Container(520).IsUpdating</visible>
+		</control>
+	</include>
+
+	<!-- ================================================================== diary notes -->
+	<variable name="KS_TimeWord">
+		<value condition="Integer.IsEqual(ListItem.PlayCount,2)">the second time</value>
+		<value condition="Integer.IsEqual(ListItem.PlayCount,3)">a third time</value>
+		<value condition="Integer.IsEqual(ListItem.PlayCount,4)">a fourth time</value>
+		<value condition="Integer.IsEqual(ListItem.PlayCount,5)">a fifth time</value>
+		<value>time number $INFO[ListItem.PlayCount]</value>
+	</variable>
+	<variable name="KS_CTimeWord">
+		<value condition="Integer.IsEqual(Container.ListItem.PlayCount,2)">the second time</value>
+		<value condition="Integer.IsEqual(Container.ListItem.PlayCount,3)">a third time</value>
+		<value condition="Integer.IsEqual(Container.ListItem.PlayCount,4)">a fourth time</value>
+		<value condition="Integer.IsEqual(Container.ListItem.PlayCount,5)">a fifth time</value>
+		<value>time number $INFO[Container.ListItem.PlayCount]</value>
+	</variable>
+	<variable name="KS_DiaryNote">
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1) + $EXP[KS_ShelfOlder]">$VAR[KS_TimeWord], on the shelf since $VAR[KS_DA_Year]</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1)">$VAR[KS_TimeWord], a $VAR[KS_LP_Wd]</value>
+		<value condition="$EXP[KS_Today_LP]">today</value>
+		<value condition="String.IsEqual(ListItem.LastPlayed,Window(Home).Property(keepsake.yesterday))">yesterday</value>
+		<value condition="$EXP[KS_SameMonth_DA_LP]">the month you added it</value>
+		<value condition="$EXP[KS_ShelfOlder]">on the shelf since $VAR[KS_DA_Year]</value>
+		<value condition="!String.IsEmpty(ListItem.LastPlayed)">a $VAR[KS_LP_Wd]</value>
+	</variable>
+	<variable name="KS_CDiaryNote">
+		<value condition="Integer.IsGreater(Container.ListItem.PlayCount,1) + $EXP[KS_CShelfOlder]">$VAR[KS_CTimeWord], on the shelf since $VAR[KS_CDA_Year]</value>
+		<value condition="Integer.IsGreater(Container.ListItem.PlayCount,1)">$VAR[KS_CTimeWord], a $VAR[KS_CLP_Wd]</value>
+		<value condition="$EXP[KS_Today_CLP]">today</value>
+		<value condition="String.IsEqual(Container.ListItem.LastPlayed,Window(Home).Property(keepsake.yesterday))">yesterday</value>
+		<value condition="$EXP[KS_SameMonth_CDA_CLP]">the month you added it</value>
+		<value condition="$EXP[KS_CShelfOlder]">on the shelf since $VAR[KS_CDA_Year]</value>
+		<value condition="!String.IsEmpty(Container.ListItem.LastPlayed)">a $VAR[KS_CLP_Wd]</value>
+	</variable>
+
+	<!-- ================================================================== print walls (521 films, 522 series) -->
+	<!-- params: list (id), note (label under the focused print), lift -->
+	<include name="VidView_WallPrint">
+		<definition>
+			<control type="label">
+				<left>60</left>
+				<top>60</top>
+				<width>184</width>
+				<height>252</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>hand_52</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$LOCALIZE[31384]</label>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="group">
+				<left>60</left>
+				<top>60</top>
+				<width>184</width>
+				<visible>!ListItem.IsParentFolder</visible>
+				<height>252</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>184</width>
+					<height>252</height>
+					<include condition="$PARAM[focused]">KS_TiltFocus</include>
+					<include content="KS_Print_Poster">
+						<param name="art" value="$VAR[KS_PosterArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="!String.IsEmpty(ListItem.LastPlayed) + [Integer.IsGreater(ListItem.PlayCount,0) | Container.Content(tvshows)]"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+			<include content="KS_PenProgress180">
+				<param name="left" value="62"/>
+				<param name="top" value="318"/>
+				<param name="info" value="ListItem.PercentPlayed"/>
+				<param name="visible" value="ListItem.IsResumable + !Container.Content(tvshows)"/>
+				<param name="color" value="ink2"/>
+			</include>
+		</definition>
+	</include>
+	<include name="VidView_WallNote">
+		<!-- under the focused print; on the last two columns it is right-aligned to the print so it stays on the page -->
+		<definition>
+			<control type="group">
+				<visible>Control.HasFocus($PARAM[list]) + Integer.IsLess(Container($PARAM[list]).Column,4)</visible>
+				<control type="label">
+					<left>60</left>
+					<top>326</top>
+					<width>420</width>
+					<height>27</height>
+					<font>lbln_20</font>
+					<textcolor>label_hi</textcolor>
+					<label>$INFO[ListItem.Label]$INFO[ListItem.Year,  ·  ,]</label>
+				</control>
+				<control type="label">
+					<left>58</left>
+					<top>352</top>
+					<width>440</width>
+					<height>54</height>
+					<font>hand_40</font>
+					<textcolor>ink_bold</textcolor>
+					<label>$PARAM[note]</label>
+				</control>
+			</control>
+			<control type="group">
+				<visible>Control.HasFocus($PARAM[list]) + !Integer.IsLess(Container($PARAM[list]).Column,4)</visible>
+				<control type="label">
+					<left>-196</left>
+					<top>326</top>
+					<width>440</width>
+					<height>27</height>
+					<align>right</align>
+					<font>lbln_20</font>
+					<textcolor>label_hi</textcolor>
+					<label>$INFO[ListItem.Label]$INFO[ListItem.Year,  ·  ,]</label>
+				</control>
+				<control type="label">
+					<left>-196</left>
+					<top>352</top>
+					<width>442</width>
+					<height>54</height>
+					<align>right</align>
+					<font>hand_40</font>
+					<textcolor>ink_bold</textcolor>
+					<label>$PARAM[note]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<variable name="VidView_FilmNote">
+		<value condition="ListItem.IsResumable">$VAR[KS_MinutesIn] $VAR[KS_LP_Rel]</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)">watched $VAR[KS_LP_Rel]</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)">watched</value>
+		<value condition="Container.Content(sets)">$INFO[ListItem.Property(WatchedCount)] of $INFO[ListItem.Property(TotalCount)] watched</value>
+		<value condition="!String.IsEmpty(ListItem.DateAdded)">added $VAR[KS_DA_YearsAgo], never played</value>
+	</variable>
+	<variable name="VidView_SeriesNote">
+		<value condition="Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">not started yet</value>
+		<value condition="Integer.IsEqual(ListItem.Property(TotalEpisodes),1) + String.IsEqual(ListItem.Property(WatchedEpisodes),ListItem.Property(TotalEpisodes))">its only episode, seen</value>
+		<value condition="String.IsEqual(ListItem.Property(WatchedEpisodes),ListItem.Property(TotalEpisodes))">all $INFO[ListItem.Property(TotalEpisodes)] episodes, seen</value>
+		<value>$INFO[ListItem.Property(WatchedEpisodes)] of $INFO[ListItem.Property(TotalEpisodes)] episodes watched</value>
+	</variable>
+	<include name="VidView_Wall">
+		<definition>
+			<control type="panel" id="$PARAM[id]">
+				<left>52</left>
+				<top>176</top>
+				<width>1812</width>
+				<height>904</height>
+				<orientation>vertical</orientation>
+				<scrolltime tween="cubic" easing="out">260</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup>9310</onup>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="$PARAM[label]">list</viewtype>
+				<visible>$PARAM[visible]</visible>
+				<itemlayout width="302" height="420">
+					<include content="VidView_WallPrint">
+						<param name="dim" value="$VAR[VidView_WallDim]"/>
+						<param name="lift" value="false"/>
+						<param name="focused" value="false"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="302" height="420">
+					<include content="VidView_WallPrint">
+						<param name="dim" value="white"/>
+						<param name="lift" value="Control.HasFocus($PARAM[id])"/>
+						<param name="focused" value="true"/>
+					</include>
+					<include content="VidView_WallNote">
+						<param name="list" value="$PARAM[id]"/>
+						<param name="note" value="$PARAM[note]"/>
+					</include>
+				</focusedlayout>
+			</control>
+		</definition>
+	</include>
+	<variable name="VidView_WallDim">
+		<value condition="Control.HasFocus(521) | Control.HasFocus(522)">dim_print</value>
+		<value>white</value>
+	</variable>
+
+	<!-- ================================================================== seasons (523) -->
+	<include name="VidView_523_Seasons">
+		<control type="group">
+			<visible>Control.IsVisible(523)</visible>
+			<control type="list" id="523">
+				<left>52</left>
+				<top>176</top>
+				<width>1812</width>
+				<height>560</height>
+				<orientation>horizontal</orientation>
+				<scrolltime tween="cubic" easing="out">260</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup>9310</onup>
+				<ondown>noop</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31365">list</viewtype>
+				<visible>Container.Content(seasons)</visible>
+				<itemlayout width="302" height="560">
+					<include content="VidView_SeasonPrint">
+						<param name="dim" value="$VAR[VidView_SeasonDim]"/>
+						<param name="lift" value="false"/>
+						<param name="focused" value="false"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="302" height="560">
+					<include content="VidView_SeasonPrint">
+						<param name="dim" value="white"/>
+						<param name="lift" value="Control.HasFocus(523)"/>
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+			<!-- the show, below the row -->
+			<control type="label">
+				<left>118</left>
+				<top>757</top>
+				<width>1000</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$INFO[ListItem.Genre]$INFO[ListItem.Studio,  ·  ,]</label>
+			</control>
+			<control type="textbox">
+				<left>116</left>
+				<top>794</top>
+				<width>1200</width>
+				<height>172</height>
+				<font>body_28</font>
+				<textcolor>body</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="8000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+		</control>
+	</include>
+	<include name="VidView_SeasonPrint">
+		<definition>
+			<control type="label">
+				<left>60</left>
+				<top>60</top>
+				<width>224</width>
+				<height>324</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>hand_52</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$LOCALIZE[31384]</label>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="group">
+				<left>60</left>
+				<top>60</top>
+				<width>224</width>
+				<visible>!ListItem.IsParentFolder</visible>
+				<height>324</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>224</width>
+					<height>324</height>
+					<include condition="$PARAM[focused]">KS_TiltFocus</include>
+					<include content="KS_Print_PosterM">
+						<param name="art" value="$VAR[KS_PosterArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="!String.IsEmpty(ListItem.LastPlayed)"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+			<control type="label">
+				<left>60</left>
+				<top>404</top>
+				<width>240</width>
+				<height>60</height>
+				<font>hand_44</font>
+				<textcolor>$VAR[VidView_SeasonText]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+			</control>
+			<control type="label">
+				<left>62</left>
+				<top>458</top>
+				<width>240</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$VAR[VidView_SeasonNote]</label>
+			</control>
+		</definition>
+	</include>
+	<variable name="VidView_SeasonNote">
+		<value condition="String.IsEqual(ListItem.Label,..)"></value>
+		<value condition="Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">$INFO[ListItem.Property(TotalEpisodes)] to watch</value>
+		<value condition="String.IsEqual(ListItem.Property(WatchedEpisodes),ListItem.Property(TotalEpisodes))">all $INFO[ListItem.Property(TotalEpisodes)] seen</value>
+		<value>$INFO[ListItem.Property(WatchedEpisodes)] of $INFO[ListItem.Property(TotalEpisodes)] seen</value>
+	</variable>
+	<variable name="VidView_SeasonDim">
+		<value condition="Control.HasFocus(523)">dim_print</value>
+		<value>white</value>
+	</variable>
+	<variable name="VidView_SeasonText">
+		<value condition="Control.HasFocus(523)">ink_faint</value>
+		<value>ink</value>
+	</variable>
+
+	<!-- ================================================================== episodes (524) -->
+	<include name="VidView_524_Episodes">
+		<control type="group">
+			<visible>Control.IsVisible(524)</visible>
+			<control type="list" id="524">
+				<left>52</left>
+				<top>196</top>
+				<width>1616</width>
+				<height>380</height>
+				<orientation>horizontal</orientation>
+				<scrolltime tween="cubic" easing="out">240</scrolltime>
+				<preloaditems>2</preloaditems>
+				<onup>9310</onup>
+				<ondown>noop</ondown>
+				<include>Lib_OpenLeft</include>
+				<include>Lib_OpenRight</include>
+				<viewtype label="31389">list</viewtype>
+				<visible>Container.Content(episodes) | $EXP[KSV_IsFilmsTV]</visible>
+				<!-- 0.9.15 films / sets / series / music videos: poster prints, six to the strip (1614 = 6 x 269) -->
+				<itemlayout width="269" height="380" condition="!Container.Content(episodes)">
+					<include content="VidView_StripPosterPrint">
+						<param name="dim" value="$VAR[VidView_EpDim]"/>
+						<param name="lift" value="false"/>
+						<param name="focused" value="false"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="269" height="380" condition="!Container.Content(episodes)">
+					<include content="VidView_StripPosterPrint">
+						<param name="dim" value="white"/>
+						<param name="lift" value="Control.HasFocus(524)"/>
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+				<itemlayout width="404" height="380">
+					<include content="VidView_EpisodePrint">
+						<param name="dim" value="$VAR[VidView_EpDim]"/>
+						<param name="lift" value="false"/>
+						<param name="focused" value="false"/>
+					</include>
+				</itemlayout>
+				<focusedlayout width="404" height="380">
+					<include content="VidView_EpisodePrint">
+						<param name="dim" value="white"/>
+						<param name="lift" value="Control.HasFocus(524)"/>
+						<param name="focused" value="true"/>
+					</include>
+				</focusedlayout>
+			</control>
+			<!-- the focused episode -->
+			<control type="textbox" id="5292">
+				<left>112</left>
+				<top>626</top>
+				<width>1300</width>
+				<height>82</height>
+				<font>ttl_64</font>
+				<textcolor>clear</textcolor>
+				<label>$INFO[ListItem.Title]</label>
+			</control>
+			<control type="label">
+				<left>118</left>
+				<top>597</top>
+				<width>1300</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label_hi</textcolor>
+				<label>$VAR[VidView_EpKicker]</label>
+			</control>
+			<control type="label">
+				<left>112</left>
+				<top>626</top>
+				<width>1300</width>
+				<height>82</height>
+				<font>ttl_64</font>
+				<textcolor>cream</textcolor>
+				<label>$INFO[ListItem.Title]</label>
+				<visible>!$EXP[VidView_EpLongTitle]</visible>
+			</control>
+			<control type="label">
+				<left>112</left>
+				<top>636</top>
+				<width>1300</width>
+				<height>60</height>
+				<font>ttt_40</font>
+				<textcolor>cream</textcolor>
+				<label>$INFO[ListItem.Title]</label>
+				<visible>$EXP[VidView_EpLongTitle]</visible>
+			</control>
+			<control type="textbox">
+				<left>116</left>
+				<top>719</top>
+				<width>1060</width>
+				<height>172</height>
+				<font>body_28</font>
+				<textcolor>body</textcolor>
+				<label>$INFO[ListItem.Plot]</label>
+				<autoscroll delay="8000" time="3000" repeat="10000">true</autoscroll>
+			</control>
+			<!-- your history with it (right column) -->
+			<control type="label">
+				<left>1260</left>
+				<top>721</top>
+				<width>560</width>
+				<height>27</height>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$LOCALIZE[31375]</label>
+			</control>
+			<control type="textbox">
+				<left>1258</left>
+				<top>752</top>
+				<width>560</width>
+				<height>150</height>
+				<font>hand_44</font>
+				<textcolor>ink</textcolor>
+				<label>$VAR[VidView_EpHistory]</label>
+			</control>
+		</control>
+	</include>
+	<!-- 0.9.15: a poster print in the strip (PosterM 200 x 300 -> 224 x 324), stamped with when you last watched it -->
+	<include name="VidView_StripPosterPrint">
+		<definition>
+			<include content="KSV_BackWord">
+				<param name="left" value="22"/><param name="top" value="28"/><param name="width" value="224"/><param name="height" value="324"/>
+			</include>
+			<control type="group">
+				<left>22</left>
+				<top>28</top>
+				<width>224</width>
+				<height>324</height>
+				<visible>!ListItem.IsParentFolder</visible>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>224</width>
+					<height>324</height>
+					<include condition="$PARAM[focused]">KS_TiltFocus</include>
+					<include content="KS_Print_PosterM">
+						<param name="art" value="$VAR[KS_PosterArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="VidView_EpisodePrint">
+		<definition>
+			<control type="label">
+				<left>60</left>
+				<top>60</top>
+				<width>324</width>
+				<height>193</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>hand_52</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$LOCALIZE[31384]</label>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="group">
+				<left>60</left>
+				<top>60</top>
+				<width>324</width>
+				<visible>!ListItem.IsParentFolder</visible>
+				<height>193</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>324</width>
+					<height>193</height>
+					<include condition="$PARAM[focused]">KS_TiltFocus</include>
+					<include content="KS_Print_Thumb">
+						<param name="art" value="$VAR[KS_EpisodeArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+			<control type="label">
+				<left>62</left>
+				<top>270</top>
+				<width>330</width>
+				<height>27</height>
+				<font>lbln_20</font>
+				<textcolor>label</textcolor>
+				<label>$VAR[VidView_EpNumber]</label>
+			</control>
+			<include content="KS_PenProgress300">
+				<param name="left" value="62"/>
+				<param name="top" value="300"/>
+				<param name="info" value="ListItem.PercentPlayed"/>
+				<param name="visible" value="ListItem.IsResumable"/>
+				<param name="color" value="ink2"/>
+			</include>
+		</definition>
+	</include>
+	<variable name="VidView_EpNumber">
+		<value condition="String.IsEqual(ListItem.Label,..)"></value>
+		<value condition="Integer.IsGreater(ListItem.Episode,0)">episode $INFO[ListItem.Episode]$INFO[ListItem.Duration(mins),  ·  , min]</value>
+		<value>$INFO[ListItem.Duration(mins),, min]</value>
+	</variable>
+	<variable name="VidView_EpKicker">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(TotalSeasons),1)">$INFO[ListItem.Year]$INFO[ListItem.Studio,  ·  ,]  ·  1 season$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Year]$INFO[ListItem.Studio,  ·  ,]$INFO[ListItem.Property(TotalSeasons),  ·  , seasons]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set) + Integer.IsEqual(ListItem.Property(Total),1)">$INFO[ListItem.Property(Total),, film]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Property(Total),, films]$INFO[ListItem.Genre,  ·  ,]</value>
+		<value condition="String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,musicvideo)">$INFO[ListItem.Year]$INFO[ListItem.Duration(mins),  ·  , min]$INFO[ListItem.Genre,  ·  ,]$INFO[ListItem.Director,  ·  ,]</value>
+		<value>$INFO[ListItem.TVShowTitle]$INFO[ListItem.Season,  ·  season ,]$INFO[ListItem.Episode,  ·  episode ,]$INFO[ListItem.Premiered,  ·  aired ,]</value>
+	</variable>
+	<variable name="VidView_EpHistory">
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(TotalEpisodes),1) + Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">$INFO[ListItem.Property(TotalEpisodes)] episode, not seen yet.</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(TotalEpisodes),1)">Its only episode seen.</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + Integer.IsEqual(ListItem.Property(WatchedEpisodes),0)">$INFO[ListItem.Property(TotalEpisodes)] episodes, none seen yet.</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow) + String.IsEqual(ListItem.Property(WatchedEpisodes),ListItem.Property(TotalEpisodes))">All $INFO[ListItem.Property(TotalEpisodes)] episodes seen.</value>
+		<value condition="String.IsEqual(ListItem.DBType,tvshow)">$INFO[ListItem.Property(WatchedEpisodes)] of $INFO[ListItem.Property(TotalEpisodes)] episodes seen.</value>
+		<value condition="String.IsEqual(ListItem.DBType,set) + Integer.IsEqual(ListItem.Property(Total),1)">$INFO[ListItem.Property(Watched)] of $INFO[ListItem.Property(Total)] film seen.</value>
+		<value condition="String.IsEqual(ListItem.DBType,set)">$INFO[ListItem.Property(Watched)] of $INFO[ListItem.Property(Total)] films seen.</value>
+		<value condition="ListItem.IsResumable">You stopped $VAR[KS_MinutesIn] $VAR[KS_LP_Rel].</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1)">Watched $INFO[ListItem.PlayCount] times, last on $VAR[KS_LP_LongY].</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0) + !String.IsEmpty(ListItem.LastPlayed)">Watched on $VAR[KS_LP_LongY].</value>
+		<value condition="Integer.IsGreater(ListItem.PlayCount,0)">Watched.</value>
+		<value>Not watched yet.</value>
+	</variable>
+	<variable name="VidView_EpDim">
+		<value condition="Control.HasFocus(524)">dim_print</value>
+		<value>white</value>
+	</variable>
+
+	<!-- ================================================================== empty folder -->
+	<include name="VidView_Empty">
+		<control type="group">
+			<left>112</left>
+			<top>262</top>
+			<width>1200</width>
+			<height>200</height>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<animation effect="slide" start="0,0" end="0,300" time="0" condition="Control.IsVisible(526)">Conditional</animation>
+			<!-- with a ".." item: below the contact sheet's back print (527) and under the list's ".." row (50), not on them -->
+			<animation effect="slide" start="0,0" end="0,330" time="0" condition="Control.IsVisible(527) + Container.HasParent">Conditional</animation>
+			<animation effect="slide" start="0,0" end="0,64" time="0" condition="Control.IsVisible(50) + Container.HasParent">Conditional</animation>
+			<control type="textbox">
+				<left>0</left>
+				<top>0</top>
+				<width>1200</width>
+				<height>110</height>
+				<font>hand_46</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$VAR[VidView_EmptyText]</label>
+			</control>
+		</control>
+	</include>
+	<variable name="VidView_EmptyText">
+		<value condition="$EXP[VidView_IsDiary]">No pages yet: the diary fills itself as you watch.</value>
+		<value condition="System.Setting(hidewatched)">Nothing left unwatched here. Choose "all" above to see everything.</value>
+		<value>This page is empty.</value>
+	</variable>
+
+	<!-- ================================================================== the window -->
+	<include name="VidView_Window">
+		<include>KS_Page</include>
+		<include content="VidView_Wall">
+			<param name="id" value="521"/>
+			<param name="label" value="prints"/>
+			<param name="visible" value="$EXP[VidView_IsFilms]"/>
+			<param name="note" value="$VAR[VidView_FilmNote]"/>
+		</include>
+		<include content="VidView_Wall">
+			<param name="id" value="522"/>
+			<param name="label" value="prints"/>
+			<param name="visible" value="Container.Content(tvshows)"/>
+			<param name="note" value="$VAR[VidView_SeriesNote]"/>
+		</include>
+		<include>VidView_523_Seasons</include>
+		<include>VidView_524_Episodes</include>
+		<include>VidView_525_Page</include>
+		<include>VidView_526_Postcards</include>
+		<include>VidView_527_Sheet</include>
+		<include>View_50_List</include>
+		<include>VidView_Empty</include>
+		<include>VidView_Header</include>
+		<include content="Lib_Panel">
+			<param name="is_video" value="true"/>
+			<param name="section" value="[LOWERCASE]$VAR[VidView_Title][/LOWERCASE]"/>
+			<param name="order_click" value="SendClick(4)"/>
+			<param name="pick_focus" value="Lib_PickFocusVideo"/>
+		</include>
+		<include content="Lib_Picker">
+			<param name="items" value="Lib_PickerVideo"/>
+		</include>
+	</include>
+</includes>

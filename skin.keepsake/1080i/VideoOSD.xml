@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video OSD: a slim black strip (Includes_OSD.xml, _src/make_osd.py): the title in Fraunces, the progress as a
+	pen line, "now -> ends" stamped in orange LCD digits, the words written in pen.
+
+	Id contract (Estuary Omega VideoOSD.xml): 602 play/pause (default), 603 stop, 600 previous / 607 next
+	(chapter or playlist item), no 601/606 seek buttons (Omar's rule 6: Left/Right seek in fullscreen),
+	87 hidden seek stepper (Up from the words; Left/Right = StepBack/StepForward, frame advance when paused),
+	70044 chapters (bookmarks), 70046 subtitles, 70049 audio, 70048 video settings, 70043 info, 70051 player.
+	Word order (rule 6): pause, stop, previous, next, chapters | subtitles, audio, video, info, player.
+	Every word has a fixed width (rule 5: "pause" / "play" never shifts the row). Left/Right walk the row and wrap.
+	Back closes the OSD (Kodi default). The strip hides while a playback dialog is on top ($EXP[OSD_PanelOpen]).
+-->
+<window>
+	<onload condition="!Player.PauseEnabled">SetFocus(603)</onload>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="group">
+			<visible>!$EXP[OSD_PanelOpen]</visible>
+			<include>Anim_FadeVisible</include>
+			<include content="OSD_Scrims">
+				<param name="bottom_h">560</param>
+				<param name="top_h">240</param>
+			</include>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>1920</width>
+				<height>380</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="shade">common/scrim_bottom.png</texture>
+			</control>
+			<include>OSD_TopLine</include>
+			<include content="OSD_TitleBlock"><param name="top" value="770"/></include>
+			<include content="OSD_ProgressBlock"><param name="top" value="896"/></include>
+
+			<!-- seek stepper (invisible; the pen line brightens) -->
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>KS_Hidden</include>
+				<onup>noop</onup>
+				<ondown>602</ondown>
+				<onleft>StepBack</onleft>
+				<onright condition="!Player.Paused">StepForward</onright>
+				<onright condition="Player.Paused">PlayerControl(FrameAdvance(1))</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+			<control type="image">
+				<left>108</left>
+				<top>936</top>
+				<width>1704</width>
+				<height>22</height>
+				<texture colordiffuse="ink_faint">ks/pen_line.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+				<include>Anim_FadeVisible</include>
+			</control>
+
+			<!-- the words -->
+			<control type="grouplist" id="200">
+				<left>108</left>
+				<top>968</top>
+				<width>1704</width>
+				<height>80</height>
+				<orientation>horizontal</orientation>
+				<itemgap>22</itemgap>
+				<onup>87</onup>
+				<include content="OSD_PenWord">
+					<param name="id" value="602"/>
+					<param name="label" value="$VAR[OSD_PlayWord]"/>
+					<param name="width" value="112"/>
+					<param name="onclick" value="PlayerControl(Play)"/>
+					<param name="onleft" value="70051"/>
+					<param name="onright" value="603"/>
+					<param name="visible" value="Player.PauseEnabled"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="603"/>
+					<param name="label" value="stop"/>
+					<param name="width" value="92"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="600"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="600"/>
+					<param name="label" value="previous"/>
+					<param name="width" value="146"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="607"/>
+					<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="607"/>
+					<param name="label" value="next"/>
+					<param name="width" value="92"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onleft" value="600"/>
+					<param name="onright" value="70044"/>
+					<param name="visible" value="$EXP[OSD_HasPrevNext]"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="70044"/>
+					<param name="label" value="chapters"/>
+					<param name="width" value="164"/>
+					<param name="onclick" value="ActivateWindow(videobookmarks)"/>
+					<param name="onleft" value="607"/>
+					<param name="onright" value="70046"/>
+					<param name="visible" value="Player.SeekEnabled + !VideoPlayer.Content(livetv)"/>
+				</include>
+				<control type="label" id="201">
+					<width>96</width>
+					<height>74</height>
+					<font>hand_46</font>
+					<textcolor>ink_dot</textcolor>
+					<align>center</align>
+					<label>·</label>
+				</control>
+				<include content="OSD_PenWord">
+					<param name="id" value="70046"/>
+					<param name="label" value="subtitles"/>
+					<param name="width" value="158"/>
+					<param name="onclick" value="ActivateWindow(osdsubtitlesettings)"/>
+					<param name="onleft" value="70044"/>
+					<param name="onright" value="70049"/>
+					<param name="visible" value="Player.HasVideo"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="70049"/>
+					<param name="label" value="audio"/>
+					<param name="width" value="104"/>
+					<param name="onclick" value="ActivateWindow(osdaudiosettings)"/>
+					<param name="onleft" value="70046"/>
+					<param name="onright" value="70048"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="70048"/>
+					<param name="label" value="video"/>
+					<param name="width" value="98"/>
+					<param name="onclick" value="ActivateWindow(osdvideosettings)"/>
+					<param name="onleft" value="70049"/>
+					<param name="onright" value="70043"/>
+					<param name="visible" value="Player.HasVideo"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="70043"/>
+					<param name="label" value="info"/>
+					<param name="width" value="84"/>
+					<param name="onclick" value="Action(Info,fullscreenvideo)"/>
+					<param name="onleft" value="70048"/>
+					<param name="onright" value="70051"/>
+				</include>
+				<include content="OSD_PenWord">
+					<param name="id" value="70051"/>
+					<param name="label" value="player"/>
+					<param name="width" value="118"/>
+					<param name="onclick" value="Action(PlayerProcessInfo)"/>
+					<param name="onleft" value="70043"/>
+					<param name="onright" value="602"/>
+				</include>
+			</control>
+		</control>
+	</controls>
+</window>

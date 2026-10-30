@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library views (MyMusicNav): albums as square instant photos with the title handwritten on the margin and
+	the date you last played them stamped in the corner; artists as square prints; songs and everything else in the
+	list (View_50_List, Includes_Views.xml).
+	  530 albums   instant prints, 6 across; the focused one lifts, artist · year and "played 12 times" below
+	  531 artists  square prints with the name written under each
+	  50  list     songs, genres, years, sources
+	Header (Music_Header): "music", the section words (albums · artists · songs · recently played, one Back each:
+	ReplaceWindow), option words (view, order, sort) and the LCD clock.
+-->
+<includes>
+	<expression name="Music_IsAlbums">Container.Content(albums)</expression>
+	<expression name="Music_IsArtists">Container.Content(artists)</expression>
+
+	<variable name="Music_AlbumNote">
+		<value condition="Integer.IsGreater(ListItem.PlayCount,1) + !String.IsEmpty(ListItem.LastPlayed)">played $INFO[ListItem.PlayCount] times, last $VAR[KS_LP_Rel]</value>
+		<value condition="!String.IsEmpty(ListItem.LastPlayed)">played $VAR[KS_LP_Rel]</value>
+		<value condition="!String.IsEmpty(ListItem.DateAdded)">added $VAR[KS_DA_YearsAgo], not played yet</value>
+		<value>not played yet</value>
+	</variable>
+	<variable name="Music_Title">
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://recentlyplayed)">recently played</value>
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://artists/) + Container.Content(albums)">$INFO[ListItem.Artist]</value>
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://albums/) + Container.Content(songs)">$INFO[ListItem.Album]</value>
+		<value condition="Container.Content(albums) | Container.Content(artists) | Container.Content(songs) | Container.Content(genres)">music</value>
+		<value condition="!String.IsEmpty(Container.FolderName)">$INFO[Container.FolderName]</value>
+		<value>music</value>
+	</variable>
+	<variable name="Music_LabelLine">
+		<value condition="Container.Content(albums) + Integer.IsEqual(Container.NumItems,1)">$INFO[Container.NumItems] album  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Container.Content(albums)">$INFO[Container.NumItems] albums  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Container.Content(artists) + Integer.IsEqual(Container.NumItems,1)">$INFO[Container.NumItems] artist  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Container.Content(artists)">$INFO[Container.NumItems] artists  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Container.Content(songs) + Integer.IsEqual(Container.NumItems,1)">$INFO[Container.NumItems] song  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Container.Content(songs)">$INFO[Container.NumItems] songs  ·  [COLOR label_hi]by $INFO[Container.SortMethod][/COLOR]</value>
+		<value condition="Integer.IsEqual(Container.NumItems,1)">$INFO[Container.NumItems] item</value>
+		<value>$INFO[Container.NumItems] items</value>
+	</variable>
+	<variable name="Music_WordColor_Albums">
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://albums/)">ink_bold</value>
+		<value>ink_ghost</value>
+	</variable>
+	<variable name="Music_WordColor_Artists">
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://artists/)">ink_bold</value>
+		<value>ink_ghost</value>
+	</variable>
+	<variable name="Music_WordColor_Songs">
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://songs/)">ink_bold</value>
+		<value>ink_ghost</value>
+	</variable>
+	<variable name="Music_WordColor_Recent">
+		<value condition="String.StartsWith(Container.FolderPath,musicdb://recentlyplayed)">ink_bold</value>
+		<value>ink_ghost</value>
+	</variable>
+
+	<!-- ================================================================== header -->
+	<include name="Music_SectionWord">
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>74</height>
+				<textoffsetx>4</textoffsetx>
+				<font>hand_46</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<include>KS_PenWordLook</include>
+				<label>$PARAM[label]</label>
+				<onclick>ReplaceWindow(Music,$PARAM[path])</onclick>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_Header">
+		<control type="label">
+			<left>112</left>
+			<top>33</top>
+			<width>690</width>
+			<height>118</height>
+			<font>hand_92</font>
+			<textcolor>ink</textcolor>
+			<label>[LOWERCASE]$VAR[Music_Title][/LOWERCASE]</label>
+		</control>
+		<control type="label">
+			<left>118</left>
+			<top>161</top>
+			<width>500</width>
+			<height>27</height>
+			<font>lbl_20</font>
+			<textcolor>label</textcolor>
+			<label>$VAR[Music_LabelLine]</label>
+		</control>
+		<include>KS_Clock</include>
+		<include content="Lib_PenWords">
+			<param name="onup" value="9000"/>
+			<param name="ondown" value="50"/>
+			<param name="onright" value="9310"/>
+			<param name="onback" value="50"/>
+			<param name="pick_focus" value="Lib_PickFocusMusic"/>
+		</include>
+		<control type="grouplist" id="9000">
+			<left>760</left>
+			<top>76</top>
+			<width>680</width>
+			<height>80</height>
+			<orientation>horizontal</orientation>
+			<itemgap>24</itemgap>
+			<onup>noop</onup>
+			<ondown>9310</ondown>
+			<onback>50</onback>
+			<include content="Music_SectionWord"><param name="id" value="9320"/><param name="label" value="albums"/><param name="path" value="musicdb://albums/"/><param name="color" value="$VAR[Music_WordColor_Albums]"/></include>
+			<include content="Music_SectionWord"><param name="id" value="9321"/><param name="label" value="artists"/><param name="path" value="musicdb://artists/"/><param name="color" value="$VAR[Music_WordColor_Artists]"/></include>
+			<include content="Music_SectionWord"><param name="id" value="9322"/><param name="label" value="songs"/><param name="path" value="musicdb://songs/"/><param name="color" value="$VAR[Music_WordColor_Songs]"/></include>
+			<include content="Music_SectionWord"><param name="id" value="9323"/><param name="label" value="recently played"/><param name="path" value="musicdb://recentlyplayedalbums/"/><param name="color" value="$VAR[Music_WordColor_Recent]"/></include>
+		</control>
+		<control type="grouplist" id="9310">
+			<left>1068</left>
+			<top>150</top>
+			<width>760</width>
+			<height>48</height>
+			<orientation>horizontal</orientation>
+			<itemgap>6</itemgap>
+			<onup>9000</onup>
+			<onleft>9830</onleft>
+			<onright>noop</onright>
+			<ondown>50</ondown>
+			<onback>50</onback>
+			<!-- the view word is a pen word now (Lib_PenWords, under the title) -->
+			<control type="button" id="9325">
+				<width>190</width>
+				<include>VidView_OptionLook</include>
+				<label>$VAR[VidView_SortOrderWord]</label>
+				<onclick>SendClick(4)</onclick>
+				<visible>Control.IsEnabled(4)</visible>
+			</control>
+			<control type="button" id="9326">
+				<width>auto</width>
+				<include>VidView_OptionLook</include>
+				<label>sort: $INFO[Container.SortMethod]</label>
+				<onclick>SendClick(3)</onclick>
+				<visible>Control.IsEnabled(3)</visible>
+			</control>
+		</control>
+		<control type="button" id="3">
+			<description>Sort by (Kodi)</description>
+			<include>KS_Hidden</include>
+		</control>
+		<control type="button" id="4">
+			<description>Sort order (Kodi)</description>
+			<include>KS_Hidden</include>
+		</control>
+	</include>
+
+	<!-- ================================================================== 530 albums -->
+	<include name="Music_AlbumPrint">
+		<definition>
+			<control type="label">
+				<left>60</left>
+				<top>60</top>
+				<width>234</width>
+				<height>280</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>hand_52</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$LOCALIZE[31384]</label>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="group">
+				<left>60</left>
+				<top>50</top>
+				<width>234</width>
+				<visible>!ListItem.IsParentFolder</visible>
+				<height>280</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>234</width>
+					<height>280</height>
+					<include content="KS_TiltFocus" condition="$PARAM[focused]"><param name="focus" value="$PARAM[lift]"/></include>
+					<include content="KS_Print_Instant">
+						<param name="art" value="$VAR[KS_SquareArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="stamp" value="$VAR[KS_LP_Stamp]"/>
+						<param name="stamped" value="!String.IsEmpty(ListItem.LastPlayed)"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+						<param name="caption" value="$INFO[ListItem.Label]"/>
+						<param name="corners" value="false"/>
+					</include>
+				</control>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_View_530">
+		<control type="panel" id="530">
+			<left>52</left>
+			<top>196</top>
+			<width>1812</width>
+			<height>800</height>
+			<orientation>vertical</orientation>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<preloaditems>2</preloaditems>
+			<onup>9310</onup>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<viewtype label="31368">list</viewtype>
+			<visible>$EXP[Music_IsAlbums]</visible>
+			<itemlayout width="302" height="400">
+				<include content="Music_AlbumPrint">
+					<param name="dim" value="$VAR[Music_GridDim]"/>
+					<param name="lift" value="false"/>
+					<param name="focused" value="false"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="302" height="400">
+				<include content="Music_AlbumPrint">
+					<param name="dim" value="white"/>
+					<param name="lift" value="Control.HasFocus(530)"/>
+					<param name="focused" value="true"/>
+				</include>
+				<control type="group">
+					<visible>Control.HasFocus(530) + Integer.IsLess(Container(530).Column,4)</visible>
+					<control type="label"><left>60</left><top>338</top><width>440</width><height>27</height><font>lbln_20</font><textcolor>label_hi</textcolor><label>$INFO[ListItem.Artist]$INFO[ListItem.Year,  ·  ,]</label></control>
+					<control type="label"><left>58</left><top>362</top><width>480</width><height>54</height><font>hand_36</font><textcolor>ink_bold</textcolor><label>$VAR[Music_AlbumNote]</label></control>
+				</control>
+				<control type="group">
+					<visible>Control.HasFocus(530) + !Integer.IsLess(Container(530).Column,4)</visible>
+					<control type="label"><left>-186</left><top>338</top><width>480</width><height>27</height><align>right</align><font>lbln_20</font><textcolor>label_hi</textcolor><label>$INFO[ListItem.Artist]$INFO[ListItem.Year,  ·  ,]</label></control>
+					<control type="label"><left>-186</left><top>362</top><width>480</width><height>54</height><align>right</align><font>hand_36</font><textcolor>ink_bold</textcolor><label>$VAR[Music_AlbumNote]</label></control>
+				</control>
+			</focusedlayout>
+		</control>
+	</include>
+	<variable name="Music_GridDim">
+		<value condition="Control.HasFocus(530) | Control.HasFocus(531)">dim_print</value>
+		<value>white</value>
+	</variable>
+
+	<!-- ================================================================== 531 artists -->
+	<include name="Music_ArtistPrint">
+		<definition>
+			<control type="label">
+				<left>60</left>
+				<top>60</top>
+				<width>234</width>
+				<height>234</height>
+				<align>center</align>
+				<aligny>center</aligny>
+				<font>hand_52</font>
+				<textcolor>ink_faint</textcolor>
+				<label>$LOCALIZE[31384]</label>
+				<visible>ListItem.IsParentFolder</visible>
+			</control>
+			<control type="group">
+				<left>60</left>
+				<top>50</top>
+				<width>234</width>
+				<visible>!ListItem.IsParentFolder</visible>
+				<height>234</height>
+				<include>KS_TiltItem</include>
+				<control type="group">
+					<width>234</width>
+					<height>234</height>
+					<include content="KS_TiltFocus" condition="$PARAM[focused]"><param name="focus" value="$PARAM[lift]"/></include>
+					<include content="KS_Print_Square">
+						<param name="art" value="$VAR[KS_SquareArt]"/>
+						<param name="dim" value="$PARAM[dim]"/>
+						<param name="lift" value="$PARAM[lift]"/>
+						<param name="title" value="$INFO[ListItem.Label]"/>
+					</include>
+				</control>
+			</control>
+			<control type="label">
+				<left>58</left>
+				<top>300</top>
+				<width>250</width>
+				<height>52</height>
+				<font>hand_36</font>
+				<textcolor>$PARAM[color]</textcolor>
+				<label>$INFO[ListItem.Label]</label>
+				<visible>!ListItem.IsParentFolder</visible>
+			</control>
+		</definition>
+	</include>
+	<include name="Music_View_531">
+		<control type="panel" id="531">
+			<left>52</left>
+			<top>196</top>
+			<width>1812</width>
+			<height>780</height>
+			<orientation>vertical</orientation>
+			<scrolltime tween="cubic" easing="out">260</scrolltime>
+			<preloaditems>2</preloaditems>
+			<onup>9310</onup>
+			<include>Lib_OpenLeft</include>
+			<include>Lib_OpenRight</include>
+			<viewtype label="31364">list</viewtype>
+			<visible>$EXP[Music_IsArtists]</visible>
+			<itemlayout width="302" height="390">
+				<include content="Music_ArtistPrint">
+					<param name="dim" value="$VAR[Music_GridDim]"/>
+					<param name="lift" value="false"/>
+					<param name="focused" value="false"/>
+					<param name="color" value="ink_faint"/>
+				</include>
+			</itemlayout>
+			<focusedlayout width="302" height="390">
+				<include content="Music_ArtistPrint">
+					<param name="dim" value="white"/>
+					<param name="lift" value="Control.HasFocus(531)"/>
+					<param name="focused" value="true"/>
+					<param name="color" value="ink_bold"/>
+				</include>
+			</focusedlayout>
+		</control>
+	</include>
+</includes>

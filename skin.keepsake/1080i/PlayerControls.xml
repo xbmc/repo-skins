@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Player controls (M3, Builder D, Minimal per SPEC 5): small centred panel Kodi opens with the
+	PlayerControls builtin while something plays outside fullscreen. Art, title, meta, hairline
+	progress with times, transport row (same 72px boxes as the OSD).
+
+	Id contract (Estuary Omega PlayerControls.xml, skin-side ids): 201 transport row, 600 previous,
+	602 play/pause, 603 stop, 605 next, 704 repeat, 607 shuffle, 87 hidden seek stepper (Up).
+	Focus map: open -> 602; Left/Right walk the row (wraps), Up -> 87 (Left/Right step seek),
+	Down from 87 -> row. Back closes.
+-->
+<window>
+	<defaultcontrol always="true">602</defaultcontrol>
+	<visible>Player.HasMedia + Window.IsActive(PlayerControls) + !Window.IsActive(FullscreenVideo) + !Window.IsActive(FullscreenGame) + !Window.IsActive(Visualisation)</visible>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<control type="group">
+			<centerleft>50%</centerleft>
+			<centertop>50%</centertop>
+			<width>1040</width>
+			<height>420</height>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1040</width>
+				<height>420</height>
+				<texture colordiffuse="paper">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>1040</width>
+				<height>420</height>
+				<texture border="10" colordiffuse="rule_strong">common/rect_outline_1.png</texture>
+			</control>
+
+			<!-- art -->
+			<control type="image">
+				<left>40</left>
+				<top>40</top>
+				<width>220</width>
+				<height>220</height>
+				<texture colordiffuse="paper_raised">common/white.png</texture>
+			</control>
+			<control type="image">
+				<left>40</left>
+				<top>40</top>
+				<width>220</width>
+				<height>220</height>
+				<aspectratio>keep</aspectratio>
+				<fadetime>120</fadetime>
+				<texture background="true">$VAR[OSD_PlayerArt]</texture>
+			</control>
+
+			<!-- text -->
+			<control type="label">
+				<left>292</left>
+				<top>40</top>
+				<width>708</width>
+				<height>26</height>
+				<font>lbl_20</font>
+				<label>$VAR[OSD_State]  ·  $VAR[OSD_Type]</label>
+			</control>
+			<control type="label">
+				<left>292</left>
+				<top>74</top>
+				<width>708</width>
+				<height>50</height>
+				<font>hand_48</font>
+				<label>$VAR[OSD_Title]</label>
+			</control>
+			<control type="label">
+				<left>292</left>
+				<top>130</top>
+				<width>708</width>
+				<height>26</height>
+				<font>lbl_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$VAR[OSD_Meta]</label>
+			</control>
+
+			<!-- progress -->
+			<control type="image">
+				<left>292</left>
+				<top>212</top>
+				<width>708</width>
+				<height>2</height>
+				<texture colordiffuse="rule_strong">common/white.png</texture>
+			</control>
+			<control type="progress">
+				<left>292</left>
+				<top>212</top>
+				<width>708</width>
+				<height>2</height>
+				<info>Player.SeekBar</info>
+				<texturebg colordiffuse="clear">common/white.png</texturebg>
+			</control>
+			<control type="image">
+				<left>292</left>
+				<top>210</top>
+				<width>708</width>
+				<height>6</height>
+				<texture colordiffuse="ink_bold">common/white.png</texture>
+				<visible>Control.HasFocus(87)</visible>
+			</control>
+			<control type="label">
+				<left>292</left>
+				<top>226</top>
+				<width>708</width>
+				<height>30</height>
+				<font>mono_20</font>
+				<label>$VAR[OSD_SeekTimeLabel]</label>
+			</control>
+			<control type="label">
+				<left>292</left>
+				<top>226</top>
+				<width>708</width>
+				<height>30</height>
+				<align>right</align>
+				<font>mono_20</font>
+				<textcolor>ink2</textcolor>
+				<label>$INFO[Player.TimeRemaining,−,]$INFO[Player.Duration,  /  ,]</label>
+			</control>
+
+			<control type="button" id="87">
+				<description>seek stepper</description>
+				<include>KS_Hidden</include>
+				<onup>noop</onup>
+				<ondown>201</ondown>
+				<onleft>StepBack</onleft>
+				<onright>StepForward</onright>
+				<visible>Player.SeekEnabled</visible>
+			</control>
+
+			<!-- transport -->
+			<control type="grouplist" id="201">
+				<left>32</left>  <!-- 40 - 8; children at left 8, itemgap - 8: frame room (grouplists clip) -->
+				<top>300</top>
+				<width>976</width>
+				<height>osd_box_f</height>
+				<usecontrolcoords>true</usecontrolcoords>
+				<orientation>horizontal</orientation>
+				<itemgap>6</itemgap>  <!-- osd_box_gap - 8 (children carry left 8) -->
+				<include content="OSD_BoxButton">
+					<param name="id" value="600"/>
+					<param name="icon" value="icons/prev.png"/>
+					<param name="onclick" value="PlayerControl(Previous)"/>
+					<param name="onleft" value="607"/>
+					<param name="onright" value="602"/>
+				</include>
+				<include content="OSD_PlayButton">
+					<param name="onleft" value="600"/>
+					<param name="onright" value="603"/>
+				</include>
+				<include content="OSD_BoxButton">
+					<param name="id" value="603"/>
+					<param name="icon" value="icons/stop.png"/>
+					<param name="onclick" value="PlayerControl(Stop)"/>
+					<param name="onleft" value="602"/>
+					<param name="onright" value="605"/>
+					<param name="icon_size" value="24"/>
+					<param name="icon_pos" value="24"/>
+				</include>
+				<include content="OSD_BoxButton">
+					<param name="id" value="605"/>
+					<param name="icon" value="icons/next.png"/>
+					<param name="onclick" value="PlayerControl(Next)"/>
+					<param name="onleft" value="603"/>
+					<param name="onright" value="704"/>
+				</include>
+				<include content="OSD_BoxButton">
+					<param name="id" value="704"/>
+					<param name="icon" value="icons/repeat.png"/>
+					<param name="icon_color" value="$VAR[OSD_RepeatColor]"/>
+					<param name="onclick" value="PlayerControl(Repeat)"/>
+					<param name="onleft" value="605"/>
+					<param name="onright" value="607"/>
+					<param name="visible" value="Player.HasAudio"/>
+				</include>
+				<include content="OSD_BoxButton">
+					<param name="id" value="607"/>
+					<param name="icon" value="icons/shuffle.png"/>
+					<param name="icon_color" value="$VAR[OSD_ShuffleColor]"/>
+					<param name="onclick" value="PlayerControl(Random)"/>
+					<param name="onleft" value="704"/>
+					<param name="onright" value="600"/>
+					<param name="visible" value="Player.HasAudio"/>
+				</include>
+			</control>
+			<control type="label">
+				<left>600</left>
+				<top>308</top>
+				<width>400</width>
+				<height>osd_box</height>
+				<align>right</align>
+				<font>lbl_20</font>
+				<textcolor>label</textcolor>
+				<label>$VAR[OSD_RepeatLabel]</label>
+				<visible>Player.HasAudio</visible>
+			</control>
+		</control>
+	</controls>
+</window>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home: today's page (Includes_Home.xml). Kodi hard-codes no control ids on Home.
+	Home is KEEP_IN_MEMORY: <include condition> is evaluated at skin load.
+	Focus on open: the memory print (mockup), or the nav word / stat you left Home from.
+-->
+<window>
+	<defaultcontrol always="true">9110</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>paper</backgroundcolor>
+	<!-- 0.9.17: the region's day/month order for the date tables ("October 30" in a month-first long date, "October 2026" only in a day-first one; Includes_Dates.xml).
+	     Also set in Startup: Kodi resolves all of a window's onload labels before running them -->
+	<onload>SetProperty(keepsake.monthday,$INFO[System.Date(MMMM D)],home)</onload>
+	<onload>SetProperty(keepsake.monthyear,$INFO[System.Date(MMMM YYYY)],home)</onload>
+	<!-- yesterday's date in the region format, for "yesterday" notes (KS_LP_Rel) -->
+	<onload>SetProperty(keepsake.yesterday,$VAR[KS_Yesterday],home)</onload>
+	<!-- come back to the word you left from (0.9.14: not a hidden word, nor a custom item that was cleared) -->
+	<onload condition="!String.IsEmpty(Window(Home).Property(keepsake.navfrom)) + ![[String.IsEqual(Window(Home).Property(keepsake.navfrom),9001) + Skin.HasSetting(HideMenu.Movies)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9002) + Skin.HasSetting(HideMenu.TVShows)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9003) + Skin.HasSetting(HideMenu.Music)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9004) + Skin.HasSetting(HideMenu.Search)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9007) + !$EXP[CustomMenu1On]] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9008) + !$EXP[CustomMenu2On]] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9009) + !$EXP[CustomMenu3On]]]">SetFocus($INFO[Window(Home).Property(keepsake.navfrom)])</onload>
+	<onload condition="[[String.IsEqual(Window(Home).Property(keepsake.navfrom),9001) + Skin.HasSetting(HideMenu.Movies)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9002) + Skin.HasSetting(HideMenu.TVShows)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9003) + Skin.HasSetting(HideMenu.Music)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9004) + Skin.HasSetting(HideMenu.Search)] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9007) + !$EXP[CustomMenu1On]] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9008) + !$EXP[CustomMenu2On]] | [String.IsEqual(Window(Home).Property(keepsake.navfrom),9009) + !$EXP[CustomMenu3On]]] + Integer.IsGreater(Container(9110).NumItems,0)">SetFocus(9110)</onload>
+	<onload>ClearProperty(keepsake.navfrom,home)</onload>
+	<!-- 0.9.8: the first word shown (HideMenu.*), not always films -->
+	<onload condition="!Integer.IsGreater(Container(9110).NumItems,0)">$VAR[Home_FirstNavWord]</onload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>KS_Page</include>
+		<include>Home_DataLists</include>
+		<include>CustomRows_Probes</include>
+		<!-- 0.9.8: today's page turns up to the custom rows (Home_CustomPage) while one has focus -->
+		<control type="group">
+			<include>Home_CustomTurn</include>
+			<include>Home_LeftPage</include>
+			<include>Home_RightPage</include>
+			<include>Home_Nav</include>
+			<include>Home_CustomPage</include>
+		</control>
+	</controls>
+</window>
