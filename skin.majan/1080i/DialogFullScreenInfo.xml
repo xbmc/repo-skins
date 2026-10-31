@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Fullscreen info - info on demand during playback (M3, Builder D). No mockup; built from the
+	OSD vocabulary (OSD.dc.html): kicker + ENDS + clock, title, meta + media flags, plot (3-line
+	clamp), "NEXT" line for TV episodes / playlists, progress with times. Same two scrims, no panel.
+	Opened by Kodi's Info action in fullscreen video and by the OSD "Info" button; Info again or
+	Back closes it (GUIDialogFullScreenInfo.cpp).
+
+	Id contract (Estuary Omega DialogFullScreenInfo.xml): 999 = full-screen invisible focus button
+	(default, always): Left/Right step seek, Up/Down chapter or big step, OK opens the OSD.
+-->
+<window>
+	<defaultcontrol always="true">999</defaultcontrol>
+	<include>Anim_OSDSlideUp</include>
+	<controls>
+		<control type="button" id="999">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<label></label>
+			<texturefocus />
+			<onright>StepForward</onright>
+			<onleft>StepBack</onleft>
+			<onup>ChapterOrBigStepForward</onup>
+			<ondown>ChapterOrBigStepBack</ondown>
+			<onclick>OSD</onclick>
+		</control>
+
+		<control type="group">
+			<visible>!Window.IsVisible(sliderdialog) + !Window.IsVisible(selectdialog) + !Window.IsVisible(osdsubtitlesettings) + !Window.IsVisible(osdaudiosettings) + !Window.IsVisible(osdvideosettings)</visible>
+			<!-- legibility over bright frames: tall bottom ramp from y 320, a plateau scrim under the poster /
+			     text block, and a corner scrim (media/osd, _src/make_osd_scrim.py) behind the text column -->
+			<include content="OSD_Scrims">
+				<param name="bottom_h" value="760"/>
+				<param name="top_h" value="300"/>
+			</include>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>620</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">common/scrim_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>screen_h</height>
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<texture colordiffuse="scrim">osd/scrim_corner_bl.png</texture>
+			</control>
+			<include content="OSD_TopLine"/>
+
+			<!-- poster: left of the title / meta / plot / next column (196 x 294, title top to NEXT line);
+			     the text column moves right by 236 only when there is a poster -->
+			<control type="group">
+				<left>page_margin</left>
+				<top>560</top>
+				<width>196</width>
+				<height>294</height>
+				<visible>[!String.IsEmpty(Player.Art(poster)) | !String.IsEmpty(Player.Art(tvshow.poster))]</visible>
+				<include content="Majan_Artwork">
+					<param name="art" value="$VAR[OSDInfo_Poster]"/>
+					<param name="title" value="$INFO[VideoPlayer.Title]"/>
+				</include>
+			</control>
+			<include content="OSD_TitleBlock">
+				<param name="top" value="560"/>
+				<param name="text_shift" value="[!String.IsEmpty(Player.Art(poster)) | !String.IsEmpty(Player.Art(tvshow.poster))]"/>
+				<param name="title_width" value="1250"/>
+				<param name="flags" value="false"/>
+			</include>
+
+			<!-- media flags: last line of the text column, bottom flush with the poster (822-854) -->
+			<control type="group">
+				<top>822</top>
+				<animation effect="slide" end="236,0" time="0" condition="[!String.IsEmpty(Player.Art(poster)) | !String.IsEmpty(Player.Art(tvshow.poster))]">Conditional</animation>
+				<include content="OSD_Flags">
+					<param name="align" value="left"/>
+				</include>
+			</control>
+
+
+			<!-- plot, 3-line clamp -->
+			<control type="textbox">
+				<animation effect="slide" end="236,0" time="0" condition="[!String.IsEmpty(Player.Art(poster)) | !String.IsEmpty(Player.Art(tvshow.poster))]">Conditional</animation>
+				<left>page_margin</left>
+				<top>692</top>
+				<width>1180</width>
+				<height>99</height>  <!-- 3 lines exactly: no half-clipped line at the bottom -->
+				<font>body_23</font>
+				<label>$INFO[VideoPlayer.Plot]</label>
+				<include>Majan_PlotScroll</include>
+				<visible>!String.IsEmpty(VideoPlayer.Plot)</visible>
+			</control>
+
+			<!-- next episode / next playlist item: right end of the flags row -->
+			<control type="grouplist">
+				<left>page_margin</left>
+				<top>822</top>
+				<width>page_width</width>
+				<height>32</height>
+				<orientation>horizontal</orientation>
+				<align>right</align>
+				<itemgap>16</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<visible>$EXP[OSD_HasNext]</visible>
+				<control type="label">
+					<top>2</top>
+					<width>auto</width>
+					<height>30</height>
+					<font>mono_13</font>
+					<textcolor>$VAR[ColorAccent]</textcolor>
+					<label>$LOCALIZE[31209]</label>
+				</control>
+				<control type="label">
+					<width max="700">auto</width>
+					<height>32</height>
+					<font>credits_21_semibold</font>
+					<label>$VAR[OSD_NextLabel]</label>
+				</control>
+			</control>
+
+			<include content="OSD_ProgressBlock">
+				<param name="top" value="906"/>
+			</include>
+
+			<control type="label">
+				<left>page_margin</left>
+				<top>1018</top>
+				<width>page_width</width>
+				<height>24</height>
+				<font>mono_13</font>
+				<textcolor>text_tertiary</textcolor>
+				<label>$LOCALIZE[31753]</label>
+			</control>
+		</control>
+	</controls>
+</window>

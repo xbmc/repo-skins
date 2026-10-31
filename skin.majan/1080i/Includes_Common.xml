@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Common building blocks: page background, top-bar furniture, focus frames, posters,
+	watched markers, buttons. Prefix: Majan_. Parameterised includes document their params.
+-->
+<includes>
+	<!-- ============================================================ page -->
+
+	<!-- Flat page background (bg). Use as the first control of every full-screen window. -->
+	<include name="Majan_Background">
+		<control type="image">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<texture colordiffuse="bg">common/white.png</texture>
+		</control>
+	</include>
+
+	<!-- 1px horizontal rule. params: top, left (default page margin), width (default page width), color -->
+	<include name="Majan_Rule">
+		<param name="top">0</param>
+		<param name="left">page_margin</param>
+		<param name="width">page_width</param>
+		<param name="color">$VAR[ColorRule]</param>
+		<definition>
+			<control type="image">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>rule_h</height>
+				<texture colordiffuse="$PARAM[color]">common/hairline.png</texture>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Header rule at the bottom of the 120px top bar -->
+	<include name="Majan_TopRule">
+		<include content="Majan_Rule">
+			<param name="top" value="topbar_rule_y"/>
+		</include>
+	</include>
+
+	<!-- Date + clock, right side of the top bar (DESIGN 7.4) -->
+	<!-- Plot scroll, one whole line at a time (1.0.17, Signal's fix, LESSONS "View fixes 2026-10-28 (Signal)"): Kodi's
+	     textbox autoscroll crawls without a pause between lines, so every moment showed half lines at the top and bottom.
+	     The condition is false for one second in five (System.Time(ss) ends in 0 or 5), which resets only the delay
+	     counter, so the box moves one line (250 ms) per 5 s and rests on whole lines. No repeat: its fade restarts on
+	     every reset. Boxes must be whole lines tall: N x pitch (body_23 32.7, body_25 35.97, body_26 37.74). -->
+	<!-- param more: an extra condition (an AUTO-height box needs a fixed whole-line probe: its own page count is a line short) -->
+	<include name="Majan_PlotScroll">
+		<param name="more">true</param>
+		<definition>
+			<autoscroll delay="3800" time="250">!String.EndsWith(System.Time(ss),0) + !String.EndsWith(System.Time(ss),5) + $PARAM[more]</autoscroll>
+		</definition>
+	</include>
+
+	<!-- param date: false hides the date (Home, while 2+ custom menu items need the room; 1.0.17) -->
+	<include name="Majan_Clock">
+		<param name="date">true</param>
+		<definition>
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>topbar_item_top</top>
+			<width>page_width</width>
+			<height>topbar_item_h</height>
+			<orientation>horizontal</orientation>
+			<align>right</align>
+			<itemgap>18</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<control type="label">
+				<top>14</top>
+				<width>auto</width>
+				<height>30</height>
+				<font>mono_15</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$VAR[DateLabel]</label>
+				<visible>$PARAM[date]</visible>
+			</control>
+			<control type="label">
+				<width>auto</width>
+				<height>topbar_item_h</height>
+				<font>clock_34</font>
+				<textcolor>text_primary</textcolor>
+				<label>$VAR[ClockLabel]</label>
+			</control>
+		</control>
+		</definition>
+	</include>
+
+	<!-- Page header for library / settings windows: mono index (accent) + page name.
+	     params: index ("02"), title (label), sub (optional mono caption after the title) -->
+	<include name="Majan_PageHeader">
+		<param name="index">01</param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<control type="grouplist">
+				<left>page_margin</left>
+				<top>topbar_item_top</top>
+				<width>1100</width>
+				<height>topbar_item_h</height>
+				<orientation>horizontal</orientation>
+				<itemgap>20</itemgap>
+				<usecontrolcoords>true</usecontrolcoords>
+				<control type="label">
+					<top>14</top>
+					<width>auto</width>
+					<height>30</height>
+					<font>mono_14</font>
+					<textcolor>$VAR[ColorAccent]</textcolor>
+					<label>[UPPERCASE]$PARAM[index][/UPPERCASE]</label>
+				</control>
+				<control type="label">
+					<width max="760">auto</width>
+					<height>topbar_item_h</height>
+					<font>header_34</font>
+					<textcolor>text_primary</textcolor>
+					<label>$PARAM[title]</label>
+				</control>
+				<control type="label">
+					<top>14</top>
+					<width max="300">auto</width>
+					<height>30</height>
+					<font>mono_14</font>
+					<textcolor>text_tertiary</textcolor>
+					<label>$PARAM[sub]</label>
+				</control>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Full top bar for non-Home windows: header + clock + rule -->
+	<include name="Majan_TopBar">
+		<param name="index">01</param>
+		<param name="title"></param>
+		<param name="sub"></param>
+		<definition>
+			<include content="Majan_PageHeader">
+				<param name="index" value="$PARAM[index]"/>
+				<param name="title" value="$PARAM[title]"/>
+				<param name="sub" value="$PARAM[sub]"/>
+			</include>
+			<include>Majan_Clock</include>
+			<include>Majan_TopRule</include>
+		</definition>
+	</include>
+
+	<!-- ===================================================== focus frames -->
+	<!-- Put inside a group sized to the item; the frame grows 7px on each side (DESIGN 7.2).
+	     param visible: condition (e.g. Control.HasFocus(9110)); omit inside focusedlayouts. -->
+	<include name="Majan_FocusFrame">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="$VAR[ColorAccent]">$VAR[FocusFrame]</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+			<!-- Outline Off + Reduce motion: no zoom marks the item either, so keep the thin frame
+			     (as VidView_PosterFocus does): music grid, Big album view, Home poster rows, Search. -->
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="$VAR[ColorAccent]">$VAR[FocusFrameAlways]</texture>
+				<visible>[$PARAM[visible]] + $EXP[FocusOutlineOff] + $EXP[ReduceMotion]</visible>
+			</control>
+		</definition>
+	</include>
+	<!-- Same, but never hidden by the "Off" setting (buttons, menus, dialogs) -->
+	<include name="Majan_FocusFrameAlways">
+		<param name="visible">true</param>
+		<definition>
+			<control type="image">
+				<left>focus_out</left>
+				<top>focus_out</top>
+				<right>focus_out</right>
+				<bottom>focus_out</bottom>
+				<texture border="16" colordiffuse="$VAR[ColorAccent]">$VAR[FocusFrameAlways]</texture>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- ========================================================== posters -->
+	<!-- Poster/cover image with corner mask chosen at window load (DESIGN 7.1; changing the
+	     corners setting runs ReloadSkin()). Sits inside a group of the poster size.
+	     params: art (infolabel), mask_round, mask_square, title (fallback label) -->
+	<include name="Majan_Artwork">
+		<param name="art">$INFO[ListItem.Art(poster)]</param>
+		<param name="mask_round">masks/poster_round8.png</param>
+		<param name="mask_square">masks/poster_square.png</param>
+		<param name="title">$INFO[ListItem.Label]</param>
+		<definition>
+			<!-- fallback: raised block + title, covered by the artwork when it loads -->
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<texture colordiffuse="bg_raised">common/white.png</texture>
+			</control>
+			<control type="label">
+				<left>12</left>
+				<right>12</right>
+				<top>12</top>
+				<height>60</height>
+				<font>small_19_bold</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$PARAM[title]</label>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<texture background="true" diffuse="$PARAM[mask_round]">$PARAM[art]</texture>
+				<visible>Skin.HasSetting(majan.roundedcorners)</visible>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<right>0</right>
+				<bottom>0</bottom>
+				<aspectratio>scale</aspectratio>
+				<texture background="true">$PARAM[art]</texture>
+				<visible>!Skin.HasSetting(majan.roundedcorners)</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Watched markers for a movie/episode poster (DESIGN 7.3 / SPEC 6). Inside the poster group. -->
+	<include name="Majan_WatchedMarkers">
+		<!-- unwatched: accent square -->
+		<control type="image">
+			<right>0</right>
+			<top>0</top>
+			<width>marker_s</width>
+			<height>marker_s</height>
+			<texture colordiffuse="$VAR[ColorAccent]">markers/unwatched.png</texture>
+			<visible>$EXP[ShowUnwatchedMarkers] + $EXP[ListItemIsVideoFile] + $EXP[ListItemUnwatched] + !Skin.HasSetting(majan.roundedcorners)</visible>
+		</control>
+		<control type="image">
+			<right>8</right>
+			<top>8</top>
+			<width>marker_s</width>
+			<height>marker_s</height>
+			<texture colordiffuse="$VAR[ColorAccent]">markers/unwatched_round.png</texture>
+			<visible>$EXP[ShowUnwatchedMarkers] + $EXP[ListItemIsVideoFile] + $EXP[ListItemUnwatched] + Skin.HasSetting(majan.roundedcorners)</visible>
+		</control>
+		<!-- watched: baked tab -->
+		<control type="image">
+			<right>0</right>
+			<top>0</top>
+			<width>marker_tab</width>
+			<height>marker_tab</height>
+			<texture>markers/watched.png</texture>
+			<visible>$EXP[ShowWatchedMarkers] + $EXP[ListItemIsVideoFile] + $EXP[ListItemWatched] + !Skin.HasSetting(majan.roundedcorners)</visible>
+		</control>
+		<control type="image">
+			<right>6</right>
+			<top>6</top>
+			<width>marker_tab</width>
+			<height>marker_tab</height>
+			<texture>markers/watched_round.png</texture>
+			<visible>$EXP[ShowWatchedMarkers] + $EXP[ListItemIsVideoFile] + $EXP[ListItemWatched] + Skin.HasSetting(majan.roundedcorners)</visible>
+		</control>
+		<!-- in progress: accent bar on the bottom edge -->
+		<control type="progress">
+			<left>0</left>
+			<right>0</right>
+			<bottom>0</bottom>
+			<height>progress_h</height>
+			<texturebg colordiffuse="scrim_track">common/white.png</texturebg>
+			<midtexture colordiffuse="$VAR[ColorAccent]">common/white.png</midtexture>
+			<info>ListItem.PercentPlayed</info>
+			<visible>$EXP[ShowUnwatchedMarkers] + ListItem.IsResumable</visible>
+		</control>
+	</include>
+
+	<!-- ========================================================== buttons -->
+	<!-- Button textures (static texture names so rounded/square is picked at window load) -->
+	<include name="Majan_Tex_ButtonPrimary">
+		<texturefocus border="10" colordiffuse="$VAR[ColorAccent]">common/rect_square.png</texturefocus>
+		<texturenofocus border="10" colordiffuse="$VAR[ColorAccent]">common/rect_square.png</texturenofocus>
+	</include>
+	<include name="Majan_Tex_ButtonPrimary_Round">
+		<texturefocus border="10" colordiffuse="$VAR[ColorAccent]">common/rect_round8.png</texturefocus>
+		<texturenofocus border="10" colordiffuse="$VAR[ColorAccent]">common/rect_round8.png</texturenofocus>
+	</include>
+	<include name="Majan_Tex_ButtonSecondary">
+		<texturefocus border="10" colordiffuse="text_primary">common/rect_outline_1.png</texturefocus>
+		<texturenofocus border="10" colordiffuse="border_button">common/rect_outline_1.png</texturenofocus>
+	</include>
+	<include name="Majan_Tex_ButtonSecondary_Round">
+		<texturefocus border="10" colordiffuse="text_primary">common/rect_outline_1_round8.png</texturefocus>
+		<texturenofocus border="10" colordiffuse="border_button">common/rect_outline_1_round8.png</texturenofocus>
+	</include>
+
+	<!-- Primary (accent fill, ink text) / secondary (1px outline) action buttons, 58px.
+	     Each lives in its own group so the focus frame can grow around it.
+	     params: id, left, top, width, label, onclick, visible, onleft, onright, onup, ondown, icon;
+	     onleft_if/onleft_then, onright_if/onright_then = an extra conditional action run before onleft/onright -->
+	<include name="Majan_ButtonPrimary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="icon">icons/play.png</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onleft_if">false</param>
+		<param name="onleft_then">noop</param>
+		<param name="onright">noop</param>
+		<param name="onright_if">false</param>
+		<param name="onright_then">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<label>$PARAM[label]</label>
+					<font>button_23_bold</font>
+					<textcolor>ink</textcolor>
+					<focusedcolor>ink</focusedcolor>
+					<align>right</align>
+					<textoffsetx>32</textoffsetx>
+					<include condition="Skin.HasSetting(majan.roundedcorners)">Majan_Tex_ButtonPrimary_Round</include>
+					<include condition="!Skin.HasSetting(majan.roundedcorners)">Majan_Tex_ButtonPrimary</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft condition="$PARAM[onleft_if]">$PARAM[onleft_then]</onleft>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright condition="$PARAM[onright_if]">$PARAM[onright_then]</onright>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+				</control>
+				<control type="image">
+					<left>32</left>
+					<top>20</top>
+					<width>18</width>
+					<height>18</height>
+					<texture colordiffuse="ink">$PARAM[icon]</texture>
+				</control>
+				<include content="Majan_FocusFrameAlways">
+					<param name="visible" value="Control.HasFocus($PARAM[id])"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+	<include name="Majan_ButtonSecondary">
+		<param name="visible">true</param>
+		<param name="top">0</param>
+		<param name="focus_also">false</param>
+		<param name="onclick2">noop</param>
+		<param name="onup">noop</param>
+		<param name="ondown">noop</param>
+		<param name="onleft">noop</param>
+		<param name="onleft_if">false</param>
+		<param name="onleft_then">noop</param>
+		<param name="onright">noop</param>
+		<param name="onright_if">false</param>
+		<param name="onright_then">noop</param>
+		<param name="onback">noop</param>
+		<definition>
+			<control type="group">
+				<left>$PARAM[left]</left>
+				<top>$PARAM[top]</top>
+				<width>$PARAM[width]</width>
+				<height>button_h</height>
+				<visible>$PARAM[visible]</visible>
+				<control type="button" id="$PARAM[id]">
+					<label>$PARAM[label]</label>
+					<font>button_23_semibold</font>
+					<textcolor>text_primary</textcolor>
+					<focusedcolor>text_primary</focusedcolor>
+					<align>center</align>
+					<textoffsetx>0</textoffsetx>
+					<include condition="Skin.HasSetting(majan.roundedcorners)">Majan_Tex_ButtonSecondary_Round</include>
+					<include condition="!Skin.HasSetting(majan.roundedcorners)">Majan_Tex_ButtonSecondary</include>
+					<onclick>$PARAM[onclick]</onclick>
+					<onclick>$PARAM[onclick2]</onclick>
+					<onup>$PARAM[onup]</onup>
+					<ondown>$PARAM[ondown]</ondown>
+					<onleft condition="$PARAM[onleft_if]">$PARAM[onleft_then]</onleft>
+					<onleft>$PARAM[onleft]</onleft>
+					<onright condition="$PARAM[onright_if]">$PARAM[onright_then]</onright>
+					<onright>$PARAM[onright]</onright>
+					<onback>$PARAM[onback]</onback>
+				</control>
+				<include content="Majan_FocusFrameAlways">
+					<param name="visible" value="Control.HasFocus($PARAM[id]) | $PARAM[focus_also]"/>
+				</include>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Mono sub-nav button (library header bar, OSD text buttons): accent fill + ink on focus.
+	     params: id, label, onclick, visible -->
+	<include name="Majan_SubNavButton">
+		<param name="visible">true</param>
+		<param name="onclick">noop</param>
+		<definition>
+			<control type="button" id="$PARAM[id]">
+				<width>auto</width>
+				<height>subnav_h</height>
+				<font>mono_15</font>
+				<textcolor>text_secondary</textcolor>
+				<focusedcolor>ink</focusedcolor>
+				<textoffsetx>12</textoffsetx>
+				<texturefocus colordiffuse="$VAR[ColorAccent]">common/white.png</texturefocus>
+				<texturenofocus />
+				<label>$PARAM[label]</label>
+				<onclick>$PARAM[onclick]</onclick>
+				<visible>$PARAM[visible]</visible>
+			</control>
+		</definition>
+	</include>
+
+	<!-- Off-screen object (template/hidden controls Kodi needs but the user never sees) -->
+	<include name="Majan_Hidden">
+		<left>offscreen</left>
+		<top>offscreen</top>
+		<width>1</width>
+		<height>1</height>
+		<texturefocus />
+		<texturenofocus />
+	</include>
+</includes>

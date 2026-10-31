@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Home (SPEC 4, HomeTuned.dc.html = Home section, Hub.dc.html = section hubs). Owner: Builder A. M2.
+	Kodi hard-codes no control ids on Home (Estuary Home.xml ids are skin-side); Majan ids are listed
+	in Includes_Home.xml. Home is KEEP_IN_MEMORY in Kodi: <include condition> is evaluated at skin load.
+
+	Focus map
+	  top bar 9001-9006 (Left/Right wrap) -Down-> content of the active section
+	  Home:   Play 9110 -Right-> Details 9111 -Right-> Trailer 9112; buttons -Down-> newest row 9120 (-> 9121)
+	  Hubs:   row 01 -Down-> row 02 (-> row 03); Up from row 01 -> its menu item
+	  Back from any content -> top bar (group 9000 remembers the item). Back on the bar does nothing.
+	Main menu items can be hidden in Skin settings (HideMenu.Home/Movies/TVShows/Music/Search, Includes_Home.xml):
+	  hidden items vanish, the rest close up, Left/Right fall through hidden ids. The gear always stays.
+	Custom menu items 9007-9009 (1.0.17, Skin settings > Custom menu items) sit after Music, before Search; OK opens the
+	  add-on / folder / favourite (Includes_CustomMenu.xml), their section shows a quiet panel (Home_SectionCustom).
+	Default focus on open: the item of the section that was active when Home was left.
+-->
+<window>
+	<!-- Hiding menu items can no longer leave Home without focus: Kodi falls back to the default control whenever
+	     nothing has focus, so it is the gear (System menu) (9006), which never hides (it was 9001, hidden with the films item).
+	     The first onload focuses 9001 while it is shown, exactly as the old default did; the onloads below override it.
+	     1.0.23: not while a hub is coming back: focusing 9001 on the way rewound that hub's rest timer, and its rows
+	     blanked and reloaded on every Back from a library window. -->
+	<defaultcontrol always="true">9006</defaultcontrol>
+	<onload condition="!Skin.HasSetting(HideMenu.Home) + !Skin.HasSetting(HideMenu.Movies) + !$EXP[Home_RefocusValid]">SetFocus(9001)</onload>
+	<menucontrol>9000</menucontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<!-- re-focus the section that was active when Home was left -->
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),movies) + !Skin.HasSetting(HideMenu.Movies)">SetFocus(9002)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),tv) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9003)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),music) + !Skin.HasSetting(HideMenu.Music)">SetFocus(9004)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),custom1) + $EXP[CustomMenu1On]">SetFocus(9007)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),custom2) + $EXP[CustomMenu2On]">SetFocus(9008)</onload>
+	<onload condition="String.IsEqual(Window(Home).Property(majan.section),custom3) + $EXP[CustomMenu3On]">SetFocus(9009)</onload>
+	<!-- 1.0.17: custom menu items (custom1-3) come back focused too, while they are shown (Home_RefocusValid). -->
+	<!-- 1.0.12: Home (9001) hidden in Skin settings (HideMenu.Home, or HideMenu.Movies: the overview is all films) and
+	     no remembered section to return to: focus the first item that is shown. The gear is never hidden. -->
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + !Skin.HasSetting(HideMenu.Movies)">SetFocus(9002)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + !Skin.HasSetting(HideMenu.TVShows)">SetFocus(9003)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + !Skin.HasSetting(HideMenu.Music)">SetFocus(9004)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + $EXP[CustomMenu1On]">SetFocus(9007)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + $EXP[CustomMenu2On]">SetFocus(9008)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenu1On] + !$EXP[CustomMenu2On] + $EXP[CustomMenu3On]">SetFocus(9009)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenuAnyOn] + !Skin.HasSetting(HideMenu.Search)">SetFocus(9005)</onload>
+	<onload condition="[Skin.HasSetting(HideMenu.Home) | Skin.HasSetting(HideMenu.Movies)] + !$EXP[Home_RefocusValid] + Skin.HasSetting(HideMenu.Movies) + Skin.HasSetting(HideMenu.TVShows) + Skin.HasSetting(HideMenu.Music) + !$EXP[CustomMenuAnyOn] + Skin.HasSetting(HideMenu.Search)">SetFocus(9006)</onload>
+	<!-- new stamp each time Home opens: the Next up plugin path changes, so it refreshes after playback -->
+	<onload>SetProperty(majan.reload,$INFO[System.Time(hh:mm:ss)],home)</onload>
+	<!-- Artwork background (setting 4) via TMDb Helper's blur service (6.17.9 source, monitor/imgmon.py):
+	     EnableBlur alone starts its image thread (the data service stays idle without TMDbHelper.Service);
+	     on Home it reads Container(TMDbHelper.WidgetContainer).ListItem and writes
+	     Window(Home).Property(TMDbHelper.ListItem.BlurImage). Off = blur service off, no image control. -->
+	<onload condition="$EXP[ArtBackgroundOn] + !Skin.HasSetting(TMDbHelper.EnableBlur)">Skin.SetBool(TMDbHelper.EnableBlur)</onload>
+	<!-- 1.0.1: blur went from 240px/radius 30 (a colour wash) to 480px/radius 12 on fanart; migrate -->
+	<onload condition="String.IsEqual(Skin.String(TMDbHelper.Blur.Size),240)">Skin.SetString(TMDbHelper.Blur.Radius,12)</onload>
+	<onload condition="String.IsEqual(Skin.String(TMDbHelper.Blur.Size),240)">Skin.SetString(TMDbHelper.Blur.Size,480)</onload>
+	<onload condition="!$EXP[ArtBackgroundOn] + Skin.HasSetting(TMDbHelper.EnableBlur)">Skin.Reset(TMDbHelper.EnableBlur)</onload>
+	<onload condition="$EXP[ArtBackgroundOn] + String.IsEmpty(Skin.String(TMDbHelper.Blur.Size))">Skin.SetString(TMDbHelper.Blur.Size,480)</onload>
+	<onload condition="$EXP[ArtBackgroundOn]">SetProperty(TMDbHelper.Blur.SourceImage,Art(fanart)|Art(poster),home)</onload>
+	<onload condition="$EXP[ArtBackgroundOn]">SetProperty(TMDbHelper.WidgetContainer,$VAR[Home_BlurContainer],home)</onload>
+	<!-- other windows must not inherit Home's container id (TMDb Helper reads it globally) -->
+	<onunload>ClearProperty(TMDbHelper.WidgetContainer,home)</onunload>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Majan_Background</include>
+		<include>Home_ArtBackground</include>
+		<include>Home_DataLists</include>
+		<include>CustomRows_Probes</include>
+		<!-- 1.0.12: sections + the custom rows page below them; the group slides one screen up while a custom row has focus -->
+		<control type="group">
+			<include>Home_CustomRowsPageAnim</include>
+			<include>Home_SectionHome</include>
+			<include>Home_HubMovies</include>
+			<include>Home_HubTV</include>
+			<include>Home_HubMusic</include>
+			<include>Home_SectionCustom</include>
+			<include>Home_CustomRows</include>
+		</control>
+		<include>Home_NowPlaying</include>
+		<include>Home_TopBar</include>
+	</controls>
+</window>

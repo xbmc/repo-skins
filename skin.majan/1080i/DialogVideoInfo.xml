@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Video information (SPEC 5 / T19, Builder B). Movie, episode, TV show, season and collection
+	variants share one page; texts and facts switch on ListItem.DBType (Includes_VideoInfo.xml,
+	VidView_Fact* in Includes_Views_Video.xml).
+
+	Kodi id contract (Estuary Omega DialogVideoInfo.xml + CGUIDialogVideoInfo, Omega source):
+	  8 play (plays from the beginning when 9 exists; browses for tvshow/season/set)
+	  9 resume (enabled by Kodi only with a resume point) | 11 play trailer | 50 cast list
+	  (collections: the films of the set; OK on a film re-opens the dialog with it)
+	  6 refresh | 7 user rating | 10 choose art | 12 choose fanart | 13 director search
+	  14 manage versions | 15 manage extras | 443 go to collection (Estuary convention).
+	  Not used: 3/4 (Kodi image/text area - we read ListItem.* directly), 5 (tracks toggle).
+	Majan ids: 9000 button row (default focus), 9001 plot (OK = full plot), 9010 More,
+	  9012 Browse / 9013 From start (both re-send 8), 9100 More row, 9200 full-plot overlay, 61 its scrollbar.
+
+	Focus map: 9001 plot ↕ 9000 buttons ↓ 50 cast (page slides up 440 px while 50 has focus).
+	  More → 9100 row (replaces the media flags while focused; ▲ / Back return to More).
+	  Back closes the dialog (from the overlay / More row it returns to the page first).
+-->
+<window>
+	<defaultcontrol always="true">9000</defaultcontrol>
+	<onload condition="$EXP[ArtBackgroundOn]">SetProperty(TMDbHelper.Blur.SourceImage,Art(fanart)|Art(tvshow.fanart)|Art(poster)|Art(tvshow.poster)|Art(thumb),Home)</onload>
+	<include>Anim_DialogOpenClose</include>
+	<controls>
+		<include>Majan_Background</include>
+		<include content="VidView_ArtBackground">
+			<param name="scrim" value="common/scrim_left.png"/>
+			<param name="scrim_flip" value="true"/>
+		</include>
+		<control type="group">
+			<description>page (slides up while the cast row has focus)</description>
+			<animation type="Conditional" condition="Control.HasFocus(50) + !Skin.HasSetting(majan.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-440" time="200" tween="cubic" easing="out"/>
+			</animation>
+			<animation type="Conditional" condition="Control.HasFocus(50) + Skin.HasSetting(majan.reducemotion)" reversible="true">
+				<effect type="slide" start="0,0" end="0,-440" time="0"/>
+			</animation>
+			<include>VidInfo_Header</include>
+			<include>VidInfo_Poster</include>
+			<include>VidInfo_TextColumn</include>
+			<include>VidInfo_Buttons</include>
+			<include>VidInfo_FlagsAndMore</include>
+			<control type="label">
+				<left>vidview_col_x</left>
+				<top>950</top>
+				<width>vidview_col_w</width>
+				<height>22</height>
+				<font>mono_14</font>
+				<textcolor>$VAR[ColorCaption]</textcolor>
+				<label>$VAR[VidInfo_Hint]</label>
+				<visible>!Control.HasFocus(50)</visible>
+			</control>
+			<include>VidInfo_CastRow</include>
+		</control>
+		<include>VidInfo_FullPlot</include>
+	</controls>
+</window>
