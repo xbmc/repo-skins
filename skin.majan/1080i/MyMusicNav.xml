@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Music library (SPEC 5 Bespoke, M2 T14; Builder C). Mockups: Music.dc.html (504 grid +
+	now-playing bar), MusicStage.dc.html (505 Big album + artist fanart stage).
+
+	Kodi id contract (Estuary Omega MyMusicNav.xml / GUIWindowMusicNav.cpp):
+	  views in <views> (50 list, 504 grid, 505 big album; all from Includes_Views_Music.xml),
+	  menucontrol 9000, 3 sort by, 4 sort order (hidden, clicked by the header tabs).
+	  Reserved by Kodi in this window and not reused: 2, 5, 8, 12, 15, 16, 17, 19, 20.
+	Majan ids: 9320-9326 header tabs (inside grouplist 9000), 60 list scrollbar.
+
+	Focus map: view <-> Up/Down <-> header tabs (Left/Right inside). Back on a view is Kodi's:
+	up a folder, back through the tab history, out of the window at the start node.
+	Back on the tabs returns to the view. Empty folder: caption + hint; focus lands on the tabs.
+-->
+<window>
+	<defaultcontrol always="true">50</defaultcontrol>
+	<menucontrol>9000</menucontrol>
+	<!-- an empty folder has nothing focusable in the view: put focus on the header tabs -->
+	<onload condition="Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating">SetFocus(9000)</onload>
+	<backgroundcolor>bg</backgroundcolor>
+	<views>50,504,505,508</views>
+	<include>Music_BlurSourceOnload</include>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Majan_Background</include>
+		<!-- Big album stage: artist fanart -> TMDb Helper blurred cover -> nothing -->
+		<include content="Music_StageBackground">
+			<param name="art" value="$VAR[Music_StageArt]"/>
+			<param name="visible" value="Control.IsVisible(505)"/>
+		</include>
+
+		<include content="Majan_TopBar">
+			<param name="index" value="04"/>
+			<param name="title" value="$LOCALIZE[31724]"/>
+			<param name="sub" value="$VAR[Music_HeaderSub]"/>
+		</include>
+		<include>Music_HeaderBar</include>
+
+		<!-- views -->
+		<include>Music_View_504</include>
+		<include>Music_View_505</include>
+		<include>Music_View_50</include>
+		<include>Music_View_508</include>
+
+		<!-- empty folder. 1.0.23: shown beside the ".." item too, at y 500, which is clear of it in every view -->
+		<control type="group">
+			<left>page_margin</left>
+			<top>500</top>
+			<width>900</width>
+			<height>120</height>
+			<visible>Integer.IsEqual(Container.NumItems,0) + !Container.IsUpdating</visible>
+			<control type="label">
+				<left>0</left>
+				<top>0</top>
+				<width>900</width>
+				<height>30</height>
+				<font>mono_15</font>
+				<textcolor>$VAR[ColorCaption]</textcolor>
+				<label>$LOCALIZE[31246]</label>
+			</control>
+			<control type="label">
+				<left>0</left>
+				<top>40</top>
+				<width>900</width>
+				<height>36</height>
+				<font>body_23</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$LOCALIZE[31350]</label>
+			</control>
+		</control>
+
+		<include>Music_NowPlayingBar</include>
+	</controls>
+</window>

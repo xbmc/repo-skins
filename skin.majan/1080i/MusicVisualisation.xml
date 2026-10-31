@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Now playing: full-screen music (SPEC 5 Bespoke, M3 T20; Builder C). No mockup: built from the
+	OSD.dc.html geometry (top line, title block, progress at y 806, controls row at y 900 drawn by
+	MusicOSD.xml) and the Big Album stage background.
+
+	Kodi id contract (Estuary Omega MusicVisualisation.xml / GUIWindowVisualisation.cpp):
+	  2 = visualisation control. Optional: only rendered when Omar enables a visualisation add-on;
+	  then the art backdrop is replaced by the visualisation and the big layout shows on Info / OSD.
+	No focusable controls (Kodi routes OK / Menu to MusicOSD, Back to the previous window).
+
+	Background: artist fanart -> TMDb Helper blur of the playing cover (Music_PlayerBlurOnload,
+	run once per album on load; MusicOSD re-checks when it opens) -> flat page. Setting 4 Off = none.
+-->
+<window>
+	<defaultcontrol></defaultcontrol>
+	<backgroundcolor>bg</backgroundcolor>
+	<include>Music_PlayerBlurOnload</include>
+	<include>Anim_WindowOpenClose</include>
+	<controls>
+		<include>Majan_Background</include>
+		<control type="visualisation" id="2">
+			<left>0</left>
+			<top>0</top>
+			<width>screen_w</width>
+			<height>screen_h</height>
+			<visible>Player.HasAudio + Visualisation.Enabled</visible>
+		</control>
+		<include content="Music_StageBackground">
+			<param name="art" value="$VAR[Music_PlayerArt]"/>
+			<param name="visible" value="!Visualisation.Enabled"/>
+			<param name="scrim_left" value="true"/>
+		</include>
+		<!-- over a visualisation: scrims under the text (DESIGN 2.5) -->
+		<control type="group">
+			<visible>Visualisation.Enabled</visible>
+			<control type="image">
+				<left>0</left>
+				<bottom>0</bottom>
+				<width>screen_w</width>
+				<height>520</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/gradient_bottom.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>screen_w</width>
+				<height>200</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/gradient_top.png</texture>
+			</control>
+			<control type="image">
+				<left>0</left>
+				<top>0</top>
+				<width>2600</width>
+				<height>screen_h</height>
+				<!-- own fades: a translucent image without them is drawn over the window content on Shield (QA 2026-10-18) -->
+				<animation effect="fade" start="0" end="100" time="180">WindowOpen</animation>
+				<animation effect="fade" start="100" end="0" time="120">WindowClose</animation>
+				<include>Music_Anim_BackdropFade</include>
+				<texture colordiffuse="scrim">common/scrim_left.png</texture>
+				<visible>Player.ShowInfo | Window.IsVisible(musicosd)</visible>
+			</control>
+		</control>
+
+		<!-- ============================================================ top line -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>45</top>
+			<width>1100</width>
+			<height>30</height>
+			<font>mono_15</font>
+			<textcolor>$VAR[ColorAccent]</textcolor>
+			<label>$VAR[Music_NPKicker]</label>
+		</control>
+		<include>Majan_Clock</include>
+
+		<!-- ======================================================= cover + title block -->
+		<control type="group">
+			<visible>!Visualisation.Enabled | Player.ShowInfo | Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="group">
+				<left>page_margin</left>
+				<top>170</top>
+				<width>music_np_cover</width>
+				<height>music_np_cover</height>
+				<include content="Music_Cover">
+					<param name="art" value="$INFO[Player.Art(thumb)]"/>
+					<param name="title" value="$INFO[MusicPlayer.Album]"/>
+					<param name="mask_round" value="music/square_round8_560.png"/>
+					<param name="fadetime" value="250"/>
+				</include>
+				<!-- no cover (and maybe no album name): a quiet music glyph instead of an empty square -->
+				<control type="image">
+					<left>224</left>
+					<top>224</top>
+					<width>112</width>
+					<height>112</height>
+					<texture colordiffuse="text_tertiary">icons/audio.png</texture>
+					<visible>String.IsEmpty(Player.Art(thumb))</visible>
+				</control>
+			</control>
+			<control type="group">
+				<left>music_np_text_x</left>
+				<top>300</top>
+				<width>music_np_text_w</width>
+				<control type="label">
+					<left>0</left>
+					<top>0</top>
+					<width>music_np_text_w</width>
+					<height>26</height>
+					<font>mono_15</font>
+					<textcolor>$VAR[ColorCaption]</textcolor>
+					<label>$INFO[MusicPlayer.Album]$INFO[MusicPlayer.Year,  ·  ,]</label>
+				</control>
+				<control type="textbox">
+					<left>0</left>
+					<top>36</top>
+					<width>music_np_text_w</width>
+					<height>157</height>  <!-- 2 lines of display_72 = 69 + 72 asc + 16 desc (140 cut line 2's descenders) -->
+					<font>display_72</font>
+					<textcolor>text_primary</textcolor>
+					<label>$INFO[MusicPlayer.Title]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>198</top>
+					<width>music_np_text_w</width>
+					<height>40</height>
+					<font>title_28_semibold</font>
+					<label>$INFO[MusicPlayer.Artist]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>244</top>
+					<width>music_np_text_w</width>
+					<height>24</height>
+					<font>mono_13</font>
+					<textcolor>text_tertiary</textcolor>
+					<label>$INFO[MusicPlayer.Genre,,  ·  ]$INFO[MusicPlayer.Codec]$INFO[MusicPlayer.BitRate,  ·  , kbps]$INFO[MusicPlayer.SampleRate,  ·  , kHz]</label>
+				</control>
+				<control type="label">
+					<left>0</left>
+					<top>340</top>
+					<width>music_np_text_w</width>
+					<height>24</height>
+					<font>mono_13</font>
+					<textcolor>$VAR[ColorAccent]</textcolor>
+					<label>$VAR[Music_PlayModes]</label>
+				</control>
+			</control>
+		</control>
+		<!-- compact title over a running visualisation -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>748</top>
+			<width>page_width</width>
+			<height>36</height>
+			<font>card_21_bold</font>
+			<label>$INFO[MusicPlayer.Title]$INFO[MusicPlayer.Artist,  ·  ,]</label>
+			<visible>Visualisation.Enabled + !Player.ShowInfo + !Window.IsVisible(musicosd)</visible>
+		</control>
+
+		<!-- ============================================================= progress -->
+		<control type="progress">
+			<left>page_margin</left>
+			<top>music_progress_y</top>
+			<width>page_width</width>
+			<height>4</height>
+			<info>Player.Progress</info>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>826</top>
+			<width>600</width>
+			<height>30</height>
+			<font>mono_17</font>
+			<label>$INFO[Player.Time]</label>
+		</control>
+		<control type="label">
+			<left>page_margin</left>
+			<top>826</top>
+			<width>page_width</width>
+			<height>30</height>
+			<align>right</align>
+			<font>mono_17</font>
+			<textcolor>text_secondary</textcolor>
+			<label>$INFO[Player.TimeRemaining,-,]$INFO[Player.Duration,  /  ,]</label>
+		</control>
+
+		<!-- 1.0.11: how to reach the presets (OK opens the controls, Left from Play wraps to Presets) -->
+		<control type="label">
+			<left>page_margin</left>
+			<top>1010</top>
+			<width>page_width</width>
+			<height>24</height>
+			<align>right</align>
+			<font>mono_13</font>
+			<textcolor>text_tertiary</textcolor>
+			<label>$LOCALIZE[31321]</label>
+			<visible>$EXP[Music_HasVisPresets] + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+		</control>
+
+		<!-- ============================================================== up next -->
+		<control type="grouplist">
+			<left>page_margin</left>
+			<top>900</top>
+			<width>page_width</width>
+			<height>36</height>
+			<orientation>horizontal</orientation>
+			<itemgap>16</itemgap>
+			<usecontrolcoords>true</usecontrolcoords>
+			<visible>MusicPlayer.HasNext + !Window.IsVisible(musicosd)</visible>
+			<include>Anim_FadeVisible</include>
+			<control type="label">
+				<top>8</top>
+				<width>auto</width>
+				<height>24</height>
+				<font>mono_13</font>
+				<textcolor>$VAR[ColorCaption]</textcolor>
+				<label>$LOCALIZE[31252]</label>
+			</control>
+			<control type="label">
+				<width max="1500">auto</width>
+				<height>36</height>
+				<font>card_21_medium</font>
+				<textcolor>text_secondary</textcolor>
+				<label>$INFO[MusicPlayer.offset(1).Title]$INFO[MusicPlayer.offset(1).Artist,  ·  ,]</label>
+			</control>
+		</control>
+	</controls>
+</window>
