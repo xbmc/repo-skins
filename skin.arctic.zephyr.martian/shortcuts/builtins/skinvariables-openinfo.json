@@ -1,0 +1,87 @@
+{
+    "infolabels": {
+        "dbtype": "Container.ListItem.DBType",
+        "tmdb_id": "Container.ListItem.Property(tmdb_id)",
+        "origin_tmdb_id": "Window.Property(origin_tmdb_id)",
+        "origin_tmdb_type": "Window.Property(origin_tmdb_type)",
+        "origin_season": "Window.Property(origin_season)",
+        "origin_episode": "Window.Property(origin_episode)",
+        "origin_dbid": "Window.Property(origin_dbid)",
+        "title": "Container.ListItem.Title",
+        "tvshow_title": "Container.ListItem.TvShowTitle",
+        "year": "Container.ListItem.Year",
+        "label": "Container.ListItem.Label"
+    },
+    "values": {
+        "tmdb_type": [
+            {
+                "rules": ["{dbtype}==movie"],
+                "value": "movie"
+            },
+            {
+                "rules": ["{dbtype}==tvshow||{dbtype}==season||{dbtype}==episode"],
+                "value": "tv"
+            },
+            "person"
+        ],
+        "year_param": [
+            {
+                "rules": [
+                    "{dbtype}==episode",
+                    "{year}!="
+                ],
+                "value": "&amp;episode_year={year}"
+            },
+            {
+                "rules": [
+                    "{year}!="
+                ],
+                "value": "&amp;year={year}"
+            },
+            ""
+        ],
+        "origin_params": [
+            {
+                "rules": ["{origin_dbid}!="],
+                "value": ",origin_tmdb_type={origin_tmdb_type},origin_dbid={origin_dbid}"
+            },
+            ",origin_tmdb_type={origin_tmdb_type},origin_season={origin_season},origin_episode={origin_episode},origin_tmdb_id={origin_tmdb_id}"
+        ],
+        "query": [
+            {
+                "rules": [
+                    "{tmdb_type}==tv",
+                    "{tvshow_title}!="
+                ],
+                "value": "{tvshow_title}"
+            },
+            {
+                "rules": [
+                    "{tmdb_type}==movie||{tmdb_type}==tv",
+                    "{title}!="
+                ],
+                "value": "{title}"
+            },
+            "{label}"
+        ]
+    },
+    "encode": {
+        "encoded_query": "{query}"
+    },
+    "actions": [        
+        {
+            "rules": ["{tmdb_id}=="],
+            "value": [
+                "RunScript(plugin.video.themoviedb.helper,add_query={encoded_query},tmdb_type={tmdb_type}{origin_params},call_auto=1190)"
+            ]
+        },
+        {
+            "rules": ["{encoded_query}=="],
+            "value": [
+                 "RunScript(plugin.video.themoviedb.helper,add_path=plugin://plugin.video.themoviedb.helper/?info=details&amp;tmdb_type={tmdb_type}&amp;tmdb_id={tmdb_id}{origin_params},call_auto=1190)"
+            ]
+        },
+        "RunScript(plugin.video.themoviedb.helper,add_path=plugin://plugin.video.themoviedb.helper/?info=details&amp;tmdb_type={tmdb_type}&amp;tmdb_id={tmdb_id}&amp;query={encoded_query}{origin_params},call_auto=1190)"
+    ]
+
+}

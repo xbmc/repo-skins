@@ -1,0 +1,639 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+	<!-- Reusable property groups -->
+	<propertyGroups>
+	    <propertyGroup name="widgetProperties">
+	        <!--- Widget Content -->
+	        <property name="content" condition="widgetPath=Submenu">skinshortcuts-mainmenu-submenu</property>
+	        <property name="content" condition="widgetPath=Settings">SettingsInfoItems</property>
+	        <property name="content" condition="widgetPath=Systeminfo">SystemInfoItems</property>
+	        <property name="content" condition="widgetPath=Weather">WeatherDailyItems</property>
+	        <property name="content" condition="widgetPath AND NOT widgetPath IN Submenu,Settings,Systeminfo,Weather" from="widgetPath"/>
+	        <property name="content">$VAR[DefWidgetContent]</property>
+	        
+	        <property name="target" condition="widgetTarget" from="widgetTarget"/>
+	        <property name="target" condition="!widgetPath">$VAR[DefWidgetTarget]</property>
+	        <property name="sortby" from="widgetSortby"/>
+	        <property name="sortorder" from="widgetSortorder"/>
+	        <property name="limit" from="widgetLimit"/>
+
+	        <property name="autoscroll" condition="widgetAutoscroll">true</property>
+	        <property name="autoscroll">false</property>
+
+			<property name="isDynamicContent" condition="widgetPath IN Submenu,Settings,Systeminfo,Weather">false</property>
+			<property name="isDynamicContent">true</property>
+	    </propertyGroup>
+
+	    <propertyGroup name="moreItemProperties">
+		    <!-- Show More Item -->
+            <property name="showMore" condition="widgetListType=wraplist">false</property>
+		    <property name="showMore" condition="NOT widgetLimit EMPTY AND NOT widgetTarget EMPTY">true</property>
+		    <property name="showMore" condition="NOT widgetLimit EMPTY AND widgetPath EMPTY">true</property>
+		    <property name="showMore">false</property>
+	
+		    <property name="showMoreFanart" condition="widgetPath EMPTY">$VAR[DefWidgetFanart]</property>
+	        <property name="showMoreFanart" condition="widgetType=movies">special://skin/extras/backgrounds/fallbacks/film.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=sets">special://skin/extras/backgrounds/fallbacks/film.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=tvshows">special://skin/extras/backgrounds/fallbacks/tv.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=episodes">special://skin/extras/backgrounds/fallbacks/tv.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=musicvideos">special://skin/extras/backgrounds/fallbacks/music.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=artists">special://skin/extras/backgrounds/fallbacks/music.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=albums">special://skin/extras/backgrounds/fallbacks/music.jpg</property>
+	        <property name="showMoreFanart" condition="widgetType=songs">special://skin/extras/backgrounds/fallbacks/music.jpg</property>
+		    <property name="showMoreFanart" condition="widgetTarget=videos">special://skin/extras/backgrounds/fallbacks/tv.jpg</property>
+		    <property name="showMoreFanart" condition="widgetTarget=music">special://skin/extras/backgrounds/fallbacks/music.jpg</property>
+		
+		    <property name="limitNumber" condition="widgetLimit=10">10</property>
+		    <property name="limitNumber" condition="widgetLimit=25">25</property>
+		    <property name="limitNumber" condition="widgetLimit=50">50</property>
+		    <property name="limitNumber" condition="widgetLimit=100">100</property>
+		    <property name="limitNumber">99999</property>    
+	    </propertyGroup>   
+	</propertyGroups>
+
+	<!-- Presets (lookup tables) -->
+	<presets>
+		<preset name="widgetLayout">
+			<values condition="widgetAspect=Square OR widgetPath IN Submenu,Settings,Systeminfo" top="238" width="254" height="257" include="include.widget.square"/>
+			<values condition="widgetAspect=Landscape" top="238" width="445" height="257" include="include.widget.landscape"/>
+			<values condition="widgetAspect=Thumbnail" top="238" width="445" height="257" include="include.widget.thumb"/>
+			<values top="238" width="178" height="257" include="include.widget.poster"/>
+		</preset>
+	</presets>
+    
+  	<!-- Variable definitions and groups -->
+	<variables>
+        <variable name="widgetContainerParent" output="TMDBHelperWidgetContainer_Parent">
+            <value condition="Control.IsVisible($MATH[$PROPERTY[mainmenuid] * 1000 + 301])">$VAR[TMDBHelperWidgetContainer_C$MATH[$PROPERTY[mainmenuid] * 1000 + 301]]</value>
+        </variable>
+
+        <variable name="widgetContainer" output="TMDBHelperWidgetContainer_C$PARENT[index]301">
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]])">$NUMBER[$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]]</value>
+		</variable>
+
+        <variable name="widgetFanartParent" output="GlobalFanart_MultiWidgets_Parent">
+            <value condition="Control.IsVisible($MATH[$PROPERTY[mainmenuid] * 1000 + 301]) + Integer.IsGreater(Container($MATH[$PROPERTY[mainmenuid] * 1000 + 301]).NumItems,0)">$VAR[GlobalFanart_MultiWidgets_C$MATH[$PROPERTY[mainmenuid] * 1000 + 301]]</value>
+            <value condition="Control.IsVisible($MATH[$PROPERTY[mainmenuid] * 1000 + 301])">$VAR[GlobalFanart_Fallback]</value>
+        </variable>
+
+	    <variable name="widgetFanart" output="GlobalFanart_MultiWidgets_C$PARENT[index]301">
+	        <!-- Widget 1 -->
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(thumb)) + Skin.HasSetting(background.episodes.use.thumbnail) + String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBtype,episode) + ![System.Setting(hideunwatchedepisodethumbs) + Integer.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Playcount,0)]">$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(thumb)]</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(season.fanart)) + String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBtype,episode) + String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(fanart),Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(tvshow.fanart))">$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(season.fanart)]</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(fanart))">$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Art(fanart)]</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(fanart))">$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(fanart)]</value>
+	        <!-- PVR -->
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Window(Home).Property(TMDbHelper.ListItem.Fanart)) + [String.StartsWith(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.FolderPath,pvr://channels/tv) | String.StartsWith(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.FolderPath,pvr://recordings/tv) | String.StartsWith(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.FolderPath,pvr://timers/tv)]">$INFO[Window(Home).Property(TMDbHelper.ListItem.Fanart)]</value>
+	        <!-- Weather -->
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(FanartCode)) + $EXP[HasWeatherFanartMulti]">$VAR[WeatherFanartPath]$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(FanartCode)]/</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + !String.IsEmpty(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(FanartCode)) + $EXP[HasWeatherFanartSingle]">$VAR[WeatherFanartPath]$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.Property(FanartCode),,.jpg]</value>
+	        <!-- Fallback -->
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + [String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,movie) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,set)]">special://skin/extras/backgrounds/fallbacks/film.jpg</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + [String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,artist) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,album) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,song) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,musicvideo)]">special://skin/extras/backgrounds/fallbacks/music.jpg</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]) + [String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,tvshow) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,season) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,episode) | String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,video)]">special://skin/extras/backgrounds/fallbacks/tv.jpg</value>
+	        <value condition="Control.IsVisible($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]])">$VAR[GlobalFanart_Fallback]</value>
+		</variable>
+		
+		<variableGroup name="widgetVars">
+    		<variable content="widgetContainerParent" />
+    		<variable content="widgetFanartParent" />
+  		</variableGroup>
+
+		<variableGroup name="widgetItemVars">
+    		<variable content="widgetContainer" />
+    		<variable content="widgetFanart" />
+  		</variableGroup>
+	</variables>
+
+    <!-- Template definitions -->
+    <template include="widget-classic" menu="mainmenu">
+		<property name="id" from="index" />
+
+        <propertyGroup content="widgetProperties"/>
+        <propertyGroup content="moreItemProperties"/>
+
+		<preset content="widgetLayout" />
+
+        <property name="widgetListType" from="widgetListType" condition="widgetListType" />
+        <property name="widgetListType">list</property>
+		
+		<property name="widgetAspect" condition="widgetPath IN Submenu,Settings,Systeminfo">Square</property>
+		<property name="widgetAspect" from="widgetAspect" condition="widgetAspect" />		
+		<property name="widgetAspect">Poster</property>		
+		
+        <property name="autoLimit" condition="widgetAspect=Square">7</property>
+        <property name="autoLimit" condition="widgetAspect=Thumbnail">4</property>
+        <property name="autoLimit" condition="widgetAspect=Landscape">4</property>
+        <property name="autoLimit">10</property>
+
+        <property name="isAutoLimit" condition="widgetLimit=Auto">true</property>
+        <property name="isAutoLimit">false</property>
+
+        <controls>
+            <control type="$PROPERTY[widgetListType]" id="301">
+                <skinshortcuts>visibility</skinshortcuts>
+                <description>Plugin Content Widget</description>
+                <left>70</left>
+                <right>70</right>
+                <height>297</height>
+                <onup>300</onup>
+                <ondown>300</ondown>
+                <onback>300</onback>
+                <onleft>301</onleft>
+                <onright>301</onright>
+                <preloaditems>2</preloaditems>
+                <orientation>horizontal</orientation>
+                <include>ScrolltimeWidgetsList</include>
+                <include content="Widget_AutoScroll" condition="$PROPERTY[autoscroll]">
+                    <param name="time" value="Skin.String(AutoScrollTime)" />
+                    <param name="condition" value="!Control.HasFocus(301) + !System.ScreenSaverActive + System.IdleTime(1)" />
+                </include>
+                <itemlayout width="$PROPERTY[width]" height="$PROPERTY[height]">
+                    <include content="$PROPERTY[include]">
+                        <param name="height" value="$PROPERTY[height]"/>
+                        <param name="top" value="$PROPERTY[top]"/>
+                        <param name="reflections" value="Skin.HasSetting(show.reflections)"/>
+                    </include>
+                </itemlayout>
+                <focusedlayout width="$PROPERTY[width]" height="$PROPERTY[height]">
+                    <include content="$PROPERTY[include]">
+                        <param name="id" value="301"/>
+                        <param name="height" value="$PROPERTY[height]"/>
+                        <param name="top" value="$PROPERTY[top]"/>
+                        <param name="reflections" value="Skin.HasSetting(show.reflections)"/>
+                        <param name="focused" value="true" />
+                    </include>
+                </focusedlayout>
+                <include content="Widget_ContentDynamic" condition="$PROPERTY[isDynamicContent]">
+                   <param name="target" value="$PROPERTY[target]" />
+                   <param name="limit" value="$PROPERTY[limit]" />
+                   <param name="sortby" value="$PROPERTY[sortby]" />
+                   <param name="sortorder" value="$PROPERTY[sortorder]" />
+                   <param name="content" value="$PROPERTY[content]" />
+                   <param name="is_autolimit" value="$PROPERTY[isAutoLimit]" />
+                   <param name="autolimit" value="$PROPERTY[autoLimit]" />
+                </include>
+                <include content="Widget_ContentInclude" condition="!$PROPERTY[isDynamicContent]">
+                   <param name="include" value="$PROPERTY[content]" />
+                </include>
+                <include content="Widget_ContentItem" condition="$PROPERTY[showMore] + $PROPERTY[isDynamicContent] + !$PROPERTY[isAutoLimit] + Skin.HasSetting(enable.morewidget)">
+                    <param name="label" value="31429" />
+                    <param name="icon" value="misc/more-items.png" />
+                    <param name="fanart" value="$PROPERTY[showMoreFanart]" />
+                    <param name="onclick" value="ActivateWindow($PROPERTY[target],$PROPERTY[content],return)" />
+                    <param name="visible" value="[Integer.IsEqual(Container(301).NumItems,$PROPERTY[limitNumber]) | Integer.IsEqual(Container(301).NumItems,$MATH[limitNumber + 1])] + !Container(301).IsUpdating" />
+                </include>
+            </control>
+        </controls>
+    </template>
+
+    <template include="widget-featured" menu="mainmenu">
+		<property name="id" from="index" />
+
+        <propertyGroup content="widgetProperties"/>
+        <propertyGroup content="moreItemProperties"/>
+
+        <controls>
+            <control type="wraplist" id="301">
+                <skinshortcuts>visibility</skinshortcuts>
+                <description>Widget</description>
+                <width>1</width>
+                <height>1</height>
+                <onup>300</onup>
+                <ondown>300</ondown>
+                <onback>300</onback>
+                <onleft>301</onleft>
+                <onright>301</onright>
+                <preloaditems>2</preloaditems>
+                <orientation>horizontal</orientation>
+                <scrolltime tween="quadratic">0</scrolltime>
+                <include content="Widget_AutoScroll" condition="$PROPERTY[autoscroll]">
+                    <param name="time" value="Skin.String(AutoScrollTime)" />
+                    <param name="condition" value="!Control.HasFocus(301) + !System.ScreenSaverActive" />
+                </include>
+                <include>Animation.FadeIn</include>
+                <include>Animation.FadeOut</include>
+                <itemlayout width="1" height="1">
+                </itemlayout>
+                <focusedlayout width="1" height="1">
+                </focusedlayout>
+                <include content="Widget_ContentDynamic" condition="$PROPERTY[isDynamicContent]">
+                   <param name="target" value="$PROPERTY[target]" />
+                   <param name="limit" value="$PROPERTY[limit]" />
+                   <param name="sortby" value="$PROPERTY[sortby]" />
+                   <param name="sortorder" value="$PROPERTY[sortorder]" />
+                   <param name="content" value="$PROPERTY[content]" />
+                </include>
+                <include content="Widget_ContentInclude" condition="!$PROPERTY[isDynamicContent]">
+                   <param name="include" value="$PROPERTY[content]" />
+                </include>
+                <include content="Widget_ContentItem" condition="$PROPERTY[showMore] + $PROPERTY[isDynamicContent] + Skin.HasSetting(enable.morewidget)">
+                    <param name="label" value="31429" />
+                    <param name="icon" value="misc/more-items.png" />
+                    <param name="fanart" value="$PROPERTY[showMoreFanart]" />
+                    <param name="onclick" value="ActivateWindow($PROPERTY[target],$PROPERTY[content],return)" />
+                    <param name="visible" value="[Integer.IsEqual(Container(301).NumItems,$PROPERTY[limitNumber]) | Integer.IsEqual(Container(301).NumItems,$MATH[limitNumber + 1])] + !Container(301).IsUpdating" />
+                </include>
+            </control>
+        </controls>
+    </template>
+
+    <template include="widget-vertical" menu="mainmenu">
+		<property name="id" from="index" />
+
+        <propertyGroup content="widgetProperties"/>
+        <propertyGroup content="moreItemProperties"/>
+
+        <property name="widgetListType" from="widgetListType" condition="widgetListType" />
+        <property name="widgetListType">fixedlist</property>
+
+		<property name="widgetAspect" condition="widgetPath IN Submenu,Settings,Systeminfo">Square</property>
+		<property name="widgetAspect" from="widgetAspect" condition="widgetAspect" />		
+		<property name="widgetAspect">Poster</property>		
+		
+        <property name="autoLimit" condition="widgetAspect=Square">5</property>
+        <property name="autoLimit" condition="widgetAspect=Thumbnail">3</property>
+        <property name="autoLimit" condition="widgetAspect=Landscape">3</property>
+        <property name="autoLimit">8</property>
+
+        <property name="isAutoLimit" condition="widgetLimit=Auto">true</property>
+        <property name="isAutoLimit">false</property>
+
+        <controls>
+            <control type="$PROPERTY[widgetListType]" id="301">
+                <skinshortcuts>visibility</skinshortcuts>
+                <visible>!String.Contains(Container(300).ListItem.Property(widget),weather)</visible>
+                <animation effect="fade" start="100" end="66" time="400" condition="!Control.HasFocus(301) + !Skin.HasSetting(widgets.fade)">Conditional</animation>
+                <top>330</top>
+                <left>518</left>
+                <width>1876</width>
+                <height>365</height>
+                <onright>noop</onright>
+                <onback condition="!Integer.IsEqual(Container(301).Position,0) | Container(301).HasPrevious">PageUp</onback>
+                <onback condition="!Integer.IsEqual(Container(301).Position,0) | Container(301).HasPrevious">PageUp</onback>
+                <onback condition="!Integer.IsEqual(Container(301).Position,0) | Container(301).HasPrevious">PageUp</onback>
+                <onback condition="Integer.IsEqual(Container(301).Position,0) + !Container(301).HasPrevious">300</onback>
+                <onleft>300</onleft>
+                <onup>300</onup>
+                <ondown>300</ondown>
+                <focusposition>0</focusposition>
+                <preloaditems>2</preloaditems>
+                <orientation>horizontal</orientation>
+                <pagecontrol>60</pagecontrol>
+                <movement>$MATH[autoLimit - 1]</movement>
+                <include>ScrolltimeWidgetsList</include>
+                <include content="Widget_AutoScroll" condition="$PROPERTY[autoscroll]">
+                    <param name="time" value="Skin.String(AutoScrollTime)" />
+                    <param name="condition" value="!Control.HasFocus(301) + !System.ScreenSaverActive + System.IdleTime(1)" />
+                </include>
+				<include content="Widget_Layout_Normal">
+					<param name="shortcutsid" value="301" />
+					<param name="Thumbnail" value="$IF[widgetAspect=Thumbnail THEN true ELSE false]" />
+					<param name="Landscape" value="$IF[widgetAspect=Landscape THEN true ELSE false]" />
+					<param name="Square" value="$IF[widgetAspect=Square THEN true ELSE false]" />
+				</include>
+                <include content="Widget_ContentDynamic" condition="$PROPERTY[isDynamicContent]">
+                   <param name="target" value="$PROPERTY[target]" />
+                   <param name="limit" value="$PROPERTY[limit]" />
+                   <param name="sortby" value="$PROPERTY[sortby]" />
+                   <param name="sortorder" value="$PROPERTY[sortorder]" />
+                   <param name="content" value="$PROPERTY[content]" />
+                   <param name="is_autolimit" value="$PROPERTY[isAutoLimit]" />
+                   <param name="autolimit" value="$PROPERTY[autoLimit]" />
+                </include>
+                <include content="Widget_ContentInclude" condition="!$PROPERTY[isDynamicContent]">
+                   <param name="include" value="$PROPERTY[content]" />
+                </include>
+                <include content="Widget_ContentItem" condition="$PROPERTY[showMore] + $PROPERTY[isDynamicContent] + !$PROPERTY[isAutoLimit] + Skin.HasSetting(enable.morewidget)">
+                    <param name="label" value="31429" />
+                    <param name="icon" value="misc/more-items.png" />
+                    <param name="fanart" value="$PROPERTY[showMoreFanart]" />
+                    <param name="onclick" value="ActivateWindow($PROPERTY[target],$PROPERTY[content],return)" />
+                    <param name="visible" value="[Integer.IsEqual(Container(301).NumItems,$PROPERTY[limitNumber]) | Integer.IsEqual(Container(301).NumItems,$MATH[limitNumber + 1])] + !Container(301).IsUpdating" />
+                </include>
+            </control>
+        </controls>
+    </template>
+
+    <template include="widgets" menu="mainmenu">
+        <property name="mainmenuid" from="index" />     
+
+        <controls>
+            <control type="group">
+                <skinshortcuts>visibility</skinshortcuts>
+                <include condition="!Skin.HasSetting(widgets.fade)">Animation.Vertical.Widgets.Label</include>
+                <animation effect="slide" start="0" end="0,342" time="0" condition="Skin.HasSetting(homemenu.clean.flix) + Skin.HasSetting(homemenu.clean.flix.no.slide)">Conditional</animation>
+                <animation effect="slide" start="0" end="0,335" time="0" condition="Skin.HasSetting(homemenu.clean.flix) + !Skin.HasSetting(homemenu.clean.flix.no.slide)">Conditional</animation>
+                <animation effect="slide" start="0" end="0,40" time="0" condition="!Skin.HasSetting(homemenu.clean.flix) + !Skin.HasSetting(show.reflections)">Conditional</animation>
+                <include content="Widget_Navigation_Arrows">
+                    <param name="groupid" value="$MATH[mainmenuid * 1000 + 301]" />
+                </include>
+                <include content="Widget_Items_Count" condition="Skin.HasSetting(homemenu.clean.flix)">
+                    <param name="groupid" value="$MATH[mainmenuid * 1000 + 301]" />
+                </include>
+            </control>
+            <control type="grouplist" id="$MATH[mainmenuid * 1000 + 301]">
+                <skinshortcuts>visibility</skinshortcuts>
+                <usecontrolcoords>true</usecontrolcoords>
+                <itemgap>0</itemgap>
+                <orientation>vertical</orientation>
+                <include>ScrolltimeWidgetsContainer</include>
+ 
+                <include>Widget_Navigation_Actions</include>
+                
+                <skinshortcuts insert="widgets">items</skinshortcuts>
+             </control>
+             <control type="group">
+                 <skinshortcuts>visibility</skinshortcuts>
+                 <skinshortcuts insert="hidden-lists">items</skinshortcuts>
+             </control>       
+        </controls>     
+        <variableGroup content="widgetVars" />
+    </template>
+
+	<template items="widgets" source="widgets" filter="widgetPath">
+		<property name="id" from="index" />
+
+        <!--- Widget Content -->
+        <property name="content" condition="widgetPath=Submenu">skinshortcuts-mainmenu-submenu</property>
+        <property name="content" condition="widgetPath=Settings">SettingsInfoItems</property>
+        <property name="content" condition="widgetPath=Systeminfo">SystemInfoItems</property>
+        <property name="content" condition="widgetPath=WeatherDaily">WeatherDailyItems</property>
+        <property name="content" condition="widgetPath=WeatherHourly">WeatherHourlyItems</property>
+        <property name="content" condition="NOT widgetPath IN Submenu,Settings,Systeminfo,WeatherDaily,WeatherHourly" from="widgetPath"/>
+        
+        <property name="target" from="widgetTarget"/>
+        <property name="sortby" from="widgetSortby"/>
+        <property name="sortorder" from="widgetSortorder"/>
+        <property name="limit" from="widgetLimit"/>
+
+        <property name="autoscroll" condition="widgetAutoscroll">true</property>
+        <property name="autoscroll">false</property>
+
+        <property name="label" from="label" />
+        <property name="label">$LOCALIZE[31105]</property>
+
+        <property name="movement" condition="widgetPath IN Submenu,Settings,Systeminfo">4</property>
+        <property name="movement" condition="widgetStyle=Square">4</property>
+        <property name="movement" condition="widgetStyle=Thumbnail">2</property>
+        <property name="movement" condition="widgetStyle=Landscape">2</property>
+        <property name="movement" condition="widgetStyle=LandscapeSmall">3</property>
+        <property name="movement" condition="widgetStyle=LandscapePosterSmall">2</property>
+        <property name="movement">7</property>
+
+        <property name="autoLimit" condition="widgetTarget IN tvguide,radioguide">5</property>
+        <property name="autoLimit" condition="widgetPath IN Submenu,Settings,Systeminfo">5</property>
+        <property name="autoLimit" condition="widgetStyle=Square">5</property>
+        <property name="autoLimit" condition="widgetStyle=Thumbnail">3</property>
+        <property name="autoLimit" condition="widgetStyle=Landscape">3</property>
+        <property name="autoLimit" condition="widgetStyle=LandscapeSmall">4</property>
+        <property name="autoLimit" condition="widgetStyle=LandscapePosterSmall">3</property>
+        <property name="autoLimit">8</property>
+
+        <property name="isAutoLimit" condition="widgetLimit=Auto">true</property>
+        <property name="isAutoLimit" condition="widgetTarget IN tvguide,radioguide">true</property>
+        <property name="isAutoLimit">false</property>
+
+		<property name="isDynamicContent" condition="widgetPath IN Submenu,Settings,Systeminfo,WeatherDaily,WeatherHourly">false</property>
+		<property name="isDynamicContent">true</property>
+
+        <property name="isSubmenu" condition="widgetPath=Submenu">true</property>
+        <property name="isSubmenu">false</property>
+        <property name="isSettings" condition="widgetPath=Settings">true</property>
+        <property name="isSettings">false</property>
+        <property name="isFullscreenWidget" condition="widgetFullscreen">true</property>
+        <property name="isFullscreenWidget">false</property>
+
+        <property name="widgetInclude" condition="widgetTarget IN tvguide,radioguide">Widget_Layout_PVRGuide</property>
+        <property name="widgetInclude" condition="widgetPath IN Settings,Systeminfo">Widget_Layout_System</property>
+        <property name="widgetInclude" condition="widgetPath IN WeatherDaily,WeatherHourly">Widget_Layout_Weather</property>
+        <property name="widgetInclude">Widget_Layout_Normal</property>
+
+        <property name="fullscreenInfoInclude" condition="widgetPath IN Settings,Systeminfo">HomeWidgetsSysteminfo</property>
+        <property name="fullscreenInfoInclude" condition="widgetPath IN WeatherDaily,WeatherHourly">HomeWidgetsWeatherInfo</property>
+        <property name="fullscreenInfoInclude">HomeWidgetsFullscreenInfo</property>
+
+        <property name="widgetListType" from="widgetListType" condition="widgetListType"/>
+        <property name="widgetListType">fixedlist</property>
+
+        <propertyGroup content="moreItemProperties"/>
+
+        <!-- Widget Container -->
+        <property name="layoutHeight" condition="widgetFullscreen">710</property>
+        <property name="layoutHeight">325</property>
+        <property name="layoutHeight2" condition="widgetFullscreen">750</property>
+        <property name="layoutHeight2">365</property>
+        <property name="orientation" condition="widgetTarget IN tvguide,radioguide">vertical</property>
+	    <property name="orientation">horizontal</property>
+	
+		<controls>
+			<control type="group" id="$MATH[$PARENT[index] * 10000 + 7500 + $PROPERTY[id]]">
+				<visible>String.IsEqual(Container(300).ListItem.Property(submenuVisibility),$PARENT[submenuVisibility])</visible>
+				<visible>Integer.IsGreater(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).NumItems,0) | Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).IsUpdating</visible>
+				<control type="grouplist">
+					<include content="Widget_Title_Label">
+						<param name="focusid" value="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]" />
+						<param name="label" value="$PROPERTY[label]" />
+						<param name="showinfo" value="!$PROPERTY[isFullscreenWidget] + !Integer.IsEqual(Container($MATH[$PARENT[index] * 1000 + 301]).NumItems,1)" />
+					</include>
+				</control>
+			</control>
+			<control type="$PROPERTY[widgetListType]" id="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]">
+				<visible>String.IsEqual(Container(300).ListItem.Property(submenuVisibility),$PARENT[submenuVisibility])</visible>
+				<visible>Integer.IsGreater(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).NumItems,0) | Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).IsUpdating | $PROPERTY[isSubmenu]</visible>
+				<include content="DefMultiWidgetContainer">
+					<param name="id" value="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]" />
+					<param name="baseid" value="$MATH[$PARENT[index] * 100 + 31]" />
+					<param name="height" value="$PROPERTY[layoutHeight]" />
+					<param name="height2" value="$PROPERTY[layoutHeight2]" />
+					<param name="orientation" value="$PROPERTY[orientation]" />
+					<param name="movement" value="$PROPERTY[movement]" />
+					<param name="autoscroll" value="$PROPERTY[autoscroll]" />
+				</include>
+				<!-- ItemLayout -->
+				<include content="$PROPERTY[widgetInclude]">
+					<param name="shortcutsid" value="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]" />
+					<param name="Banner" value="$IF[widgetStyle=Banner THEN true ELSE false]" />
+					<param name="Thumbnail" value="$IF[widgetStyle=Thumbnail THEN true ELSE false]" />
+					<param name="Landscape" value="$IF[widgetStyle=Landscape THEN true ELSE false]" />
+					<param name="LandscapeSmall" value="$IF[widgetStyle=LandscapeSmall THEN true ELSE false]" />
+					<param name="LandscapePosterSmall" value="$IF[widgetStyle=LandscapePosterSmall THEN true ELSE false]" />
+					<param name="Square" value="$IF[widgetStyle=Square | isSubmenu THEN true ELSE false]" />
+				</include>
+				<include content="Widget_ContentDynamic" condition="$PROPERTY[isDynamicContent]">
+					<param name="target" value="$PROPERTY[target]" />
+					<param name="limit" value="$PROPERTY[limit]" />
+					<param name="sortby" value="$PROPERTY[sortby]" />
+					<param name="sortorder" value="$PROPERTY[sortorder]" />
+					<param name="content" value="$PROPERTY[content]" />
+					<param name="is_autolimit" value="$PROPERTY[isAutoLimit]" />
+					<param name="autolimit" value="$PROPERTY[autoLimit]" />
+				</include>
+				<include content="Widget_ContentInclude" condition="!$PROPERTY[isDynamicContent]">
+					<param name="include" value="$PROPERTY[content]" />
+				</include>
+                <include content="Widget_ContentItem" condition="$PROPERTY[showMore] + $PROPERTY[isDynamicContent] + !$PROPERTY[isAutoLimit] + Skin.HasSetting(enable.morewidget)">
+                    <param name="label" value="31429" />
+                    <param name="icon" value="misc/more-items.png" />
+                    <param name="fanart" value="$PROPERTY[showMoreFanart]" />
+                    <param name="onclick" value="ActivateWindow($PROPERTY[target],$PROPERTY[content],return)" />
+                    <param name="visible" value="[Integer.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).NumItems,$PROPERTY[limitNumber]) | Integer.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).NumItems,$MATH[limitNumber + 1])] + !Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).IsUpdating" />"
+                </include>
+			</control>
+			<!-- InfoSub -->
+			<control type="group" id="$MATH[$PARENT[index] * 10000 + 5600 + $PROPERTY[id]]">
+				<visible>String.IsEqual(Container(300).ListItem.Property(submenuVisibility),$PARENT[submenuVisibility])</visible>
+				<visible>$PROPERTY[isFullscreenWidget] | Skin.HasSetting(homemenu.netflix) | String.IsEmpty(Container(300).ListItem.Property(submenuPath.2))</visible>
+				<visible>[Integer.IsGreater(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).NumItems,0) | Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).IsUpdating]</visible>
+				<control type="grouplist">
+					<include content="$PROPERTY[fullscreenInfoInclude]" condition="!$PROPERTY[isSubmenu]">
+						<param name="id" value="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]" />
+						<param name="issettingslayout" value="$PROPERTY[isSettings]" />
+						<param name="isfullscreenlayout" value="!$PROPERTY[isFullscreenWidget] + !Skin.HasSetting(homemenu.netflix) + Integer.IsEqual(Container($MATH[$PARENT[index] * 1000 + 301]).NumItems,1)" />
+						<param name="infoid" value="$MATH[$PARENT[index] * 10000 + 4400 + $PROPERTY[id]]" />
+					</include>
+				</control>
+				<control type="grouplist">
+					<include content="HomeClearArt" condition="$PROPERTY[isDynamicContent] + !Skin.HasSetting(homemenu.netflix) + !Skin.HasSetting(home.multiwidgets.hideclearart)">
+						<param name="id" value="$MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]" />
+						<param name="isfullscreenlayout" value="!$PROPERTY[isFullscreenWidget] + !Skin.HasSetting(homemenu.netflix) + Integer.IsEqual(Container($MATH[$PARENT[index] * 1000 + 301]).NumItems,1)" />
+					</include>
+				</control>
+			</control>
+		</controls>
+		<variableGroup content="widgetItemVars" />
+	</template>
+
+     <template items="hidden-lists" source="widgets" filter="widgetPath">
+         <property name="id" from="index"/>
+         <controls>
+             <control type="list" id="$MATH[$PARENT[index] * 10000 + 4400 + $PROPERTY[id]]">
+                 <visible>String.IsEqual(Container(300).ListItem.Property(submenuVisibility),$PARENT[submenuVisibility])</visible>
+                 <include>HiddenListControl</include>
+                 <content>$INFO[Container($MATH[$PARENT[index] * 10000 + 4500 + $PROPERTY[id]]).ListItem.Label]</content>
+             </control>
+             <control type="list" id="$MATH[$PARENT[index] * 10000 + 4500 + $PROPERTY[id]]">
+                 <visible>String.IsEqual(Container(300).ListItem.Property(submenuVisibility),$PARENT[submenuVisibility])</visible>
+                 <include>HiddenListControl</include>
+                 <content>
+                     <item>
+                         <visible>!ControlGroup(301).HasFocus() + Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.IsCollection + !String.IsEmpty($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBID</visible>
+                         <label>videodb://movies/sets/$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBID]/?setid=$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBID]</label>
+                     </item>
+                     <item>
+                         <visible>!ControlGroup(301).HasFocus() + Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.IsFolder + String.IsEqual(Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.DBType,album)</visible>
+                         <label>$INFO[Container($MATH[$PARENT[index] * 10000 + 3100 + $PROPERTY[id]]).ListItem.FolderPath]</label>
+                     </item>
+                 </content>    
+             </control>
+         </controls>
+    </template>
+
+    <!-- Fallback widget -->
+    <template include="global" build="true">
+        <!--- Widget Content -->
+        <property name="content">$VAR[DefWidgetContent]</property>
+        <property name="target">$VAR[DefWidgetTarget]</property>
+        <property name="limit">25</property>
+
+        <controls>
+            <control type="group">
+                <visible>[String.IsEmpty(Skin.String(home.slideshowpath)) | String.IsEqual(Skin.String(home.slideshowpath),none)] + String.IsEmpty(Container(300).ListItem.Property(Background))</visible>
+                <visible>String.IsEmpty(Container(300).ListItem.Property(submenuPath))</visible>
+                <include condition="!Skin.HasSetting(widgets.fade)">Animation.Vertical.Widgets.Label</include>
+                <animation effect="slide" start="0" end="0,342" time="0" condition="Skin.HasSetting(homemenu.clean.flix) + Skin.HasSetting(homemenu.clean.flix.no.slide)">Conditional</animation>
+                <animation effect="slide" start="0" end="0,335" time="0" condition="Skin.HasSetting(homemenu.clean.flix) + !Skin.HasSetting(homemenu.clean.flix.no.slide)">Conditional</animation>
+                <animation effect="slide" start="0" end="0,40" time="0" condition="!Skin.HasSetting(homemenu.clean.flix) + !Skin.HasSetting(show.reflections)">Conditional</animation>
+                <include content="Widget_Items_Count" condition="Skin.HasSetting(homemenu.clean.flix)">
+                    <param name="groupid" value="99310" />
+                </include>
+            </control>
+
+            <control type="grouplist" id="99310">
+                <visible>String.IsEmpty(Container(300).ListItem.Property(submenuPath))</visible>
+                <usecontrolcoords>true</usecontrolcoords>
+                <itemgap>0</itemgap>
+                <orientation>vertical</orientation>
+                <include>ScrolltimeWidgetsContainer</include>
+                
+                <include>Widget_Navigation_Actions</include>
+                
+                <control type="group" id="997500">
+                    <visible>[String.IsEmpty(Skin.String(home.slideshowpath)) | String.IsEqual(Skin.String(home.slideshowpath),none)] + String.IsEmpty(Container(300).ListItem.Property(Background))</visible>
+                    <visible>Integer.IsGreater(Container(993100).NumItems,0) | Container(993100).IsUpdating</visible>
+                    <control type="grouplist">
+                        <include content="Widget_Title_Label">
+                            <param name="focusid" value="993100"/>
+                            <param name="label" value="$LOCALIZE[31105]"/>
+                        </include>
+                    </control>
+                </control>
+                <control type="fixedlist" id="993100">
+                    <visible>[String.IsEmpty(Skin.String(home.slideshowpath)) | String.IsEqual(Skin.String(home.slideshowpath),none)] + String.IsEmpty(Container(300).ListItem.Property(Background))</visible>
+                    <visible>Integer.IsGreater(Container(993100).NumItems,0) | Container(993100).IsUpdating</visible>
+                    <include content="DefMultiWidgetContainer">
+                        <param name="id" value="993100"/>
+                        <param name="baseid" value="9931"/>
+                        <param name="height" value="325"/>
+                        <param name="height2" value="365"/>
+                        <param name="movement" value="7"/>
+                    </include>
+                    <!-- ItemLayout -->
+                    <include content="Widget_Layout_Normal">
+                        <param name="shortcutsid" value="993100"/>
+                    </include>
+                    <include content="Widget_ContentDynamic">
+                       <param name="target" value="$PROPERTY[target]" />
+                       <param name="content" value="$PROPERTY[content]" />
+                       <param name="limit" value="$PROPERTY[limit]" />
+                    </include>
+                    <include content="Widget_ContentItem" condition="Skin.HasSetting(enable.morewidget)">
+                        <param name="label" value="31429" />
+                        <param name="icon" value="misc/more-items.png" />
+                        <param name="fanart" value="$VAR[DefWidgetFanart]" />
+                        <param name="onclick" value="ActivateWindow($PROPERTY[target],$PROPERTY[content],return)" />
+                        <param name="visible" value="[Integer.IsEqual(Container(993100).NumItems,$PROPERTY[limit]) | Integer.IsEqual(Container(993100).NumItems,$MATH[limit + 1])]  + !Container(993100).IsUpdating" />
+                    </include>
+                </control>
+                <!-- InfoSub -->
+                <control type="group" id="995600">
+                    <visible>[String.IsEmpty(Skin.String(home.slideshowpath)) | String.IsEqual(Skin.String(home.slideshowpath),none)] + String.IsEmpty(Container(300).ListItem.Property(Background))</visible>
+                    <visible>Integer.IsGreater(Container(993100).NumItems,0) | Container(993100).IsUpdating</visible>
+                    <control type="grouplist">
+                        <include content="HomeWidgetsFullscreenInfo">
+                            <param name="id" value="993100"/>
+                            <param name="isfullscreenlayout" value="!Skin.HasSetting(homemenu.netflix)" />
+                            <param name="infoid" value="994400" />
+                        </include>
+                    </control>
+                    <control type="grouplist">
+                        <include content="HomeClearArt" condition="!Skin.HasSetting(homemenu.netflix) + !Skin.HasSetting(home.multiwidgets.hideclearart)">
+                            <param name="id" value="993100"/>
+                            <param name="isfullscreenlayout" value="true" />
+                        </include>
+                    </control>
+                </control>
+           </control>        
+
+            <control type="group">
+                <visible>[String.IsEmpty(Skin.String(home.slideshowpath)) | String.IsEqual(Skin.String(home.slideshowpath),none)] + String.IsEmpty(Container(300).ListItem.Property(Background))</visible>
+                <visible>String.IsEmpty(Container(300).ListItem.Property(submenuPath))</visible>
+                <control type="list" id="994400">
+                    <include>HiddenListControl</include>
+                    <content>$INFO[Container(994500).ListItem.Label]</content>
+                </control>
+                <control type="list" id="994500">
+                    <include>HiddenListControl</include>
+                    <content>
+                        <item>
+                            <visible>Container(993100).ListItem.IsCollection + !String.IsEmpty(993100).ListItem.DBID</visible>
+                            <label>videodb://movies/sets/$INFO[Container(993100).ListItem.DBID]/?setid=$INFO[Container(993100).ListItem.DBID]</label>
+                        </item>
+                    </content>    
+                </control>
+            </control>
+        </controls>
+    </template>
+    	
+</templates>

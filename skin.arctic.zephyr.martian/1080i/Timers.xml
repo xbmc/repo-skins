@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<timers>
+	<timer>
+		<name>artistslideshowtimer</name>
+		<description>Run script.artistslideshow when player gets audio</description>
+		<start>Player.HasAudio + System.AddonIsEnabled(script.artistslideshow) + !Skin.HasSetting(ArtistSlideShow.Disabled)</start>
+		<stop>!Player.HasAudio | !System.AddonIsEnabled(script.artistslideshow) | Skin.HasSetting(ArtistSlideShow.Disabled)</stop>
+		<onstart>RunScript(script.artistslideshow)</onstart>
+	</timer>
+
+    <timer>
+        <name>plotoverlaytimer</name>
+        <description>Show plot overlay after 5 second delay</description>
+        <start reset="true">Skin.HasSetting(furniture.overlayinfo) + Window.IsVisible(MyVideoNav.xml)</start>
+        <reset>Skin.HasSetting(furniture.overlayinfo) + Window.IsVisible(MyVideoNav.xml) + !System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(plotoverlaytimer), 1)</reset>
+        <stop>!Window.IsVisible(MyVideoNav.xml) | Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(plotoverlaytimer), 5)</stop>
+        <onstop condition="Window.IsVisible(MyVideoNav.xml) + [String.IsEqual(ListItem.DBTYPE,movie) | String.IsEqual(ListItem.DBTYPE,tvshow) | String.IsEqual(ListItem.DBTYPE,episode) | String.IsEqual(ListItem.DBTYPE,set) | String.IsEqual(ListItem.DBTYPE,season)] + ![Window.IsVisible(script-skinshortcuts.xml) | Window.IsVisible(DialogConfirm.xml) | Window.IsVisible(DialogBusy.xml) | Window.IsVisible(DialogSelect.xml) | Window.IsVisible(DialogContextMenu.xml) | Window.IsVisible(DialogButtonMenu.xml) | Window.IsVisible(DialogVideoInfo.xml) | ControlGroup(9000).HasFocus()] + ![Skin.HasSetting(home.netflix.autoplay.trailer) + [Control.IsVisible(521) | Control.IsVisible(522)]] + ![!String.IsEmpty(Window(home).Property(TrailerPath2)) + !String.IsEmpty(Window(home).Property(TrailerPath)) + String.IsEmpty(Player.FileNameAndPath)] + ![String.IsEqual(Window(home).Property(TrailerPath2),Player.FileNameAndPath) + !String.IsEmpty(Player.FileNameAndPath)]">SetFocus(9601)</onstop>
+    </timer>
+
+    <timer>
+        <name>osdinfotimer</name>
+        <description>Show OSD info on start of video</description>
+        <start reset="true">Window.IsActive(fullscreenvideo) + Skin.HasSetting(osd.info.fullscreen) + [!String.IsEmpty(Window(home).Property(osdinfo)) | String.IsEmpty(Window(home).Property(osdinfo)) + String.IsEqual(Player.Time(hh:mm:ss),00:00:00)]</start>
+        <reset>Window.IsActive(fullscreenvideo) + !String.IsEmpty(Window(home).Property(osdinfo)) + !System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(osdinfotimer), 1)</reset>
+        <stop>!Window.IsActive(fullscreenvideo) | [[Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(osdinfotimer),Skin.String(OSD_Info)) + !Window.IsActive(VideoOSD.xml) + !Window.IsActive(fullscreeninfo) + ![Player.Paused + !Skin.HasSetting(OSD.AutoHideOnPause) | Player.HasPerformedSeek(3)]] + Integer.IsGreater(Player.Time(ss),3)]</stop>
+        <onstart condition="String.IsEmpty(Window(home).Property(osdinfo))">SetProperty(osdinfo,1,home)</onstart>
+        <onstop condition="Window.IsVisible(seekbar)">Dialog.Close(seekbar)</onstop>        
+        <onstop>ClearProperty(osdinfo,home)</onstop>   
+    </timer>
+
+    <timer>
+        <name>autocloseosdtimer</name>
+        <description>Close OSD after delay</description>
+        <start reset="true">[Window.IsVisible(videoosd) | Window.IsVisible(musicosd)] + Skin.String(OSD_Timeout)</start>
+        <reset>[Window.IsVisible(videoosd) | Window.IsVisible(musicosd)] + Skin.String(OSD_Timeout) + !System.IdleTime(1) + Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(autocloseosdtimer), 1)</reset>
+        <stop>![Window.IsVisible(videoosd) | Window.IsVisible(musicosd)] | [Integer.IsGreaterOrEqual(Skin.TimerElapsedSecs(autocloseosdtimer),Skin.String(OSD_Timeout)) + ![Player.Forwarding | Player.Rewinding | Player.Seeking | Player.HasPerformedSeek(3)] + String.IsEmpty(Window(home).Property(dontautoclose)) + !Window.IsVisible(teletext) + !Window.IsVisible(DialogSelect.xml) + !Window.IsVisible(DialogSettings.xml) + !Window.IsVisible(DialogSubtitles.xml) + !Window.IsVisible(DialogSlider.xml) + !Window.IsVisible(VideoOSDBookmarks.xml) + !Window.IsVisible(1131) + !Window.IsVisible(DialogPlayerProcessInfo.xml) + !Window.IsVisible(DialogPVRChannelsOSD.xml) + !Window.IsVisible(pvrchannelguide)]</stop>
+        <onstop condition="Window.IsVisible(videoosd)">Dialog.Close(videoosd)</onstop>
+        <onstop condition="Window.IsVisible(musicosd)">Dialog.Close(musicosd)</onstop>
+    </timer>
+
+    <timer>
+        <name>seekbartimer</name>
+        <description>Hide seekbar when video is paused</description>
+        <start>Window.IsVisible(fullscreenvideo) + !Window.IsVisible(videoosd) + !Window.IsVisible(fullscreeninfo) + Skin.HasSetting(osd.autohideonpause) + Player.Paused + System.IdleTime(5)</start>
+        <stop>!Window.IsVisible(fullscreenvideo) | Window.IsVisible(videoosd) | Window.IsVisible(fullscreeninfo) | !Player.Paused | Player.Seeking | Player.Forwarding | Player.Rewinding | Player.Rewinding | Player.Caching</stop>
+        <onstart>SetProperty(HideSeekbar,1,home)</onstart>
+        <onstop>ClearProperty(HideSeekbar,home)</onstop>
+    </timer>
+</timers>
